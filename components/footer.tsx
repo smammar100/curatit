@@ -12,8 +12,14 @@ import gsap from "gsap"
 export default function Footer() {
   const [email, setEmail] = useState("")
   const isMobile = useMobile()
+  const [mounted, setMounted] = useState(false)
   const stackRef = useRef<HTMLDivElement>(null)
   const imageRefs = useRef<(HTMLDivElement | null)[]>([]) // Fixed type definition
+
+  // Ensure component is mounted before using isMobile
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Define the images for the stepped stack
   const images = [
@@ -54,8 +60,9 @@ export default function Footer() {
     },
   ]
 
-  // For mobile, only show 3 images (center and adjacent)
-  const visibleImages = isMobile ? images.slice(2, 5) : images
+  // Always render all images to prevent hydration mismatch
+  // Use CSS to control visibility on mobile
+  const visibleImages = images
 
   // Animation effect
   useEffect(() => {
@@ -150,43 +157,35 @@ export default function Footer() {
       {/* Image stack - responsive for different screen sizes */}
       <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] flex justify-center items-end overflow-hidden">
         <div
-          className="relative"
-          style={{ width: isMobile ? "422px" : "970px" }} // 20% increase from previous values
+          className="relative w-[422px] sm:w-[970px]" // Use responsive classes instead of inline styles
           ref={stackRef} // Add ref for animations
         >
           {visibleImages.map((image, index) => {
-            // For mobile, adjust indices to center the 3 visible images
-            const adjustedIndex = isMobile ? index + 2 : index
+            // Use index directly to prevent hydration mismatch
+            const adjustedIndex = index
 
             // Calculate z-index: center has highest, decreases toward edges
             const zIndex = 7 - Math.abs(3 - adjustedIndex)
 
-            // Calculate horizontal position with adjusted spacing for mobile
-            const spacing = isMobile ? 84 : 126 // 20% increase in spacing
+            // Calculate horizontal position - use CSS variables for responsive spacing
             const offsetX = (adjustedIndex - 3) * spacing
 
             // For the center image
             const isCenterImage = adjustedIndex === 3
 
-            // Adjust image size for mobile with 20% increase
-            const imageWidth = isMobile
-              ? isCenterImage
-                ? 238
-                : 185 // 20% increase from previous values
-              : isCenterImage
-                ? 396
-                : 290 // 20% increase from previous values
-
-            // Scale height proportionally for mobile
-            const heightScale = isMobile ? 0.7 : 1
-            const imageHeight = image.height * heightScale
+            // Use consistent sizing to prevent hydration mismatch
+            const imageWidth = isCenterImage ? 396 : 290
+            const spacing = 126
 
             return (
               <div
                 key={index}
-                className="absolute rounded-t-lg overflow-hidden shadow-md transition-all duration-500 hover:shadow-lg"
+                className={`absolute rounded-t-lg overflow-hidden shadow-md transition-all duration-500 hover:shadow-lg ${
+                  // Hide outer images on mobile using CSS classes
+                  index < 2 || index > 4 ? 'hidden sm:block' : ''
+                }`}
                 style={{
-                  height: `${imageHeight}px`,
+                  height: `${image.height * 0.7}px`, // Consistent height scaling
                   width: `${imageWidth}px`,
                   left: "50%",
                   marginLeft: offsetX - imageWidth / 2, // Center each image

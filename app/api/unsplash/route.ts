@@ -17,7 +17,10 @@ export async function GET(request: Request) {
     // Check if API key is available
     if (!process.env.UNSPLASH_ACCESS_KEY) {
       console.error("Unsplash API key is missing")
-      return NextResponse.json({ error: "Configuration error: Unsplash API key is missing" }, { status: 500 })
+      return NextResponse.json({ 
+        error: "Configuration error: Unsplash API key is missing",
+        errors: ["Unsplash API key is missing from environment variables"]
+      }, { status: 500 })
     }
 
     // Fetch random photos from Unsplash
@@ -36,10 +39,22 @@ export async function GET(request: Request) {
     // Improve error handling for 503 and other server errors
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({
-        errors: [`Error ${response.status}: Unable to connect to Unsplash`],
+        message: `Error ${response.status}: Unable to connect to Unsplash`,
       }))
 
       console.error(`Unsplash API error: ${response.status}`, errorData)
+
+      // Create a meaningful errors array
+      let errors = []
+      if (errorData.errors && Array.isArray(errorData.errors)) {
+        errors = errorData.errors
+      } else if (errorData.message) {
+        errors = [errorData.message]
+      } else if (errorData.error) {
+        errors = [errorData.error]
+      } else {
+        errors = [`HTTP ${response.status}: Unable to fetch images from Unsplash`]
+      }
 
       // Return a more detailed error response with a 200 status to prevent cascading errors
       return NextResponse.json(
@@ -48,7 +63,7 @@ export async function GET(request: Request) {
           status: response.status,
           message: "Unable to fetch images from Unsplash at this time",
           fallback: true,
-          errors: errorData.errors || ["Unknown error"],
+          errors,
         },
         { status: 200 }, // Return 200 with error flag instead of error status
       )
@@ -78,6 +93,7 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         error: "Failed to fetch images from Unsplash",
+        errors: [error instanceof Error ? error.message : "Unknown server error"],
         message: error instanceof Error ? error.message : String(error),
       },
       { status: 500 },

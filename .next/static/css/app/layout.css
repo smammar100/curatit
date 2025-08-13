@@ -807,6 +807,9 @@ video {
 .block {
   display: block;
 }
+.inline {
+  display: inline;
+}
 .flex {
   display: flex;
 }
@@ -1026,6 +1029,9 @@ video {
 }
 .w-px {
   width: 1px;
+}
+.w-\[422px\] {
+  width: 422px;
 }
 .min-w-0 {
   min-width: 0px;
@@ -3027,6 +3033,10 @@ video {
 
   .sm\:w-auto {
     width: auto;
+  }
+
+  .sm\:w-\[970px\] {
+    width: 970px;
   }
 
   .sm\:max-w-\[500px\] {
