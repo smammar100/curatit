@@ -1,3 +1,4 @@
 {
+  "/api/unsplash/route": "app/api/unsplash/route.js",
   "/page": "app/page.js"
 }
