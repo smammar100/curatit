@@ -16,9 +16,18 @@ export default function EnhancedMasonryGrid() {
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
   const isMobile = useMobile()
+  const [mounted, setMounted] = useState(false)
+
+  // Ensure component is mounted before using isMobile
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     async function loadPostsWithUnsplashImages() {
+      // Only run on client side to prevent SSR issues
+      if (typeof window === 'undefined') return
+      
       setLoading(true)
       setError(null)
 
@@ -79,8 +88,9 @@ export default function EnhancedMasonryGrid() {
     setRetryCount((prev) => prev + 1)
   }
 
-  // Adjust the number of posts shown based on screen size
-  const visiblePosts = isMobile ? posts.slice(0, 8) : posts
+  // Always render all posts to prevent hydration mismatch
+  // Use CSS to control visibility on mobile
+  const visiblePosts = posts
 
   return (
     <div className="bg-gray-50 p-2 sm:p-4 rounded-xl">
@@ -100,21 +110,33 @@ export default function EnhancedMasonryGrid() {
       {loading ? (
         // Loading skeleton with responsive grid
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-          {Array.from({ length: isMobile ? 4 : 12 }).map((_, index) => (
-            <div key={index} className="rounded-xl bg-gray-200 animate-pulse aspect-[3/4]" />
+          {Array.from({ length: 12 }).map((_, index) => (
+            <div 
+              key={index} 
+              className={`rounded-xl bg-gray-200 animate-pulse aspect-[3/4] ${
+                index >= 4 ? 'hidden sm:block' : ''
+              } ${index >= 8 ? 'hidden md:block' : ''}`} 
+            />
           ))}
         </div>
       ) : (
         // Actual content with responsive grid
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-          {visiblePosts.map((post) => (
-            <MasonryPostCard key={post.id} post={post} />
+          {visiblePosts.map((post, index) => (
+            <div
+              key={post.id}
+              className={`${
+                index >= 4 ? 'hidden sm:block' : ''
+              } ${index >= 8 ? 'hidden md:block' : ''}`}
+            >
+              <MasonryPostCard post={post} />
+            </div>
           ))}
         </div>
       )}
 
-      {/* Load more button for mobile */}
-      {isMobile && posts.length > 8 && (
+      {/* Load more button for mobile - only show when mounted */}
+      {mounted && isMobile && posts.length > 8 && (
         <div className="mt-6 text-center">
           <Button
             onClick={() => setPosts((prev) => [...prev, ...generateDummyPosts(4)])}
