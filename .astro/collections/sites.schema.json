@@ -32,8 +32,7 @@
         "required": [
           "label",
           "value"
-        ],
-        "additionalProperties": false
+        ]
       }
     },
     "thumbnail": {
@@ -49,8 +48,7 @@
       "required": [
         "url",
         "alt"
-      ],
-      "additionalProperties": false
+      ]
     },
     "tags": {
       "type": "array",
@@ -68,6 +66,5 @@
     "tagline",
     "description",
     "thumbnail"
-  ],
-  "additionalProperties": false
+  ]
 }
