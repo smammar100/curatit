@@ -1,5 +1,7 @@
 # AGENTS.md — Carbon (Lexington Themes)
 
+**Design rules:** [.cursor/skills/carbon-design/SKILL.md](./.cursor/skills/carbon-design/SKILL.md) - read before creating or changing any UI.  
+
 **Carbon** is a Lexington Themes Astro template for a **directory / showcase-style marketing site**: homepage highlights featured “sites” (with Fuse.js search), a magazine-style **blog**, a **digital product store**, and supporting pages (pricing, advertise, submit, sign-in/up, system styleguide). It fits **SaaS/marketing, template marketplaces, and curated listings**. Publisher: [Lexington Themes](https://lexingtonthemes.com/).
 
 ## Tech stack
