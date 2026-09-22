@@ -25,7 +25,7 @@ export default async function BoardPage({ params }: { params: Promise<{ id: stri
 
   return (
     <section>
-      <Wrapper variant="standard" className="pt-28 pb-24 lg:pt-32">
+      <Wrapper variant="standard" className="py-24 lg:pt-48">
         <BoardEditor key={`${board.id}-${board.version}`} initial={board} />
       </Wrapper>
     </section>

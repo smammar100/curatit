@@ -119,12 +119,12 @@ export default function SaveButton({ postId, compact = false }: { postId: string
       <dialog
         ref={dialogRef}
         aria-labelledby={titleId}
-        className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-xl bg-white p-0 shadow-xl backdrop:bg-base-950/50 backdrop:backdrop-blur-sm"
+        className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-lg bg-base-50 p-0 backdrop:bg-base-950/50 backdrop:backdrop-blur"
         onClick={(event) => {
           if (event.target === dialogRef.current) dialogRef.current?.close();
         }}
       >
-        <div className="p-6">
+        <div className="p-8">
           <div className="flex items-center justify-between">
             <h2 id={titleId} className="font-display text-2xl text-base-900">
               Save to boards
@@ -189,7 +189,7 @@ export default function SaveButton({ postId, compact = false }: { postId: string
             <button
               type="submit"
               disabled={!newName.trim() || status === "creating"}
-              className="shrink-0 h-9 px-4 rounded-lg text-sm font-medium bg-base-50 text-base-900 hover:bg-base-100 disabled:opacity-50"
+              className="shrink-0 h-9 px-4 rounded-lg text-sm font-medium bg-white text-base-900 hover:bg-base-100 disabled:opacity-50"
             >
               {status === "creating" ? "Creating…" : "Create"}
             </button>
@@ -211,7 +211,7 @@ export default function SaveButton({ postId, compact = false }: { postId: string
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}
-              className="h-10 px-5 rounded-lg text-sm font-medium bg-base-50 text-base-900 hover:bg-base-100"
+              className="h-10 px-5 rounded-lg text-sm font-medium bg-white text-base-900 hover:bg-base-100"
             >
               Done
             </button>

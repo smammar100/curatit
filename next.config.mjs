@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Lets a verification build run beside `next dev` without clobbering its .next folder.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   images: {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
   },

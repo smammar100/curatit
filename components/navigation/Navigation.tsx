@@ -19,7 +19,7 @@ export default async function Navigation() {
       <nav className="fixed w-full top-0 z-20 bg-white/95 backdrop-blur py-4 hidden md:block" aria-label="Main">
         <Wrapper variant="standard">
           <div className="flex items-center justify-between gap-6">
-            <Link href={viewer ? "/library" : "/"} className="shrink-0 rounded focus:outline-2 focus:outline-offset-4 focus:outline-accent-500">
+            <Link href="/" className="shrink-0 rounded focus:outline-2 focus:outline-offset-4 focus:outline-accent-500">
               <Logo className="text-2xl text-base-900" />
             </Link>
             <div className="flex items-center gap-2">

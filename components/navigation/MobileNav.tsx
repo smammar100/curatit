@@ -38,7 +38,7 @@ export default function MobileNav({ links, signedIn }: { links: NavLink[]; signe
     <nav ref={containerRef} className="fixed inset-x-0 top-0 z-40 bg-white md:hidden" aria-label="Main">
       <Wrapper variant="standard" className="py-3">
         <div className="flex items-center justify-between">
-          <Link href={signedIn ? "/library" : "/"}>
+          <Link href="/">
             <Logo className="text-2xl text-base-900" />
           </Link>
           <Button

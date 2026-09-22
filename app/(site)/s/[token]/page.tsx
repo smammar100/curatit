@@ -41,7 +41,7 @@ export default async function SharedBoardPage({ params }: { params: Promise<{ to
 
   return (
     <section>
-      <Wrapper variant="standard" className="pt-28 pb-24 lg:pt-32">
+      <Wrapper variant="standard" className="py-24 lg:pt-48">
         <p className="text-xs font-medium uppercase tracking-wide text-base-500">Shared reference board · read-only</p>
         <Text tag="h1" variant="displayLG" className="mt-3 font-display font-thin text-base-900 text-balance break-words">
           {board.title}
@@ -51,10 +51,10 @@ export default async function SharedBoardPage({ params }: { params: Promise<{ to
           {hidden > 0 && ` · ${hidden} no longer available`}
         </p>
 
-        <ol className="mt-10 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+        <ol className="group mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           {visible.map((item, index) => (
-            <li key={item.postId}>
-              <div className="p-4 bg-base-50 rounded-lg">
+            <li key={item.postId} className="peer duration-300 group-hover:opacity-30 hover:opacity-100 hover:peer-hover:opacity-30">
+              <div className="rounded-lg bg-base-50 p-8">
                 <div className="rounded overflow-hidden shadow">
                   <SlideArt art={item.cover} alt={item.coverAlt} />
                 </div>

@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import Navigation from "@/components/navigation/Navigation";
-import Footer from "@/components/global/Footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -53,11 +51,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           rel="stylesheet"
         />
       </head>
-      <body className="bg-white flex flex-col lg:min-h-svh">
-        <Navigation />
-        <main className="grow">{children}</main>
-        <Footer />
-      </body>
+      <body className="bg-white">{children}</body>
     </html>
   );
 }

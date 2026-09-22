@@ -79,7 +79,7 @@ export default async function AdminPage({
 
   return (
     <section>
-      <Wrapper variant="standard" className="pt-28 pb-24 lg:pt-32">
+      <Wrapper variant="standard" className="py-24 lg:pt-48">
         <Text tag="h1" variant="displayLG" className="text-base-900 font-display font-thin">
           Curation
         </Text>
@@ -143,7 +143,7 @@ export default async function AdminPage({
         ) : (
           <ul className="mt-6 space-y-4">
             {items.map((item) => (
-              <li key={item.id} className="grid grid-cols-1 gap-4 rounded-lg bg-base-50 p-4 md:grid-cols-[1fr_14rem]">
+              <li key={item.id} className="grid grid-cols-1 gap-6 rounded-lg bg-base-50 p-8 md:grid-cols-[1fr_14rem]">
                 <div className="min-w-0">
                   <ul className="flex gap-2 overflow-x-auto pb-2" aria-label={`${item.slides.length} slides`}>
                     {item.slides.map((slide, index) => (

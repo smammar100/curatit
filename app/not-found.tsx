@@ -1,9 +1,11 @@
 import Text from "@/components/fundations/elements/Text";
 import Button from "@/components/fundations/elements/Button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
+import SiteLayout from "./(site)/layout";
 
 export default function NotFound() {
   return (
+    <SiteLayout>
     <section>
       <Wrapper
         variant="standard"
@@ -32,5 +34,6 @@ export default function NotFound() {
         </div>
       </Wrapper>
     </section>
+    </SiteLayout>
   );
 }

@@ -12,6 +12,7 @@ import { formatDate } from "@/components/product/format";
 const field =
   "block w-full px-3 py-2 rounded-md text-sm bg-white ring-1 ring-base-200 border-transparent focus:ring-2 focus:ring-accent-100 focus:border-accent-500";
 const buttonMuted = "h-9 px-4 rounded-lg text-sm font-medium bg-base-50 text-base-900 hover:bg-base-100 disabled:opacity-40";
+const buttonOnPanel = "h-9 px-4 rounded-lg text-sm font-medium bg-white text-base-900 hover:bg-base-100 disabled:opacity-40";
 const buttonDark = "h-9 px-4 rounded-lg text-sm font-medium text-white bg-base-800 hover:bg-base-700 disabled:opacity-50";
 
 export default function BoardEditor({ initial }: { initial: BoardDetail }) {
@@ -286,9 +287,9 @@ export default function BoardEditor({ initial }: { initial: BoardDetail }) {
       <dialog
         ref={shareDialog}
         aria-labelledby="share-title"
-        className="m-auto w-[min(34rem,calc(100vw-2rem))] rounded-xl bg-white p-0 shadow-xl backdrop:bg-base-950/50 backdrop:backdrop-blur-sm"
+        className="m-auto w-[min(34rem,calc(100vw-2rem))] rounded-lg bg-base-50 p-0 backdrop:bg-base-950/50 backdrop:backdrop-blur"
       >
-        <div className="p-6">
+        <div className="p-8">
           <h2 id="share-title" className="font-display text-2xl text-base-900">
             Share a read-only link
           </h2>
@@ -297,7 +298,7 @@ export default function BoardEditor({ initial }: { initial: BoardDetail }) {
             can&rsquo;t recall screenshots already taken.
           </p>
 
-          <div className="mt-5 rounded-lg bg-base-50 p-4">
+          <div className="mt-5 rounded-lg bg-white p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-base-500">What recipients will see</p>
             <ul className="mt-2 space-y-1 text-sm text-base-700">
               <li>✓ Board title: <span className="font-medium text-base-900">{board.name}</span></li>
@@ -355,7 +356,7 @@ export default function BoardEditor({ initial }: { initial: BoardDetail }) {
           )}
 
           <div className="mt-6 flex justify-end">
-            <button type="button" className={buttonMuted} onClick={() => shareDialog.current?.close()}>
+            <button type="button" className={buttonOnPanel} onClick={() => shareDialog.current?.close()}>
               Done
             </button>
           </div>
@@ -366,9 +367,9 @@ export default function BoardEditor({ initial }: { initial: BoardDetail }) {
       <dialog
         ref={deleteDialog}
         aria-labelledby="delete-title"
-        className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-xl bg-white p-0 shadow-xl backdrop:bg-base-950/50"
+        className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-lg bg-base-50 p-0 backdrop:bg-base-950/50 backdrop:backdrop-blur"
       >
-        <div className="p-6">
+        <div className="p-8">
           <h2 id="delete-title" className="font-display text-2xl text-base-900">
             Delete this board?
           </h2>
@@ -377,7 +378,7 @@ export default function BoardEditor({ initial }: { initial: BoardDetail }) {
             any share link working. The references stay in the library. This can&rsquo;t be undone.
           </p>
           <div className="mt-6 flex justify-end gap-2">
-            <button type="button" className={buttonMuted} onClick={() => deleteDialog.current?.close()} autoFocus>
+            <button type="button" className={buttonOnPanel} onClick={() => deleteDialog.current?.close()} autoFocus>
               Cancel
             </button>
             <button type="button" className="h-9 px-4 rounded-lg text-sm font-medium text-white bg-red-700 hover:bg-red-600" onClick={() => void deleteBoard()}>
@@ -411,8 +412,8 @@ function ItemRow({
   const label = item.creative ? `${item.creative.brandName}: ${item.creative.hook ?? "reference"}` : "Unavailable reference";
 
   return (
-    <li className="grid grid-cols-1 gap-4 rounded-lg bg-base-50 p-4 sm:grid-cols-[7rem_1fr_auto]">
-      <div className="w-28">
+    <li className="grid grid-cols-1 gap-6 rounded-lg bg-base-50 p-8 sm:grid-cols-[8rem_1fr_auto]">
+      <div className="w-32">
         {item.creative ? (
           <Link href={`/creatives/${item.postId}`} className="block rounded overflow-hidden shadow-sm">
             <SlideArt art={item.creative.cover} alt={item.creative.coverAlt} />
@@ -477,7 +478,7 @@ function ItemRow({
         <button
           id={`move-up-${item.id}`}
           type="button"
-          className={buttonMuted}
+          className={buttonOnPanel}
           disabled={index === 0}
           onClick={() => onMove(index, -1)}
           aria-label={`Move up: ${label}`}
@@ -487,7 +488,7 @@ function ItemRow({
         <button
           id={`move-down-${item.id}`}
           type="button"
-          className={buttonMuted}
+          className={buttonOnPanel}
           disabled={index === total - 1}
           onClick={() => onMove(index, 1)}
           aria-label={`Move down: ${label}`}

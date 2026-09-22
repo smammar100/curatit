@@ -506,3 +506,29 @@ export function libraryStats() {
       WHERE ${PUBLISHED}`
   )!;
 }
+
+/** Small index of every published post for the client-side ⌘K quick search. */
+export type QuickSearchItem = {
+  id: string;
+  brand: string;
+  hook: string;
+  category: string;
+  labels: string;
+};
+
+export function quickSearchIndex(): QuickSearchItem[] {
+  return all<Row>(`${BASE_SELECT} WHERE ${PUBLISHED} ORDER BY p.published_at DESC`).map((row) => ({
+    id: row.id,
+    brand: row.brand_name,
+    hook: row.hook ?? "",
+    category: termName("category", row.category_id) ?? "",
+    labels: [
+      termName("objective", row.objective_id),
+      termName("format", row.format_id),
+      row.media_type,
+      ...parseJson<string[]>(row.visual_styles, []).map((style) => termName("visualStyle", style)),
+    ]
+      .filter(Boolean)
+      .join(" "),
+  }));
+}
