@@ -4,9 +4,13 @@ import { useRef, type ReactNode } from "react";
 import { MotionConfig } from "framer-motion";
 import Hero from "./Hero";
 import ScrollCards from "./ScrollCards";
-import SectionThree from "./SectionThree";
+import ClosingCta from "./ClosingCta";
+import HowItWorks from "./HowItWorks";
+import LandingFaq from "./LandingFaq";
+import LibraryShowcase from "./LibraryShowcase";
 import SectionTwo from "./SectionTwo";
 import { colors } from "./tokens";
+import type { LandingLibrary } from "@/lib/services/creatives";
 
 /** Soft grey blobs fixed behind everything. */
 function Blobs() {
@@ -36,7 +40,15 @@ function Blobs() {
  * with a global card overlay that travels from the hero fan into the
  * Section 2 cascade.
  */
-export default function Landing({ signedIn, nav }: { signedIn: boolean; nav: ReactNode }) {
+export default function Landing({
+  signedIn,
+  nav,
+  library,
+}: {
+  signedIn: boolean;
+  nav: ReactNode;
+  library: LandingLibrary;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -53,7 +65,10 @@ export default function Landing({ signedIn, nav }: { signedIn: boolean; nav: Rea
         <ScrollCards containerRef={containerRef} />
         <Hero signedIn={signedIn} />
         <SectionTwo signedIn={signedIn} />
-        <SectionThree signedIn={signedIn} />
+        <HowItWorks library={library} />
+        <LibraryShowcase library={library} signedIn={signedIn} />
+        <LandingFaq />
+        <ClosingCta signedIn={signedIn} />
       </div>
     </MotionConfig>
   );

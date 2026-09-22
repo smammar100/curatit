@@ -4,7 +4,13 @@ import { motion } from "framer-motion";
 import Button from "@/components/fundations/elements/Button";
 import Text from "@/components/fundations/elements/Text";
 import Tag from "./Tag";
-import { colors, jelly } from "./tokens";
+import { colors, jelly, smoothEase } from "./tokens";
+
+const paragraph =
+  "Real organic brand posts, reviewed by editors. Search by brief, save the best references to private boards, and share them with your client.";
+
+const blurWord = { opacity: 0, y: 16, filter: "blur(8px)" };
+const clearWord = { opacity: 1, y: 0, filter: "blur(0px)" };
 
 const lines = [
   ["Find", "the", "brand", "posts"],
@@ -24,15 +30,15 @@ export default function Hero({ signedIn }: { signedIn: boolean }) {
           {lines.map((line, lineIndex) => (
             <span key={lineIndex} className="block">
               {line.map((word) => {
-                const delay = wordIndex++ * 0.08;
+                const delay = 0.15 + wordIndex++ * 0.06;
                 return (
                   <motion.span
                     key={word}
                     className="inline-block"
                     style={{ marginRight: "0.25em" }}
-                    initial={{ opacity: 0, y: 28 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease: "easeOut", delay }}
+                    initial={blurWord}
+                    animate={clearWord}
+                    transition={{ duration: 0.5, ease: smoothEase, delay }}
                   >
                     {word}
                   </motion.span>
@@ -48,7 +54,7 @@ export default function Hero({ signedIn }: { signedIn: boolean }) {
             color={colors.accent}
             style={{ left: "max(8px, calc(50% - 320px))", top: -12, zIndex: 20 }}
             tail={{ side: "left", offset: 16, near: 8, far: 4 }}
-            motionProps={{ initial: { opacity: 0 }, animate: jelly, transition: { duration: 0.8, delay: 3.05 } }}
+            motionProps={{ initial: { opacity: 0 }, animate: jelly, transition: { duration: 0.8, delay: 2.0 } }}
           >
             #product-launch
           </Tag>
@@ -56,29 +62,32 @@ export default function Hero({ signedIn }: { signedIn: boolean }) {
             color={colors.dark}
             style={{ right: "max(8px, calc(50% - 420px))", top: -20, zIndex: 20 }}
             tail={{ side: "right", offset: 16, near: 8, far: 4 }}
-            motionProps={{ initial: { opacity: 0 }, animate: jelly, transition: { duration: 0.8, delay: 3.2 } }}
+            motionProps={{ initial: { opacity: 0 }, animate: jelly, transition: { duration: 0.8, delay: 2.15 } }}
           >
             #editorial
           </Tag>
         </div>
 
-        <motion.div
-          className="mt-12 max-w-[480px]"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 2.2 }}
-        >
-          <Text tag="p" variant="textBase" className="text-base-600">
-            Real organic brand posts, reviewed by editors. Search by brief, save the best references to private boards,
-            and share them with your client.
-          </Text>
-        </motion.div>
+        <Text tag="p" variant="textBase" className="mt-12 max-w-[480px] text-base-600">
+          {paragraph.split(" ").map((word, index) => (
+            <motion.span
+              key={index}
+              className="inline-block"
+              style={{ marginRight: "0.25em" }}
+              initial={blurWord}
+              animate={clearWord}
+              transition={{ duration: 0.4, ease: smoothEase, delay: 1.6 + index * 0.02 }}
+            >
+              {word}
+            </motion.span>
+          ))}
+        </Text>
 
         <motion.div
           className="mt-7 flex flex-wrap justify-center gap-2 pb-20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 2.4 }}
+          transition={{ duration: 0.6, ease: smoothEase, delay: 1.9 }}
         >
           <Button isLink href={signedIn ? "/library" : "/signup"} size="base" variant="default">
             {signedIn ? "Open the library" : "Get access"}

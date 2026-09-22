@@ -532,3 +532,46 @@ export function quickSearchIndex(): QuickSearchItem[] {
       .join(" "),
   }));
 }
+
+/** Real library content for the public landing page's product previews. */
+export type LandingLibrary = {
+  categories: { id: string; name: string; count: number; covers: { art: SlideArt; alt: string }[] }[];
+  sample: {
+    brand: string;
+    hook: string;
+    cover: { art: SlideArt; alt: string };
+    objective: string;
+    structure: string;
+    styles: string;
+    sequence: string[];
+  } | null;
+};
+
+export function landingLibrary(): LandingLibrary {
+  const categoriesWithCovers = filterDimensions.category.terms.map((term) => {
+    const result = searchCreatives({ filters: { category: [term.id] }, limit: 3 });
+    return {
+      id: term.id,
+      name: term.name,
+      count: result.total,
+      covers: result.items.map((item) => ({ art: item.cover, alt: item.coverAlt })),
+    };
+  });
+
+  const carousel = searchCreatives({ filters: { mediaType: ["carousel"], category: ["finance"] }, limit: 1 }).items[0];
+  let sample: LandingLibrary["sample"] = null;
+  if (carousel) {
+    const detail = getCreative(carousel.id);
+    sample = {
+      brand: detail.brand.name,
+      hook: detail.hook ?? "",
+      cover: { art: detail.cover, alt: detail.coverAlt },
+      objective: termName("objective", detail.objectiveId) ?? "",
+      structure: termName("narrative", detail.narrativeId) ?? "",
+      styles: detail.visualStyles.map((style) => termName("visualStyle", style)).join(", "),
+      sequence: detail.narrativeSequence,
+    };
+  }
+
+  return { categories: categoriesWithCovers.filter((category) => category.count > 0), sample };
+}

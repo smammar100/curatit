@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } fro
 import Image from "next/image";
 import {
   motion,
+  useAnimationControls,
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
@@ -13,11 +14,12 @@ import {
 import {
   CARD_SIZE,
   HERO_ROW_Y,
+  LEAD,
   cardImages,
   cascade,
   clamp,
+  dealSpring,
   fanSlots,
-  getTimeForProgress,
   hoverEase,
   smoothEase,
 } from "./tokens";
@@ -59,11 +61,22 @@ function cascadePose(g: Geometry, index: number) {
 
 /**
  * The visible card. Rendered inside a zero-size motion.div whose x/y is the
- * card *centre*, so rotation and scale pivot around the middle.
+ * card *centre*, so rotation and scale pivot around the middle. The hover lift
+ * lives here, on the inner element, so it never fights the scroll-driven x/y.
  */
-function CardFace({ index, size, radius }: { index: number; size: number; radius: number }) {
+function CardFace({
+  index,
+  size,
+  radius,
+  hoverable = false,
+}: {
+  index: number;
+  size: number;
+  radius: number;
+  hoverable?: boolean;
+}) {
   return (
-    <div
+    <motion.div
       className="absolute overflow-hidden"
       style={{
         left: -size / 2,
@@ -73,90 +86,120 @@ function CardFace({ index, size, radius }: { index: number; size: number; radius
         borderRadius: radius,
         boxShadow: "0 20px 60px rgba(0,0,0,0.20)",
       }}
+      whileHover={hoverable ? { y: -8, transition: { duration: 0.25, ease: hoverEase } } : undefined}
     >
       <Image
         src={cardImages[index]}
         alt=""
         fill
-        sizes="440px"
+        sizes="400px"
         priority
         draggable={false}
         className="select-none"
         style={{ objectFit: "cover" }}
       />
-    </div>
+    </motion.div>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Intro (Section 1, scroll ≈ 0)                                              */
+/*  Intro: deal from the deck                                                  */
 /* -------------------------------------------------------------------------- */
 
-const introDelay = 0.8;
-const introDuration = 0.72; // rise from below centre to the hero row
-const travelToRightDuration = 0.6; // fly to slot 6 (rightmost)
-const sweepLeftDuration = 1.6; // sweep across to slot 0 (leftmost)
-const totalDuration = introDuration + travelToRightDuration + sweepLeftDuration;
-const sweepStart = introDelay + introDuration + travelToRightDuration;
+const LEAD_RISE_DELAY = 0.35;
+const LEAD_RISE_DURATION = 0.6;
+const DECK_START = 0.75;
+const DEAL_START = 1.1;
+const DEAL_STAGGER = 0.035;
 
-/** When the lead card passes each slot, reveal it (inverting smoothEase). */
-const revealDelays = fanSlots.map((slot, index) => {
-  if (index === 0) return 0;
-  const progress = (slot.x - fanSlots[6].x) / (fanSlots[0].x - fanSlots[6].x);
-  return sweepStart + getTimeForProgress(progress, smoothEase) * sweepLeftDuration;
-});
+/**
+ * One card of the intro. The lead rises to the centre; the rest fade in as a
+ * deck underneath it; then every card springs out to its fan slot, the ones
+ * travelling furthest leaving last.
+ */
+function DealCard({ g, index, startedAt, onDealt }: { g: Geometry; index: number; startedAt: number; onDealt?: () => void }) {
+  const controls = useAnimationControls();
+  const isLead = index === LEAD;
+  const depth = LEAD - index; // 0 = top of the deck
+  const center = { x: g.vp.w / 2, y: g.heroRowY };
+  const target = fanPose(g, index);
+  const deck = {
+    x: center.x + 2 * depth * g.k,
+    y: center.y + 2 * depth * g.k,
+    rotate: isLead ? 0 : depth % 2 ? 1.5 : -1.5,
+  };
 
-function IntroOverlay({ g, onDone }: { g: Geometry; onDone: () => void }) {
-  const revealed = useRef(new Set<number>());
-  const slot0 = fanPose(g, 0);
-  const slot6 = fanPose(g, 6);
+  useEffect(() => {
+    let cancelled = false;
+    const elapsed = () => (performance.now() - startedAt) / 1000;
+
+    void (async () => {
+      if (isLead) {
+        await controls.start({
+          x: center.x,
+          y: center.y,
+          rotate: 0,
+          scale: 1,
+          opacity: 1,
+          transition: { delay: LEAD_RISE_DELAY, duration: LEAD_RISE_DURATION, ease: smoothEase },
+        });
+      } else {
+        await controls.start({
+          opacity: 1,
+          scale: 1,
+          transition: { delay: DECK_START + (depth - 1) * 0.03, duration: 0.3, ease: "easeOut" },
+        });
+      }
+      if (cancelled) return;
+
+      const dealAt = DEAL_START + depth * DEAL_STAGGER;
+      await controls.start({
+        x: target.x,
+        y: target.y,
+        rotate: target.rotate,
+        transition: { ...dealSpring, delay: Math.max(0, dealAt - elapsed()) },
+      });
+      if (!cancelled) onDealt?.();
+    })();
+
+    return () => {
+      cancelled = true;
+      controls.stop();
+    };
+    // Runs once per mount; geometry changes remount the overlay via its key.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <div className="pointer-events-none fixed inset-0" style={{ zIndex: 5 }} aria-hidden="true">
-      {[1, 2, 3, 4, 5, 6].map((index) => {
-        const pose = fanPose(g, index);
-        const quick = revealed.current.has(index);
-        return (
-          <motion.div
-            key={index}
-            className="absolute left-0 top-0"
-            style={{ zIndex: fanSlots[index].z, x: pose.x, y: pose.y, rotate: pose.rotate, scale: pose.scale }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={
-              quick
-                ? { duration: 0.25, ease: hoverEase }
-                : { delay: revealDelays[index], duration: index <= 3 ? 0.06 : 0.18, ease: "easeOut" }
-            }
-            onAnimationComplete={() => revealed.current.add(index)}
-          >
-            <CardFace index={index} size={g.size} radius={18 * g.k} />
-          </motion.div>
-        );
-      })}
+    <motion.div
+      className="absolute left-0 top-0"
+      style={{ zIndex: fanSlots[index].z }}
+      initial={
+        isLead
+          ? { x: center.x, y: center.y + 60 * g.k, rotate: -4, scale: 0.85, opacity: 0 }
+          : { ...deck, scale: 0.96, opacity: 0 }
+      }
+      animate={controls}
+    >
+      <CardFace index={index} size={g.size} radius={18 * g.k} />
+    </motion.div>
+  );
+}
 
-      {/* Lead card: rise → fly to the rightmost slot → sweep to the leftmost. */}
-      <motion.div
-        className="absolute left-0 top-0"
-        style={{ zIndex: 10 }}
-        initial={{ x: g.vp.w / 2, y: g.vp.h / 2 + 180, rotate: 0, scale: 0.3, opacity: 0 }}
-        animate={{
-          x: [g.vp.w / 2, g.vp.w / 2, slot6.x, slot0.x],
-          y: [g.vp.h / 2 + 180, g.heroRowY, slot6.y, slot0.y],
-          rotate: [0, 0, slot6.rotate, slot0.rotate],
-          scale: [0.3, 1, slot6.scale, slot0.scale],
-          opacity: [0, 1, 1, 1],
-        }}
-        transition={{
-          delay: introDelay,
-          duration: totalDuration,
-          times: [0, introDuration / totalDuration, (introDuration + travelToRightDuration) / totalDuration, 1],
-          ease: [smoothEase, smoothEase, smoothEase],
-        }}
-        onAnimationComplete={onDone}
-      >
-        <CardFace index={0} size={g.size} radius={18 * g.k} />
-      </motion.div>
+function IntroOverlay({ g, onDone }: { g: Geometry; onDone: () => void }) {
+  const [startedAt] = useState(() => performance.now());
+  return (
+    <div className="pointer-events-none fixed inset-0" style={{ zIndex: 5 }} aria-hidden="true">
+      {fanSlots.map((_, index) => (
+        <DealCard
+          key={index}
+          g={g}
+          index={index}
+          startedAt={startedAt}
+          // Slot 0 travels furthest and deals last, so its landing ends the intro.
+          onDealt={index === 0 ? onDone : undefined}
+        />
+      ))}
     </div>
   );
 }
@@ -199,9 +242,8 @@ function ScrollLinkedCard({
       style={{ x, y, rotate, scaleX: scale, scaleY: scale, zIndex: hovered ? 30 : z }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      whileHover={{ transition: { duration: 0.2, ease: hoverEase } }}
     >
-      <CardFace index={index} size={g.size} radius={18 * g.k} />
+      <CardFace index={index} size={g.size} radius={18 * g.k} hoverable />
     </motion.div>
   );
 }
@@ -301,7 +343,15 @@ export default function ScrollCards({ containerRef }: { containerRef: RefObject<
 
   if (!geometry) return null;
 
-  if (!introDone) return <IntroOverlay g={geometry} onDone={() => setIntroDone(true)} />;
+  if (!introDone) {
+    return (
+      <IntroOverlay
+        key={`${geometry.vp.w}x${geometry.vp.h}:${Math.round(geometry.heroRowY)}`}
+        g={geometry}
+        onDone={() => setIntroDone(true)}
+      />
+    );
+  }
 
   // Same element either way — only its positioning changes — so the seven
   // cards stay mounted and never visibly reset when crossing into Section 2.

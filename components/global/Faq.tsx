@@ -2,7 +2,7 @@ import Text from "@/components/fundations/elements/Text";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 import { Plus } from "@/components/fundations/icons";
 
-const faqs = [
+export const faqs = [
   {
     question: "What is Curatit?",
     answer:
