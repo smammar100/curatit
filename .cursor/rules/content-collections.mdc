@@ -1,0 +1,21 @@
+---
+description: Carbon content collections — Zod schemas, image(), frontmatter templates
+globs:
+  - src/content/**
+  - src/content.config.ts
+alwaysApply: false
+---
+
+# Content collections (Carbon)
+
+- **Config source of truth:** `src/content.config.ts` — collection names `legal`, `store`, `sites`, `posts`.
+- **Image fields:** Use Astro’s `image()` shape: `url` must resolve to a real asset (existing entries use `/src/images/...` paths). Don’t break `image()` by switching to raw strings incompatible with the schema helper.
+- **IDs:** Entry `id` is the filename without `.md`/`.mdx`; URLs use these ids in `[...slug]` routes (e.g. `posts/1.md` → blog post slug `1`).
+- **Before changing schemas:** Every new required field must be satisfied in all existing markdown files; optional fields are safer. Updating Zod without updating `src/pages` / layouts that read `entry.data` will fail typecheck or runtime.
+
+**Copy-paste templates (real files):**
+
+- Legal: `src/content/legal/terms.md` — `page`, `pubDate`
+- Store: `src/content/store/1.md` — price, title, preview, checkout, license, highlights, features, description, image, optional gallery
+- Sites: `src/content/sites/1.md` — live, title, tagline, description, thumbnail, optional details, tags, optional isNew
+- Blog: `src/content/posts/1.md` — title, pubDate, description, image, tags
