@@ -2,43 +2,20 @@
 
 import { useRef, type ReactNode } from "react";
 import { MotionConfig } from "framer-motion";
-import Hero from "./Hero";
-import ScrollCards from "./ScrollCards";
+import type { LandingLibrary } from "@/lib/services/creatives";
 import ClosingCta from "./ClosingCta";
-import HowItWorks from "./HowItWorks";
+import Details from "./Details";
+import FeatureRows from "./FeatureRows";
+import Hero from "./Hero";
 import LandingFaq from "./LandingFaq";
 import LibraryShowcase from "./LibraryShowcase";
+import ScrollCards from "./ScrollCards";
 import SectionTwo from "./SectionTwo";
-import { colors } from "./tokens";
-import type { LandingLibrary } from "@/lib/services/creatives";
-
-/** Soft grey blobs fixed behind everything. */
-function Blobs() {
-  const soft = "radial-gradient(circle, rgba(180,180,180,0.12) 0%, transparent 70%)";
-  return (
-    <div className="pointer-events-none fixed inset-0" style={{ zIndex: 0 }} aria-hidden="true">
-      <div className="absolute" style={{ top: "5%", left: "8%", width: 300, height: 300, background: soft, filter: "blur(40px)" }} />
-      <div className="absolute" style={{ top: "8%", right: "10%", width: 250, height: 250, background: soft, filter: "blur(40px)" }} />
-      <div
-        className="absolute"
-        style={{
-          top: "30%",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: 600,
-          height: 400,
-          background: "radial-gradient(circle, rgba(160,160,160,0.08) 0%, transparent 70%)",
-          filter: "blur(60px)",
-        }}
-      />
-    </div>
-  );
-}
 
 /**
- * Scroll-driven landing page: three full-height sections in one container,
- * with a global card overlay that travels from the hero fan into the
- * Section 2 cascade.
+ * Landing page. The hero cards deal out of a deck, then follow the scroll into
+ * Section 2's cascade. Below that, sections show the real product: visitor-driven
+ * demos, the library itself, and the details that make it safe to share.
  */
 export default function Landing({
   signedIn,
@@ -55,20 +32,20 @@ export default function Landing({
     <MotionConfig reducedMotion="user">
       <div
         ref={containerRef}
-        className="relative"
+        className="relative bg-surface"
         // `clip` (not `hidden`) stops the cascade's right edge from causing a
         // horizontal scrollbar without creating a new scroll container.
-        style={{ background: colors.page, overflowX: "clip" }}
+        style={{ overflowX: "clip" }}
       >
-        <Blobs />
         {nav}
         <ScrollCards containerRef={containerRef} />
         <Hero signedIn={signedIn} />
         <SectionTwo signedIn={signedIn} />
-        <HowItWorks library={library} />
+        <FeatureRows library={library} signedIn={signedIn} />
+        <Details />
         <LibraryShowcase library={library} signedIn={signedIn} />
         <LandingFaq />
-        <ClosingCta signedIn={signedIn} />
+        <ClosingCta library={library} signedIn={signedIn} />
       </div>
     </MotionConfig>
   );

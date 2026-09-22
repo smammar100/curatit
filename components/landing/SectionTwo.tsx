@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { useInView } from "framer-motion";
 import Tag from "./Tag";
 import Button from "@/components/fundations/elements/Button";
 import { colors } from "./tokens";
@@ -12,17 +12,11 @@ const lines: { words: string[]; color: string }[] = [
   { words: ["for", "every", "brief."], color: colors.ink },
 ];
 
-const blurIn = {
-  initial: { opacity: 0, filter: "blur(8px)", y: 16 },
-  whileInView: { opacity: 1, filter: "blur(0px)", y: 0 },
-  viewport: { once: true, margin: "-80px" },
-};
 
 export default function SectionTwo({ signedIn }: { signedIn: boolean }) {
   const sectionRef = useRef<HTMLElement>(null);
   // Tags pop in only once the cascade is fully on screen.
   const inView = useInView(sectionRef, { amount: 0.95 });
-  let wordIndex = 0;
 
   return (
     <section
@@ -33,14 +27,7 @@ export default function SectionTwo({ signedIn }: { signedIn: boolean }) {
       style={{ background: colors.page, minHeight: "calc(100vh - 30px)" }}
     >
       <div className="relative z-10 w-full max-w-[520px] pt-8">
-        <motion.div
-          className="mb-5 text-xs font-medium uppercase"
-          style={{ letterSpacing: 2.5, color: colors.eyebrow }}
-          {...blurIn}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
-          RESEARCH BOARDS
-        </motion.div>
+        <p className="mb-5 text-xs font-medium uppercase tracking-[0.2em] text-ink-subtle">Research boards</p>
 
         <h2
           className="m-0 font-display font-light"
@@ -48,48 +35,24 @@ export default function SectionTwo({ signedIn }: { signedIn: boolean }) {
         >
           {lines.map((line, lineIndex) => (
             <span key={lineIndex} className="block" style={{ color: line.color }}>
-              {line.words.map((word) => {
-                const delay = wordIndex++ * 0.06;
-                return (
-                  <motion.span
-                    key={word}
-                    className="inline-block"
-                    style={{ marginRight: "0.25em" }}
-                    initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
-                    whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                    viewport={{ once: true, margin: "-80px" }}
-                    transition={{ duration: 0.5, ease: "easeOut", delay }}
-                  >
-                    {word}
-                  </motion.span>
-                );
-              })}
+              {line.words.join(" ")}
             </span>
           ))}
         </h2>
 
-        <motion.p
-          className="mt-7 max-w-[340px] text-sm"
-          style={{ color: colors.body, lineHeight: 1.65 }}
-          {...blurIn}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
-        >
+        <p className="mt-7 max-w-[340px] text-sm leading-relaxed text-ink-muted">
           Collect posts for a campaign, note what to adapt, and send a read-only link your client can open without an
           account.
-        </motion.p>
+        </p>
 
-        <motion.div
-          className="mt-12 flex flex-wrap gap-3"
-          {...blurIn}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.7 }}
-        >
+        <div className="mt-12 flex flex-wrap gap-2">
           <Button isLink href={signedIn ? "/boards" : "/signup"} size="base" variant="default">
             {signedIn ? "Open your boards" : "Get access"}
           </Button>
           <Button isLink href="/pricing" size="base" variant="muted">
             See pricing
           </Button>
-        </motion.div>
+        </div>
       </div>
 
       <Tag

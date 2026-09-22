@@ -54,6 +54,27 @@ function Swatches({ title, swatches }: { title: string; swatches: typeof accent 
   );
 }
 
+
+// Semantic tokens: what components use. Class names written in full for Tailwind.
+const semantic = [
+  { className: "bg-surface ring-1 ring-line", name: "surface", use: "Page background" },
+  { className: "bg-surface-sunken", name: "surface-sunken", use: "Panels, muted buttons" },
+  { className: "bg-surface-inset", name: "surface-inset", use: "Wells, hover on sunken" },
+  { className: "bg-ink", name: "ink", use: "Primary text" },
+  { className: "bg-ink-muted", name: "ink-muted", use: "Secondary text" },
+  { className: "bg-ink-subtle", name: "ink-subtle", use: "Captions, metadata" },
+  { className: "bg-line ring-1 ring-line-strong", name: "line", use: "Borders and dividers (alpha)" },
+  { className: "bg-brand", name: "brand", use: "Primary accent actions" },
+  { className: "bg-brand-hover", name: "brand-hover", use: "color-mix of brand + black" },
+  { className: "bg-brand-soft", name: "brand-soft", use: "Suggestion chips, highlights" },
+  { className: "bg-disabled", name: "disabled", use: "Disabled fills (not opacity)" },
+];
+
+const depth = [
+  { className: "shadow-card", name: "shadow-card", use: "Cards and inputs: three layers" },
+  { className: "shadow-window", name: "shadow-window", use: "Windows and popovers" },
+];
+
 export default function ColorsPage() {
   return (
     <>
@@ -70,6 +91,39 @@ export default function ColorsPage() {
             <Swatches title="Accent" swatches={accent} />
             <Swatches title="Base" swatches={base} />
           </div>
+        </Wrapper>
+      </section>
+      <section>
+        <Wrapper variant="standard" className="pb-32 pt-16">
+          <Text tag="h2" variant="displaySM" className="font-display font-light text-ink">
+            Semantic tokens
+          </Text>
+          <p className="mt-2 max-w-xl text-sm text-ink-muted">
+            Components use these, never palette steps directly, so a palette change doesn&rsquo;t mean hunting through
+            the codebase.
+          </p>
+          <ul className="mt-8 grid grid-cols-1 gap-x-8 gap-y-3 md:grid-cols-2">
+            {semantic.map((token) => (
+              <li key={token.name} className="flex items-center gap-3">
+                <span className={`size-10 shrink-0 rounded-lg ${token.className}`} />
+                <span className="text-sm">
+                  <code className="font-mono text-ink">{token.name}</code>
+                  <span className="text-ink-subtle"> · {token.use}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <ul className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2">
+            {depth.map((token) => (
+              <li key={token.name} className="rounded-lg bg-surface-sunken p-8">
+                <div className={`h-20 rounded-lg bg-surface ring-1 ring-line ${token.className}`} />
+                <p className="mt-4 text-sm">
+                  <code className="font-mono text-ink">{token.name}</code>
+                  <span className="text-ink-subtle"> · {token.use}</span>
+                </p>
+              </li>
+            ))}
+          </ul>
         </Wrapper>
       </section>
     </>

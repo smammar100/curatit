@@ -5,6 +5,7 @@ import Button from "@/components/fundations/elements/Button";
 import Text from "@/components/fundations/elements/Text";
 import Tag from "./Tag";
 import { colors, jelly, smoothEase } from "./tokens";
+import { useIntroSkipped } from "./useIntro";
 
 const paragraph =
   "Real organic brand posts, reviewed by editors. Search by brief, save the best references to private boards, and share them with your client.";
@@ -18,11 +19,14 @@ const lines = [
 ];
 
 export default function Hero({ signedIn }: { signedIn: boolean }) {
+  // After the first visit this session, render settled instead of replaying the intro.
+  const skipped = useIntroSkipped();
+  const from = <T,>(state: T) => (skipped ? false : state);
   let wordIndex = 0;
 
   return (
     <section className="relative flex min-h-screen justify-center overflow-hidden px-8">
-      <div className="flex w-full flex-col items-center pt-[140px] text-center">
+      <div key={skipped ? "settled" : "intro"} className="flex w-full flex-col items-center pt-[140px] text-center">
         <h1
           className="max-w-[1100px] font-display font-light text-base-900 text-balance"
           style={{ fontSize: "clamp(44px, 7.5vw, 96px)", lineHeight: 1 }}
@@ -36,7 +40,7 @@ export default function Hero({ signedIn }: { signedIn: boolean }) {
                     key={word}
                     className="inline-block"
                     style={{ marginRight: "0.25em" }}
-                    initial={blurWord}
+                    initial={from(blurWord)}
                     animate={clearWord}
                     transition={{ duration: 0.5, ease: smoothEase, delay }}
                   >
@@ -54,7 +58,7 @@ export default function Hero({ signedIn }: { signedIn: boolean }) {
             color={colors.accent}
             style={{ left: "max(8px, calc(50% - 320px))", top: -12, zIndex: 20 }}
             tail={{ side: "left", offset: 16, near: 8, far: 4 }}
-            motionProps={{ initial: { opacity: 0 }, animate: jelly, transition: { duration: 0.8, delay: 2.0 } }}
+            motionProps={{ initial: from({ opacity: 0 }), animate: jelly, transition: { duration: 0.8, delay: 2.0 } }}
           >
             #product-launch
           </Tag>
@@ -62,7 +66,7 @@ export default function Hero({ signedIn }: { signedIn: boolean }) {
             color={colors.dark}
             style={{ right: "max(8px, calc(50% - 420px))", top: -20, zIndex: 20 }}
             tail={{ side: "right", offset: 16, near: 8, far: 4 }}
-            motionProps={{ initial: { opacity: 0 }, animate: jelly, transition: { duration: 0.8, delay: 2.15 } }}
+            motionProps={{ initial: from({ opacity: 0 }), animate: jelly, transition: { duration: 0.8, delay: 2.15 } }}
           >
             #editorial
           </Tag>
@@ -74,7 +78,7 @@ export default function Hero({ signedIn }: { signedIn: boolean }) {
               key={index}
               className="inline-block"
               style={{ marginRight: "0.25em" }}
-              initial={blurWord}
+              initial={from(blurWord)}
               animate={clearWord}
               transition={{ duration: 0.4, ease: smoothEase, delay: 1.6 + index * 0.02 }}
             >
@@ -85,7 +89,7 @@ export default function Hero({ signedIn }: { signedIn: boolean }) {
 
         <motion.div
           className="mt-7 flex flex-wrap justify-center gap-2 pb-20"
-          initial={{ opacity: 0, y: 20 }}
+          initial={from({ opacity: 0, y: 20 })}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: smoothEase, delay: 1.9 }}
         >

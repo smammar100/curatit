@@ -22,6 +22,20 @@ Copy everything under **The prompt** into Claude Code from the repository root.
   `lib/auth.ts` and renders `<Landing signedIn nav={<Navigation />} />` followed by `<Footer />`. Put client
   components in `components/landing/`. The landing sits outside the `app/(site)` route group, so it renders
   its own chrome.
+- **Design system — use the semantic tokens in `app/globals.css`** (`@theme inline`), never palette steps or hex
+  where a token exists: surfaces `bg-surface` / `bg-surface-sunken` / `bg-surface-inset`; text `text-ink` /
+  `text-ink-muted` / `text-ink-subtle`; lines `border-line` / `ring-line` (alpha, so they recede);
+  brand `bg-brand` / `hover:bg-brand-hover` (derived with `color-mix`) / `bg-brand-soft`; depth `shadow-card`
+  and `shadow-window` (layered, never one big shadow); disabled `bg-disabled` / `text-disabled-ink` (a token,
+  not opacity). Headings get `text-wrap: balance` and focus rings come from `:focus-visible` globally.
+- **Motion rules (from the marketing-pages and unslop skills):**
+  - No scroll-triggered fade-ins, anywhere. The only scroll-linked motion is the card choreography, which maps 1:1
+    to scroll position and reverses with it.
+  - No auto-advancing carousels or auto-playing demos. Every demo moves only when the visitor acts.
+  - The hero intro plays once per session: `useIntroSkipped()` in `components/landing/useIntro.ts` (sessionStorage,
+    decided once per page load and shared by the hero text and the cards).
+  - Hover transitions 150ms ease-out on listed properties; buttons have a pressed state (`active:scale-[0.97]`);
+    popovers scale from their trigger; exits are faster than entrances.
 - **Theme — use Carbon, never hard-coded colours or fonts:**
   - Type: headings use `font-display` (Hedvig Letters Serif) at `font-light`; body text uses the default
     sans (InterVariable). Use `Text` from `components/fundations/elements/Text.tsx` for body copy.
@@ -36,7 +50,7 @@ Copy everything under **The prompt** into Claude Code from the repository root.
   - Navigation and footer: the existing `components/navigation/Navigation.tsx` and
     `components/global/Footer.tsx`. Don't build a separate navbar.
 - **Copy:** Curatit's own words (below). Every button links to a real route, so there are no dead controls.
-- **Images:** the seven cards and three banner slides live in `public/landing/`. Render them with
+- **Images:** the seven hero cards live in `public/landing/`. Render them with
   `next/image` (`fill`, correct `sizes`), `alt=""` because they're decorative, and `draggable={false}`.
   They're third-party artwork (qclay.design): keep the licence note in `components/landing/tokens.ts`.
 - **Motion tokens** (`components/landing/tokens.ts`): `smoothEase = [0.22, 1, 0.36, 1]`,
@@ -55,21 +69,21 @@ Copy everything under **The prompt** into Claude Code from the repository root.
 ### 2. Page structure
 
 ```
-<Landing>                      relative container, bg-white, overflow-x: clip   ← containerRef
-  <Blobs />                    fixed z-0 decoration
+<Landing>                      relative container, bg-surface, overflow-x: clip   ← containerRef
   {nav}                        site Navigation (fixed, z-20)
   <ScrollCards />              global card overlay, z-5 (see §4)
   <Hero />                     section 1
   <SectionTwo />               section 2, data-section="two"
-  …further sections           see §7
+  <FeatureRows />              §7.1
+  <Details />                  §7.2
+  <LibraryShowcase />          §7.3
+  <LandingFaq />               §7.4
+  <ClosingCta />               §7.5
 </Landing>
 <Footer />                     outside the container so it doesn't affect scroll maths
 ```
 
-**Blobs** (`pointer-events-none fixed inset-0 z-0`): three radial-gradient blurs.
-(a) top 5%, left 8%, 300×300, `radial-gradient(circle, rgba(180,180,180,0.12), transparent 70%)`, blur 40px;
-(b) top 8%, right 10%, 250×250, the same gradient, blur 40px;
-(c) top 30%, left 50% (−50% translate), 600×400, `rgba(160,160,160,0.08)` to transparent at 70%, blur 60px.
+No decorative blobs or glows: nothing floats behind the hero.
 
 ### 3. Section 1 — Hero
 
@@ -160,11 +174,11 @@ transition with `hoverEase` over 0.25s.
 - `section#how-it-works[data-section="two"]`: `relative flex items-start overflow-hidden px-8 md:px-16 pt-20`,
   `min-height: calc(100vh − 30px)`. The left text column is 520px wide (`pt-8`); the right side stays empty
   for the cascade.
-- Eyebrow: `text-xs font-medium uppercase text-base-500`, letter-spacing 2.5px, text "RESEARCH BOARDS".
-  It blurs in on view (`once`, margin −80px).
+- Eyebrow: `text-xs font-medium uppercase tracking-[0.2em] text-ink-subtle`, text "Research boards". Static:
+  no scroll fade.
 - `h2` (`font-display font-light`, `clamp(40px, 5vw, 60px)`, line-height 1.05), three lines:
   "Search, save" (`text-base-900`), "& share references" (`text-accent-600`), "for every brief."
-  (`text-base-900`). Words blur in with a 0.06s stagger.
+  (`text-base-900`). Static text.
 - Paragraph (`text-sm text-base-600`, max-width 340px): "Collect posts for a campaign, note what to adapt,
   and send a read-only link your client can open without an account."
 - Buttons: `Button default` "Get access" → `/signup` (signed in: "Open your boards" → `/boards`);
@@ -187,52 +201,61 @@ transition with `hoverEase` over 0.25s.
 
 ### 7. After Section 2
 
-Four sections, designed from Mobbin references and built from **real library data**. `app/page.tsx` calls
-`landingLibrary()` from `lib/services/creatives.ts` (three covers and a count per category, plus one sample
-carousel's analysis) and passes it to `<Landing library={…} />`. Nothing here is a static screenshot.
+Everything below Section 2 shows **the real product with real library data**, built from references to
+Cursor's and ElevenLabs' landing pages (via Mobbin). `app/page.tsx` calls `landingLibrary()` from
+`lib/services/creatives.ts`, which returns: three example briefs with the results Curatit actually returns
+for each, one carousel's slides and analysis, three board references, per-category covers and counts, and a
+mosaic of covers for backdrops.
 
-Every section reveals on view: `{ opacity: 0, y: 24, filter: "blur(8px)" }` to rest, 0.6s, `smoothEase`,
-`once`, margin −80px. Horizontal padding is `px-8 md:px-16`; content is capped at `max-w-7xl`, centred.
+Shared pieces:
+- **`Backdrop`**: the art behind product windows, painted from the library's own covers (a 3×2 grid enlarged,
+  `blur-2xl`, slightly desaturated, under a `bg-surface/35` veil with a data-URI paper grain). The palette comes
+  from the content; there is no arbitrary gradient anywhere on the page.
+- **`AppWindow`**: `rounded-xl bg-surface shadow-window ring-1 ring-line`, with a 36px title bar holding three
+  neutral dots and a centred `text-[11px] text-ink-subtle` title. Contents are real-size UI (12–14px text),
+  never thumbnail-scale mock-ups.
+- **The signature motif:** the hero's chat-bubble tag with a triangular tail reappears as the annotation in
+  the detail demo. Use it only there and in the hero and Section 2.
 
-**7.1 How it works** (refs: FLORA numbered panels; Kastle serif header).
-- Top padding `pt-40 lg:pt-64`, so the pinned cascade (whose lowest card sits about 250px into this section)
-  scrolls past without covering the header.
-- Centred header: an outlined eyebrow pill "HOW IT WORKS" (`ring-1 ring-base-200`, uppercase, 2.5px
-  tracking), `h2` `displayLG font-display font-light` "From brief to board, *in three steps.*" (the second
-  clause in `text-accent-600`), and a one-line `text-base-600` subhead.
-- Three columns (`lg:grid-cols-3`, `gap-8`), staggered 0.08s. Each is a `rounded-lg bg-base-50 p-8` panel,
-  22rem tall, with a large serif numeral (`text-5xl text-base-300`) above a small slice of real product UI,
-  then a `font-medium` title and a `text-sm text-base-600` description underneath:
-  - **01 Search by brief:** a search field showing "finance carousels explaining a feature", three accent
-    "+ Category / + Media type / + Objective" chips, and three real covers.
-  - **02 Understand the pattern:** one real carousel cover beside divided rows (Objective, Structure,
-    Style, Narrative) from its analysis, and "Brand — hook" underneath.
-  - **03 Build and share the board:** a mini board card with a title, a "Link active · 7 days" chip,
-    four covers, and a private-note line.
+**7.1 Feature rows** (Cursor-style). `pt-40 lg:pt-64` so the pinned cascade scrolls clear. Three rows with
+unequal treatment, because the features are unequal:
+- Each row has a statement in serif `text-2xl md:text-3xl font-light`: the claim in `text-ink` followed by
+  the explanation in `text-ink-subtle` at the same size, then a `text-brand` link with "→".
+- The visual is a `rounded-2xl` stage with a `Backdrop` and an `AppWindow` inside (`p-5 sm:p-10 lg:p-14`),
+  wrapped in `role="group"` with an `aria-label`.
+1. **Search by brief** (full width; statement above, window `max-w-3xl` centred). `SearchDemo`: a search
+   field, "Read as" chips (`bg-brand-soft`), and a 3×2 grid of real results with "Brand — hook" captions.
+   A footer bar offers the three briefs as pill buttons. Choosing one types it into the field (22ms per
+   character), then chips and results fade in with a 40ms stagger. Nothing happens until the visitor clicks.
+2. **See why it works** (window left 7fr, statement right 4fr). `DetailDemo`: slide viewer on
+   `bg-surface-sunken` with previous/next buttons and a tabular "n / N" counter. The current step's name
+   appears as a `bg-brand` chat-bubble annotation. The right pane has clickable narrative steps (the current
+   one is dark) and analysis rows (Objective, Format, Structure, Visual style, Why it's here).
+3. **Hand over a board** (statement left 4fr, window right 7fr). `BoardDemo`: board title in serif, a
+   private/shared status line, and three references with notes. The Share button opens a popover that scales
+   from its top-right origin (exit faster, ease-in): "Create link · 7 days" → a link field plus a copy button
+   that shows a check for 1.5s → "Revoke link" returns the board to private.
 
-**7.2 Inside the library** (refs: Melius fanned stack; MasterClass category grid).
-- Header row: eyebrow "INSIDE THE LIBRARY", serif `h2` "Six categories, studied closely.", and a right-aligned
-  `text-sm` paragraph explaining the narrow-and-deep launch.
-- A `sm:grid-cols-2 lg:grid-cols-3` grid of category tiles. Each is a `h-72 rounded-lg bg-base-50` panel
-  holding that category's three covers as a fanned stack (`w-32`, rest poses x −18/+18/0 and rotate
-  −6°/+6°/0°). On hover or focus it spreads to x −64/+64/0 and rotate −10°/+10°/0°, with the front card
-  lifted 6px, using `hoverEase` over 0.35s. Below: the category name and "N references →".
-- Links: `/library?category=<id>` when signed in, otherwise `/signup?next=` that URL.
-- A small `text-base-400` note under the grid saying the preview uses the demo library of fictional brands.
+**7.2 Details** (a compact list, not cards). Top border and `pt-16`; a narrow serif heading "Safe to share
+with clients." beside a 2×2 list. Each item is the actual UI fragment at real size (a Private pill, an
+"Expires in 7 days" pill, an attribution link, a "Removed · hidden everywhere" pill; each `role="img"` with an
+`aria-label`, no pointer events) over one sentence: the bold claim, then the detail.
 
-**7.3 FAQ** (refs: Fiasco / Amigo split layout).
-- `lg:grid-cols-[1fr_1.4fr]`. Left: eyebrow "QUESTIONS" and serif `h2` "The ones that tend to crop up."
-  Right: native `<details>` rows between `border-y divide-y divide-base-200`, a `text-base` question with a
-  `Plus` icon that rotates 45° when open, and a `text-sm text-base-600` answer.
-- Reuse the `faqs` array exported from `components/global/Faq.tsx`, so pricing and landing never drift.
+**7.3 Inside the library** (ElevenLabs-style cards). A header row with the serif `h2` "Six categories, studied
+closely." and a right-aligned paragraph. Cards are `rounded-xl bg-surface shadow-card ring-1 ring-line`: a
+240px art area (a `Backdrop` from that category's covers, plus three covers fanned at rest and spreading on
+hover with `hoverEase`), then a footer with the serif name, "N references · N objectives" (`tabular-nums`),
+and a single "Browse →" link stretched over the card with `after:absolute after:inset-0` (don't wrap the whole
+card in `<a>`). Links go to `/library?category=…`, or sign-up with `next`. Add a small demo-library note.
 
-**7.4 Closing call to action** (ref: The Leap).
-- A `rounded-lg bg-base-900` panel, `py-24`, centred, with a soft `accent-600` radial glow rising from the
-  bottom edge (blur-3xl, 40% opacity).
-- Two-line serif `h2` (`text-4xl md:text-5xl lg:text-6xl font-light`): "Reference, not copying." in white,
-  "Start with your next brief." in `text-base-400`. A `text-sm text-base-300` line about attribution.
-- One white button (`h-11 rounded-lg`): "Get access" → `/signup`, or "Open the library" → `/library`.
-- Entrance: `y: 40, blur(12px)` to rest, 0.8s.
+**7.4 FAQ.** `lg:grid-cols-[1fr_2fr]`: serif "Questions that tend to crop up." and native `<details>` rows
+(`divide-line`, a Plus icon rotating 45° when open, answers capped at 65ch). Reuse `faqs` from
+`components/global/Faq.tsx`.
+
+**7.5 Closing card** (Cursor-style). A `rounded-2xl bg-surface-sunken ring-1 ring-line` card, 5fr/7fr: serif
+"Start with your next brief.", one line of copy, then one primary button (Get access / Open the library) and a
+quiet secondary (See pricing, on `bg-surface` because the card is sunken). On the right, a decorative
+`AppWindow` library grid on a `Backdrop` (`role="img"`, labelled, no pointer events).
 
 ### 8. Done when
 
@@ -244,7 +267,10 @@ Every section reveals on view: `{ opacity: 0, y: 24, filter: "blur(8px)" }` to r
 - [ ] With `prefers-reduced-motion: reduce`, the page shows a settled fan and no intro.
 - [ ] At 375px wide: no horizontal scroll and nothing overlaps the headline or buttons.
 - [ ] Scrolled to the top of §7.1, the lowest cascade card sits above the "How it works" heading.
-- [ ] Library tiles show three real covers each and link to the filtered library (or to sign-up).
+- [ ] Library cards show three real covers each and link to the filtered library (or to sign-up).
+- [ ] No element on the page animates because it scrolled into view; demos move only when clicked.
+- [ ] Reloading within the same tab session shows the hero settled, with no intro replay.
+- [ ] `grep -rn "#[0-9a-fA-F]\{6\}\|rgba(" components/landing` finds nothing except inside `SlideArt` data.
 - [ ] The page uses no hard-coded hex colours or non-theme fonts (search `components/landing` for `#` and `font-`).
 
 ---
@@ -262,5 +288,7 @@ Every section reveals on view: `{ opacity: 0, y: 24, filter: "blur(8px)" }` to r
 | Up/down scroll buttons | Removed | Duplicates native scrolling; visual noise |
 | `overflow: hidden` implied | `overflow-x: clip` | Keeps scroll measurement and sticky working |
 | No reduced-motion or mid-page reload handling | Both specified | Accessibility and robustness |
-| Section 3 "Gateway to artist people" + autoplay banner | How it works, library showcase, FAQ, closing CTA (§7) | Explains the product with real data instead of stock artwork |
+| Section 3 "Gateway to artist people" + autoplay banner | Feature rows with live demos, details list, library cards, FAQ, closing card (§7) | Shows the real product instead of stock artwork |
+| Scroll fade-ins on every section, background blobs | None | Motion must map to input; decoration standing in for content |
+| Illustrations as thumbnail-scale mock-ups | Real-size app windows on backdrops painted from the library's covers | Show the product; derive the palette from content |
 | Third-party banner images | Removed; only the seven hero cards remain | Fewer assets to license before launch |

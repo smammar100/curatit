@@ -3,14 +3,19 @@
 @plugin "@tailwindcss/typography";
 @plugin "tailwind-scrollbar-hide";
 
-/*  Define your custom theme variables */
+/* ==========================================================================
+   Carbon foundation — palette (primitives)
+   Warm neutrals and a terracotta accent, both in OKLCH so lightness steps
+   are perceptually even. Components should prefer the semantic tokens below.
+   ========================================================================== */
 @theme {
-  /* Typography */
-  --font-sans: "InterVariable", sans-serif;
-  --font-display: "Hedvig Letters Serif", serif;
+  /* Type. Fallbacks are chosen to be close in x-height, to limit shift on load. */
+  --font-sans: "InterVariable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Hedvig Letters Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+
   --color-white: oklch(0.986 0.002 67.8);
 
-  /* Accent palette */
+  /* Accent */
   --color-accent-50: oklch(96.37% 0.014 34.3);
   --color-accent-100: oklch(92.11% 0.031 32.56);
   --color-accent-200: oklch(85.18% 0.06 35);
@@ -23,7 +28,7 @@
   --color-accent-900: oklch(22.26% 0.055 35.39);
   --color-accent-950: oklch(16.51% 0.033 41.46);
 
-  /* Base palette */
+  /* Base (warm neutrals) */
   --color-base-50: oklch(0.964 0.003 84.4);
   --color-base-100: oklch(0.922 0.007 88.56);
   --color-base-200: oklch(0.836 0.012 89.69);
@@ -35,16 +40,78 @@
   --color-base-800: oklch(0.309 0.004 84.54);
   --color-base-900: oklch(0.223 0.002 67.71);
   --color-base-950: oklch(0.177 0.002 106.5);
+
+  /* Motion */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@supports (font-variation-settings: normal) {
-  :root {
-    font-family: InterVariable, sans-serif;
+/* ==========================================================================
+   Semantic tokens — what components should use.
+   `inline` so utilities reference the primitive variables directly.
+   ========================================================================== */
+@theme inline {
+  /* Surfaces: page → sunken panel → inset well */
+  --color-surface: var(--color-white);
+  --color-surface-sunken: var(--color-base-50);
+  --color-surface-inset: var(--color-base-100);
+
+  /* Text */
+  --color-ink: var(--color-base-900);
+  --color-ink-muted: var(--color-base-600);
+  --color-ink-subtle: var(--color-base-500);
+
+  /* Lines recede: alpha black, not solid grey */
+  --color-line: oklch(0.2 0.01 60 / 0.08);
+  --color-line-strong: oklch(0.2 0.01 60 / 0.14);
+
+  /* Brand */
+  --color-brand: var(--color-accent-600);
+  --color-brand-hover: color-mix(in oklch, var(--color-accent-600) 88%, black);
+  --color-brand-soft: var(--color-accent-50);
+
+  /* Disabled is a token, not an opacity */
+  --color-disabled: var(--color-base-100);
+  --color-disabled-ink: var(--color-base-400);
+
+  /* Depth: layered shadows read as physical; one big shadow reads as pasted on */
+  --shadow-card: 0 1px 1px oklch(0.2 0.01 60 / 0.04), 0 2px 4px oklch(0.2 0.01 60 / 0.04),
+    0 8px 16px -4px oklch(0.2 0.01 60 / 0.06);
+  --shadow-window: 0 1px 1px oklch(0.2 0.01 60 / 0.05), 0 8px 16px -4px oklch(0.2 0.01 60 / 0.08),
+    0 32px 64px -12px oklch(0.2 0.01 60 / 0.22);
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Visible focus for keyboard users only. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent-500);
+    outline-offset: 2px;
   }
 }
 
-:root {
-  /* Typography */
-  font-feature-settings: "tnum" 1; /* Open 4 */
-}
+/* Numbers that must line up (counts, prices, dates in tables): add `tabular-nums`. */
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

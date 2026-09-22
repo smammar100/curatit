@@ -6,9 +6,9 @@ export type ButtonSize = "xxs" | "xs" | "sm" | "base" | "md" | "lg" | "xl";
 export type ButtonGap = "xs" | "sm" | "base" | "md" | "lg";
 
 const variantClass: Record<ButtonVariant, string[]> = {
-  default: ["text-white", "bg-base-800", "hover:bg-base-700", "focus:outline-base-700"],
-  accent: ["text-white", "bg-accent-600", "hover:bg-accent-500", "focus:outline-accent-500"],
-  muted: ["text-base-900", "bg-base-50", "hover:bg-base-100", "focus:outline-base-300"],
+  default: ["text-white", "bg-base-800", "hover:bg-base-700", "focus-visible:outline-base-700"],
+  accent: ["text-white", "bg-brand", "hover:bg-brand-hover", "focus-visible:outline-accent-500"],
+  muted: ["text-ink", "bg-surface-sunken", "hover:bg-surface-inset", "focus-visible:outline-base-300"],
   none: [],
 };
 
@@ -46,11 +46,19 @@ const baseClass = [
   "text-center",
   "font-medium",
   "items-center",
-  "duration-500",
-  "ease-in-out",
-  "transition-colors",
-  "focus:outline-2",
-  "focus:outline-offset-2",
+  "select-none",
+  // Listed properties at 150ms: hover should feel native, never like the UI is thinking.
+  "transition-[background-color,color,transform]",
+  "duration-150",
+  "ease-out",
+  // Pressed state, so the button responds under the finger.
+  "active:scale-[0.97]",
+  "focus-visible:outline-2",
+  "focus-visible:outline-offset-2",
+  // Disabled uses a token rather than opacity, so contrast stays predictable.
+  "disabled:pointer-events-none",
+  "disabled:bg-disabled",
+  "disabled:text-disabled-ink",
 ];
 
 type CommonProps = {

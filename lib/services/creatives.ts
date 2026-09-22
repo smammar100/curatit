@@ -533,45 +533,88 @@ export function quickSearchIndex(): QuickSearchItem[] {
   }));
 }
 
-/** Real library content for the public landing page's product previews. */
+/** Real library content for the public landing page: every preview there is live data. */
+type Cover = { art: SlideArt; alt: string };
+type Reference = Cover & { id: string; brand: string; hook: string; why: string[] };
+
 export type LandingLibrary = {
-  categories: { id: string; name: string; count: number; covers: { art: SlideArt; alt: string }[] }[];
+  /** Example briefs with the results Curatit actually returns for them. */
+  briefs: { query: string; readAs: string[]; total: number; results: Reference[] }[];
   sample: {
     brand: string;
     hook: string;
-    cover: { art: SlideArt; alt: string };
-    objective: string;
-    structure: string;
-    styles: string;
+    slides: Cover[];
     sequence: string[];
+    rows: { label: string; value: string }[];
   } | null;
+  board: Reference[];
+  categories: { id: string; name: string; count: number; objectives: number; covers: Cover[] }[];
+  /** Covers used to paint the product-window backdrops. */
+  mosaic: Cover[];
 };
 
+const LANDING_BRIEFS = [
+  "finance carousels explaining a feature",
+  "sportswear launches with bold typography",
+  "travel promotions with photography",
+];
+
+function toReference(item: CreativeSummary): Reference {
+  return { id: item.id, art: item.cover, alt: item.coverAlt, brand: item.brand.name, hook: item.hook ?? "", why: item.whyMatched };
+}
+
 export function landingLibrary(): LandingLibrary {
-  const categoriesWithCovers = filterDimensions.category.terms.map((term) => {
-    const result = searchCreatives({ filters: { category: [term.id] }, limit: 3 });
+  const briefs = LANDING_BRIEFS.map((query) => {
+    const result = searchCreatives({ query, limit: 6 });
     return {
-      id: term.id,
-      name: term.name,
-      count: result.total,
-      covers: result.items.map((item) => ({ art: item.cover, alt: item.coverAlt })),
+      query,
+      readAs: result.interpretations.map((term) => `${filterDimensions[term.dimension].label}: ${term.name}`),
+      total: result.total,
+      results: result.items.map(toReference),
     };
   });
 
-  const carousel = searchCreatives({ filters: { mediaType: ["carousel"], category: ["finance"] }, limit: 1 }).items[0];
+  const categories = filterDimensions.category.terms
+    .map((term) => {
+      const result = searchCreatives({ filters: { category: [term.id] }, limit: 24 });
+      return {
+        id: term.id,
+        name: term.name,
+        count: result.total,
+        objectives: new Set(result.items.map((item) => item.objectiveId)).size,
+        covers: result.items.slice(0, 3).map((item) => ({ art: item.cover, alt: item.coverAlt })),
+      };
+    })
+    .filter((category) => category.count > 0);
+
+  const pick = searchCreatives({ filters: { mediaType: ["carousel"], category: ["finance"], objective: ["educational"] }, limit: 1 })
+    .items[0];
   let sample: LandingLibrary["sample"] = null;
-  if (carousel) {
-    const detail = getCreative(carousel.id);
+  if (pick) {
+    const detail = getCreative(pick.id);
     sample = {
       brand: detail.brand.name,
       hook: detail.hook ?? "",
-      cover: { art: detail.cover, alt: detail.coverAlt },
-      objective: termName("objective", detail.objectiveId) ?? "",
-      structure: termName("narrative", detail.narrativeId) ?? "",
-      styles: detail.visualStyles.map((style) => termName("visualStyle", style)).join(", "),
+      slides: detail.slides.map((slide) => ({ art: slide.art, alt: slide.alt })),
       sequence: detail.narrativeSequence,
+      rows: [
+        { label: "Objective", value: termName("objective", detail.objectiveId) ?? "" },
+        { label: "Format", value: `${termName("format", detail.formatId)} · ${detail.slideCount} slides` },
+        { label: "Structure", value: termName("narrative", detail.narrativeId) ?? "" },
+        { label: "Visual style", value: detail.visualStyles.map((style) => termName("visualStyle", style)).join(", ") },
+        { label: "Why it’s here", value: detail.editorialReason ?? "" },
+      ],
     };
   }
 
-  return { categories: categoriesWithCovers.filter((category) => category.count > 0), sample };
+  // The board demo pairs specific posts with written notes; fall back to any sports posts.
+  const sports = searchCreatives({ filters: { category: ["sports"] }, limit: 24 }).items;
+  const byHook = (prefix: string) => sports.find((item) => item.hook?.startsWith(prefix));
+  const chosen = [byHook("Lighter than"), byHook("5:30am run club"), byHook("Your first 10K")].filter(
+    (item): item is CreativeSummary => Boolean(item)
+  );
+  const board = (chosen.length === 3 ? chosen : sports.slice(0, 3)).map(toReference);
+  const mosaic = searchCreatives({ limit: 24 }).items.map((item) => ({ art: item.cover, alt: item.coverAlt }));
+
+  return { briefs, sample, board, categories, mosaic };
 }

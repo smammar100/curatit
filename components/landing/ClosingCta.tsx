@@ -1,40 +1,57 @@
-"use client";
+import Button from "@/components/fundations/elements/Button";
+import SlideArt from "@/components/product/SlideArt";
+import type { LandingLibrary } from "@/lib/services/creatives";
+import AppWindow from "./AppWindow";
+import Backdrop from "./Backdrop";
 
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { smoothEase } from "./tokens";
+/** Closing card: the claim and one primary action beside the real library. */
+export default function ClosingCta({ library, signedIn }: { library: LandingLibrary; signedIn: boolean }) {
+  const covers = library.mosaic.slice(0, 6);
 
-/** Dark closing panel with a two-line serif headline and one action. */
-export default function ClosingCta({ signedIn }: { signedIn: boolean }) {
   return (
     <section className="px-8 pb-24 md:px-16">
-      <motion.div
-        className="relative mx-auto max-w-7xl overflow-hidden rounded-lg bg-base-900 px-8 py-24 text-center"
-        initial={{ opacity: 0, y: 40, filter: "blur(12px)" }}
-        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.8, ease: smoothEase }}
-      >
-        {/* Soft accent glow, echoing the page's background blobs. */}
+      <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 overflow-hidden rounded-2xl bg-surface-sunken p-8 ring-1 ring-line lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:p-12">
+        <div>
+          <h2 className="font-display text-4xl font-light leading-tight text-ink md:text-5xl">
+            Start with your next brief.
+          </h2>
+          <p className="mt-4 max-w-sm text-sm text-ink-muted">
+            Every post credits its brand and links to the original. Use the patterns to make work that&rsquo;s yours.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-2">
+            <Button isLink href={signedIn ? "/library" : "/signup"} size="base" variant="default">
+              {signedIn ? "Open the library" : "Get access"}
+            </Button>
+            {/* The panel is already sunken, so the secondary button sits on the page surface. */}
+            <Button
+              isLink
+              href="/pricing"
+              size="base"
+              variant="none"
+              className="bg-surface text-ink ring-1 ring-line hover:bg-surface-inset focus-visible:outline-base-300"
+            >
+              See pricing
+            </Button>
+          </div>
+        </div>
+
         <div
-          aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-full size-[40rem] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40 blur-3xl"
-          style={{ background: "radial-gradient(circle, var(--color-accent-600), transparent 65%)" }}
-        />
-        <h2 className="relative font-display text-4xl font-light leading-tight text-white text-balance md:text-5xl lg:text-6xl">
-          <span className="block">Reference, not copying.</span>
-          <span className="block text-base-400">Start with your next brief.</span>
-        </h2>
-        <p className="relative mx-auto mt-6 max-w-md text-sm text-base-300">
-          Every post credits its brand and links to the original. Use the patterns to make work that&rsquo;s yours.
-        </p>
-        <Link
-          href={signedIn ? "/library" : "/signup"}
-          className="relative mt-10 inline-flex h-11 items-center rounded-lg bg-white px-5 text-base font-medium text-base-900 transition-colors hover:bg-base-100 focus:outline-2 focus:outline-offset-2 focus:outline-white"
+          role="img"
+          aria-label="The Curatit library: a grid of brand posts"
+          className="pointer-events-none relative select-none overflow-hidden rounded-xl p-6 sm:p-10"
         >
-          {signedIn ? "Open the library" : "Get access"}
-        </Link>
-      </motion.div>
+          <Backdrop covers={library.mosaic} offset={3} />
+          <AppWindow title="Curatit — Library" className="relative">
+            <div className="grid grid-cols-3 gap-3 p-4">
+              {covers.map((cover, index) => (
+                <div key={index} className="overflow-hidden rounded-md shadow-card ring-1 ring-line">
+                  <SlideArt art={cover.art} alt="" />
+                </div>
+              ))}
+            </div>
+          </AppWindow>
+        </div>
+      </div>
     </section>
   );
 }

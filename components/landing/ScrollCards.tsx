@@ -23,6 +23,7 @@ import {
   hoverEase,
   smoothEase,
 } from "./tokens";
+import { useIntroSkipped } from "./useIntro";
 
 /* -------------------------------------------------------------------------- */
 /*  Geometry                                                                   */
@@ -77,14 +78,13 @@ function CardFace({
 }) {
   return (
     <motion.div
-      className="absolute overflow-hidden"
+      className="absolute overflow-hidden shadow-window"
       style={{
         left: -size / 2,
         top: -size / 2,
         width: size,
         height: size,
         borderRadius: radius,
-        boxShadow: "0 20px 60px rgba(0,0,0,0.20)",
       }}
       whileHover={hoverable ? { y: -8, transition: { duration: 0.25, ease: hoverEase } } : undefined}
     >
@@ -259,6 +259,7 @@ function ScrollLinkedCard({
  */
 export default function ScrollCards({ containerRef }: { containerRef: RefObject<HTMLDivElement | null> }) {
   const reduceMotion = useReducedMotion();
+  const introSeen = useIntroSkipped();
   const [vp, setVp] = useState<Viewport | null>(null);
   const [m, setM] = useState<Measurements>({ lockProgress: 0.5, scrollableHeight: 1, heroRowY: HERO_ROW_Y });
   const [introDone, setIntroDone] = useState(false);
@@ -313,7 +314,7 @@ export default function ScrollCards({ containerRef }: { containerRef: RefObject<
   // visitor starts scrolling before it finishes.
   useEffect(() => {
     if (introDone) return;
-    if (reduceMotion || window.scrollY > 10) {
+    if (reduceMotion || introSeen || window.scrollY > 10) {
       setIntroDone(true);
       return;
     }
@@ -322,7 +323,7 @@ export default function ScrollCards({ containerRef }: { containerRef: RefObject<
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [introDone, reduceMotion]);
+  }, [introDone, reduceMotion, introSeen]);
 
   useMotionValueEvent(scrollYProgress, "change", (value) => {
     const next = value >= m.lockProgress;
