@@ -1,55 +1,66 @@
+import Link from "next/link";
 import Logo from "@/components/assets/Logo";
-import Symbol from "@/components/assets/Symbol";
-import Text from "@/components/fundations/elements/Text";
-import Button from "@/components/fundations/elements/Button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
+
+const columns = [
+  {
+    title: "Product",
+    links: [
+      { href: "/library", text: "Library" },
+      { href: "/boards", text: "Boards" },
+      { href: "/pricing", text: "Pricing" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { href: "/about", text: "About" },
+      { href: "/blog", text: "Journal" },
+    ],
+  },
+  {
+    title: "Trust",
+    links: [
+      { href: "/legal/removal", text: "Request content removal" },
+      { href: "/legal/privacy", text: "Privacy" },
+      { href: "/legal/terms", text: "Terms" },
+    ],
+  },
+];
 
 export default function Footer() {
   return (
     <footer className="bg-base-50 overflow-hidden">
-      <Wrapper className="py-24">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center text-balance">
-            <Symbol className="inline-block size-12 text-base-900" />
-            <Text
-              tag="h3"
-              variant="displayLG"
-              className="text-base-900 font-display font-light mt-12"
-            >
-              Stay connected to the future of Curatit
-            </Text>
+      <Wrapper className="py-20">
+        <div className="grid grid-cols-2 gap-10 md:grid-cols-[2fr_1fr_1fr_1fr]">
+          <div className="col-span-2 md:col-span-1 max-w-xs">
+            <Logo className="text-3xl text-base-900" />
+            <p className="mt-3 text-sm text-base-600">
+              Curated organic brand posts, analysed and searchable — for teams researching real campaigns.
+            </p>
           </div>
-          <form className="flex flex-col gap-2 max-w-md mx-auto items-start sm:items-center mt-8">
-            <label className="sr-only" htmlFor="footer-email">
-              Email address
-            </label>
-            <input
-              id="footer-email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              className="block w-full px-4 py-2 text-xs leading-tight align-middle bg-white border border-transparent transition duration-300 ease-in-out focus:z-10 h-9 rounded-md text-base-500 ring-1 ring-base-200 placeholder-base-400 focus:border-accent-500 focus:ring-accent-100 focus:ring-2 focus:outline-none shadow-sm"
-              required
-            />
-            <Button size="sm" variant="accent" type="submit" className="w-full">
-              Subscribe
-            </Button>
-          </form>
-          <div className="flex flex-wrap gap-4 mt-12 justify-center">
-            <a href="#_" className="text-base-600 hover:text-accent-600">
-              Twitter
-            </a>
-            <a href="#_" className="text-base-600 hover:text-accent-600">
-              Pinterest
-            </a>
-            <a href="#_" className="text-base-600 hover:text-accent-600">
-              Instagram
-            </a>
-          </div>
+          {columns.map((column) => (
+            <div key={column.title}>
+              <p className="text-xs font-medium uppercase tracking-wide text-base-500">{column.title}</p>
+              <ul className="mt-3 space-y-2">
+                {column.links.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="text-sm text-base-700 hover:text-accent-600">
+                      {link.text}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
+        <p className="mt-16 text-xs text-base-500">
+          Posts belong to the brands that published them and are shown for research with attribution.
+        </p>
       </Wrapper>
-      <Logo className="text-base-100 mt-8 -mx-24 -mb-24" />
+      <div aria-hidden="true" className="select-none font-display leading-[0.8] text-base-100 text-[26vw] -mb-[4vw] px-4">
+        Curatit
+      </div>
     </footer>
   );
 }

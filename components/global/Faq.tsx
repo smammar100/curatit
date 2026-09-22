@@ -4,54 +4,39 @@ import { Plus } from "@/components/fundations/icons";
 
 const faqs = [
   {
-    question: "What is a website tool curation platform?",
+    question: "What is Curatit?",
     answer:
-      "A website tool curation platform is a site that collects and organizes the best tools available online to help users find resources for their specific needs, such as productivity, design, development, or marketing.",
+      "A curated library of organic brand posts from Instagram — statics and carousels — each with an editor-reviewed breakdown of its objective, structure, and visual approach. You search it by brief, save references to private boards, and share them.",
   },
   {
-    question: "How are the tools selected for curation?",
+    question: "Where do the posts come from?",
     answer:
-      "The tools are carefully selected based on their features, user reviews, popularity, and overall utility. Our team evaluates each tool to ensure it meets quality standards and provides value.",
+      "From public brand feeds in six launch categories, collected on a disclosed schedule and reviewed by editors before anything is published. Every post links back to its source and credits the brand. We don’t collect comments or personal profiles.",
   },
   {
-    question: "Can I suggest a tool to be added to the curation?",
+    question: "Is the library real-time?",
     answer:
-      "Yes, we encourage user suggestions! You can recommend tools through our 'Suggest a Tool' form. Each submission is reviewed to ensure it aligns with our platform’s focus and quality criteria.",
+      "No. Sources are checked on a schedule, and each post shows when it was published and when we last checked it. We don’t describe anything as live unless it is.",
   },
   {
-    question: "Are the tools on your website free to use?",
+    question: "Are posts organic or paid?",
     answer:
-      "Our curated tools include a mix of free, freemium, and paid options. Each tool listing clearly mentions its pricing model to help you decide which fits your needs.",
+      "They come from brand feeds. A post can also have been promoted, and we usually can’t know, so we label it as a brand-feed post with paid distribution unknown.",
   },
   {
-    question: "How do I know if a tool is trustworthy?",
+    question: "Who can see my boards?",
     answer:
-      "We provide detailed descriptions, reviews, and ratings for each tool. Additionally, tools are vetted for reliability, security, and user feedback before being listed on our platform.",
+      "Only you. Boards are private by default. If you create a share link, anyone holding it can view the board title and references until it expires or you revoke it — never your description or notes.",
   },
   {
-    question: "Do you provide tutorials or guides for the tools?",
+    question: "Can I use these posts as templates?",
     answer:
-      "Yes, for many tools, we offer links to official documentation, video tutorials, and user guides to help you get started quickly and efficiently.",
+      "No. Curatit is for reference and understanding, not copying another brand’s design. Use the patterns to inform original work.",
   },
   {
-    question: "Can I leave reviews or feedback on the tools listed?",
+    question: "How do I get content removed?",
     answer:
-      "Absolutely! We encourage users to leave reviews and feedback on tool pages. This helps others make informed decisions and ensures we maintain a high-quality curation.",
-  },
-  {
-    question: "Are there categories to help me find tools more easily?",
-    answer:
-      "Yes, tools are categorized by purpose, such as design, development, marketing, or productivity. You can also use our search function to find specific tools quickly.",
-  },
-  {
-    question: "Is there a cost to access the curated tools on your website?",
-    answer:
-      "Accessing our curated tool lists is completely free. However, individual tools may have their own pricing models, which are indicated in their descriptions.",
-  },
-  {
-    question: "Can I share curated tools with others?",
-    answer:
-      "Yes, each tool page has sharing options that allow you to easily send links to your colleagues, friends, or team members.",
+      "If you own or represent content on Curatit, use the removal page linked in the footer. We stop showing it immediately while we review the request.",
   },
 ];
 
@@ -64,7 +49,7 @@ export default function Faq() {
             Frequently Asked Questions
           </Text>
           <Text tag="p" variant="textBase" className="text-base-600 mt-4">
-            Everything you need to know about our platform.
+            What you should know before you start.
           </Text>
         </div>
         <Wrapper variant="narrow" className="mt-12">

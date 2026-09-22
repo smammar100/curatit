@@ -7,20 +7,20 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL("https://yourdomain.com"),
   title: {
-    default: "Curatit — No concepts. Just real websites.",
+    default: "Curatit — Creative intelligence for organic social",
     template: "%s — Curatit",
   },
   description:
-    "A curated collection of production websites worth studying — layout, hierarchy, interaction, and execution.",
-  keywords: ["design", "inspiration", "websites", "curation", "templates"],
+    "A curated, searchable library of organic brand posts, analysed by editors — for teams researching real campaigns.",
+  keywords: ["social media", "creative research", "brand content", "instagram carousels", "reference boards"],
   authors: [{ name: "Curatit" }],
   openGraph: {
     type: "website",
     siteName: "Curatit",
     locale: "en_US",
-    title: "Curatit — No concepts. Just real websites.",
+    title: "Curatit — Creative intelligence for organic social",
     description:
-      "A curated collection of production websites worth studying — layout, hierarchy, interaction, and execution.",
+      "A curated, searchable library of organic brand posts, analysed by editors — for teams researching real campaigns.",
   },
   twitter: {
     card: "summary_large_image",
@@ -38,6 +38,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className="scroll-smooth selection:bg-accent-50 selection:text-accent-500"
     >
       <head>

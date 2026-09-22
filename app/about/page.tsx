@@ -3,9 +3,16 @@ import Text from "@/components/fundations/elements/Text";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 
 export const metadata: Metadata = {
-  title: "Who we are",
-  description: "Curatit is a community-driven platform for designers, developers and makers.",
+  title: "About",
+  description: "Curatit helps creative teams find, understand, and use the best organic brand content.",
 };
+
+const notList = [
+  "A generic moodboard or Pinterest replacement.",
+  "A paid-ad spy tool.",
+  "A feed of automatically scraped posts — editors review everything.",
+  "An AI image generator, or a way to clone another brand’s design.",
+];
 
 export default function AboutPage() {
   return (
@@ -13,35 +20,32 @@ export default function AboutPage() {
       <Wrapper variant="standard" className="py-24 lg:pt-48">
         <Wrapper variant="narrow">
           <Text tag="h1" variant="displayLG" className="text-base-900 font-display font-thin">
-            Who we are
+            Creative intelligence for organic social
           </Text>
           <Wrapper variant="prose" className="mt-12">
             <p>
-              Curatit is a community-driven platform for designers, developers, and creative
-              professionals who take their craft seriously. It’s a place to stay current — from
-              design systems and typography to modern front-end tools and workflows.
+              Curatit helps creative teams find, understand, and use the best organic brand content. Social and brand
+              agencies spend hours scrolling feeds, screenshotting posts, and rebuilding the same reference boards. We
+              think that research deserves a proper tool.
             </p>
             <p>
-              Beyond resources, Curatit functions as a living creative index. Members share work,
-              exchange ideas, and learn from real-world experience. Curated collections, focused
-              articles, tutorials, and trend breakdowns are built to improve decision-making, not
-              just inspire it.
+              We collect strong posts from real brand feeds on a disclosed schedule, have editors review every one, and
+              describe each with a controlled vocabulary — objective, format, narrative structure, visual style — so you
+              can search by the brief you actually have.
             </p>
+            <h2>What Curatit is not</h2>
+            <ul>
+              {notList.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+            <h2>How we handle content</h2>
             <p>
-              Good work doesn’t happen in isolation. Curatit is designed to connect forward-thinking
-              creatives, encourage critical thinking, and push standards higher. Join the community
-              and use it to sharpen your skills, expand your perspective, and build better work.
+              Every post credits its brand and links to the original. We show when it was published and when we last
+              checked it. If you own content on Curatit and want it removed, we stop showing it immediately while we
+              review the request.
             </p>
           </Wrapper>
-          <div className="mt-12">
-            <Text className="text-base-600 italic">
-              &ldquo;Innovation is born from connection. Together, we create the future of
-              design.&rdquo;
-            </Text>
-            <Text tag="p" variant="textBase" className="text-base-900 mt-2 font-semibold">
-              — Jordan Miller, Founder of Curatit
-            </Text>
-          </div>
         </Wrapper>
       </Wrapper>
     </section>

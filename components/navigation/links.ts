@@ -1,13 +1,15 @@
 export type NavLink = { href: string; text: string };
 
-/** Quick access links, shared by the desktop and mobile navigations. */
-export const navLinks: NavLink[] = [
-  { href: "/system/overview", text: "Overview" },
-  { href: "/", text: "Websites" },
+/** Public links, always shown. */
+export const publicLinks: NavLink[] = [
   { href: "/pricing", text: "Pricing" },
-  { href: "/blog", text: "Blog" },
-  { href: "/store", text: "Store" },
-  { href: "/submit", text: "Submit" },
-  { href: "/advertise", text: "Sponsors" },
-  { href: "https://lexingtonthemes.com/templates/carbon", text: "Buy Curatit" },
+  { href: "/blog", text: "Journal" },
 ];
+
+/** Product links for signed-in members. */
+export const memberLinks: NavLink[] = [
+  { href: "/library", text: "Library" },
+  { href: "/boards", text: "Boards" },
+];
+
+export const adminLinks: NavLink[] = [{ href: "/admin", text: "Curation" }];

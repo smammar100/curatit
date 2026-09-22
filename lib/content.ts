@@ -26,42 +26,6 @@ export const legalSchema = z.object({
   pubDate: z.coerce.date(),
 });
 
-export const storeSchema = z.object({
-  price: z.string(),
-  title: z.string(),
-  preview: z.string(),
-  checkout: z.string(),
-  license: z.string(),
-  highlights: z.array(z.string()),
-  description: z.string(),
-  features: z.array(
-    z.object({
-      title: z.string(),
-      description: z.string(),
-    })
-  ),
-  image: imageSchema,
-  gallery: z.array(imageSchema).optional(),
-});
-
-export const sitesSchema = z.object({
-  live: z.string(),
-  title: z.string(),
-  tagline: z.string(),
-  description: z.string(),
-  isNew: z.boolean().optional(),
-  details: z
-    .array(
-      z.object({
-        label: z.string(),
-        value: z.string(),
-      })
-    )
-    .optional(),
-  thumbnail: imageSchema,
-  tags: z.array(z.string()).optional(),
-});
-
 export const postsSchema = z.object({
   title: z.string(),
   pubDate: z.coerce.date(),
@@ -72,8 +36,6 @@ export const postsSchema = z.object({
 
 const schemas = {
   legal: legalSchema,
-  store: storeSchema,
-  sites: sitesSchema,
   posts: postsSchema,
 } as const;
 

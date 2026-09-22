@@ -4,77 +4,52 @@ import Wrapper from "@/components/fundations/containers/Wrapper";
 
 export const metadata: Metadata = {
   title: "Overview",
-  description: "Every page in the Curatit theme, in one index.",
+  description: "Every page in Curatit, in one index.",
 };
 
 const pages = [
   {
-    title: "Static pages",
+    title: "Product",
     categories: [
       {
-        title: "Pages",
+        title: "Research",
         links: [
-          { href: "/", text: "Home" },
-          { href: "/about", text: "About" },
-          { href: "/404", text: "404" },
+          { href: "/library", text: "Library" },
+          { href: "/library?q=bold+typography+carousels", text: "Search results" },
+          { href: "/boards", text: "Boards" },
         ],
       },
       {
-        title: "Advertise",
-        links: [
-          { href: "/pricing", text: "Membership" },
-          { href: "/advertise", text: "Advertise" },
-        ],
+        title: "Operations",
+        links: [{ href: "/admin", text: "Curation (admin)" }],
       },
       {
-        title: "Forms",
+        title: "Account",
         links: [
           { href: "/signin", text: "Sign in" },
           { href: "/signup", text: "Sign up" },
-          { href: "/submit", text: "Submit" },
-        ],
-      },
-      {
-        title: "System",
-        links: [
-          { href: "/system/links", text: "Links" },
-          { href: "/system/buttons", text: "Buttons" },
-          { href: "/system/colors", text: "Colors" },
-          { href: "/system/typography", text: "Typography" },
-          { href: "https://lexingtonthemes.com/legal/license", text: "License" },
-          { href: "https://lexingtonthemes.com/legal/support", text: "Support" },
-          { href: "https://lexingtonthemes.com/documentation/", text: "Documentation" },
         ],
       },
     ],
   },
   {
-    title: "Content collections",
+    title: "Marketing",
     categories: [
       {
-        title: "Directory",
+        title: "Pages",
         links: [
-          { href: "/sites", text: "Home" },
-          { href: "/sites/site/1", text: "Details" },
-          { href: "/sites/tags", text: "Tag index" },
-          { href: "/sites/tags/design", text: "Tag category" },
+          { href: "/", text: "Home" },
+          { href: "/pricing", text: "Pricing" },
+          { href: "/about", text: "About" },
+          { href: "/404", text: "404" },
         ],
       },
       {
-        title: "Blog",
+        title: "Journal",
         links: [
           { href: "/blog", text: "Home" },
-          { href: "/blog/posts/1", text: "Details" },
           { href: "/blog/tags", text: "Tag index" },
-          { href: "/blog/tags/3d", text: "Tag category" },
           { href: "/rss.xml", text: "RSS" },
-        ],
-      },
-      {
-        title: "Store",
-        links: [
-          { href: "/store", text: "Home" },
-          { href: "/store/1", text: "Details" },
         ],
       },
       {
@@ -82,6 +57,16 @@ const pages = [
         links: [
           { href: "/legal/terms", text: "Terms" },
           { href: "/legal/privacy", text: "Privacy" },
+          { href: "/legal/removal", text: "Content removal" },
+        ],
+      },
+      {
+        title: "Design system",
+        links: [
+          { href: "/system/links", text: "Links" },
+          { href: "/system/buttons", text: "Buttons" },
+          { href: "/system/colors", text: "Colors" },
+          { href: "/system/typography", text: "Typography" },
         ],
       },
     ],

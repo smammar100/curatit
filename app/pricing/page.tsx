@@ -5,36 +5,41 @@ import Wrapper from "@/components/fundations/containers/Wrapper";
 import Faq from "@/components/global/Faq";
 
 export const metadata: Metadata = {
-  title: "Membership",
-  description: "Choose a plan to unlock deeper filtering, unlimited saves, and pro tools.",
+  title: "Pricing",
+  description: "Plans for designers, strategists, and agencies researching real brand campaigns.",
 };
 
+/**
+ * Test prices from the build plan's pricing experiment. They are hypotheses to
+ * validate with real offers, not settled pricing — update them in one place here.
+ */
 const plans = [
   {
     name: "Free",
-    description: "Get limited access to everything.",
-    priceStatic: "$0",
-    features: [
-      { label: "Bookmarks", value: "Save up to 5 favorites" },
-      { label: "Filters", value: "Basic filters for quick scans" },
-      { label: "Email", value: "Weekly inspiration roundup" },
-      { label: "Support", value: "Community help" },
-    ],
+    price: "$0",
+    period: "",
+    audience: "Evaluate the library.",
+    features: ["Search and filter the library", "Full post analysis", "Private boards with notes", "Read-only share links"],
+    cta: { label: "Create a free account", href: "/signup", variant: "muted" as const },
   },
   {
-    name: "Team",
-    description: "Get limited access to everything.",
-    priceMonthly: "$9",
-    priceAnnual: "$6",
-    features: [
-      { label: "Bookmarks & collections", value: "Unlimited for teams" },
-      { label: "Filters & tags", value: "Advanced + saved searches" },
-      { label: "Workspace", value: "Shared lists for teammates" },
-      { label: "Exports", value: "CSV / Notion ready" },
-      { label: "Support", value: "Priority replies" },
-    ],
+    name: "Individual",
+    price: "$12",
+    period: "/month",
+    audience: "For freelancers and individual designers.",
+    features: ["Everything in Free", "Higher search and board limits", "Priority on new categories", "Email support"],
+    cta: { label: "Start with Individual", href: "/signup?next=/pricing", variant: "accent" as const },
+    highlight: true,
   },
-] as const;
+  {
+    name: "Design partner",
+    price: "From $100",
+    period: "/month",
+    audience: "For agencies that want founder-supported research.",
+    features: ["Everything in Individual", "Research help on live briefs", "Input on categories and taxonomy", "Invoiced monthly"],
+    cta: { label: "Talk to us", href: "/signup?next=/pricing", variant: "default" as const },
+  },
+];
 
 export default function PricingPage() {
   return (
@@ -43,75 +48,44 @@ export default function PricingPage() {
         <Wrapper variant="standard" className="py-24 lg:pt-48">
           <div className="text-balance max-w-3xl mx-auto text-center">
             <Text tag="h1" variant="displayLG" className="text-base-900 font-display font-light">
-              <span className="block">Access the full library.</span>
-              <span className="block">Use it like a pro.</span>
+              Simple plans while we&rsquo;re in beta
             </Text>
             <Text tag="p" variant="textBase" className="text-base-600 mt-4">
-              Choose a plan to unlock deeper filtering, unlimited saves, and tools built for
-              designers who study real production websites—not theory.
+              Start free. Upgrade when Curatit becomes part of how you research briefs.
             </Text>
           </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-12">
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3 mt-12">
             {plans.map((plan) => (
               <div
                 key={plan.name}
-                className="flex flex-col h-full justify-between bg-base-50 rounded-lg p-8"
+                className={`flex flex-col justify-between rounded-lg p-8 ${plan.highlight ? "bg-base-900 text-white" : "bg-base-50"}`}
               >
-                <div className="flex flex-col gap-8">
-                  <div className="space-y-3">
-                    <Text
-                      tag="p"
-                      variant="displaySM"
-                      className="text-base-900 text-balance font-display font-light"
-                    >
-                      {plan.name}
-                    </Text>
-                    <Text tag="p" variant="textSM" className="text-base-600">
-                      {plan.description}
-                    </Text>
-                  </div>
-                  <div>
-                    {"priceStatic" in plan ? (
-                      <Text
-                        tag="p"
-                        variant="displayLG"
-                        className="text-base-900 font-display font-light"
-                      >
-                        {plan.priceStatic}
-                      </Text>
-                    ) : (
-                      <Text tag="p" variant="displayLG" className="text-base-900">
-                        <span className="tracking-tighter font-display font-light">
-                          {plan.priceMonthly ?? plan.priceAnnual ?? ""}
-                        </span>
-                        {plan.priceMonthly && (
-                          <span className="text-lg ml-1 text-base-700">/month</span>
-                        )}
-                      </Text>
-                    )}
-                  </div>
-                  <ul className="divide-y divide-base-200 mt-4">
-                    {plan.features.map((item) => (
-                      <li
-                        key={item.label}
-                        className="flex items-center justify-between py-3 text-base-800"
-                      >
-                        <Text tag="span" variant="textBase" className="text-base-800">
-                          {item.label}
-                        </Text>
-                        <Text tag="span" variant="textSM" className="text-base-500">
-                          {item.value}
-                        </Text>
+                <div>
+                  <p className={`font-display text-2xl ${plan.highlight ? "text-white" : "text-base-900"}`}>{plan.name}</p>
+                  <p className={`mt-2 text-sm ${plan.highlight ? "text-base-300" : "text-base-600"}`}>{plan.audience}</p>
+                  <p className="mt-8">
+                    <span className="font-display text-4xl lg:text-5xl font-light">{plan.price}</span>
+                    {plan.period && <span className={`ml-1 ${plan.highlight ? "text-base-300" : "text-base-600"}`}>{plan.period}</span>}
+                  </p>
+                  <ul className={`mt-8 divide-y ${plan.highlight ? "divide-base-700" : "divide-base-200"}`}>
+                    {plan.features.map((feature) => (
+                      <li key={feature} className={`py-3 text-sm ${plan.highlight ? "text-base-100" : "text-base-800"}`}>
+                        {feature}
                       </li>
                     ))}
                   </ul>
                 </div>
-                <Button size="base" variant="default" type="submit" className="w-fit mt-8">
-                  Get started
+                <Button isLink href={plan.cta.href} size="base" variant={plan.cta.variant} className="mt-8 w-full">
+                  {plan.cta.label}
                 </Button>
               </div>
             ))}
           </div>
+
+          <p className="mt-6 text-center text-xs text-base-500">
+            Team workspaces with shared boards are planned. We&rsquo;ll offer them once collaboration ships — not before.
+          </p>
         </Wrapper>
       </section>
       <Faq />

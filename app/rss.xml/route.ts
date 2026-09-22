@@ -29,7 +29,7 @@ export async function GET() {
 <rss version="2.0">
   <channel>
     <title>Curatit</title>
-    <description>A curated collection of production websites worth studying.</description>
+    <description>Notes on organic brand content from the Curatit team.</description>
     <link>${SITE}</link>
 ${items}
   </channel>
