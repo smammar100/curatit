@@ -141,21 +141,23 @@ const InputField = forwardRef<HTMLDivElement, InputFieldProps>(
     let bgClass: string;
     let ringClass: string;
 
+    // Curatit: fields keep a visible hairline at rest (FF ships them edgeless),
+    // so a form reads as a form before the pointer finds it.
     if (disabled) {
       bgClass = "bg-transparent";
       ringClass = "ring-border";
     } else if (error) {
-      bgClass = isFocused ? "bg-card" : isActive ? "bg-destructive-light/60" : "bg-transparent";
-      ringClass = isFocused || isActive ? "ring-destructive/50" : "ring-transparent";
+      bgClass = isFocused ? "bg-card" : isActive ? "bg-destructive-light/60" : "bg-background";
+      ringClass = "ring-destructive/50";
     } else if (isFocused) {
       bgClass = "bg-card";
-      ringClass = "ring-border";
+      ringClass = "ring-foreground/30";
     } else if (isActive) {
-      bgClass = "bg-muted/50";
-      ringClass = "ring-border";
+      bgClass = "bg-background";
+      ringClass = "ring-foreground/20";
     } else {
-      bgClass = "bg-transparent";
-      ringClass = "ring-transparent";
+      bgClass = "bg-background";
+      ringClass = "ring-border";
     }
 
     return (

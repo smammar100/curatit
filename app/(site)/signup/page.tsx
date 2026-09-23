@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import AuthForm from "@/components/auth/AuthForm";
+import AuthShell from "@/components/auth/AuthShell";
 import { signUpAction } from "@/app/actions/auth";
 import { getViewer } from "@/lib/auth";
 
@@ -15,12 +16,8 @@ export default async function SignUpPage({ searchParams }: { searchParams: Promi
   if (await getViewer()) redirect("/library");
 
   return (
-    <div className="mx-auto w-full max-w-sm px-6 pt-32 pb-24 sm:pt-40">
-      <div className="text-center">
-        <h1 className="heading-display text-foreground">Create an account</h1>
-        <p className="mt-2 text-[14px] leading-5 text-muted-foreground">Search the library, save references to private boards, and share them when you&rsquo;re ready.</p>
-      </div>
+    <AuthShell title="Create your account" description="Search the library, save references to private boards, and share them when you’re ready.">
       <AuthForm mode="signup" action={signUpAction} next={next} />
-    </div>
+    </AuthShell>
   );
 }

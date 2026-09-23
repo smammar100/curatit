@@ -79,7 +79,18 @@ function Lines({
  * Renders a generated demo slide. Decorative: the accessible description
  * lives on the wrapper (`alt`), because the slide's words are repeated there.
  */
-export default function SlideArt({ art, alt, className = "" }: { art: Art; alt: string; className?: string }) {
+export default function SlideArt({
+  art,
+  alt,
+  className = "",
+  crop = "contain",
+}: {
+  art: Art;
+  alt: string;
+  className?: string;
+  /** "cover" fills a fixed-size frame and crops the edges, for mosaics. */
+  crop?: "contain" | "cover";
+}) {
   const display = art.serif ? "'Hedvig Letters Serif', Georgia, serif" : "InterVariable, Inter, system-ui, sans-serif";
   const displayWeight = art.serif ? 400 : 800;
   const sans = "InterVariable, Inter, system-ui, sans-serif";
@@ -230,7 +241,8 @@ export default function SlideArt({ art, alt, className = "" }: { art: Art; alt: 
       role={alt ? "img" : undefined}
       aria-label={alt || undefined}
       aria-hidden={alt ? undefined : true}
-      className={`block w-full h-auto ${className}`}
+      preserveAspectRatio={crop === "cover" ? "xMidYMid slice" : undefined}
+      className={`block w-full ${crop === "cover" ? "h-full" : "h-auto"} ${className}`}
       xmlns="http://www.w3.org/2000/svg"
     >
       <rect width={W} height={H} fill={art.bg} />

@@ -76,8 +76,11 @@ driving the theme. Map them to Tailwind in `@theme inline`, as FF's `globals.css
 - **Roles.** `text-display` 28px (22px on mobile), `text-title` 16px, `text-subtitle` 14px,
   `text-body` 13px (the default for controls, rows and copy), `text-caption` 12px.
 - **Serif for headings only.** Hedvig Letters Serif (`font-serif`, weight 400) is for the page title
-  (28px, 22px mobile), section headings (22px), the landing hero (48px, 34px mobile), EmptyState
-  titles and the wordmark. Never on buttons, labels, card titles or body copy.
+  (`heading-display`: 36px, 28px mobile), section headings (`heading-section`: 26px, 22px mobile), the
+  landing hero and the pricing title (`heading-hero`: 48px, 34px mobile), EmptyState titles and the
+  wordmark. Never on buttons, labels, card titles or body copy.
+- **Reading sizes.** Page intros and descriptions are 15px on 24px leading, not 13px. Controls, rows and
+  meta stay on the 13px and 12px roles.
 - **Details.** `tabular-nums` wherever numbers line up. `text-wrap: balance` on headings, `pretty` on
   paragraphs.
 
@@ -92,6 +95,12 @@ driving the theme. Map them to Tailwind in `@theme inline`, as FF's `globals.css
   Toast: offset 2 with shadow-5. Marketing AppWindow: offset 2 with shadow-6.
 - **Borderless by default.** Groups split with `border` hairlines at 60%, and table rows with `accent`
   at 40%. Don't box sections or nest cards.
+- **Panels that hold one thing** (a post's detail, the auth form, a board item, the recommended plan)
+  sit on `bg-card` with `shadow-surface-3` (plan: `shadow-surface-6`) and `rounded-2xl`. One panel per
+  thing, never a panel inside a panel.
+- **Form fields show their edge at rest.** InputField rests on `bg-background` with a `ring-border`
+  hairline, steps to `ring-foreground/20` on hover and `ring-foreground/30` with `bg-card` on focus.
+  Curatit patched FF's edgeless rest state for this.
 
 ## Shape and size
 
@@ -140,9 +149,16 @@ and register rows with `useRegisterFluidHoverItem`. Never hand-roll the overlay.
 - **Curatit's own**, built on the same primitives:
   - **Header:** the serif wordmark, a nav strip on `axis: "x"` fluid hover, a semibold ghost-span for
     the current page, 56px tall.
-  - **CreativeCard:** an FF `Card` in a `CardGroup columns={3|4} separated`, 4:5 art at 2px radius, a
-    1/N counter, brand as `CardTitle`, hook as `CardDescription`, and a compact Save `CardButton` that
-    turns primary as "Saved".
+  - **CreativeCard:** image first. An FF `Card` (`p-2`) in a `CardGroup separated` with 4, 3 or 2
+    columns (1024px, 640px, else), 4:5 art at 2px radius, a 1/N counter top right, and one caption line:
+    brand left, category right (hidden on phones). The hook is already on the art, so it isn't repeated.
+    Save rides on the art's top-left corner, shows on card hover or focus (always on touch), and turns
+    `brand` with "Saved".
+  - **Library header:** title, a count-first intro, then the ⌘K search bar (`CommandSearch`, 44px,
+    `bg-card shadow-surface-3`) and a sideways-scrolling row of example briefs. Categories and the
+    Filters toggle share one row under it.
+  - **Board card:** a 4:3 cover mosaic (one large post, two small) cropped with `SlideArt crop="cover"`,
+    the name with a Private or Shared badge, then count and date. A dashed "New board" tile ends the grid.
   - **Also:** Toast (Elevated, `spring.moderate`), Note, EmptyState (serif title), Pagination, Link,
     Avatar, Kbd, Skeleton (flat `muted`, no shimmer) and AppWindow.
 - **Badges.** One palette colour per category everywhere: Food & drink orange, Sports blue,

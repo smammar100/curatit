@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { CheckboxGroup, CheckboxItem } from "@/components/ui/checkbox-group";
 import { InputGroup, InputField } from "@/components/ui/input-group";
+import { fontWeights } from "@/lib/font-weight";
+import { cn } from "@/lib/utils";
 
 type BoardOption = { id: string; name: string; saved: boolean };
 
@@ -23,7 +25,14 @@ type BoardOption = { id: string; name: string; saved: boolean };
  * "Save" action + dialog: choose one or more boards, or create one inline.
  * Saving is idempotent; boards that already hold the post show as saved.
  */
-export default function SaveButton({ postId, compact = false }: { postId: string; compact?: boolean }) {
+export default function SaveButton({
+  postId,
+  variant = "default",
+}: {
+  postId: string;
+  /** "overlay" sits on post artwork and shows on card hover or focus, staying put once saved. */
+  variant?: "default" | "compact" | "overlay";
+}) {
   const [open, setOpen] = useState(false);
   const [boards, setBoards] = useState<BoardOption[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -113,7 +122,27 @@ export default function SaveButton({ postId, compact = false }: { postId: string
 
   return (
     <>
-      {compact ? (
+      {variant === "overlay" ? (
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          onClick={show}
+          className={cn(
+            "inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[12px] shadow-surface-3 outline-none backdrop-blur-sm transition-opacity duration-80 focus-visible:opacity-100 focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]",
+            saved
+              ? "bg-brand text-on-brand"
+              : "bg-card/90 text-foreground opacity-0 hover:bg-card group-hover/card:opacity-100 group-focus-within/card:opacity-100 [@media(hover:none)]:opacity-100"
+          )}
+          style={{ fontVariationSettings: fontWeights.medium }}
+        >
+          {saved ? (
+            <BookmarkCheck aria-hidden="true" size={14} strokeWidth={2} />
+          ) : (
+            <Bookmark aria-hidden="true" size={14} strokeWidth={1.5} />
+          )}
+          {saved ? "Saved" : "Save"}
+        </button>
+      ) : variant === "compact" ? (
         <Button
           type="button"
           size="compact"
@@ -173,7 +202,7 @@ export default function SaveButton({ postId, compact = false }: { postId: string
             }}
           >
             <div className="min-w-0 flex-1">
-              <InputGroup>
+              <InputGroup className="w-full">
                 <InputField
                   index={0}
                   label="New board name"

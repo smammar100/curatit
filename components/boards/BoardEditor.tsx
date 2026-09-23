@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowLeft, ArrowUp, Check, Link2, Pencil, Trash2, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Link2, Pencil, Trash2, X } from "lucide-react";
 import { apiRequest, ApiError } from "@/lib/client";
 import type { BoardDetail, BoardItem } from "@/lib/services/boards";
 import { fontWeights } from "@/lib/font-weight";
@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { InputCopy } from "@/components/ui/input-copy";
+import { Tooltip } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import PageHeader from "@/components/fundations/containers/PageHeader";
 import SlideArt from "@/components/product/SlideArt";
@@ -354,7 +355,7 @@ export default function BoardEditor({ initial }: { initial: BoardDetail }) {
           <p className="mt-4 text-[13px] tabular-nums text-muted-foreground">
             {items.length} reference{items.length === 1 ? "" : "s"}
           </p>
-          <ol className="mt-2 divide-y divide-border border-y border-border" aria-label="Saved references">
+          <ol className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Saved references">
             {items.map((item, index) => (
               <ItemRow
                 key={item.id}
@@ -515,43 +516,85 @@ function ItemRow({
   const label = item.creative ? `${item.creative.brandName}: ${item.creative.hook ?? "reference"}` : "Unavailable reference";
 
   return (
-    <li className="grid grid-cols-[5rem_minmax(0,1fr)] gap-x-6 gap-y-4 py-6 sm:grid-cols-[8rem_minmax(0,1fr)_auto]">
-      <div>
-        {item.creative ? (
-          <Link
-            href={`/creatives/${item.postId}`}
-            className="block overflow-hidden rounded-[2px] shadow-surface-1"
-          >
-            <SlideArt art={item.creative.cover} alt={item.creative.coverAlt} />
-          </Link>
-        ) : (
-          <div className="flex aspect-[4/5] items-center justify-center rounded-[2px] bg-muted p-2 text-center text-[12px] text-foreground">
-            No longer available
-          </div>
-        )}
+    <li className="flex min-w-0 flex-col rounded-2xl bg-card p-3 shadow-surface-3">
+      {item.creative ? (
+        <Link
+          href={`/creatives/${item.postId}`}
+          className="block overflow-hidden rounded-[2px] shadow-surface-1 outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]"
+          aria-label={label}
+        >
+          <SlideArt art={item.creative.cover} alt={item.creative.coverAlt} />
+        </Link>
+      ) : (
+        <div className="flex aspect-[4/5] items-center justify-center rounded-[2px] bg-muted p-4 text-center text-[13px] text-foreground">
+          No longer available
+        </div>
+      )}
+
+      <div className="flex items-center justify-between gap-2 px-1 pt-3">
+        <p className="min-w-0 truncate text-[12px] tabular-nums text-muted-foreground">
+          {index + 1} · {item.creative ? item.creative.brandName : "Removed from the library"}
+          {item.creative?.mediaType === "carousel" && ` · ${item.creative.slideCount} slides`}
+        </p>
+        <div className="flex shrink-0 items-center gap-0.5">
+          <Tooltip content="Move earlier">
+            <Button
+              id={`move-up-${item.id}`}
+              type="button"
+              variant="ghost"
+              size="icon-compact"
+              disabled={index === 0}
+              onClick={() => onMove(index, -1)}
+              aria-label={`Move up: ${label}`}
+            >
+              <ArrowLeft strokeWidth={1.5} aria-hidden="true" className="max-sm:rotate-90" />
+            </Button>
+          </Tooltip>
+          <Tooltip content="Move later">
+            <Button
+              id={`move-down-${item.id}`}
+              type="button"
+              variant="ghost"
+              size="icon-compact"
+              disabled={index === total - 1}
+              onClick={() => onMove(index, 1)}
+              aria-label={`Move down: ${label}`}
+            >
+              <ArrowRight strokeWidth={1.5} aria-hidden="true" className="max-sm:rotate-90" />
+            </Button>
+          </Tooltip>
+          <Tooltip content="Remove from board">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-compact"
+              className={destructiveGhost}
+              onClick={() => onRemove(item)}
+              aria-label={`Remove from board: ${label}`}
+            >
+              <Trash2 strokeWidth={1.5} aria-hidden="true" />
+            </Button>
+          </Tooltip>
+        </div>
       </div>
 
-      <div className="min-w-0">
-        <p className="text-[12px] tabular-nums text-muted-foreground">
-          {index + 1}. {item.creative ? item.creative.brandName : "Removed from the library"}
-          {item.creative?.mediaType === "carousel" && ` · Carousel, ${item.creative.slideCount} slides`}
-        </p>
+      <div className="px-1">
         {item.creative ? (
           <Link
             href={`/creatives/${item.postId}`}
-            className="mt-1 block text-[14px] leading-6 text-foreground underline decoration-transparent underline-offset-[3px] transition-colors duration-80 hover:decoration-foreground"
+            className="mt-0.5 block text-[14px] leading-5 text-foreground underline decoration-transparent underline-offset-[3px] transition-colors duration-80 hover:decoration-foreground"
             style={{ fontVariationSettings: fontWeights.medium }}
           >
             {item.creative.hook}
           </Link>
         ) : (
-          <p className="mt-1 text-[13px] leading-5 text-muted-foreground">
+          <p className="mt-0.5 text-[13px] leading-5 text-muted-foreground">
             This reference was removed from the library, so it&rsquo;s hidden here and on share links. You can remove it from the board.
           </p>
         )}
 
         <form
-          className="mt-3 flex max-w-xl flex-col gap-1"
+          className="mt-3 flex flex-col gap-1"
           onSubmit={async (event) => {
             event.preventDefault();
             setSaving(true);
@@ -568,7 +611,7 @@ function ItemRow({
             maxLength={2000}
             value={note}
             onChange={(event) => setNote(event.target.value)}
-            placeholder="e.g. Use this pacing for the launch carousel; swap product shots for UI."
+            placeholder="e.g. Use this pacing; swap product shots for UI."
             className={textarea}
           />
           {dirty && (
@@ -582,44 +625,6 @@ function ItemRow({
             </div>
           )}
         </form>
-      </div>
-
-      <div className="col-span-2 flex flex-wrap gap-2 sm:col-span-1 sm:flex-col sm:items-stretch">
-        <Button
-          id={`move-up-${item.id}`}
-          type="button"
-          variant="tertiary"
-          size="compact"
-          leadingIcon={ArrowUp}
-          disabled={index === 0}
-          onClick={() => onMove(index, -1)}
-          aria-label={`Move up: ${label}`}
-        >
-          Up
-        </Button>
-        <Button
-          id={`move-down-${item.id}`}
-          type="button"
-          variant="tertiary"
-          size="compact"
-          leadingIcon={ArrowDown}
-          disabled={index === total - 1}
-          onClick={() => onMove(index, 1)}
-          aria-label={`Move down: ${label}`}
-        >
-          Down
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="compact"
-          leadingIcon={Trash2}
-          className={destructiveGhost}
-          onClick={() => onRemove(item)}
-          aria-label={`Remove from board: ${label}`}
-        >
-          Remove
-        </Button>
       </div>
     </li>
   );

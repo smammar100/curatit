@@ -42,8 +42,8 @@ export default function LibraryGrid({
 
   return (
     <>
-      <div className="mt-6">
-        <CardGroup columns={columns} separated>
+      <div className="-mx-2 mt-4">
+        <CardGroup columns={columns} separated className="gap-x-2 gap-y-3">
           {items.map((creative) => (
             <CreativeCard key={creative.id} creative={creative} showWhy={Boolean(query)} />
           ))}
@@ -65,13 +65,13 @@ export default function LibraryGrid({
   );
 }
 
-/** 4 columns from 1024px, 2 from 640px, else 1. The fluid hover needs a real column count. */
+/** 4 columns from 1024px, 3 from 640px, else 2. The fluid hover needs a real column count. */
 function useColumns() {
   const [columns, setColumns] = useState(4);
   useEffect(() => {
     const wide = window.matchMedia("(min-width: 1024px)");
     const mid = window.matchMedia("(min-width: 640px)");
-    const update = () => setColumns(wide.matches ? 4 : mid.matches ? 2 : 1);
+    const update = () => setColumns(wide.matches ? 4 : mid.matches ? 3 : 2);
     update();
     wide.addEventListener("change", update);
     mid.addEventListener("change", update);

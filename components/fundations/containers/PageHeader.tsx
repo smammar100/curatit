@@ -20,11 +20,11 @@ export default function PageHeader({
   className?: string;
 }) {
   return (
-    <header className={cn("flex flex-wrap items-end justify-between gap-x-8 gap-y-4 pt-24 pb-8 sm:pt-28", className)}>
+    <header className={cn("flex flex-wrap items-end justify-between gap-x-8 gap-y-4 pt-24 pb-8 sm:pt-32", className)}>
       <div className="min-w-0 max-w-2xl">
         {eyebrow && <div className="mb-3 text-[13px] text-muted-foreground">{eyebrow}</div>}
         <h1 className="heading-display text-balance break-words text-foreground">{title}</h1>
-        {description && <p className="mt-2 text-[14px] leading-5 text-muted-foreground">{description}</p>}
+        {description && <p className="mt-3 text-pretty text-[15px] leading-6 text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
     </header>

@@ -23,10 +23,10 @@ export default function AuthForm({
   const isSignUp = mode === "signup";
 
   return (
-    <form action={formAction} className="mt-8 flex flex-col gap-4" noValidate>
+    <form action={formAction} className="flex flex-col gap-4" noValidate>
       {next && <input type="hidden" name="next" value={next} />}
 
-      <InputGroup>
+      <InputGroup className="w-full">
         <InputField
           index={0}
           label="Email address"
