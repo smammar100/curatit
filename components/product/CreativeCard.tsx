@@ -37,9 +37,13 @@ export default function CreativeCard({
           <p className="text-[12px] leading-4 text-muted-foreground">Why it matched: {creative.whyMatched.join(" · ")}</p>
         )}
       </CardHeader>
-      <CardFooter className="justify-between gap-3">
-        <span className="min-w-0 truncate text-[12px] text-muted-foreground">{meta}</span>
-        <SaveButton postId={creative.id} compact />
+      <CardFooter className="flex-nowrap justify-between gap-3">
+        <span className="min-w-0 flex-1 truncate text-[12px] text-muted-foreground" title={meta}>
+          {meta}
+        </span>
+        <span className="shrink-0">
+          <SaveButton postId={creative.id} compact />
+        </span>
       </CardFooter>
     </Card>
   );

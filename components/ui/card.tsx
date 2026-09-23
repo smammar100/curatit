@@ -572,6 +572,9 @@ const CardTitle = forwardRef<HTMLSpanElement, HTMLAttributes<HTMLSpanElement>>(
     // instead; minmax(0,1fr) clamps the implicit track to the clipped grid's
     // width so the ellipsis falls inside the visible box. All of it is inert
     // while titles wrap normally.
+    //
+    // Curatit: clip on x only. With the cap-height trim, overflow-hidden cut
+    // off descenders (g, p, y) in inline cards; x-clip keeps the ellipsis.
     return (
       <span
         ref={ref}
@@ -584,7 +587,7 @@ const CardTitle = forwardRef<HTMLSpanElement, HTMLAttributes<HTMLSpanElement>>(
         {...props}
       >
         <span
-          className={cn("col-start-1 row-start-1 invisible min-w-0 overflow-hidden text-ellipsis", trim)}
+          className={cn("col-start-1 row-start-1 invisible min-w-0 overflow-x-clip overflow-y-visible text-ellipsis", trim)}
           style={{ fontVariationSettings: fontWeights.semibold }}
           aria-hidden="true"
         >
@@ -592,7 +595,7 @@ const CardTitle = forwardRef<HTMLSpanElement, HTMLAttributes<HTMLSpanElement>>(
         </span>
         <span
           className={cn(
-            "col-start-1 row-start-1 min-w-0 overflow-hidden text-ellipsis text-foreground transition-[font-variation-settings] duration-80",
+            "col-start-1 row-start-1 min-w-0 overflow-x-clip overflow-y-visible text-ellipsis text-foreground transition-[font-variation-settings] duration-80",
             trim
           )}
           style={{

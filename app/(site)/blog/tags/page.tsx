@@ -25,7 +25,7 @@ export default async function BlogTagsPage() {
             <Card key={tag} href={`/blog/tags/${tag}`} label={tag} title={tag}>
               <CardHeader>
                 {/* Inline titles trim to cap height and clip overflow, which cuts descenders; let them show. */}
-                <CardTitle className="capitalize [&>span]:overflow-visible">{tag}</CardTitle>
+                <CardTitle className="capitalize">{tag}</CardTitle>
               </CardHeader>
               <CardFooter>
                 <span className="text-[12px] tabular-nums text-muted-foreground">

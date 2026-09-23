@@ -158,10 +158,10 @@ export default async function AdminPage({
               <TableHeader>
                 <TableRow>
                   <TableHead scope="col">Category</TableHead>
-                  <TableHead scope="col">Brands</TableHead>
-                  <TableHead scope="col">Published</TableHead>
-                  <TableHead scope="col">Objectives</TableHead>
-                  <TableHead scope="col">In review</TableHead>
+                  <TableHead scope="col" className="text-right">Brands</TableHead>
+                  <TableHead scope="col" className="text-right">Published</TableHead>
+                  <TableHead scope="col" className="text-right">Objectives</TableHead>
+                  <TableHead scope="col" className="text-right">In review</TableHead>
                   <TableHead scope="col">Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -171,10 +171,10 @@ export default async function AdminPage({
                     <TableHead scope="row" style={{ fontVariationSettings: fontWeights.normal }}>
                       {cell.name}
                     </TableHead>
-                    <TableCell className="tabular-nums">{cell.brands}</TableCell>
-                    <TableCell className="tabular-nums">{cell.published}</TableCell>
-                    <TableCell className="tabular-nums">{cell.objectives}</TableCell>
-                    <TableCell className="tabular-nums">{cell.queued}</TableCell>
+                    <TableCell className="text-right tabular-nums">{cell.brands}</TableCell>
+                    <TableCell className="text-right tabular-nums">{cell.published}</TableCell>
+                    <TableCell className="text-right tabular-nums">{cell.objectives}</TableCell>
+                    <TableCell className="text-right tabular-nums">{cell.queued}</TableCell>
                     <TableCell>
                       {cell.ready ? (
                         <Badge variant="dot" color="green">

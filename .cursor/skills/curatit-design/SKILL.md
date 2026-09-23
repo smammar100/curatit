@@ -23,8 +23,8 @@ System artifact: https://claude.ai/artifact/RzecpfcQfhP6svWnbzVpku. This file is
   base styles are in `app/globals.css`. Inter is self-hosted from `public/fonts/InterVariable.ttf`.
 - `components/providers.tsx` wraps the app: `MotionConfig reducedMotion="user"`, `ShapeProvider`, `TooltipProvider`.
 - Screens start with `PageHeader` (`components/fundations/containers/PageHeader.tsx`) inside `Wrapper`
-  (standard `max-w-6xl px-6`, narrow `max-w-sm`, prose). `Text` maps its variants onto the new roles; in
-  new code prefer plain elements with the role classes.
+  (standard `max-w-6xl px-6`, narrow `max-w-sm`, prose). Use plain elements with the role classes
+  for text; there is no `Text` component.
 - The header nav (`components/navigation/NavLinks.tsx`) and the library grid
   (`components/product/LibraryGrid.tsx`) show the fluid hover patterns for a strip and a grid. Keep the
   folder name `fundations` as spelled.
