@@ -1,24 +1,25 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import Providers from "@/components/providers";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yourdomain.com"),
   title: {
-    default: "Curatit — Creative intelligence for organic social",
-    template: "%s — Curatit",
+    default: "Curatit: creative intelligence for organic social",
+    template: "%s · Curatit",
   },
   description:
-    "A curated, searchable library of organic brand posts, analysed by editors — for teams researching real campaigns.",
+    "A curated, searchable library of organic brand posts, analysed by editors, for teams researching real campaigns.",
   keywords: ["social media", "creative research", "brand content", "instagram carousels", "reference boards"],
   authors: [{ name: "Curatit" }],
   openGraph: {
     type: "website",
     siteName: "Curatit",
     locale: "en_US",
-    title: "Curatit — Creative intelligence for organic social",
+    title: "Curatit: creative intelligence for organic social",
     description:
-      "A curated, searchable library of organic brand posts, analysed by editors — for teams researching real campaigns.",
+      "A curated, searchable library of organic brand posts, analysed by editors, for teams researching real campaigns.",
   },
   twitter: {
     card: "summary_large_image",
@@ -29,7 +30,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FAFAFA" },
+    { media: "(prefers-color-scheme: dark)", color: "#171717" },
+  ],
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -37,13 +41,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className="scroll-smooth selection:bg-accent-50 selection:text-accent-500"
+      className="scroll-smooth"
     >
       <head>
-        {/* Inter: https://rsms.me/inter/ */}
-        <link rel="preconnect" href="https://rsms.me/" />
-        <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        {/* Hedvig Letters Serif */}
+        {/* Inter is self-hosted (public/fonts, see globals.css). Hedvig Letters Serif is for headings. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
@@ -51,7 +52,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           rel="stylesheet"
         />
       </head>
-      <body className="bg-white">{children}</body>
+      <body className="bg-background text-foreground">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

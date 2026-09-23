@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
+import { Elevated } from "@/lib/elevated";
+import { cn } from "@/lib/utils";
 
 /**
- * A Curatit app window: quiet chrome, layered shadow, real-size UI inside.
- * Border and shadow are the only depth cues (no gradient, no glow).
+ * A Curatit app window: real, working UI in quiet chrome. Two levels above
+ * its substrate with a pinned shadow-6, so anything opened inside lifts on.
  */
 export default function AppWindow({
   title,
@@ -14,16 +16,11 @@ export default function AppWindow({
   className?: string;
 }) {
   return (
-    <div className={`overflow-hidden rounded-xl bg-surface shadow-window ring-1 ring-line ${className}`}>
-      <div className="relative flex h-9 items-center border-b border-line px-3.5">
-        <div className="flex gap-1.5" aria-hidden="true">
-          <span className="size-2.5 rounded-full bg-base-200" />
-          <span className="size-2.5 rounded-full bg-base-200" />
-          <span className="size-2.5 rounded-full bg-base-200" />
-        </div>
-        <p className="absolute inset-x-16 truncate text-center text-[11px] font-medium text-ink-subtle">{title}</p>
+    <Elevated offset={2} shadowLevel={6} className={cn("overflow-hidden rounded-xl", className)}>
+      <div className="flex h-10 items-center border-b border-border px-4">
+        <p className="truncate text-[12px] text-muted-foreground">{title}</p>
       </div>
       {children}
-    </div>
+    </Elevated>
   );
 }

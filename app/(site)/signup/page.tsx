@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import Text from "@/components/fundations/elements/Text";
 import AuthForm from "@/components/auth/AuthForm";
 import { signUpAction } from "@/app/actions/auth";
 import { getViewer } from "@/lib/auth";
@@ -16,14 +15,10 @@ export default async function SignUpPage({ searchParams }: { searchParams: Promi
   if (await getViewer()) redirect("/library");
 
   return (
-    <div className="w-full max-w-md px-8 py-24 lg:py-48 mx-auto">
+    <div className="mx-auto w-full max-w-sm px-6 pt-32 pb-24 sm:pt-40">
       <div className="text-center">
-        <Text tag="h1" variant="displayLG" className="text-base-900 font-display font-light">
-          Create an account
-        </Text>
-        <Text tag="p" variant="textBase" className="text-base-600 mt-4">
-          Search the library, save references to private boards, and share them when you&rsquo;re ready.
-        </Text>
+        <h1 className="heading-display text-foreground">Create an account</h1>
+        <p className="mt-2 text-[14px] leading-5 text-muted-foreground">Search the library, save references to private boards, and share them when you&rsquo;re ready.</p>
       </div>
       <AuthForm mode="signup" action={signUpAction} next={next} />
     </div>

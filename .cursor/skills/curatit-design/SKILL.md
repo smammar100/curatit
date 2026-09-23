@@ -14,12 +14,20 @@ terracotta brand hue.
 The live reference (tokens, 31 components with working previews, brand book) is the Curatit Design
 System artifact: https://claude.ai/artifact/RzecpfcQfhP6svWnbzVpku. This file is the rulebook for the code.
 
-## Status of the codebase
+## Where things live
 
-The app still renders the older Carbon look (warm oklch `base-*` and `accent-*` scales, `Text`,
-`Wrapper`, the Carbon `Button` in `components/fundations/`). New UI follows this file. When you touch an
-existing screen, move it onto the system rather than extending Carbon patterns. Keep the folder name
-`fundations` as spelled.
+- FF components are installed in `components/ui/` (Radix flavour), with their libs in `lib/`
+  (`springs`, `font-weight`, `elevated`, `surface-*`, `shape-context`, `size-context`, `popup`,
+  `icon-context`, `utils`) and hooks in `hooks/`. The MIT notice is `components/ui/LICENSE-fluid-functionalism.txt`.
+- Tokens, the serif heading utilities (`heading-hero`, `heading-display`, `heading-section`) and the
+  base styles are in `app/globals.css`. Inter is self-hosted from `public/fonts/InterVariable.ttf`.
+- `components/providers.tsx` wraps the app: `MotionConfig reducedMotion="user"`, `ShapeProvider`, `TooltipProvider`.
+- Screens start with `PageHeader` (`components/fundations/containers/PageHeader.tsx`) inside `Wrapper`
+  (standard `max-w-6xl px-6`, narrow `max-w-sm`, prose). `Text` maps its variants onto the new roles; in
+  new code prefer plain elements with the role classes.
+- The header nav (`components/navigation/NavLinks.tsx`) and the library grid
+  (`components/product/LibraryGrid.tsx`) show the fluid hover patterns for a strip and a grid. Keep the
+  folder name `fundations` as spelled.
 
 ## Install
 

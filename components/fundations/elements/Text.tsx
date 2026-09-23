@@ -38,23 +38,24 @@ export type TextTag =
   | "h5"
   | "h6";
 
-// Define text styles for each variant
+// Variants map onto the design system's roles: display variants are serif
+// headings (see globals.css), text variants are Inter on the FF type scale.
 const textStyles: Record<TextVariant, string> = {
-  display6XL: "text-4xl  sm:text-7xl md:text-9xl lg:text-[12rem]",
-  display5XL: "text-4xl  sm:text-7xl md:text-8xl lg:text-[10rem]",
-  display4XL: "text-4xl  sm:text-7xl md:text-8xl lg:text-9xl",
-  display3XL: "text-5xl  sm:text-6xl md:text-7xl lg:text-8xl",
-  display2XL: "text-5xl  sm:text-5xl md:text-6xl lg:text-7xl",
-  displayXL: "text-4xl  sm:text-4xl md:text-5xl lg:text-6xl",
-  displayLG: "text-3xl  sm:text-3xl md:text-4xl lg:text-5xl",
-  displayMD: "text-2xl  sm:text-2xl md:text-3xl lg:text-4xl",
-  displaySM: "text-lg  sm:text-xl md:text-2xl lg:text-3xl",
-  displayXS: "text-base  sm:text-lg md:text-xl lg:text-2xl",
-  textXL: "text-lg sm:text-xl md:text-2xl",
-  textLG: "text-base sm:text-lg md:text-xl ",
-  textBase: "text-base",
-  textSM: "text-sm ",
-  textXS: "text-xs ",
+  display6XL: "heading-hero",
+  display5XL: "heading-hero",
+  display4XL: "heading-hero",
+  display3XL: "heading-hero",
+  display2XL: "heading-hero",
+  displayXL: "heading-display",
+  displayLG: "heading-display",
+  displayMD: "heading-section",
+  displaySM: "heading-section",
+  displayXS: "heading-section",
+  textXL: "text-[16px] leading-6",
+  textLG: "text-[14px] leading-5",
+  textBase: "text-[14px] leading-6",
+  textSM: "text-[13px] leading-5",
+  textXS: "text-[12px] leading-4",
 };
 
 type TextProps = {

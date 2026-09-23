@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, type ReactNode } from "react";
-import { MotionConfig } from "framer-motion";
 import type { LandingLibrary } from "@/lib/services/creatives";
 import ClosingCta from "./ClosingCta";
 import Details from "./Details";
@@ -29,10 +28,10 @@ export default function Landing({
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <MotionConfig reducedMotion="user">
+    <>
       <div
         ref={containerRef}
-        className="relative bg-surface"
+        className="relative bg-background"
         // `clip` (not `hidden`) stops the cascade's right edge from causing a
         // horizontal scrollbar without creating a new scroll container.
         style={{ overflowX: "clip" }}
@@ -47,6 +46,6 @@ export default function Landing({
         <LandingFaq />
         <ClosingCta library={library} signedIn={signedIn} />
       </div>
-    </MotionConfig>
+    </>
   );
 }
