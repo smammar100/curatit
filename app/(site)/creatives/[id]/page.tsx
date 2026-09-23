@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 import { Button } from "@/components/ui/button";
 import { CardGroup } from "@/components/ui/card";
@@ -27,7 +27,7 @@ const proseLink =
 /** One metadata row: label left, value right, split by hairlines. */
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[9rem_1fr] items-baseline gap-4 py-2.5 sm:grid-cols-[11rem_1fr]">
+    <div className="grid grid-cols-[6.5rem_1fr] items-baseline gap-4 py-2.5 sm:grid-cols-[10rem_1fr]">
       <dt className="text-[13px] leading-5 text-muted-foreground">{label}</dt>
       <dd className="min-w-0 text-[13px] leading-5 text-foreground">{children}</dd>
     </div>
@@ -50,63 +50,84 @@ export default async function CreativePage({ params }: { params: Promise<{ id: s
 
   return (
     <>
-      <CommandSearch items={quickSearchIndex()} />
-
       <Wrapper variant="standard" className="pb-12">
-        <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 pb-8 pt-24 sm:pt-28">
-          <div className="min-w-0 max-w-2xl">
-            <p className="mb-3 flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
+        <div className="flex items-center justify-between gap-4 pb-4 pt-20 sm:pt-24">
+          <Button asChild variant="ghost" size="compact" className="-ml-2">
+            <Link href="/library">
+              <span className="inline-flex items-center gap-1">
+                <ArrowLeft size={14} strokeWidth={1.5} aria-hidden="true" />
+                Library
+              </span>
+            </Link>
+          </Button>
+          <CommandSearch items={quickSearchIndex()} variant="button" />
+        </div>
+
+        <article className="grid overflow-hidden rounded-2xl bg-card shadow-surface-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="flex items-start justify-center bg-muted/60 p-6 sm:p-10">
+            <div className="w-full max-w-[26rem] lg:sticky lg:top-24">
+              <Carousel slides={creative.slides} label={`${creative.brand.name} ${creative.mediaType}`} />
+            </div>
+          </div>
+
+          <div className="min-w-0 p-6 sm:p-8">
+            <div className="flex items-center gap-3">
               <Link
                 href={libraryHref("", { brand: [creative.brand.id] })}
-                className="text-foreground underline decoration-transparent underline-offset-[3px] transition-colors duration-80 hover:decoration-foreground"
-                style={{ fontVariationSettings: fontWeights.medium }}
+                className="group/brand flex min-w-0 items-center gap-2.5 rounded-lg outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]"
               >
-                {creative.brand.name}
+                <span
+                  aria-hidden="true"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted font-serif text-[16px] text-foreground"
+                >
+                  {creative.brand.name.charAt(0)}
+                </span>
+                <span className="min-w-0">
+                  <span
+                    className="block truncate text-[14px] text-foreground underline decoration-transparent underline-offset-[3px] transition-colors duration-80 group-hover/brand:decoration-foreground"
+                    style={{ fontVariationSettings: fontWeights.medium }}
+                  >
+                    {creative.brand.name}
+                  </span>
+                  <span className="block truncate text-[12px] text-muted-foreground">
+                    {termName("category", creative.categoryId)} · {formatDate(creative.publishedAt)}
+                  </span>
+                </span>
               </Link>
-              <span aria-hidden="true">·</span>
-              <Link
-                href={libraryHref("", { category: [creative.categoryId as never] })}
-                className="underline decoration-transparent underline-offset-[3px] transition-colors duration-80 hover:text-foreground hover:decoration-foreground"
-              >
-                {termName("category", creative.categoryId)}
-              </Link>
-              {creative.brand.isDemo && <Tag tone="warning">Demo brand, fictional</Tag>}
-            </p>
-            <h1 className="heading-display text-balance break-words text-foreground">{creative.hook}</h1>
-            <p className="mt-2 text-[14px] leading-6 text-muted-foreground">{creative.summary}</p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <SaveButton postId={creative.id} />
-            <Button asChild size="icon" variant="tertiary">
-              <a
-                href={creative.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="View the original post"
-                aria-label="View the original post"
-              >
-                <ArrowUpRight />
-              </a>
-            </Button>
-          </div>
-        </header>
+              <div className="ml-auto flex shrink-0 items-center gap-2">
+                <Button asChild size="icon" variant="tertiary">
+                  <a
+                    href={creative.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="View the original post"
+                    aria-label="View the original post"
+                  >
+                    <ArrowUpRight />
+                  </a>
+                </Button>
+                <SaveButton postId={creative.id} />
+              </div>
+            </div>
 
-        <div className="grid grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
-          <div className="w-full max-w-md lg:max-w-none">
-            <Carousel slides={creative.slides} label={`${creative.brand.name} ${creative.mediaType}`} />
-          </div>
-
-          <div className="min-w-0">
-            {creative.editorialReason && (
-              <div className="mb-6">
-                <h2 className="text-[13px] text-foreground" style={{ fontVariationSettings: fontWeights.semibold }}>
-                  Why it&rsquo;s here
-                </h2>
-                <p className="mt-1 text-[14px] leading-6 text-foreground">{creative.editorialReason}</p>
+            <h1 className="heading-display mt-8 text-balance break-words text-foreground">{creative.hook}</h1>
+            <p className="mt-3 text-pretty text-[15px] leading-6 text-muted-foreground">{creative.summary}</p>
+            {creative.brand.isDemo && (
+              <div className="mt-4">
+                <Tag tone="warning">Demo brand, fictional</Tag>
               </div>
             )}
 
-            <dl className="divide-y divide-border border-y border-border">
+            {creative.editorialReason && (
+              <div className="mt-6 rounded-xl bg-muted/70 p-4">
+                <h2 className="text-[12px] text-muted-foreground" style={{ fontVariationSettings: fontWeights.medium }}>
+                  Why it&rsquo;s here
+                </h2>
+                <p className="mt-1 text-pretty text-[15px] leading-6 text-foreground">{creative.editorialReason}</p>
+              </div>
+            )}
+
+            <dl className="mt-6 divide-y divide-border/60">
               <Row label="Objective">{termName("objective", creative.objectiveId)}</Row>
               <Row label="Format">
                 {termName("format", creative.formatId)} ·{" "}
@@ -143,9 +164,6 @@ export default async function CreativePage({ params }: { params: Promise<{ id: s
                 </Row>
               )}
               {creative.caption && <Row label="Caption">&ldquo;{creative.caption}&rdquo;</Row>}
-              <Row label="Posted">
-                <span className="tabular-nums">{formatDate(creative.publishedAt)}</span>
-              </Row>
               <Row label="Captured · last checked">
                 <span className="tabular-nums">
                   {formatDate(creative.capturedAt)} · {formatDate(creative.lastCheckedAt)}
@@ -158,7 +176,7 @@ export default async function CreativePage({ params }: { params: Promise<{ id: s
               </Row>
             </dl>
 
-            <p className="mt-4 text-[12px] leading-5 text-muted-foreground">
+            <p className="mt-6 text-[12px] leading-5 text-muted-foreground">
               Source: {creative.brand.name} on Instagram (
               <a href={creative.sourceUrl} target="_blank" rel="noopener noreferrer nofollow" className={proseLink}>
                 original post
@@ -167,23 +185,18 @@ export default async function CreativePage({ params }: { params: Promise<{ id: s
               material, not a template: don&rsquo;t reproduce another brand&rsquo;s design.
             </p>
           </div>
-        </div>
+        </article>
       </Wrapper>
 
       {related.length > 0 && (
         <section>
-          <Wrapper variant="standard" className="pb-24 pt-12">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-12">
-              <h2 className="heading-section text-foreground">Related references</h2>
-              <Button asChild variant="secondary" size="compact">
-                <Link href="/library">Back to the library</Link>
-              </Button>
-            </div>
-            <div className="mt-6">
+          <Wrapper variant="standard" className="pb-24 pt-10">
+            <h2 className="heading-section text-foreground">More like this</h2>
+            <div className="-mx-2 mt-4">
               {/* Fixed-column CardGroup; the grid template collapses on small screens. */}
-              <CardGroup columns={4} separated className="max-lg:grid-cols-2! max-sm:grid-cols-1!">
+              <CardGroup columns={4} separated className="gap-x-2 gap-y-3 max-lg:grid-cols-2!">
                 {related.map((item) => (
-                  <CreativeCard key={item.id} creative={item} />
+                  <CreativeCard key={item.id} creative={item} showWhy={false} />
                 ))}
               </CardGroup>
             </div>

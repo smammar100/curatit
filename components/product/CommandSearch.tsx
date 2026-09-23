@@ -12,7 +12,8 @@ import {
   CommandMenuList,
   type CommandMenuItemData,
 } from "@/components/ui/command-menu";
-import { Elevated } from "@/lib/elevated";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { QuickSearchItem } from "@/lib/services/creatives";
 
 const SEARCH = "__search";
@@ -21,7 +22,17 @@ const SEARCH = "__search";
  * ⌘K search over the library. Fuzzy matches run locally (no API call per
  * keystroke); picking the first row runs a full search for the brief.
  */
-export default function CommandSearch({ items }: { items: QuickSearchItem[] }) {
+export default function CommandSearch({
+  items,
+  variant = "bar",
+  initialQuery = "",
+}: {
+  items: QuickSearchItem[];
+  /** "bar" is the full-width field at the top of the library; "button" fits a page header. */
+  variant?: "bar" | "button";
+  /** The brief currently shown, so the bar reads as the field that produced the results. */
+  initialQuery?: string;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -57,6 +68,11 @@ export default function CommandSearch({ items }: { items: QuickSearchItem[] }) {
     [items, query]
   );
 
+  function openSearch() {
+    setQuery(initialQuery);
+    setOpen(true);
+  }
+
   function select(item: CommandMenuItemData) {
     setOpen(false);
     if (item.value === SEARCH) {
@@ -69,28 +85,35 @@ export default function CommandSearch({ items }: { items: QuickSearchItem[] }) {
 
   return (
     <>
-      <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2">
-        <Elevated offset={2} shadowLevel={5} className="rounded-xl p-1">
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            aria-haspopup="dialog"
-            className="flex h-9 w-72 max-w-[calc(100vw-4rem)] items-center gap-2 rounded-lg px-3 text-left text-[13px] text-muted-foreground outline-none transition-colors duration-80 hover:bg-hover hover:text-foreground focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]"
-          >
+      {variant === "bar" ? (
+        <button
+          type="button"
+          onClick={openSearch}
+          aria-haspopup="dialog"
+          className="group/search flex h-11 w-full min-w-0 items-center gap-2.5 rounded-xl bg-card px-3.5 text-left text-[14px] text-muted-foreground shadow-surface-3 outline-none transition-colors duration-80 hover:text-foreground focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]"
+        >
+          <Search aria-hidden="true" className="size-4 shrink-0" strokeWidth={1.5} />
+          <span className={cn("min-w-0 flex-1 truncate", initialQuery && "text-foreground")}>
+            {initialQuery || "Describe a brief or search brands and hooks"}
+          </span>
+          <kbd className="inline-flex h-5 shrink-0 items-center rounded-[4px] bg-muted px-1.5 font-sans text-[11px] text-muted-foreground">
+            ⌘K
+          </kbd>
+        </button>
+      ) : (
+        <Button type="button" variant="secondary" onClick={openSearch} aria-haspopup="dialog">
+          <span className="inline-flex items-center gap-1.5">
             <Search aria-hidden="true" className="size-4" strokeWidth={1.5} />
-            Search the library
-            <kbd className="ml-auto inline-flex h-5 items-center rounded-[4px] bg-muted px-1.5 font-sans text-[11px] text-muted-foreground shadow-surface-1">
-              ⌘K
-            </kbd>
-          </button>
-        </Elevated>
-      </div>
+            Search
+          </span>
+        </Button>
+      )}
 
       <CommandMenuDialog
         open={open}
         onOpenChange={(next) => {
           setOpen(next);
-          if (!next) setQuery("");
+          setQuery(next ? initialQuery : "");
         }}
         title="Search the library"
         description="Describe the brief, or jump to a post."

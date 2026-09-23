@@ -223,7 +223,7 @@ export function listBoards(viewer: Viewer): BoardSummary[] {
     itemCount: board.item_count,
     covers: covers
       .filter((cover) => cover.collection_id === board.id)
-      .slice(0, 3)
+      .slice(0, 4)
       .map((cover) => parseJson<SlideArt>(cover.art, {} as SlideArt)),
     version: board.version,
     updatedAt: board.updated_at,

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +22,17 @@ const textarea =
   "block min-h-24 w-full rounded-lg bg-background px-3 py-2 text-[13px] text-foreground shadow-surface-1 placeholder:text-muted-foreground outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]";
 
 /** "New board" button + dialog. */
-export default function CreateBoardForm({ label = "New board" }: { label?: string }) {
+export default function CreateBoardForm({
+  label = "New board",
+  variant = "button",
+  index,
+}: {
+  label?: string;
+  /** "tile" is the empty slot at the end of the boards grid. */
+  variant?: "button" | "tile";
+  /** Injected by CardGroup, so the tile joins the grid's fluid hover like the boards around it. */
+  index?: number;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -31,9 +42,20 @@ export default function CreateBoardForm({ label = "New board" }: { label?: strin
 
   return (
     <>
-      <Button type="button" variant="primary" leadingIcon={Plus} onClick={() => setOpen(true)} aria-haspopup="dialog">
-        {label}
-      </Button>
+      {variant === "tile" ? (
+        <Card onClick={() => setOpen(true)} label={label} index={index} className="p-2">
+          <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border text-[14px] text-muted-foreground transition-colors duration-80 group-hover/card:text-foreground">
+            <span className="flex size-10 items-center justify-center rounded-full bg-card shadow-surface-3">
+              <Plus size={18} strokeWidth={1.5} aria-hidden="true" />
+            </span>
+            {label}
+          </div>
+        </Card>
+      ) : (
+        <Button type="button" variant="primary" leadingIcon={Plus} onClick={() => setOpen(true)} aria-haspopup="dialog">
+          {label}
+        </Button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent size="sm">

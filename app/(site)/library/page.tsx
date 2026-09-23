@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronDown, Plus, X } from "lucide-react";
+import { ChevronDown, Plus, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Wrapper from "@/components/fundations/containers/Wrapper";
-import PageHeader from "@/components/fundations/containers/PageHeader";
 import CommandSearch from "@/components/product/CommandSearch";
 import LibraryGrid from "@/components/product/LibraryGrid";
 import { requireViewer } from "@/lib/auth";
@@ -36,21 +35,17 @@ const field =
   "h-9 w-full rounded-lg bg-background px-3 text-[13px] text-foreground shadow-surface-1 placeholder:text-muted-foreground outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]";
 
 /** Page title and one-line intro that reflect the current view. */
-function heading(query: string, filters: SearchFilters) {
-  if (query) return { title: <>Results for &ldquo;{query}&rdquo;</>, body: null };
+function heading(query: string, filters: SearchFilters, total: number | null) {
+  const count = total === null ? null : `${total} reference${total === 1 ? "" : "s"}`;
+  if (query) return { title: <>Results for &ldquo;{query}&rdquo;</>, body: count };
   const onlyCategory = filters.category?.length === 1 && Object.keys(filters).length === 1;
   if (onlyCategory) {
     const name = termName("category", filters.category![0]);
-    return { title: <>Explore {name}</>, body: `Every ${name} reference in the library, newest first.` };
+    return { title: <>{name}</>, body: count && `${count} in ${name}, newest first.` };
   }
   return {
-    title: (
-      <>
-        <span className="block">No concepts.</span>
-        <span className="block">Just real brand posts.</span>
-      </>
-    ),
-    body: "Organic brand posts worth studying for their hooks, structure and execution. Use them to benchmark your work, not to copy it.",
+    title: <>Library</>,
+    body: `${count ? `${count}, ` : ""}each reviewed by an editor. Study the hook, the structure and the execution, then make your own.`,
   };
 }
 
@@ -91,7 +86,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
 
   const facets = libraryFacets();
   const brands = listBrands();
-  const hero = heading(query, filters);
+  const hero = heading(query, filters, result?.total ?? null);
   const activeCategory = filters.category?.length === 1 ? filters.category[0] : null;
   const advanced = (Object.keys(filterDimensions) as FilterDimension[]).filter((dimension) => dimension !== "category");
 
@@ -118,55 +113,61 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <CommandSearch items={quickSearchIndex()} />
-
       <Wrapper variant="standard" className="pb-24">
-        <PageHeader title={hero.title} description={hero.body ?? undefined} className="pb-6" />
-
-        {!query && !activeChips.length && (
-          <div className="-mt-2 mb-6 flex flex-wrap items-center gap-2">
-            <span className="text-[12px] text-muted-foreground">Try a brief:</span>
-            {examples.map((example) => (
-              <Button key={example} asChild variant="tertiary" size="compact">
-                <Link href={libraryHref(example, {})}>{example}</Link>
-              </Button>
-            ))}
+        <header className="pt-24 sm:pt-28">
+          <h1 className="heading-display text-balance break-words text-foreground">{hero.title}</h1>
+          <p className="mt-2 max-w-2xl text-pretty text-[15px] leading-6 text-muted-foreground">
+            {hero.body}
+          </p>
+          <div className="mt-6 max-w-3xl">
+            <CommandSearch items={quickSearchIndex()} initialQuery={query} />
           </div>
-        )}
-
-        {/* Categories: real links, since filters live in the URL */}
-        <nav
-          aria-label="Categories"
-          className="flex snap-x snap-proximity gap-1 overflow-x-auto border-b border-border pb-3 pt-1 scrollbar-hide"
-        >
-          <Button asChild size="compact" variant={allCurrent ? "secondary" : "ghost"} className="shrink-0 snap-start">
-            <Link href={libraryHref(query, withoutCategory(filters))} aria-current={allCurrent ? "page" : undefined}>
-              <WeightLabel current={allCurrent}>All</WeightLabel>
-            </Link>
-          </Button>
-          {categories
-            .filter((category) => (facets.category[category.id] ?? 0) > 0)
-            .map((category) => {
-              const current = activeCategory === category.id;
-              return (
-                <Button key={category.id} asChild size="compact" variant={current ? "secondary" : "ghost"} className="shrink-0 snap-start">
-                  <Link
-                    href={libraryHref(query, { ...withoutCategory(filters), category: [category.id] })}
-                    aria-current={current ? "page" : undefined}
-                  >
-                    <WeightLabel current={current}>{category.name}</WeightLabel>
-                  </Link>
+          {!query && !activeChips.length && (
+            <div className="-mx-6 mt-3 flex items-center gap-1.5 overflow-x-auto px-6 scrollbar-hide">
+              <span className="mr-1 shrink-0 text-[12px] text-muted-foreground">Try</span>
+              {examples.map((example) => (
+                <Button key={example} asChild variant="tertiary" size="compact" className="shrink-0 whitespace-nowrap">
+                  <Link href={libraryHref(example, {})}>{example}</Link>
                 </Button>
-              );
-            })}
-        </nav>
+              ))}
+            </div>
+          )}
+        </header>
 
-        {/* Everything else, collapsed until needed */}
-        <details className="group/filters mt-3" open={advancedCount > 0}>
-          <summary className="inline-flex h-7 cursor-pointer select-none list-none items-center gap-1 rounded-lg px-2 text-[12px] text-muted-foreground outline-none transition-colors duration-80 hover:bg-hover hover:text-foreground focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)] [&::-webkit-details-marker]:hidden">
-            More filters
-            {advancedCount > 0 && <span className="tabular-nums text-foreground">({advancedCount})</span>}
-            <ChevronDown size={14} strokeWidth={1.5} aria-hidden="true" className="group-open/filters:rotate-180" />
+        {/* Categories and the filter toggle share one row; filters are real links and a GET form, since they live in the URL */}
+        <div className="relative mt-8">
+          <nav
+            aria-label="Categories"
+            className="flex snap-x snap-proximity gap-1 overflow-x-auto border-b border-border pb-3 pr-28 scrollbar-hide"
+          >
+            <Button asChild size="compact" variant={allCurrent ? "secondary" : "ghost"} className="shrink-0 snap-start">
+              <Link href={libraryHref(query, withoutCategory(filters))} aria-current={allCurrent ? "page" : undefined}>
+                <WeightLabel current={allCurrent}>All</WeightLabel>
+              </Link>
+            </Button>
+            {categories
+              .filter((category) => (facets.category[category.id] ?? 0) > 0)
+              .map((category) => {
+                const current = activeCategory === category.id;
+                return (
+                  <Button key={category.id} asChild size="compact" variant={current ? "secondary" : "ghost"} className="shrink-0 snap-start">
+                    <Link
+                      href={libraryHref(query, { ...withoutCategory(filters), category: [category.id] })}
+                      aria-current={current ? "page" : undefined}
+                    >
+                      <WeightLabel current={current}>{category.name}</WeightLabel>
+                    </Link>
+                  </Button>
+                );
+              })}
+          </nav>
+
+        <details className="group/filters" open={advancedCount > 0}>
+          <summary className="absolute right-0 top-0 inline-flex h-7 cursor-pointer select-none list-none items-center gap-1.5 rounded-lg bg-background px-2 text-[12px] text-foreground outline-none transition-colors duration-80 hover:bg-hover focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)] [&::-webkit-details-marker]:hidden">
+            <SlidersHorizontal size={14} strokeWidth={1.5} aria-hidden="true" />
+            Filters
+            {advancedCount > 0 && <span className="tabular-nums text-muted-foreground">{advancedCount}</span>}
+            <ChevronDown size={14} strokeWidth={1.5} aria-hidden="true" className="text-muted-foreground group-open/filters:rotate-180" />
           </summary>
           <form action="/library" method="get" className="mt-3 border-b border-border pb-6">
             {query && <input type="hidden" name="q" value={query} />}
@@ -252,6 +253,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
             </div>
           </form>
         </details>
+        </div>
 
         {activeChips.length > 0 && (
           <ul className="mt-4 flex flex-wrap gap-2" aria-label="Active filters">
@@ -313,7 +315,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
 
         {result && (
           <>
-            <p className="mt-6 text-[13px] tabular-nums text-muted-foreground" aria-live="polite">
+            <p className="sr-only" aria-live="polite">
               {result.total} reference{result.total === 1 ? "" : "s"}
             </p>
             {result.total === 0 ? (

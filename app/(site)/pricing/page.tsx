@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import Wrapper from "@/components/fundations/containers/Wrapper";
-import PageHeader from "@/components/fundations/containers/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Card, CardGroup, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { fontWeights } from "@/lib/font-weight";
 import Faq from "@/components/global/Faq";
 
@@ -24,6 +24,7 @@ const plans = [
     price: "$0",
     period: "",
     audience: "Evaluate the library.",
+    includes: "Includes:",
     features: ["Search and filter the library", "Full post analysis", "Private boards with notes", "Read-only share links"],
     cta: { label: "Create a free account", href: "/signup" },
   },
@@ -32,7 +33,8 @@ const plans = [
     price: "$12",
     period: "/month",
     audience: "For freelancers and individual designers.",
-    features: ["Everything in Free", "Higher search and board limits", "Priority on new categories", "Email support"],
+    includes: "Everything in Free, plus:",
+    features: ["Higher search and board limits", "Priority on new categories", "Email support"],
     cta: { label: "Start with Individual", href: "/signup?next=/pricing" },
     primary: true,
   },
@@ -41,7 +43,8 @@ const plans = [
     price: "From $100",
     period: "/month",
     audience: "For agencies that want founder-supported research.",
-    features: ["Everything in Individual", "Research help on live briefs", "Input on categories and taxonomy", "Invoiced monthly"],
+    includes: "Everything in Individual, plus:",
+    features: ["Research help on live briefs", "Input on categories and taxonomy", "Invoiced monthly"],
     cta: { label: "Talk to us", href: "/signup?next=/pricing" },
   },
 ];
@@ -50,45 +53,65 @@ export default function PricingPage() {
   return (
     <>
       <Wrapper variant="standard">
-        <PageHeader
-          title="Simple plans while we’re in beta"
-          description="Start free. Upgrade when Curatit becomes part of how you research briefs."
-        />
+        <header className="mx-auto flex max-w-2xl flex-col items-center pb-12 pt-28 text-center sm:pt-36">
+          <p className="text-[13px] text-muted-foreground" style={{ fontVariationSettings: fontWeights.medium }}>
+            Pricing
+          </p>
+          <h1 className="heading-hero mt-3 text-balance text-foreground">Simple plans while we&rsquo;re in beta</h1>
+          <p className="mt-4 max-w-md text-pretty text-[16px] leading-6 text-muted-foreground">
+            Start free. Upgrade when Curatit becomes part of how you research briefs.
+          </p>
+        </header>
 
-        {/* CardGroup needs a fixed column count; below md the tiles stack. */}
-        <CardGroup columns={3} separated border="outlined" className="gap-4 max-md:grid-cols-1!">
+        <div className="grid items-stretch gap-4 md:grid-cols-3">
           {plans.map((plan) => (
-            <Card key={plan.name}>
-              <CardHeader>
-                <CardTitle className="text-[16px]!">{plan.name}</CardTitle>
-                <CardDescription className="min-h-10 text-[13px]! leading-5">{plan.audience}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="flex items-baseline gap-1 text-foreground">
-                  <span className="text-[28px] leading-8 tabular-nums" style={{ fontVariationSettings: fontWeights.semibold }}>
-                    {plan.price}
-                  </span>
-                  {plan.period && <span className="text-[13px] text-muted-foreground">{plan.period}</span>}
-                </p>
-                <ul className="mt-6 flex flex-col gap-2.5 border-t border-border/60 pt-4">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-[13px] leading-5 text-foreground">
-                      <Check aria-hidden="true" size={16} strokeWidth={1.5} className="mt-0.5 shrink-0 text-muted-foreground" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-              <CardFooter className="mt-auto pt-6">
-                <Button asChild variant={plan.primary ? "primary" : "tertiary"} className="w-full">
-                  <Link href={plan.cta.href}>{plan.cta.label}</Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </CardGroup>
+            <section
+              key={plan.name}
+              aria-label={plan.name}
+              className={cn(
+                "flex flex-col rounded-2xl p-6 sm:p-7",
+                plan.primary ? "bg-card shadow-surface-6" : "border border-border/60"
+              )}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-[16px] text-foreground" style={{ fontVariationSettings: fontWeights.semibold }}>
+                  {plan.name}
+                </h2>
+                {plan.primary && (
+                  <Badge variant="dot" color="gray">
+                    Recommended
+                  </Badge>
+                )}
+              </div>
+              <p className="mt-1 min-h-10 text-[14px] leading-5 text-muted-foreground">{plan.audience}</p>
 
-        <p className="mt-6 text-center text-[12px] text-muted-foreground">
+              <p className="mt-6 flex items-baseline gap-1.5 text-foreground">
+                <span className="text-[40px] leading-[44px] tracking-[-0.02em] tabular-nums" style={{ fontVariationSettings: fontWeights.semibold }}>
+                  {plan.price}
+                </span>
+                {plan.period && <span className="text-[14px] text-muted-foreground">{plan.period}</span>}
+              </p>
+
+              <Button asChild variant={plan.primary ? "primary" : "secondary"} className="mt-6 w-full">
+                <Link href={plan.cta.href}>{plan.cta.label}</Link>
+              </Button>
+
+              <p className="mt-8 text-[13px] text-foreground" style={{ fontVariationSettings: fontWeights.medium }}>
+                {plan.includes}
+              </p>
+              <ul className="mt-3 flex flex-col gap-3">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-2.5 text-[14px] leading-5 text-foreground">
+                    <Check aria-hidden="true" size={16} strokeWidth={2} className="mt-0.5 shrink-0 text-foreground" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+
+        <p className="mt-8 text-center text-[13px] text-muted-foreground">
           Team workspaces with shared boards are planned. We&rsquo;ll offer them once collaboration ships, not before.
         </p>
       </Wrapper>
