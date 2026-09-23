@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import Text from "@/components/fundations/elements/Text";
-import Button from "@/components/fundations/elements/Button";
+import { ArrowLeft } from "lucide-react";
 import Wrapper from "@/components/fundations/containers/Wrapper";
-import BlogCard from "@/components/blog/BlogCard";
-import { getCollection, getEntry, getSortedPosts, renderMarkdown } from "@/lib/content";
+import PageHeader from "@/components/fundations/containers/PageHeader";
+import { Button } from "@/components/ui/button";
+import { BlogGrid } from "@/components/blog/BlogCard";
+import { formatDate, getCollection, getEntry, getSortedPosts, renderMarkdown } from "@/lib/content";
 
 type Params = { slug: string };
 
@@ -42,69 +44,69 @@ export default async function BlogPostPage({ params }: { params: Promise<Params>
 
   const html = await renderMarkdown(post.body);
   const latest = (await getSortedPosts()).slice(0, 3);
+  const pubDate = formatDate(post.data.pubDate);
 
   return (
     <>
-      <section>
-        <Wrapper variant="standard" className="py-24 lg:pt-48">
-          <div className="text-balance">
-            <div className="text-center max-w-3xl mx-auto text-balance">
-              <Text tag="h1" variant="displayLG" className="text-base-900 font-display font-thin">
-                {post.data.title}
-              </Text>
-              <Text tag="p" variant="textBase" className="text-base-600 mt-4">
-                {post.data.description}
-              </Text>
-            </div>
-            <div className="flex flex-wrap items-center gap-1 mt-8 justify-center">
-              {post.data.tags.map((tag) => (
-                <Button
-                  key={tag}
-                  isLink
-                  title={tag}
-                  size="sm"
-                  variant="muted"
-                  aria-label={tag}
-                  href={`/blog/tags/${tag}`}
-                  className="text-accent-500 font-medium text-xs hover:text-base-900 capitalize"
+      <Wrapper variant="standard">
+        <article className="mx-auto max-w-2xl">
+          <PageHeader
+            className="pb-6"
+            eyebrow={
+              <span className="flex items-center gap-3">
+                <Link
+                  href="/blog"
+                  className="inline-flex items-center gap-1 text-muted-foreground transition-colors duration-80 hover:text-foreground"
                 >
-                  {tag}
+                  <ArrowLeft aria-hidden="true" size={14} strokeWidth={1.5} />
+                  Journal
+                </Link>
+                <time dateTime={pubDate} className="text-[12px] tabular-nums">
+                  {pubDate}
+                </time>
+              </span>
+            }
+            title={post.data.title}
+            description={post.data.description}
+          />
+          <ul aria-label="Tags" className="flex flex-wrap items-center gap-2">
+            {post.data.tags.map((tag) => (
+              <li key={tag}>
+                <Button asChild size="compact" variant="tertiary" className="capitalize">
+                  <Link title={tag} aria-label={tag} href={`/blog/tags/${tag}`}>
+                    {tag}
+                  </Link>
                 </Button>
-              ))}
-            </div>
-          </div>
-          <div className="p-8 bg-base-50 rounded-lg mt-12">
-            <Image
-              width={1400}
-              height={1400}
-              loading="lazy"
-              decoding="async"
-              src={post.data.image.url}
-              alt={post.data.image.alt || post.data.title}
-              className="size-full aspect-8/5 object-top rounded shadow object-cover"
-            />
-          </div>
-          <Wrapper variant="narrow" className="mt-12">
-            <Wrapper variant="prose">
-              <div dangerouslySetInnerHTML={{ __html: html }} />
-            </Wrapper>
-          </Wrapper>
-        </Wrapper>
-      </section>
-      <section>
-        <Wrapper variant="standard" className="py-12">
-          <div className="flex flex-wrap gap-4 justify-between items-center">
-            <Text tag="h2" variant="displaySM" className="text-base-900 font-display font-thin">
-              Latest posts
-            </Text>
-            <Button isLink size="sm" variant="muted" href="/blog">
-              See all posts
-            </Button>
-          </div>
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 mt-8">
-            {latest.map((item) => (
-              <BlogCard key={item.id} post={item} />
+              </li>
             ))}
+          </ul>
+          <Image
+            width={1400}
+            height={875}
+            priority
+            sizes="(min-width: 768px) 672px, 100vw"
+            src={post.data.image.url}
+            alt={post.data.image.alt || post.data.title}
+            className="mt-8 aspect-8/5 w-full rounded-xl object-cover object-top shadow-surface-1"
+          />
+          <Wrapper variant="prose" className="mt-10">
+            <div dangerouslySetInnerHTML={{ __html: html }} />
+          </Wrapper>
+        </article>
+      </Wrapper>
+
+      <section aria-labelledby="latest-posts">
+        <Wrapper variant="standard" className="pt-12 pb-24">
+          <div className="border-t border-border pt-12">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <h2 id="latest-posts" className="heading-section text-foreground">
+                Latest posts
+              </h2>
+              <Button asChild size="compact" variant="tertiary">
+                <Link href="/blog">See all posts</Link>
+              </Button>
+            </div>
+            <BlogGrid posts={latest.map(({ id, data }) => ({ id, data }))} className="mt-6" />
           </div>
         </Wrapper>
       </section>
