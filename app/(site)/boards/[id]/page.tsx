@@ -24,10 +24,8 @@ export default async function BoardPage({ params }: { params: Promise<{ id: stri
   track("board_reopened", { viewer, resourceId: board.id });
 
   return (
-    <section>
-      <Wrapper variant="standard" className="py-24 lg:pt-48">
-        <BoardEditor key={`${board.id}-${board.version}`} initial={board} />
-      </Wrapper>
-    </section>
+    <Wrapper variant="standard" className="pb-24">
+      <BoardEditor key={`${board.id}-${board.version}`} initial={board} />
+    </Wrapper>
   );
 }

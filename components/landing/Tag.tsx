@@ -2,6 +2,7 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { motion, type MotionProps } from "framer-motion";
+import { fontWeights } from "@/lib/font-weight";
 
 type Tail = { side: "left" | "right" | "center"; offset?: number; near: number; far: number };
 
@@ -11,6 +12,7 @@ type Tail = { side: "left" | "right" | "center"; offset?: number; near: number; 
  */
 export default function Tag({
   color,
+  ink = "var(--background)",
   children,
   className = "",
   style,
@@ -20,6 +22,8 @@ export default function Tag({
   motionProps,
 }: {
   color: string;
+  /** Text colour on the bubble; pair `ink` with `colors.onInk`, `brand` with `colors.onBrand`. */
+  ink?: string;
   children: ReactNode;
   className?: string;
   style?: CSSProperties;
@@ -44,8 +48,8 @@ export default function Tag({
   return (
     <motion.div className={`absolute whitespace-nowrap ${className}`} style={style} {...motionProps}>
       <div
-        className="relative rounded-full font-medium text-white"
-        style={{ background: color, padding, fontSize }}
+        className="relative rounded-full"
+        style={{ background: color, color: ink, padding, fontSize, fontVariationSettings: fontWeights.medium }}
       >
         {children}
         <span aria-hidden="true" style={tailStyle} />

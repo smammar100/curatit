@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import Text from "@/components/fundations/elements/Text";
+import { ArrowLeft } from "lucide-react";
 import Wrapper from "@/components/fundations/containers/Wrapper";
-import BlogCard from "@/components/blog/BlogCard";
+import PageHeader from "@/components/fundations/containers/PageHeader";
+import { BlogGrid } from "@/components/blog/BlogCard";
 import { getSortedPosts, uniqueTags } from "@/lib/content";
 
 type Params = { tag: string };
@@ -31,17 +33,21 @@ export default async function BlogTagPage({ params }: { params: Promise<Params> 
   if (posts.length === 0) notFound();
 
   return (
-    <section className="relative overflow-hidden">
-      <Wrapper variant="standard" className="py-24 lg:pt-48">
-        <Text tag="h1" variant="displayLG" className="text-base-900 font-display font-thin">
-          All blog posts about {tag}
-        </Text>
-        <div className="grid grid-cols-1 gap-px gap-y-12 md:grid-cols-2 lg:grid-cols-3 group mt-8">
-          {posts.map((post) => (
-            <BlogCard key={post.id} post={post} />
-          ))}
-        </div>
-      </Wrapper>
-    </section>
+    <Wrapper variant="standard" className="pb-24">
+      <PageHeader
+        eyebrow={
+          <Link
+            href="/blog/tags"
+            className="inline-flex items-center gap-1 text-muted-foreground transition-colors duration-80 hover:text-foreground"
+          >
+            <ArrowLeft aria-hidden="true" size={14} strokeWidth={1.5} />
+            All tags
+          </Link>
+        }
+        title={`All journal posts about ${tag}`}
+        description={`${posts.length} ${posts.length === 1 ? "post" : "posts"}`}
+      />
+      <BlogGrid posts={posts.map(({ id, data }) => ({ id, data }))} />
+    </Wrapper>
   );
 }

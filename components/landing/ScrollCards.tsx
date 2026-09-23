@@ -20,10 +20,10 @@ import {
   clamp,
   dealSpring,
   fanSlots,
-  hoverEase,
   smoothEase,
 } from "./tokens";
 import { useIntroSkipped } from "./useIntro";
+import { spring } from "@/lib/springs";
 
 /* -------------------------------------------------------------------------- */
 /*  Geometry                                                                   */
@@ -78,7 +78,7 @@ function CardFace({
 }) {
   return (
     <motion.div
-      className="absolute overflow-hidden shadow-window"
+      className="absolute overflow-hidden shadow-surface-6"
       style={{
         left: -size / 2,
         top: -size / 2,
@@ -86,7 +86,7 @@ function CardFace({
         height: size,
         borderRadius: radius,
       }}
-      whileHover={hoverable ? { y: -8, transition: { duration: 0.25, ease: hoverEase } } : undefined}
+      whileHover={hoverable ? { y: -8, transition: spring.moderate } : undefined}
     >
       <Image
         src={cardImages[index]}
@@ -354,7 +354,7 @@ export default function ScrollCards({ containerRef }: { containerRef: RefObject<
     );
   }
 
-  // Same element either way — only its positioning changes — so the seven
+  // Same element either way (only its positioning changes), so the seven
   // cards stay mounted and never visibly reset when crossing into Section 2.
   const wrapperStyle: React.CSSProperties = locked
     ? {

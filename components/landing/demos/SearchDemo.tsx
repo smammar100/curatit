@@ -4,12 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Search } from "lucide-react";
 import SlideArt from "@/components/product/SlideArt";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { spring } from "@/lib/springs";
+import { fontWeights } from "@/lib/font-weight";
 import type { LandingLibrary } from "@/lib/services/creatives";
 import AppWindow from "../AppWindow";
 
 /**
  * Library search, driven by the visitor: pick a brief and it types into the
- * field, Curatit reads it into filters, and the real results stream in.
+ * field, Curatit reads it into filters, and the real results come in.
  */
 export default function SearchDemo({ briefs }: { briefs: LandingLibrary["briefs"] }) {
   const reduce = useReducedMotion();
@@ -48,30 +52,31 @@ export default function SearchDemo({ briefs }: { briefs: LandingLibrary["briefs"
   if (!brief) return null;
 
   return (
-    <AppWindow title="Curatit — Library">
+    <AppWindow title="Library">
       <div className="p-5">
-        <div className="flex h-10 items-center gap-2.5 rounded-md bg-surface px-3 text-sm text-ink shadow-card ring-1 ring-line">
-          <Search size={15} className="shrink-0 text-ink-subtle" aria-hidden="true" />
+        <div className="flex h-9 items-center gap-2 rounded-lg bg-background px-3 text-[13px] text-foreground shadow-surface-1">
+          <Search size={16} strokeWidth={1.5} className="shrink-0 text-muted-foreground" aria-hidden="true" />
           <span className="truncate">
             {typed}
-            {typing && <span className="ml-px inline-block h-4 w-px translate-y-0.5 bg-ink" aria-hidden="true" />}
+            {typing && <span className="ml-px inline-block h-4 w-px translate-y-0.5 bg-foreground" aria-hidden="true" />}
           </span>
         </div>
 
-        <div className="mt-3 flex min-h-6 flex-wrap items-center gap-1.5 text-[11px]">
-          <span className="text-ink-subtle">Read as</span>
+        <div className="mt-3 flex min-h-6 flex-wrap items-center gap-1.5 text-[12px]">
+          <span className="text-muted-foreground">Read as</span>
           <AnimatePresence mode="popLayout">
             {!typing &&
               brief.readAs.map((term, index) => (
                 <motion.span
                   key={`${active}-${term}`}
-                  className="rounded-full bg-brand-soft px-2 py-0.5 font-medium text-accent-700 ring-1 ring-inset ring-accent-100"
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2, ease: "easeOut", delay: index * 0.04 }}
+                  exit={{ opacity: 0, transition: spring.fast.exit }}
+                  transition={{ ...spring.fast, delay: index * 0.04 }}
                 >
-                  + {term}
+                  <Badge color="gray" size="compact">
+                    {term}
+                  </Badge>
                 </motion.span>
               ))}
           </AnimatePresence>
@@ -84,33 +89,36 @@ export default function SearchDemo({ briefs }: { briefs: LandingLibrary["briefs"
               className="min-w-0"
               initial={reduce ? false : { opacity: 0, y: 6 }}
               animate={typing ? { opacity: 0.25, y: 0 } : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.25, ease: "easeOut", delay: typing ? 0 : index * 0.04 }}
+              transition={{ ...spring.moderate, delay: typing ? 0 : index * 0.04 }}
             >
-              <div className="overflow-hidden rounded-md shadow-card ring-1 ring-line">
+              <div className="overflow-hidden rounded-[2px] shadow-surface-1">
                 <SlideArt art={result.art} alt="" />
               </div>
-              <figcaption className="mt-1.5 truncate text-[11px] text-ink-muted">
-                <span className="font-medium text-ink">{result.brand}</span> — {result.hook}
+              <figcaption className="mt-1.5 truncate text-[12px] text-muted-foreground">
+                <span className="text-foreground" style={{ fontVariationSettings: fontWeights.medium }}>
+                  {result.brand}
+                </span>{" "}
+                {result.hook}
               </figcaption>
             </motion.figure>
           ))}
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 border-t border-line bg-surface-sunken px-5 py-3">
-        <span className="text-[11px] text-ink-subtle">Try a brief</span>
+      <div className="flex flex-wrap items-center gap-1 border-t border-border px-5 py-3">
+        <span className="mr-1 text-[12px] text-muted-foreground">Try a brief</span>
         {briefs.map((item, index) => (
-          <button
+          <Button
             key={item.query}
             type="button"
+            size="compact"
+            variant={index === active ? "secondary" : "ghost"}
+            active={index === active}
             onClick={() => choose(index)}
             aria-pressed={index === active}
-            className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-[background-color,color] duration-150 ease-out active:scale-[0.97] ${
-              index === active ? "bg-base-800 text-white" : "bg-surface text-ink ring-1 ring-line hover:bg-surface-inset"
-            }`}
           >
             {item.query}
-          </button>
+          </Button>
         ))}
       </div>
     </AppWindow>

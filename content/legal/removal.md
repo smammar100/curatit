@@ -7,14 +7,14 @@ Curatit shows brand posts for research, always credited to the account that publ
 
 ## How to request removal
 
-Email **[removal contact — to be confirmed before launch]** with:
+Email **[removal contact: to be confirmed before launch]** with:
 
 - A link to the Curatit page or the original post.
 - Your relationship to the content (for example, the brand or its agency).
 
 ## What happens next
 
-- We stop showing the content **immediately** while we review your request — in search, on post pages, in saved boards, and on shared links.
+- We stop showing the content **immediately** while we review your request: in search, on post pages, in saved boards, and on shared links.
 - We aim to acknowledge requests by the next business day.
 - Removed content is not re-added by later collection runs.
 

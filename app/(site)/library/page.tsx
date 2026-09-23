@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Text from "@/components/fundations/elements/Text";
-import Button from "@/components/fundations/elements/Button";
+import { ChevronDown, Plus, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import Wrapper from "@/components/fundations/containers/Wrapper";
+import PageHeader from "@/components/fundations/containers/PageHeader";
 import CommandSearch from "@/components/product/CommandSearch";
 import LibraryGrid from "@/components/product/LibraryGrid";
 import { requireViewer } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
+import { fontWeights } from "@/lib/font-weight";
 import { rateLimit } from "@/lib/security";
 import {
   libraryFacets,
@@ -28,7 +31,11 @@ const examples = [
   "Employer branding featuring real employees",
 ];
 
-/** Carbon-style centred hero copy that reflects the current view. */
+/** Plain input recipe matching FF's InputField, for native GET form fields. */
+const field =
+  "h-9 w-full rounded-lg bg-background px-3 text-[13px] text-foreground shadow-surface-1 placeholder:text-muted-foreground outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]";
+
+/** Page title and one-line intro that reflect the current view. */
 function heading(query: string, filters: SearchFilters) {
   if (query) return { title: <>Results for &ldquo;{query}&rdquo;</>, body: null };
   const onlyCategory = filters.category?.length === 1 && Object.keys(filters).length === 1;
@@ -43,8 +50,25 @@ function heading(query: string, filters: SearchFilters) {
         <span className="block">Just real brand posts.</span>
       </>
     ),
-    body: "A curated library of organic brand posts worth studying — hooks, structure, and execution. Use them to benchmark your own work, not to copy it.",
+    body: "Organic brand posts worth studying for their hooks, structure and execution. Use them to benchmark your work, not to copy it.",
   };
+}
+
+/** A label that turns semibold when current, with a hidden heavier copy so neighbours never shift. */
+function WeightLabel({ children, current }: { children: string; current: boolean }) {
+  return (
+    <span className="inline-grid">
+      <span className="invisible col-start-1 row-start-1" style={{ fontVariationSettings: fontWeights.semibold }} aria-hidden="true">
+        {children}
+      </span>
+      <span
+        className="col-start-1 row-start-1"
+        style={{ fontVariationSettings: current ? fontWeights.semibold : fontWeights.normal }}
+      >
+        {children}
+      </span>
+    </span>
+  );
 }
 
 export default async function LibraryPage({ searchParams }: { searchParams: Promise<RawParams> }) {
@@ -90,227 +114,233 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
   );
   const advancedCount = advanced.reduce((sum, dimension) => sum + (filters[dimension]?.length ?? 0), 0) +
     (filters.brand?.length ?? 0) + (filters.dateFrom ? 1 : 0) + (filters.dateTo ? 1 : 0);
+  const allCurrent = !activeCategory && !filters.category?.length;
 
   return (
     <>
       <CommandSearch items={quickSearchIndex()} />
 
-      <section>
-        <Wrapper variant="standard" className="pt-24 lg:pt-48">
-          <div className="mx-auto max-w-3xl text-balance text-center">
-            <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 break-words">
-              {hero.title}
-            </Text>
-            {hero.body && (
-              <Text tag="p" variant="textBase" className="mt-4 text-base-600">
-                {hero.body}
-              </Text>
-            )}
-            {!query && !activeChips.length && (
-              <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs">
-                {examples.map((example) => (
-                  <Link
-                    key={example}
-                    href={libraryHref(example, {})}
-                    className="rounded-full bg-base-50 px-3 py-1 text-base-700 hover:bg-base-100"
-                  >
-                    {example}
-                  </Link>
-                ))}
-              </div>
-            )}
+      <Wrapper variant="standard" className="pb-24">
+        <PageHeader title={hero.title} description={hero.body ?? undefined} className="pb-6" />
+
+        {!query && !activeChips.length && (
+          <div className="-mt-2 mb-6 flex flex-wrap items-center gap-2">
+            <span className="text-[12px] text-muted-foreground">Try a brief:</span>
+            {examples.map((example) => (
+              <Button key={example} asChild variant="tertiary" size="compact">
+                <Link href={libraryHref(example, {})}>{example}</Link>
+              </Button>
+            ))}
           </div>
-        </Wrapper>
-      </section>
+        )}
 
-      <section>
-        <Wrapper variant="standard" className="pb-32 pt-24">
-          {/* Category chips — Carbon's tag row */}
-          <nav aria-label="Categories" className="relative flex snap-x snap-proximity gap-1 overflow-x-scroll py-2 scrollbar-hide">
-            <Button
-              isLink
-              size="xs"
-              variant={!activeCategory && !filters.category?.length ? "default" : "muted"}
-              href={libraryHref(query, withoutCategory(filters))}
-              className="shrink-0"
-            >
-              All
-            </Button>
-            {categories
-              .filter((category) => (facets.category[category.id] ?? 0) > 0)
-              .map((category) => (
-                <Button
-                  key={category.id}
-                  isLink
-                  size="xs"
-                  variant={activeCategory === category.id ? "default" : "muted"}
-                  href={libraryHref(query, { ...withoutCategory(filters), category: [category.id] })}
-                  aria-current={activeCategory === category.id ? "page" : undefined}
-                  className="shrink-0"
-                >
-                  {category.name}
-                </Button>
-              ))}
-          </nav>
-
-          {/* Everything else, collapsed until needed */}
-          <details className="group/filters mt-2" open={advancedCount > 0}>
-            <summary className="inline-flex cursor-pointer select-none items-center gap-2 rounded-lg px-1 py-2 text-xs font-medium text-base-600 hover:text-base-900">
-              More filters{advancedCount > 0 && <span className="text-accent-600">({advancedCount})</span>}
-            </summary>
-            <form action="/library" method="get" className="mt-2 rounded-lg bg-base-50 p-8">
-              {query && <input type="hidden" name="q" value={query} />}
-              {(filters.category ?? []).map((id) => (
-                <input key={id} type="hidden" name="category" value={id} />
-              ))}
-              <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-4">
-                {advanced.map((dimension) => {
-                  const terms = filterDimensions[dimension].terms.filter((term) => (facets[dimension][term.id] ?? 0) > 0);
-                  if (!terms.length) return null;
-                  return (
-                    <fieldset key={dimension}>
-                      <legend className="text-sm font-medium text-base-900">{filterDimensions[dimension].label}</legend>
-                      <div className="mt-2 space-y-1">
-                        {terms.map((term) => (
-                          <label key={term.id} className="flex cursor-pointer items-center gap-2 text-sm text-base-700">
-                            <input
-                              type="checkbox"
-                              name={dimension}
-                              value={term.id}
-                              defaultChecked={filters[dimension]?.includes(term.id)}
-                              className="size-4 rounded border-base-300 text-accent-600 focus:ring-accent-500"
-                            />
-                            <span className="grow">{term.name}</span>
-                            <span className="text-xs text-base-400">{facets[dimension][term.id]}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </fieldset>
-                  );
-                })}
-                <fieldset>
-                  <legend className="text-sm font-medium text-base-900">Brand</legend>
-                  <div className="mt-2 space-y-1">
-                    {brands.map((brand) => (
-                      <label key={brand.id} className="flex cursor-pointer items-center gap-2 text-sm text-base-700">
-                        <input
-                          type="checkbox"
-                          name="brand"
-                          value={brand.id}
-                          defaultChecked={filters.brand?.includes(brand.id)}
-                          className="size-4 rounded border-base-300 text-accent-600 focus:ring-accent-500"
-                        />
-                        <span className="grow">{brand.name}</span>
-                        <span className="text-xs text-base-400">{brand.count}</span>
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-                <fieldset>
-                  <legend className="text-sm font-medium text-base-900">Published date</legend>
-                  <div className="mt-2 grid gap-2">
-                    <label className="text-xs text-base-600">
-                      From
-                      <input type="date" name="from" defaultValue={filters.dateFrom} className="mt-1 block w-full rounded-md border-base-200 text-xs" />
-                    </label>
-                    <label className="text-xs text-base-600">
-                      To
-                      <input type="date" name="to" defaultValue={filters.dateTo} className="mt-1 block w-full rounded-md border-base-200 text-xs" />
-                    </label>
-                  </div>
-                </fieldset>
-              </div>
-              <div className="mt-8 flex gap-2">
-                <Button type="submit" size="sm" variant="default">
-                  Apply filters
-                </Button>
-                <Button isLink size="sm" variant="muted" href={libraryHref(query, {})}>
-                  Clear all
-                </Button>
-              </div>
-            </form>
-          </details>
-
-          {activeChips.length > 0 && (
-            <ul className="mt-4 flex flex-wrap gap-2" aria-label="Active filters">
-              {activeChips.map((chip) => (
-                <li key={`${chip.key}-${chip.id}`}>
+        {/* Categories: real links, since filters live in the URL */}
+        <nav
+          aria-label="Categories"
+          className="flex snap-x snap-proximity gap-1 overflow-x-auto border-b border-border pb-3 pt-1 scrollbar-hide"
+        >
+          <Button asChild size="compact" variant={allCurrent ? "secondary" : "ghost"} className="shrink-0 snap-start">
+            <Link href={libraryHref(query, withoutCategory(filters))} aria-current={allCurrent ? "page" : undefined}>
+              <WeightLabel current={allCurrent}>All</WeightLabel>
+            </Link>
+          </Button>
+          {categories
+            .filter((category) => (facets.category[category.id] ?? 0) > 0)
+            .map((category) => {
+              const current = activeCategory === category.id;
+              return (
+                <Button key={category.id} asChild size="compact" variant={current ? "secondary" : "ghost"} className="shrink-0 snap-start">
                   <Link
-                    href={libraryHref(query, withoutFilter(filters, chip.key, chip.id))}
-                    className="inline-flex items-center gap-1 rounded-full bg-base-800 px-3 py-1 text-xs text-white hover:bg-base-700"
-                    aria-label={`Remove filter ${chip.label}`}
+                    href={libraryHref(query, { ...withoutCategory(filters), category: [category.id] })}
+                    aria-current={current ? "page" : undefined}
                   >
-                    {chip.label} <span aria-hidden="true">×</span>
+                    <WeightLabel current={current}>{category.name}</WeightLabel>
                   </Link>
-                </li>
-              ))}
-            </ul>
-          )}
+                </Button>
+              );
+            })}
+        </nav>
 
-          {suggestions.length > 0 && (
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
-              <span className="text-base-500">We read your brief as:</span>
-              {suggestions.map((term) => (
+        {/* Everything else, collapsed until needed */}
+        <details className="group/filters mt-3" open={advancedCount > 0}>
+          <summary className="inline-flex h-7 cursor-pointer select-none list-none items-center gap-1 rounded-lg px-2 text-[12px] text-muted-foreground outline-none transition-colors duration-80 hover:bg-hover hover:text-foreground focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)] [&::-webkit-details-marker]:hidden">
+            More filters
+            {advancedCount > 0 && <span className="tabular-nums text-foreground">({advancedCount})</span>}
+            <ChevronDown size={14} strokeWidth={1.5} aria-hidden="true" className="group-open/filters:rotate-180" />
+          </summary>
+          <form action="/library" method="get" className="mt-3 border-b border-border pb-6">
+            {query && <input type="hidden" name="q" value={query} />}
+            {(filters.category ?? []).map((id) => (
+              <input key={id} type="hidden" name="category" value={id} />
+            ))}
+            <div className="grid grid-cols-2 gap-x-8 gap-y-6 md:grid-cols-3 lg:grid-cols-4">
+              {advanced.map((dimension) => {
+                const terms = filterDimensions[dimension].terms.filter((term) => (facets[dimension][term.id] ?? 0) > 0);
+                if (!terms.length) return null;
+                return (
+                  <fieldset key={dimension}>
+                    <legend className="text-[13px] text-foreground" style={{ fontVariationSettings: fontWeights.medium }}>
+                      {filterDimensions[dimension].label}
+                    </legend>
+                    <div className="mt-2 space-y-0.5">
+                      {terms.map((term) => (
+                        <label
+                          key={term.id}
+                          className="-mx-2 flex h-7 cursor-pointer items-center gap-2 rounded-lg px-2 text-[13px] text-foreground hover:bg-hover"
+                        >
+                          <input
+                            type="checkbox"
+                            name={dimension}
+                            value={term.id}
+                            defaultChecked={filters[dimension]?.includes(term.id)}
+                            className="size-3.5 shrink-0 accent-foreground"
+                          />
+                          <span className="grow truncate">{term.name}</span>
+                          <span className="text-[12px] tabular-nums text-muted-foreground">{facets[dimension][term.id]}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                );
+              })}
+              <fieldset>
+                <legend className="text-[13px] text-foreground" style={{ fontVariationSettings: fontWeights.medium }}>
+                  Brand
+                </legend>
+                <div className="mt-2 space-y-0.5">
+                  {brands.map((brand) => (
+                    <label
+                      key={brand.id}
+                      className="-mx-2 flex h-7 cursor-pointer items-center gap-2 rounded-lg px-2 text-[13px] text-foreground hover:bg-hover"
+                    >
+                      <input
+                        type="checkbox"
+                        name="brand"
+                        value={brand.id}
+                        defaultChecked={filters.brand?.includes(brand.id)}
+                        className="size-3.5 shrink-0 accent-foreground"
+                      />
+                      <span className="grow truncate">{brand.name}</span>
+                      <span className="text-[12px] tabular-nums text-muted-foreground">{brand.count}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <fieldset>
+                <legend className="text-[13px] text-foreground" style={{ fontVariationSettings: fontWeights.medium }}>
+                  Published date
+                </legend>
+                <div className="mt-2 grid gap-3">
+                  <label className="grid gap-1 text-[12px] text-muted-foreground">
+                    From
+                    <input type="date" name="from" defaultValue={filters.dateFrom} className={field} />
+                  </label>
+                  <label className="grid gap-1 text-[12px] text-muted-foreground">
+                    To
+                    <input type="date" name="to" defaultValue={filters.dateTo} className={field} />
+                  </label>
+                </div>
+              </fieldset>
+            </div>
+            <div className="mt-6 flex gap-2">
+              <Button type="submit" size="compact" variant="primary">
+                Apply filters
+              </Button>
+              <Button asChild size="compact" variant="ghost">
+                <Link href={libraryHref(query, {})}>Clear all</Link>
+              </Button>
+            </div>
+          </form>
+        </details>
+
+        {activeChips.length > 0 && (
+          <ul className="mt-4 flex flex-wrap gap-2" aria-label="Active filters">
+            {activeChips.map((chip) => (
+              <li key={`${chip.key}-${chip.id}`}>
                 <Link
-                  key={`${term.dimension}-${term.id}`}
+                  href={libraryHref(query, withoutFilter(filters, chip.key, chip.id))}
+                  className="group/chip inline-flex rounded-lg outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]"
+                  aria-label={`Remove filter ${chip.label}`}
+                >
+                  <Badge className="gap-1 pr-1.5 transition-colors duration-80 group-hover/chip:bg-selected!">
+                    <span className="inline-flex items-center gap-1">
+                      {chip.label}
+                      <X size={12} strokeWidth={1.5} aria-hidden="true" className="text-muted-foreground group-hover/chip:text-foreground" />
+                    </span>
+                  </Badge>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {suggestions.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-[12px] text-muted-foreground">We read your brief as:</span>
+            {suggestions.map((term) => (
+              <Button key={`${term.dimension}-${term.id}`} asChild size="compact" variant="tertiary" className="pl-2">
+                <Link
                   href={libraryHref(query, withFilter(filters, term.dimension, term.id))}
-                  className="rounded-full bg-accent-50 px-3 py-1 text-accent-700 ring-1 ring-inset ring-accent-100 hover:bg-accent-100"
                   title="Apply as a strict filter"
                 >
-                  + {filterDimensions[term.dimension].label}: {term.name}
+                  <span className="inline-flex items-center gap-1">
+                    <Plus size={14} strokeWidth={1.5} aria-hidden="true" />
+                    {filterDimensions[term.dimension].label}: {term.name}
+                  </span>
                 </Link>
-              ))}
-            </div>
-          )}
+              </Button>
+            ))}
+          </div>
+        )}
 
-          {result?.notice && (
-            <p className="mt-4 rounded-lg bg-base-50 px-4 py-3 text-xs text-base-600" role="note">
-              {result.notice}
+        {result?.notice && (
+          <p className="mt-4 rounded-xl bg-muted px-3 py-2.5 text-[13px] text-foreground" role="note">
+            {result.notice}
+          </p>
+        )}
+
+        {error && (
+          <div role="alert" className="mt-6 rounded-xl bg-destructive-light px-3 py-2.5 text-[13px] text-destructive">
+            {error}{" "}
+            <Link
+              href={libraryHref(query, filters)}
+              className="underline decoration-current/40 underline-offset-[3px] hover:decoration-current"
+            >
+              Retry
+            </Link>
+          </div>
+        )}
+
+        {result && (
+          <>
+            <p className="mt-6 text-[13px] tabular-nums text-muted-foreground" aria-live="polite">
+              {result.total} reference{result.total === 1 ? "" : "s"}
             </p>
-          )}
-
-          {error && (
-            <div role="alert" className="mt-6 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">
-              {error}{" "}
-              <Link href={libraryHref(query, filters)} className="underline">
-                Retry
-              </Link>
-            </div>
-          )}
-
-          {result && (
-            <>
-              <p className="mt-6 text-xs uppercase tracking-wide text-base-500" aria-live="polite">
-                {result.total} reference{result.total === 1 ? "" : "s"}
-              </p>
-              {result.total === 0 ? (
-                <div className="mt-8 rounded-lg bg-base-50 p-12 text-center">
-                  <Text tag="h2" variant="displaySM" className="font-display font-light text-base-900">
-                    Nothing in the library matches this yet.
-                  </Text>
-                  <p className="mx-auto mt-3 max-w-md text-sm text-base-600">
-                    Try fewer filters or broader words. The library covers six launch categories; other industries
-                    aren&rsquo;t indexed yet.
-                  </p>
-                  {(activeChips.length > 0 || query) && (
-                    <Button isLink size="sm" variant="muted" href="/library" className="mx-auto mt-6 w-fit">
-                      Browse everything
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <LibraryGrid
-                  key={libraryHref(query, filters)}
-                  initialItems={result.items}
-                  initialCursor={result.nextCursor}
-                  query={query}
-                  filters={filters}
-                />
-              )}
-            </>
-          )}
-        </Wrapper>
-      </section>
+            {result.total === 0 ? (
+              <div className="flex max-w-md flex-col items-start gap-2 py-12">
+                <h2 className="heading-section text-foreground">Nothing in the library matches this yet</h2>
+                <p className="text-[14px] leading-6 text-muted-foreground">
+                  Try fewer filters or broader words. The library covers six launch categories; other industries
+                  aren&rsquo;t indexed yet.
+                </p>
+                {(activeChips.length > 0 || query) && (
+                  <Button asChild variant="secondary" className="mt-2">
+                    <Link href="/library">Browse everything</Link>
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <LibraryGrid
+                key={libraryHref(query, filters)}
+                initialItems={result.items}
+                initialCursor={result.nextCursor}
+                query={query}
+                filters={filters}
+              />
+            )}
+          </>
+        )}
+      </Wrapper>
     </>
   );
 }

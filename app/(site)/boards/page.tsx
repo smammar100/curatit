@@ -1,17 +1,41 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Text from "@/components/fundations/elements/Text";
-import Button from "@/components/fundations/elements/Button";
+import { Folder } from "lucide-react";
 import Wrapper from "@/components/fundations/containers/Wrapper";
+import PageHeader from "@/components/fundations/containers/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardDescription, CardFooter, CardGroup, CardHeader, CardTitle } from "@/components/ui/card";
 import CreateBoardForm from "@/components/boards/CreateBoardForm";
 import CommandSearch from "@/components/product/CommandSearch";
 import SlideArt from "@/components/product/SlideArt";
 import { formatDate } from "@/components/product/format";
 import { requireViewer } from "@/lib/auth";
-import { listBoards } from "@/lib/services/boards";
+import { listBoards, type BoardSummary } from "@/lib/services/boards";
 import { quickSearchIndex } from "@/lib/services/creatives";
 
 export const metadata: Metadata = { title: "Boards", robots: { index: false } };
+
+/** Leading media for a board row: up to 3 covers, or a folder tile when the board is empty. */
+function BoardMedia({ board }: { board: BoardSummary }) {
+  const covers = board.covers.slice(0, 3);
+  if (covers.length === 0) {
+    return (
+      <span data-slot="card-media" className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-hover">
+        <Folder size={18} strokeWidth={1.5} className="text-muted-foreground" aria-hidden="true" />
+      </span>
+    );
+  }
+  return (
+    <span data-slot="card-media" className="flex shrink-0 gap-1" aria-hidden="true">
+      {covers.map((cover, slot) => (
+        <span key={slot} className="block w-8 overflow-hidden rounded-[2px] shadow-surface-1">
+          <SlideArt art={cover} alt="" />
+        </span>
+      ))}
+    </span>
+  );
+}
 
 export default async function BoardsPage() {
   const viewer = await requireViewer("/boards");
@@ -20,70 +44,59 @@ export default async function BoardsPage() {
   return (
     <>
       <CommandSearch items={quickSearchIndex()} />
-      <section>
-        <Wrapper variant="standard" className="py-24 lg:pt-48">
-          <div className="mx-auto max-w-xl text-balance text-center">
-            <Text tag="h1" variant="displayLG" className="font-display font-thin text-base-900">
-              Your boards
-            </Text>
-            <Text tag="p" variant="textBase" className="mt-4 text-base-600">
-              Collect references for a brief, note what to adapt, and share a read-only link when you&rsquo;re ready.
-            </Text>
-            <div className="mt-8 flex justify-center gap-2">
-              <CreateBoardForm />
-              <Button isLink size="base" variant="muted" href="/library">
-                Browse the library
+      <Wrapper variant="standard" className="pb-24">
+        <PageHeader
+          title="Your boards"
+          description="Collect references for a brief, note what to adapt, and share a read-only link when you're ready."
+          actions={
+            <>
+              <Button asChild variant="secondary">
+                <Link href="/library">Browse the library</Link>
               </Button>
-            </div>
-          </div>
+              <CreateBoardForm />
+            </>
+          }
+        />
 
-          {boards.length === 0 ? (
-            <div className="mx-auto mt-16 max-w-xl rounded-lg bg-base-50 p-12 text-center">
-              <Text tag="h2" variant="displaySM" className="font-display font-light text-base-900">
-                No boards yet
-              </Text>
-              <p className="mt-3 text-sm text-base-600">
-                Create one above, or press Save on any reference in the library and make a board as you go.
-              </p>
-            </div>
-          ) : (
-            <ul className="group mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+        {boards.length === 0 ? (
+          <div className="flex max-w-md flex-col items-start gap-2 border-t border-border py-12">
+            <h2 className="heading-section text-foreground">No boards yet</h2>
+            <p className="text-[14px] leading-6 text-muted-foreground">
+              Create one above, or press Save on any reference in the library and make a board as you go.
+            </p>
+          </div>
+        ) : (
+          <>
+            <p className="mb-2 text-[13px] tabular-nums text-muted-foreground">
+              {boards.length} board{boards.length === 1 ? "" : "s"}
+            </p>
+            <CardGroup orientation="inline" className="border-y border-border">
               {boards.map((board) => (
-                <li
-                  key={board.id}
-                  className="peer relative duration-300 group-hover:opacity-30 hover:opacity-100 hover:peer-hover:opacity-30 focus-within:opacity-100"
-                >
-                  <Link
-                    href={`/boards/${board.id}`}
-                    className="block rounded-lg focus:outline-2 focus:outline-offset-4 focus:outline-accent-500"
-                  >
-                    <div className="grid grid-cols-3 gap-3 rounded-lg bg-base-50 p-8">
-                      {[0, 1, 2].map((slot) =>
-                        board.covers[slot] ? (
-                          <div key={slot} className="overflow-hidden rounded shadow">
-                            <SlideArt art={board.covers[slot]} alt="" />
-                          </div>
-                        ) : (
-                          <div key={slot} className="aspect-[4/5] rounded bg-base-100" aria-hidden="true" />
-                        )
-                      )}
-                    </div>
-                    <div className="mt-2">
-                      <Text tag="h3" variant="textSM" className="text-base-600">
-                        <span className="text-base-900">{board.name}</span> — {board.itemCount} reference
-                        {board.itemCount === 1 ? "" : "s"}
-                      </Text>
-                      <p className="mt-0.5 text-xs text-base-500">
-                        {board.hasActiveShare ? "Shared link active" : "Private"} · Updated {formatDate(board.updatedAt)}
-                      </p>
-                    </div>
-                  </Link>
-                </li>
+                <Card key={board.id} href={`/boards/${board.id}`} label={board.name}>
+                  <BoardMedia board={board} />
+                  <CardHeader>
+                    <CardTitle className="max-w-full whitespace-nowrap">{board.name}</CardTitle>
+                    <CardDescription className="text-[13px] tabular-nums">
+                      {board.itemCount} reference{board.itemCount === 1 ? "" : "s"} · Updated {formatDate(board.updatedAt)}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardFooter>
+                    {board.hasActiveShare ? (
+                      <Badge variant="dot" color="green">
+                        Shared link active
+                      </Badge>
+                    ) : (
+                      <Badge variant="dot" color="gray">
+                        Private
+                      </Badge>
+                    )}
+                  </CardFooter>
+                </Card>
               ))}
-            </ul>
-          )}
-        </Wrapper>
-      </section>
+            </CardGroup>
+          </>
+        )}
+      </Wrapper>
     </>
   );
 }

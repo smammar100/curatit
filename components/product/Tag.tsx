@@ -1,14 +1,22 @@
 import type { ReactNode } from "react";
+import { Badge } from "@/components/ui/badge";
 
+/**
+ * A state label, always in words. `accent` is the saved/brand state,
+ * `warning` is waiting on review, `muted` is neutral.
+ */
 export default function Tag({ children, tone = "muted" }: { children: ReactNode; tone?: "muted" | "accent" | "warning" }) {
-  const tones = {
-    muted: "bg-base-50 text-base-600 ring-base-200",
-    accent: "bg-accent-50 text-accent-700 ring-accent-100",
-    warning: "bg-amber-50 text-amber-800 ring-amber-200",
-  };
+  if (tone === "accent") {
+    return (
+      <span className="inline-flex h-6 items-center gap-1.5 whitespace-nowrap rounded-full bg-brand-soft px-2.5 text-[12px] text-brand-text">
+        <span aria-hidden="true" className="size-1.5 rounded-full bg-brand" />
+        {children}
+      </span>
+    );
+  }
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${tones[tone]}`}>
+    <Badge variant="dot" color={tone === "warning" ? "amber" : "gray"}>
       {children}
-    </span>
+    </Badge>
   );
 }

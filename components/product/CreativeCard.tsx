@@ -1,51 +1,50 @@
-import Link from "next/link";
 import type { CreativeSummary } from "@/lib/services/creatives";
 import { termName } from "@/lib/taxonomy";
+import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import SlideArt from "./SlideArt";
 import SaveButton from "./SaveButton";
 
 /**
- * Carbon-style card: artwork on a base-50 panel, one quiet caption line.
- * Place inside a grid with the `group` class for Carbon's hover-dim effect.
+ * One library post on the FF Card. Render inside a `CardGroup columns separated`
+ * so one highlight glides across the grid; the artwork itself never moves.
  */
-export default function CreativeCard({ creative, showWhy = true }: { creative: CreativeSummary; showWhy?: boolean }) {
-  const href = `/creatives/${creative.id}`;
+export default function CreativeCard({
+  creative,
+  showWhy = true,
+  index,
+}: {
+  creative: CreativeSummary;
+  showWhy?: boolean;
+  /** Injected by CardGroup. */
+  index?: number;
+}) {
+  const meta = `${termName("category", creative.categoryId)} · ${termName("objective", creative.objectiveId)}`;
 
   return (
-    <article className="peer relative duration-300 group-hover:opacity-30 hover:opacity-100 hover:peer-hover:opacity-30 focus-within:opacity-100">
-      <div className="relative rounded-lg bg-base-50 p-8">
-        <Link
-          href={href}
-          className="block overflow-hidden rounded shadow focus:outline-2 focus:outline-offset-2 focus:outline-accent-500"
-        >
-          <SlideArt art={creative.cover} alt={creative.coverAlt} />
-        </Link>
+    <Card href={`/creatives/${creative.id}`} label={`${creative.brand.name}: ${creative.hook}`} index={index}>
+      <div className="relative overflow-hidden rounded-[2px] shadow-surface-1">
+        <SlideArt art={creative.cover} alt={creative.coverAlt} />
         {creative.mediaType === "carousel" && (
-          <span className="absolute right-10 top-10 rounded-full bg-base-950/70 px-2 py-0.5 text-[11px] font-medium text-white">
-            1 / {creative.slideCount}
+          <span className="absolute right-2 top-2 rounded-[4px] bg-black/70 px-1.5 py-0.5 text-[11px] tabular-nums text-white">
+            1/{creative.slideCount}
           </span>
         )}
       </div>
-
-      <div className="mt-2 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="text-sm text-base-600">
-            <Link href={href} className="hover:text-base-900">
-              <span className="text-base-900">{creative.brand.name}</span> — {creative.hook}
-            </Link>
-          </h3>
-          <p className="mt-0.5 text-xs text-base-500">
-            {termName("category", creative.categoryId)} · {termName("objective", creative.objectiveId)}
-          </p>
-        </div>
-        <SaveButton postId={creative.id} compact />
-      </div>
-
-      {showWhy && creative.whyMatched.length > 0 && (
-        <p className="mt-1 text-xs text-base-500">
-          <span className="font-medium text-base-700">Why it matched:</span> {creative.whyMatched.join(" · ")}
-        </p>
-      )}
-    </article>
+      <CardHeader>
+        <CardTitle>{creative.brand.name}</CardTitle>
+        <CardDescription>{creative.hook}</CardDescription>
+        {showWhy && creative.whyMatched.length > 0 && (
+          <p className="text-[12px] leading-4 text-muted-foreground">Why it matched: {creative.whyMatched.join(" · ")}</p>
+        )}
+      </CardHeader>
+      <CardFooter className="flex-nowrap justify-between gap-3">
+        <span className="min-w-0 flex-1 truncate text-[12px] text-muted-foreground" title={meta}>
+          {meta}
+        </span>
+        <span className="shrink-0">
+          <SaveButton postId={creative.id} compact />
+        </span>
+      </CardFooter>
+    </Card>
   );
 }

@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import Text from "@/components/fundations/elements/Text";
-import Button from "@/components/fundations/elements/Button";
+import Link from "next/link";
 import Wrapper from "@/components/fundations/containers/Wrapper";
-import BlogCard from "@/components/blog/BlogCard";
+import PageHeader from "@/components/fundations/containers/PageHeader";
+import { Button } from "@/components/ui/button";
+import { BlogGrid } from "@/components/blog/BlogCard";
 import { getSortedPosts, uniqueTags } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "Magazine",
-  description:
-    "The latest trends in the world of web development, design, and technology.",
+  title: "Journal",
+  description: "The latest trends in web development, design, and technology.",
 };
 
 export default async function BlogIndexPage() {
@@ -16,39 +16,18 @@ export default async function BlogIndexPage() {
   const sortedTags = uniqueTags(posts);
 
   return (
-    <section>
-      <Wrapper variant="standard" className="py-24 lg:pt-48">
-        <div className="text-balance max-w-xl">
-          <Text tag="h1" variant="displayLG" className="text-base-900 font-display font-thin">
-            Magazine
-          </Text>
-          <Text tag="p" variant="textBase" className="text-base-600 mt-4">
-            You will find here the latest trends in the world of web development, design, and
-            technology.
-          </Text>
-        </div>
-        <div className="relative flex snap-x snap-proximity gap-1 py-2 px-2 overflow-x-scroll scrollbar-hide mt-12">
-          {sortedTags.map((tag) => (
-            <Button
-              key={tag}
-              isLink
-              size="xs"
-              title={tag}
-              variant="muted"
-              aria-label={tag}
-              href={`/blog/tags/${tag}`}
-              className="capitalize"
-            >
+    <Wrapper variant="standard" className="pb-24">
+      <PageHeader title="Journal" description="The latest trends in web development, design, and technology." />
+      <nav aria-label="Tags" className="-mx-1 flex gap-2 overflow-x-auto scrollbar-hide px-1 py-1">
+        {sortedTags.map((tag) => (
+          <Button key={tag} asChild size="compact" variant="tertiary" className="shrink-0 capitalize">
+            <Link title={tag} aria-label={tag} href={`/blog/tags/${tag}`}>
               {tag}
-            </Button>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 mt-8">
-          {posts.map((post) => (
-            <BlogCard key={post.id} post={post} />
-          ))}
-        </div>
-      </Wrapper>
-    </section>
+            </Link>
+          </Button>
+        ))}
+      </nav>
+      <BlogGrid posts={posts.map(({ id, data }) => ({ id, data }))} className="mt-6" />
+    </Wrapper>
   );
 }

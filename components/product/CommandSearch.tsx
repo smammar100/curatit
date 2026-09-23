@@ -1,135 +1,113 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Fuse from "fuse.js";
-import { Command } from "@/components/fundations/icons";
+import { Search, FileImage } from "lucide-react";
+import {
+  CommandMenu,
+  CommandMenuDialog,
+  CommandMenuEmpty,
+  CommandMenuInput,
+  CommandMenuList,
+  type CommandMenuItemData,
+} from "@/components/ui/command-menu";
+import { Elevated } from "@/lib/elevated";
 import type { QuickSearchItem } from "@/lib/services/creatives";
 
-const fieldClass =
-  "block w-full px-4 py-2 text-sm leading-tight bg-white border border-transparent transition duration-300 ease-in-out h-10 rounded-md text-base-900 ring-1 ring-base-200 placeholder-base-400 focus:border-accent-500 focus:ring-accent-100 focus:ring-2 focus:outline-none shadow-sm";
+const SEARCH = "__search";
 
 /**
- * Carbon's floating "Search ⌘K" pill. Instant fuzzy matches over the library
- * run locally (no API calls per keystroke); Enter runs a full search.
+ * ⌘K search over the library. Fuzzy matches run locally (no API call per
+ * keystroke); picking the first row runs a full search for the brief.
  */
 export default function CommandSearch({ items }: { items: QuickSearchItem[] }) {
   const router = useRouter();
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [isMac, setIsMac] = useState(true);
 
   const fuse = useMemo(
     () => new Fuse(items, { keys: ["brand", "hook", "category", "labels"], threshold: 0.35, ignoreLocation: true }),
     [items]
   );
-  const results = useMemo(() => (query.trim() ? fuse.search(query.trim()).slice(0, 8).map((r) => r.item) : []), [fuse, query]);
+  const matches = useMemo(() => {
+    const value = query.trim();
+    const hits = value ? fuse.search(value).slice(0, 8).map((result) => result.item) : items.slice(0, 6);
+    return new Set(hits.map((item) => item.id));
+  }, [fuse, items, query]);
 
-  function open() {
-    dialogRef.current?.showModal();
-    window.setTimeout(() => inputRef.current?.focus(), 50);
+  const menuItems: CommandMenuItemData[] = useMemo(
+    () => [
+      {
+        value: SEARCH,
+        label: query.trim() ? `Search the library for “${query.trim()}”` : "Search the whole library",
+        action: "Search",
+        icon: Search,
+        group: "Brief",
+      },
+      ...items.map((item) => ({
+        value: item.id,
+        label: item.hook,
+        description: `${item.brand} · ${item.category}`,
+        action: "Open post",
+        icon: FileImage,
+        group: query.trim() ? "Quick matches" : "Recent posts",
+      })),
+    ],
+    [items, query]
+  );
+
+  function select(item: CommandMenuItemData) {
+    setOpen(false);
+    if (item.value === SEARCH) {
+      const value = query.trim();
+      router.push(value ? `/library?q=${encodeURIComponent(value)}` : "/library");
+    } else {
+      router.push(`/creatives/${item.value}`);
+    }
   }
-
-  function close() {
-    dialogRef.current?.close();
-    setQuery("");
-  }
-
-  useEffect(() => {
-    setIsMac(/mac/i.test(navigator.platform));
-    const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        if (dialogRef.current?.open) close();
-        else open();
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, []);
 
   return (
     <>
-      <div className="fixed bottom-6 left-1/2 z-30 flex w-fit -translate-x-1/2 rounded-xl bg-base-100 p-2">
-        <button
-          type="button"
-          onClick={open}
-          aria-haspopup="dialog"
-          className="flex h-9 w-72 max-w-[calc(100vw-4rem)] items-center gap-2 rounded-md bg-white px-4 text-left text-xs text-base-500 shadow-sm ring-1 ring-base-200 transition duration-300 hover:ring-base-300 focus:outline-none focus:ring-2 focus:ring-accent-100"
-        >
-          Search the library
-          <span className="ml-auto flex items-center gap-0.5" aria-hidden="true">
-            {isMac ? <Command className="size-4" /> : "Ctrl"} K
-          </span>
-        </button>
+      <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2">
+        <Elevated offset={2} shadowLevel={5} className="rounded-xl p-1">
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-haspopup="dialog"
+            className="flex h-9 w-72 max-w-[calc(100vw-4rem)] items-center gap-2 rounded-lg px-3 text-left text-[13px] text-muted-foreground outline-none transition-colors duration-80 hover:bg-hover hover:text-foreground focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]"
+          >
+            <Search aria-hidden="true" className="size-4" strokeWidth={1.5} />
+            Search the library
+            <kbd className="ml-auto inline-flex h-5 items-center rounded-[4px] bg-muted px-1.5 font-sans text-[11px] text-muted-foreground shadow-surface-1">
+              ⌘K
+            </kbd>
+          </button>
+        </Elevated>
       </div>
 
-      <dialog
-        ref={dialogRef}
-        aria-label="Search the library"
-        onClose={() => setQuery("")}
-        onClick={(event) => {
-          if (event.target === dialogRef.current) close();
+      <CommandMenuDialog
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (!next) setQuery("");
         }}
-        className="mx-auto mt-12 w-[min(42rem,calc(100vw-2rem))] rounded-lg bg-base-50 p-0 backdrop:bg-base-950/50 backdrop:backdrop-blur lg:mt-48"
+        title="Search the library"
+        description="Describe the brief, or jump to a post."
       >
-        <form
-          className="p-8"
-          role="search"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const value = query.trim();
-            if (!value) return;
-            close();
-            router.push(`/library?q=${encodeURIComponent(value)}`);
-          }}
+        <CommandMenu
+          items={menuItems}
+          query={query}
+          onQueryChange={setQuery}
+          filter={(item) => item.value === SEARCH || matches.has(item.value)}
+          onSelect={select}
         >
-          <label htmlFor="command-search" className="sr-only">
-            Describe what you&rsquo;re looking for
-          </label>
-          <input
-            id="command-search"
-            ref={inputRef}
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Describe the brief, e.g. “finance carousels explaining a feature”"
-            maxLength={1000}
-            autoComplete="off"
-            className={fieldClass}
-          />
-
-          {query.trim() && (
-            <div className="mt-2 max-h-96 space-y-2 overflow-y-auto scrollbar-hide">
-              <button
-                type="submit"
-                className="block w-full rounded-lg bg-white px-8 py-4 text-left text-sm text-base-900 duration-300 hover:bg-base-100"
-              >
-                Search the whole library for &ldquo;{query.trim()}&rdquo; →
-              </button>
-              {results.length === 0 ? (
-                <p className="px-8 py-4 text-sm text-base-500">No quick matches. Press Enter for a full search.</p>
-              ) : (
-                results.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/creatives/${item.id}`}
-                    onClick={close}
-                    className="group block rounded-lg bg-white px-8 py-4 duration-300 hover:bg-base-100"
-                  >
-                    <span className="block text-sm font-medium text-base-900 group-hover:text-accent-600">{item.hook}</span>
-                    <span className="block text-xs text-base-600">
-                      {item.brand} · {item.category}
-                    </span>
-                  </Link>
-                ))
-              )}
-            </div>
-          )}
-        </form>
-      </dialog>
+          <CommandMenuInput placeholder="Describe the brief, for example finance carousels explaining a feature" />
+          <CommandMenuList>
+            <CommandMenuEmpty>No quick matches. Press Enter for a full search.</CommandMenuEmpty>
+          </CommandMenuList>
+        </CommandMenu>
+      </CommandMenuDialog>
     </>
   );
 }

@@ -3,19 +3,18 @@
 export type Bezier = [number, number, number, number];
 
 export const smoothEase: Bezier = [0.22, 1, 0.36, 1];
-export const hoverEase: Bezier = [0.34, 1.56, 0.64, 1];
 /** Spring for the hero deal-out: quick, with a small settle. */
 export const dealSpring = { type: "spring", stiffness: 260, damping: 28, mass: 0.9 } as const;
 
-/** Carbon theme colours (see app/globals.css), so the landing follows the palette. */
+/** Design-system colours (see app/globals.css), so the landing follows the theme. */
 export const colors = {
-  page: "var(--color-white)",
-  ink: "var(--color-base-900)",
-  dark: "var(--color-base-800)",
-  accent: "var(--color-accent-600)",
-  accentSoft: "var(--color-accent-500)",
-  eyebrow: "var(--color-base-500)",
-  body: "var(--color-base-600)",
+  page: "var(--background)",
+  ink: "var(--foreground)",
+  /** Text that sits on an `ink` fill. */
+  onInk: "var(--background)",
+  brand: "var(--brand)",
+  onBrand: "var(--on-brand)",
+  muted: "var(--muted-foreground)",
 } as const;
 
 export const CARD_SIZE = 200;
@@ -56,12 +55,6 @@ export const cascade = Array.from({ length: 7 }, (_, i) => ({
  */
 export const cardImages = Array.from({ length: 7 }, (_, i) => `/landing/card-${i + 1}.png`);
 
-/** Squash-and-stretch pop used by the chat-style tags. */
-export const jelly = {
-  opacity: [0, 1],
-  scaleX: [1, 1.25, 0.75, 1.15, 0.95, 1.05, 1],
-  scaleY: [1, 0.75, 1.25, 0.85, 1.05, 0.95, 1],
-};
 
 
 export const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));

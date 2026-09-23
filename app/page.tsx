@@ -6,7 +6,7 @@ import { getViewer } from "@/lib/auth";
 import { landingLibrary } from "@/lib/services/creatives";
 
 export const metadata: Metadata = {
-  title: { absolute: "Curatit — Find the brand posts worth studying" },
+  title: { absolute: "Curatit: find the brand posts worth studying" },
 };
 
 export default async function HomePage() {

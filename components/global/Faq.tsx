@@ -1,12 +1,12 @@
-import Text from "@/components/fundations/elements/Text";
 import Wrapper from "@/components/fundations/containers/Wrapper";
-import { Plus } from "@/components/fundations/icons";
+import { AccordionGroup, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 
+/** Shared with the landing FAQ, which reads `{ question, answer }`. */
 export const faqs = [
   {
     question: "What is Curatit?",
     answer:
-      "A curated library of organic brand posts from Instagram — statics and carousels — each with an editor-reviewed breakdown of its objective, structure, and visual approach. You search it by brief, save references to private boards, and share them.",
+      "A curated library of organic brand posts from Instagram, both statics and carousels. Each one has an editor-reviewed breakdown of its objective, structure, and visual approach. You search it by brief, save references to private boards, and share them.",
   },
   {
     question: "Where do the posts come from?",
@@ -26,7 +26,7 @@ export const faqs = [
   {
     question: "Who can see my boards?",
     answer:
-      "Only you. Boards are private by default. If you create a share link, anyone holding it can view the board title and references until it expires or you revoke it — never your description or notes.",
+      "Only you. Boards are private by default. If you create a share link, anyone holding it can view the board title and references until it expires or you revoke it. They never see your description or notes.",
   },
   {
     question: "Can I use these posts as templates?",
@@ -42,33 +42,26 @@ export const faqs = [
 
 export default function Faq() {
   return (
-    <section>
+    <section aria-labelledby="faq-heading">
       <Wrapper variant="standard" className="py-12">
-        <div className="text-center">
-          <Text tag="h2" variant="displayLG" className="text-base-900 font-display font-thin">
-            Frequently Asked Questions
-          </Text>
-          <Text tag="p" variant="textBase" className="text-base-600 mt-4">
-            What you should know before you start.
-          </Text>
-        </div>
-        <Wrapper variant="narrow" className="mt-12">
+        <div className="grid grid-cols-1 gap-6 border-t border-border pt-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-12">
           <div>
-            {faqs.map((faq) => (
-              <details key={faq.question} className="group cursor-pointer">
-                <summary className="text-sm leading-normal text-base-900 font-medium flex items-center justify-between w-full px-8 py-4 text-left select-none hover:text-accent-500 focus:text-accent-500">
-                  {faq.question}
-                  <Plus className="size-4 duration-300 ease-out transform group-open:-rotate-45" />
-                </summary>
-                <div className="py-4 px-8">
-                  <Text tag="p" variant="textSM" className="text-base-600 text-balance">
-                    {faq.answer}
-                  </Text>
-                </div>
-              </details>
-            ))}
+            <h2 id="faq-heading" className="heading-section text-foreground">
+              Frequently asked questions
+            </h2>
+            <p className="mt-2 text-[14px] leading-6 text-muted-foreground">What you should know before you start.</p>
           </div>
-        </Wrapper>
+          <AccordionGroup type="single" collapsible className="-mx-3 w-auto lg:mx-0 lg:w-full">
+            {faqs.map((faq, index) => (
+              <AccordionItem key={faq.question} value={faq.question} index={index}>
+                <AccordionTrigger>{faq.question}</AccordionTrigger>
+                <AccordionContent>
+                  <p className="max-w-[65ch] leading-5">{faq.answer}</p>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </AccordionGroup>
+        </div>
       </Wrapper>
     </section>
   );
