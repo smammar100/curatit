@@ -1,39 +1,36 @@
-# AGENTS.md — Carbon (Lexington Themes)
+# AGENTS.md — Curatit
 
-**Design rules:** [.cursor/skills/carbon-design/SKILL.md](./.cursor/skills/carbon-design/SKILL.md) - read before creating or changing any UI.  
+**Design rules:** [.cursor/skills/curatit-design/SKILL.md](./.cursor/skills/curatit-design/SKILL.md) - read before creating or changing any UI.  
 
-**Carbon** is a Lexington Themes Astro template for a **directory / showcase-style marketing site**: homepage highlights featured “sites” (with Fuse.js search), a magazine-style **blog**, a **digital product store**, and supporting pages (pricing, advertise, submit, sign-in/up, system styleguide). It fits **SaaS/marketing, template marketplaces, and curated listings**. Publisher: [Lexington Themes](https://lexingtonthemes.com/).
+**Curatit** is a **directory / showcase-style marketing site** built with Next.js on a Lexington Themes template: homepage highlights featured “sites” (with Fuse.js search), a magazine-style **blog**, a **digital product store**, and supporting pages (pricing, advertise, submit, sign-in/up, system styleguide). It fits **SaaS/marketing, template marketplaces, and curated listings**. Original template publisher: [Lexington Themes](https://lexingtonthemes.com/).
 
 ## Tech stack
 
 | Area | Details |
 |------|---------|
-| **Framework** | [Astro](https://astro.build/) `^6.0.0` |
-| **Styling** | [Tailwind CSS](https://tailwindcss.com/) `^4.1.18` via `@tailwindcss/vite` |
-| **Markdown / MDX** | `@astrojs/mdx` `^5.0.0`; content collections in `src/content.config.ts` |
-| **Other integrations** | `@astrojs/sitemap` `^3.7.1`, `@astrojs/rss` `^4.0.17` |
-| **Tailwind plugins (deps)** | `@tailwindcss/forms`, `@tailwindcss/typography`, `tailwind-scrollbar-hide` |
-| **Lexington** | `@lexingtonthemes/seo` `^0.1.0` (e.g. `AstroSeo` in `src/components/fundations/head/Seo.astro`) |
+| **Framework** | [Next.js](https://nextjs.org/) `^16` (App Router, React 19), all routes statically generated |
+| **Styling** | [Tailwind CSS](https://tailwindcss.com/) `^4` via `@tailwindcss/postcss` (`postcss.config.mjs`) |
+| **Markdown** | Frontmatter parsed with `yaml` and validated with `zod` in `src/lib/content.ts`; bodies rendered by `src/lib/markdown.ts` (unified: GFM, smartypants, heading ids, Shiki `min-light`) |
+| **Search** | `fuse.js` in the client component `src/components/sites/SearchDialog.tsx` |
+| **Tailwind plugins** | `@tailwindcss/forms`, `@tailwindcss/typography`, `tailwind-scrollbar-hide` (loaded with `@plugin` in `src/styles/global.css`) |
+| **Fonts** | `next/font/google` (Inter, Hedvig Letters Serif) in `src/app/layout.tsx` |
 | **Aliases** | `@/*` → `src/*` (`tsconfig.json`) |
-
-**Config:** `astro.config.mjs` — `site: 'https://yourdomain.com'`, Shiki `min-light`, `markdown.drafts: true`, integrations `sitemap()`, `mdx()`.
 
 ## Folder map
 
 | Path | Role |
 |------|------|
-| `src/pages/` | File-based routes (see Routing below) |
-| `src/layouts/` | `BaseLayout`, `BlogLayout`, `LegalLayout`, `StoreLayout`, `SitesLayout` |
-| `src/components/` | UI: `fundations/` (design system), `navigation/`, `global/`, `landing/`, `blog/`, `store/`, `sites/`, `assets/` |
-| `src/content/` | Markdown **sources** for collections (`legal/`, `store/`, `sites/`, `posts/`) — not the Astro `content.config` file (that lives in `src/content.config.ts`) |
+| `src/app/` | App Router routes (see Routing below). `(site)` and `(auth)` are route groups that only choose the page shell |
+| `src/layouts/` | Page-level components: `BaseLayout` (nav + `<main>` + footer shell), `BlogLayout`, `LegalLayout`, `StoreLayout`, `SitesLayout` |
+| `src/components/` | UI: `fundations/` (design system), `navigation/`, `global/`, `landing/`, `blog/`, `store/`, `sites/`, `assets/`, `system/` |
+| `src/content/` | Markdown sources for the collections (`legal/`, `store/`, `sites/`, `posts/`) |
+| `src/lib/` | `content.ts` (collections + schemas), `markdown.ts`, `site.ts` (`SITE_URL`), `cx.ts` |
 | `src/styles/` | `global.css` — Tailwind import, `@theme` tokens, plugins |
-| `src/images/` | Images referenced from content `image()` fields and components (e.g. `blog/`, `sites/`, `store/`, `lex.jpg`) |
+| `public/images/` | Images referenced from content frontmatter and components (`blog/`, `sites/`, `store/`, `lex.jpg`) |
 
-**`public/`:** not present in this repository (no static asset root checked in here).
+## Content collections (`src/lib/content.ts`)
 
-## Content collections (`src/content.config.ts`)
-
-IDs are the filename without `.md`/`.mdx` (`generateId` strips extension). Use paths under `src/images/` for `image()` fields (see existing entries).
+`getCollection(name)` returns entries sorted by filename (so `10.md` sorts before `2.md`); `getEntry(name, id)` finds one. IDs are the filename without `.md`/`.mdx`. Frontmatter is validated with zod at build time and a bad file fails the build with the file name. Image fields are paths under `public/` (e.g. `/images/blog/1.jpg`) and must exist.
 
 ### `legal`
 
@@ -49,8 +46,8 @@ IDs are the filename without `.md`/`.mdx` (`generateId` strips extension). Use p
 | | |
 |--|--|
 | **Folder** | `src/content/store/` |
-| **Schema** | `price`, `title`, `preview`, `checkout`, `license`, `highlights` (string[]), `description`, `features` (`{ title, description }[]`), `image: { url: image(), alt }`, optional `gallery: { url: image(), alt }[]` |
-| **Images** | `image()` — local assets (e.g. `/src/images/store/...`) |
+| **Schema** | `price`, `title`, `preview`, `checkout`, `license`, `highlights` (string[]), `description`, `features` (`{ title, description }[]`), `image: { url, alt }`, optional `gallery: { url, alt }[]` |
+| **Images** | `/images/store/...` |
 | **Template** | `src/content/store/1.md` |
 
 ### `sites`
@@ -58,8 +55,8 @@ IDs are the filename without `.md`/`.mdx` (`generateId` strips extension). Use p
 | | |
 |--|--|
 | **Folder** | `src/content/sites/` |
-| **Schema** | `live`, `title`, `tagline`, `description`, optional `isNew`, optional `details: { label, value }[]`, `thumbnail: { url: image(), alt }`, optional `tags` (array, items optional in Zod) |
-| **Images** | `thumbnail.url` via `image()` |
+| **Schema** | `live`, `title`, `tagline`, `description`, optional `isNew`, optional `details: { label, value }[]`, `thumbnail: { url, alt }`, optional `tags` (string[]) |
+| **Images** | `/images/sites/...` |
 | **Template** | `src/content/sites/1.md` |
 
 ### `posts` (blog)
@@ -67,54 +64,56 @@ IDs are the filename without `.md`/`.mdx` (`generateId` strips extension). Use p
 | | |
 |--|--|
 | **Folder** | `src/content/posts/` |
-| **Schema** | `title`, `pubDate`, `description`, `image: { url: image(), alt }`, `tags: string[]` |
-| **Images** | `image.url` via `image()` (e.g. `/src/images/blog/...`) |
+| **Schema** | `title`, `pubDate`, `description`, `image: { url, alt }`, `tags: string[]` |
+| **Images** | `/images/blog/...` |
 | **Template** | `src/content/posts/1.md` |
 
-**Do not** widen Zod fields without updating every page/layout that reads `entry.data` (e.g. `BlogLayout`, `StoreLayout`, cards).
+**Do not** widen schemas without updating every page/layout that reads `entry.data` (e.g. `BlogLayout`, `StoreLayout`, cards).
 
 ## Routing conventions
 
 | URL pattern | Source |
 |-------------|--------|
-| `/` | `src/pages/index.astro` — landing + `showSearch={true}` |
-| `/blog/` | `src/pages/blog/index.astro` — lists `posts` collection |
-| `/blog/posts/[slug]/` | `src/pages/blog/posts/[...slug].astro` — `slug` = post `id` (e.g. `1` → `/blog/posts/1`) |
-| `/blog/tags/`, `/blog/tags/[tag]/` | Tag index + filtered posts |
-| `/store/`, `/store/[slug]` | Store grid + product detail (`trailingSlash: false` in route) |
-| `/sites/site/[slug]` | Site detail from `sites` collection (`src/pages/sites/site/[...slug].astro`) |
-| `/sites/tags/`, `/sites/tags/[tag]/` | Tag index + filtered `sites` |
-| `/legal/[slug]` | Legal pages (`trailingSlash: false` in route) |
-| `/rss.xml` | `/rss.xml` is generated by `src/pages/rss.xml.js` from the `posts` content collection via `getCollection`, linking to `/blog/posts/{id}/`. |
+| `/` | `src/app/(site)/page.tsx` — landing, renders `<Search />` |
+| `/blog` | `src/app/(site)/blog/page.tsx` — lists `posts` |
+| `/blog/posts/[slug]` | `src/app/(site)/blog/posts/[slug]/page.tsx` — `slug` = post `id` (e.g. `1` → `/blog/posts/1`) |
+| `/blog/tags`, `/blog/tags/[tag]` | Tag index + filtered posts |
+| `/store`, `/store/[slug]` | Store grid + product detail |
+| `/sites/site/[slug]` | Site detail from `sites` (`SitesLayout`, renders `<Search />`) |
+| `/sites/tags`, `/sites/tags/[tag]` | Tag index + filtered `sites` |
+| `/legal/[slug]` | Legal pages |
+| `/rss.xml` | `src/app/rss.xml/route.ts`, built from `posts` |
+| `/sitemap.xml` | `src/app/sitemap.ts` — add new static routes to its list |
 | `/system/*` | Styleguide (`overview`, `colors`, `typography`, `buttons`, `links`) |
-| Other | `pricing`, `about`, `advertise`, `submit`, `signup`, `signin`, `404` as single files in `src/pages/` |
+| Other | `pricing`, `about`, `advertise`, `submit` in `(site)`; `signin`, `signup` in `(auth)` (no navigation or footer); 404 is `src/app/not-found.tsx` |
 
-**Changelog:** not present as a collection or route in this repo.
+Dynamic routes use `generateStaticParams` + `dynamicParams = false`, so unknown slugs 404.
 
 ## Customization
 
-- **Site URL / domain:** `site` in `astro.config.mjs` (currently `https://yourdomain.com`). Align with placeholders in `src/components/fundations/head/Seo.astro` and any canonical/OG URLs.
-- **Brand colors / typography:** `src/styles/global.css` — `@theme` (`--font-sans`, `--font-display`, `--color-accent-*`, `--color-base-*`). Optional fine-tuning: `src/pages/system/colors.astro`, `typography.astro`.
-- **Navigation / footer:** `src/components/navigation/Navigation.astro`, `MobileNav.astro`, `src/components/global/Footer.astro`.
-- **Global shell / head:** `src/layouts/BaseLayout.astro` (nav, search, footer toggles); `src/components/fundations/head/BaseHead.astro` (pulls `Seo`, `Meta`, `Fonts`, `Favicons`, `FuseJS`).
+- **Site URL / domain:** `SITE_URL` in `src/lib/site.ts` (currently `https://yourdomain.com`). SEO placeholders (title, Open Graph, Twitter, canonical) live in `metadata` in `src/app/layout.tsx`.
+- **Brand colors / typography:** `src/styles/global.css` — `@theme` (`--color-accent-*`, `--color-base-*`); font families are wired in `src/app/layout.tsx` and mapped to `--font-sans` / `--font-display`.
+- **Navigation / footer:** `src/components/navigation/Navigation.tsx`, `MobileNav.tsx`, `src/components/global/Footer.tsx`.
+- **Wordmark:** `src/components/assets/Logo.tsx` (outlined "Curatit" in Hedvig Letters Serif); favicon is `src/app/icon.svg`.
 
 ## Commands
 
-From `README.md` (run at repo root):
+Run at repo root:
 
 - `npm install` — dependencies  
-- `npm run dev` / `npm start` — dev server  
-- `npm run build` — output to `./dist/`  
-- `npm run preview` — preview production build  
-- `npm run astro ...` — Astro CLI  
+- `npm run dev` — dev server on http://localhost:3000  
+- `npm run build` — production build (`.next/`)  
+- `npm start` — serve the production build  
+- `npm run typecheck` — TypeScript check  
 
 ## Guardrails
 
 - Keep the folder name **`fundations`** as spelled in this repo (do not “fix” to *foundations* without a coordinated rename everywhere).
-- Do not expand content schemas lightly; update all consumers (layouts, cards, `getStaticPaths`) in the same change.
+- Components are server components by default; only `MobileNav`, `SearchDialog` and `SitesPreviewGrid` are client components (`"use client"`). Keep content loading (`src/lib/content.ts`, which uses `node:fs`) out of client components.
+- Do not expand content schemas lightly; update all consumers (layouts, cards, `generateStaticParams`) in the same change.
 - Prefer small diffs and existing patterns (`@/` imports, collection names `posts` | `sites` | `store` | `legal`).
 
-## Lexington links (from README)
+## Lexington links (original template)
 
 - Theme specs: https://lexingtonthemes.com/templates/carbon  
 - Documentation: https://lexingtonthemes.com/documentation  

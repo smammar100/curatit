@@ -1,9 +1,11 @@
-# Carbon
+# Curatit
+
+A curated directory of production websites, with a blog and a digital product store. Built with Next.js and Tailwind CSS on a Lexington Themes template.
 
 ![Theme preview](https://assets.lexingtonthemes.com/OpenGraph/carbon/twitter.png)
 
 
-## Links
+## Links (original template)
 - **Theme specs:** https://lexingtonthemes.com/templates/carbon  
 - **Documentation:** https://lexingtonthemes.com/documentation  
 - **Changelog:** https://lexingtonthemes.com/changelog/carbon  
@@ -11,18 +13,17 @@
 - **Get the bundle:** https://lexingtonthemes.com  
 
 ## Requirements
-- Node.js 18 or 20 (LTS recommended)
+- Node.js 20.9 or newer (LTS recommended)
 - npm
 
 ## Commands
 
 All commands are run from the root of the project, from a terminal:
 
-| Command                | Action                                           |
-| :--------------------- | :----------------------------------------------- |
-| `npm install`          | Install dependencies                             |
-| `npm run dev`          | Start local dev server                           |
-| `npm run build`        | Build production site to `./dist/`               |
-| `npm run preview`     | Preview the production build locally             |
-| `npm run astro ...`    | Run Astro CLI commands                           |
-| `npm run astro --help` | Get help using the Astro CLI                     |
+| Command               | Action                                       |
+| :-------------------- | :------------------------------------------- |
+| `npm install`         | Install dependencies                         |
+| `npm run dev`         | Start local dev server at `localhost:3000`   |
+| `npm run build`       | Build the production site to `./.next/`      |
+| `npm start`           | Serve the production build locally           |
+| `npm run typecheck`   | Type-check the project                       |

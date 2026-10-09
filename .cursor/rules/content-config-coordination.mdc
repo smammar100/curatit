@@ -1,0 +1,15 @@
+---
+description: Coordinate next.config.ts, src/lib/site.ts and src/lib/content.ts only when necessary
+globs:
+  - next.config.ts
+  - src/lib/site.ts
+  - src/lib/content.ts
+alwaysApply: false
+---
+
+# Next config + content config
+
+- **`next.config.ts`:** Framework config (currently empty). Change it only for real needs such as remote image domains or redirects.
+- **`src/lib/site.ts`:** `SITE_URL` drives absolute URLs (`metadataBase`, sitemap, RSS).
+- **`src/lib/content.ts`:** Defines the zod schemas and loaders for all collections; changing a schema requires updating markdown files and every importer under `src/app`, `src/layouts` and `src/components` that uses `entry.data`.
+- Edit these files together only when the linking is real. Avoid unrelated edits when touching one file.

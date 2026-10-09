@@ -1,0 +1,32 @@
+import { getCollection, sortByPubDate } from "@/lib/content";
+import { SITE_URL } from "@/lib/site";
+
+export const dynamic = "force-static";
+
+const title = "Lexington Themes";
+const description =
+  "Free and premium multipage themes and UI Kits For freelancers, developers, businesses, and personal use.Beautifully crafted with Next.js, and Tailwind CSS — Simple & easy to customise.";
+
+function escapeXml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+export function GET() {
+  const items = sortByPubDate(getCollection("posts"))
+    .map((post) => {
+      const link = `${SITE_URL}/blog/posts/${post.id}`;
+      return `<item><title>${escapeXml(post.data.title)}</title><link>${link}</link><guid isPermaLink="true">${link}</guid><description>${escapeXml(post.data.description)}</description><pubDate>${post.data.pubDate.toUTCString()}</pubDate></item>`;
+    })
+    .join("");
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>${escapeXml(title)}</title><description>${escapeXml(description)}</description><link>${SITE_URL}/</link>${items}</channel></rss>`;
+
+  return new Response(xml, {
+    headers: { "Content-Type": "application/xml; charset=utf-8" },
+  });
+}

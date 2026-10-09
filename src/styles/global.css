@@ -2,11 +2,14 @@
 @plugin "@tailwindcss/forms";
 @plugin "@tailwindcss/typography";
 @plugin "tailwind-scrollbar-hide";
+/* Fonts are loaded with next/font in src/app/layout.tsx, which sets --font-inter and --font-hedvig on <html> */
+@theme inline {
+  /* Typography */
+  --font-sans: var(--font-inter), sans-serif;
+  --font-display: var(--font-hedvig), serif;
+}
 /*  Define your custom theme variables */
 @theme {
-  /* Typography */
-  --font-sans: "InterVariable", sans-serif;
-  --font-display: "Hedvig Letters Serif", serif;
   --color-white: oklch(0.986 0.002 67.8);
   /* Colors*/
  --color-accent-50: oklch(96.37% 0.014 34.3);
@@ -33,11 +36,6 @@
   --color-base-800: oklch(0.309 0.004 84.54);
   --color-base-900: oklch(0.223 0.002 67.71);
   --color-base-950: oklch(0.177 0.002 106.5);
-}
-@supports (font-variation-settings: normal) {
-  :root {
-    font-family: InterVariable, sans-serif;
-  }
 }
 :root {
   /* Typography */
