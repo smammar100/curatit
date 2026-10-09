@@ -1,0 +1,12 @@
+---
+description: Global conventions for Lexington Carbon — imports, fundations folder, minimal diffs
+alwaysApply: true
+---
+
+# Lexington Carbon — global conventions
+
+- **Imports:** Use the `@/` alias (`@/components/...`, `@/layouts/...`, `@/styles/...`) as in existing files; it maps to `src/` via `tsconfig.json`.
+- **Design system location:** Shared primitives live under `src/components/fundations/` — keep the directory name **`fundations`** exactly (project spelling).
+- **Layouts:** Prefer `BaseLayout` for marketing shells; use `BlogLayout`, `LegalLayout`, `StoreLayout`, `SitesLayout` only where those files already do.
+- **Content:** Collections are defined only in `src/content.config.ts` with loaders under `src/content/{legal,store,sites,posts}/`. Do not invent new npm dependencies; mirror `package.json`.
+- **Changes:** Keep edits minimal and consistent with neighboring files; avoid drive-by refactors or unrelated file churn.
