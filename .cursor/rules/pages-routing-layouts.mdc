@@ -10,7 +10,8 @@ alwaysApply: false
 - **Blog:** Index `src/app/(site)/blog/page.tsx`; posts `src/app/(site)/blog/posts/[slug]/page.tsx` with `getCollection("posts")` — layout `BlogLayout`, body rendered with `renderMarkdown`.
 - **Legal:** `src/app/(site)/legal/[slug]/page.tsx` + `getCollection("legal")` — `LegalLayout`.
 - **Store:** `src/app/(site)/store/page.tsx`, `src/app/(site)/store/[slug]/page.tsx` — `StoreLayout`.
+- **Homepage:** `src/app/(site)/page.tsx` composes sections from `src/components/home/`; the website directory that used to be the homepage lives at `src/app/(site)/sites/page.tsx`.
 - **Sites directory:** Detail `src/app/(site)/sites/site/[slug]/page.tsx` — `SitesLayout` (URL prefix `/sites/site/`). Tag pages under `src/app/(site)/sites/tags/`.
-- **Search:** Pages that show the floating site search render `<Search />` (`@/components/sites/Search`) as their first element, like the homepage.
+- **Search:** Pages that show the floating site search render `<Search />` (`@/components/sites/Search`) as their first element, like `/sites`.
 - **RSS / sitemap:** `src/app/rss.xml/route.ts` and `src/app/sitemap.ts`; add new static routes to the sitemap list.
 - When adding a dynamic route, follow the sibling pattern: `generateStaticParams` + `dynamicParams = false` + `getEntry` with `notFound()`.

@@ -22,9 +22,9 @@
 |------|------|
 | `src/app/` | App Router routes (see Routing below). `(site)` and `(auth)` are route groups that only choose the page shell |
 | `src/layouts/` | Page-level components: `BaseLayout` (nav + `<main>` + footer shell), `BlogLayout`, `LegalLayout`, `StoreLayout`, `SitesLayout` |
-| `src/components/` | UI: `fundations/` (design system), `navigation/`, `global/`, `landing/`, `blog/`, `store/`, `sites/`, `assets/`, `system/` |
+| `src/components/` | UI: `fundations/` (design system), `home/` (homepage sections + demo data), `ui/` (shadcn-style vendored components), `navigation/`, `global/`, `landing/` (sections of the `/sites` directory page), `blog/`, `store/`, `sites/`, `assets/`, `system/` |
 | `src/content/` | Markdown sources for the collections (`legal/`, `store/`, `sites/`, `posts/`) |
-| `src/lib/` | `content.ts` (collections + schemas), `markdown.ts`, `site.ts` (`SITE_URL`), `cx.ts` |
+| `src/lib/` | `content.ts` (collections + schemas), `markdown.ts`, `site.ts` (`SITE_URL`), `cx.ts`, `utils.ts` (shadcn `cn`) |
 | `src/styles/` | `global.css` — Tailwind import, `@theme` tokens, plugins |
 | `public/images/` | Images referenced from content frontmatter and components (`blog/`, `sites/`, `store/`, `lex.jpg`) |
 
@@ -74,7 +74,8 @@
 
 | URL pattern | Source |
 |-------------|--------|
-| `/` | `src/app/(site)/page.tsx` — landing, renders `<Search />` |
+| `/` | `src/app/(site)/page.tsx` — Curatit homepage built from `src/components/home/` (corridor hero, how-it-works demos, categories, FAQ) |
+| `/sites` | `src/app/(site)/sites/page.tsx` — website directory (the template's original homepage), renders `<Search />` |
 | `/blog` | `src/app/(site)/blog/page.tsx` — lists `posts` |
 | `/blog/posts/[slug]` | `src/app/(site)/blog/posts/[slug]/page.tsx` — `slug` = post `id` (e.g. `1` → `/blog/posts/1`) |
 | `/blog/tags`, `/blog/tags/[tag]` | Tag index + filtered posts |
@@ -109,7 +110,10 @@ Run at repo root:
 ## Guardrails
 
 - Keep the folder name **`fundations`** as spelled in this repo (do not “fix” to *foundations* without a coordinated rename everywhere).
-- Components are server components by default; only `MobileNav`, `SearchDialog` and `SitesPreviewGrid` are client components (`"use client"`). Keep content loading (`src/lib/content.ts`, which uses `node:fs`) out of client components.
+- Components are server components by default; client components (`"use client"`) are `MobileNav`, `SearchDialog`, `SitesPreviewGrid`, the homepage demos (`SearchDemo`, `DetailDemo`, `BoardDemo`), `ui/image-stream-hero` and `ui/interactive-folder-gallery` (framer-motion). Keep content loading (`src/lib/content.ts`, which uses `node:fs`) out of client components.
+- `src/components/ui/` holds components copied from shadcn / 21st.dev. They import `cn` from `@/lib/utils`; keep them close to upstream and style them from the outside. There is no `components.json`, so run `npx shadcn@latest init` before using the shadcn CLI (it also edits `global.css`, so review that diff).
+- Icons in `src/components/fundations/icons/` are Phosphor (bold weight) paths on the shared `Icon` shell; take new ones from `@phosphor-icons/core` rather than adding an icon library.
+- Homepage demo brands and posts in `src/components/home/demo.ts` are fictional; their hex colours are post artwork, not theme tokens.
 - Do not expand content schemas lightly; update all consumers (layouts, cards, `generateStaticParams`) in the same change.
 - Prefer small diffs and existing patterns (`@/` imports, collection names `posts` | `sites` | `store` | `legal`).
 

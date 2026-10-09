@@ -9,7 +9,7 @@ import MobileNav from "./MobileNav";
 // Quick access links
 const links = [
   { href: "/system/overview", text: "Overview" },
-  { href: "/", text: "Websites" },
+  { href: "/sites", text: "Websites" },
   { href: "/pricing", text: "Pricing" },
   { href: "/blog", text: "Blog" },
   { href: "/store", text: "Store" },

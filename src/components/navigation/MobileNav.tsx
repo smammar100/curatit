@@ -12,7 +12,7 @@ import Wrapper from "@/components/fundations/containers/Wrapper";
 import Burger from "@/components/fundations/icons/Burger";
 
 const links = [
-  { href: "/", text: "Websites" },
+  { href: "/sites", text: "Websites" },
   { href: "/pricing", text: "Pricing" },
   { href: "/blog", text: "Blog" },
   { href: "/store", text: "Store" },
