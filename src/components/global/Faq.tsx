@@ -2,7 +2,8 @@ import Text from "@/components/fundations/elements/Text";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 import Plus from "@/components/fundations/icons/Plus";
 
-const faqs = [
+// Shown when no faqs are passed (pricing page)
+const defaultFaqs = [
   {
     question: "What is a website tool curation platform?",
     answer:
@@ -55,7 +56,7 @@ const faqs = [
   },
 ];
 
-export default function Faq() {
+export default function Faq({ faqs = defaultFaqs }: { faqs?: { question: string; answer: string }[] }) {
   return (
     <section>
       <Wrapper variant="standard" className="py-12">
