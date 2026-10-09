@@ -30,7 +30,7 @@ const right = tiles.filter((_, i) => i % 2 === 1);
 
 export default function ClosingCta() {
   return (
-    <section className="overflow-hidden bg-base-50">
+    <section className="overflow-hidden bg-white">
       <Wrapper variant="standard" className="py-20">
         <div className="flex flex-col items-center gap-12 lg:flex-row lg:justify-center lg:gap-16 xl:gap-24">
           <LogoReel items={left} orientation="horizontal" near="end" className="lg:hidden" />
@@ -48,7 +48,7 @@ export default function ClosingCta() {
               <Button isLink size="base" variant="default" href="/signup">
                 Get access
               </Button>
-              <Button isLink size="base" variant="muted" href="/pricing" className="bg-white hover:bg-base-100">
+              <Button isLink size="base" variant="muted" href="/pricing">
                 See pricing
               </Button>
             </div>
