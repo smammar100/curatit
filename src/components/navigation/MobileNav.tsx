@@ -11,15 +11,13 @@ import Wrapper from "@/components/fundations/containers/Wrapper";
 // Icons
 import Burger from "@/components/fundations/icons/Burger";
 
+// Same links as the desktop nav
 const links = [
-  { href: "/sites", text: "Websites" },
+  { href: "/#how-it-works", text: "How it works" },
   { href: "/pricing", text: "Pricing" },
   { href: "/blog", text: "Blog" },
-  { href: "/store", text: "Store" },
-  { href: "/submit", text: "Submit" },
-  { href: "/advertise", text: "Sponsors" },
-  { href: "/system/overview", text: "Overview" },
-];
+  { href: "/about", text: "About" },
+]
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);

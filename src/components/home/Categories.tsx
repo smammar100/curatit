@@ -37,7 +37,7 @@ function folderTone(hue: number) {
 export default function Categories() {
   return (
     <section>
-      <Wrapper variant="standard" className="py-24">
+      <Wrapper variant="standard" className="py-20">
         <div className="text-balance max-w-3xl mx-auto text-center">
           <Text tag="h2" variant="displaySM" className="text-base-900 font-display font-thin">
             Six categories, studied closely

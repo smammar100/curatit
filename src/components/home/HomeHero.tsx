@@ -29,7 +29,7 @@ export default function HomeHero() {
       <ImageStreamHero images={images} className="h-svh min-h-[40rem] w-full bg-white">
         <Wrapper
           variant="standard"
-          className="relative z-10 flex h-full flex-col items-center justify-between pt-28 pb-12 text-center lg:pt-32 lg:pb-16"
+          className="relative z-10 flex h-full flex-col items-center justify-between pt-28 pb-20 text-center lg:pt-32"
         >
           <div className="text-balance max-w-3xl">
             <Text tag="h1" variant="displayXL" className="text-base-900 font-display font-light">

@@ -74,7 +74,7 @@
 
 | URL pattern | Source |
 |-------------|--------|
-| `/` | `src/app/(site)/page.tsx` — Curatit homepage built from `src/components/home/` (corridor hero, how-it-works demos, categories, FAQ) |
+| `/` | `src/app/(site)/page.tsx` — Curatit homepage built from `src/components/home/` (corridor hero, pinned problem → solution scroll section, how-it-works cards, category folders, MCP coming-soon, FAQ) |
 | `/sites` | `src/app/(site)/sites/page.tsx` — website directory (the template's original homepage), renders `<Search />` |
 | `/blog` | `src/app/(site)/blog/page.tsx` — lists `posts` |
 | `/blog/posts/[slug]` | `src/app/(site)/blog/posts/[slug]/page.tsx` — `slug` = post `id` (e.g. `1` → `/blog/posts/1`) |
@@ -110,7 +110,7 @@ Run at repo root:
 ## Guardrails
 
 - Keep the folder name **`fundations`** as spelled in this repo (do not “fix” to *foundations* without a coordinated rename everywhere).
-- Components are server components by default; client components (`"use client"`) are `MobileNav`, `SearchDialog`, `SitesPreviewGrid`, the homepage demos (`SearchDemo`, `DetailDemo`, `BoardDemo`), `ui/image-stream-hero` and `ui/interactive-folder-gallery` (framer-motion). Keep content loading (`src/lib/content.ts`, which uses `node:fs`) out of client components.
+- Components are server components by default; client components (`"use client"`) are `MobileNav`, `SearchDialog`, `SitesPreviewGrid`, the homepage demos (`SearchDemo`, `DetailDemo`, `BoardDemo`), the pinned problem/solution section (`ProblemSolution`, `Scattered`), the MCP demo (`McpDemo`), the CTA logo reels (`LogoReel`), (`Scattered` uses the `useIntroOnce` hook), `ui/image-stream-hero` and `ui/interactive-folder-gallery` (framer-motion). Keep content loading (`src/lib/content.ts`, which uses `node:fs`) out of client components.
 - `src/components/ui/` holds components copied from shadcn / 21st.dev. They import `cn` from `@/lib/utils`; keep them close to upstream and style them from the outside. There is no `components.json`, so run `npx shadcn@latest init` before using the shadcn CLI (it also edits `global.css`, so review that diff).
 - Icons in `src/components/fundations/icons/` are Phosphor (bold weight) paths on the shared `Icon` shell; take new ones from `@phosphor-icons/core` rather than adding an icon library.
 - Homepage demo brands and posts in `src/components/home/demo.ts` are fictional; their hex colours are post artwork, not theme tokens.

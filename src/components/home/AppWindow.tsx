@@ -13,7 +13,7 @@ export default function AppWindow({
   className?: string;
 }) {
   return (
-    <div className={cx("overflow-hidden rounded bg-white shadow", className)}>
+    <div className={cx("@container overflow-hidden rounded bg-white shadow", className)}>
       <div className="relative flex h-9 items-center gap-1.5 border-b border-base-100 px-4" aria-hidden="true">
         <span className="size-2 rounded-full bg-base-200" />
         <span className="size-2 rounded-full bg-base-200" />

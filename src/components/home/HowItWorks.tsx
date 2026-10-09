@@ -1,31 +1,31 @@
 import type { ReactNode } from "react";
 // Fundation
 import Text from "@/components/fundations/elements/Text";
+import Button from "@/components/fundations/elements/Button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
+// Icons
+import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
 // Components
 import BoardDemo from "./BoardDemo";
 import DetailDemo from "./DetailDemo";
 import SearchDemo from "./SearchDemo";
 
-const steps: { eyebrow: string; title: string; body: string; demoLabel: string; demo: ReactNode }[] = [
+const steps: { title: string; muted: string; demoLabel: string; demo: ReactNode }[] = [
   {
-    eyebrow: "Search",
-    title: "Search by brief, not by hashtag.",
-    body: "Describe what you're making. Curatit reads the brief into objectives, formats and styles, shows you how it read it, and says why each post matched.",
+    title: "Search by brief,",
+    muted: "not by hashtag.",
     demoLabel: "Demo: searching the library by brief",
     demo: <SearchDemo />,
   },
   {
-    eyebrow: "Study",
-    title: "See why a post works.",
-    body: "Every post is reviewed by an editor and broken down by objective, format, structure and visual style, with a note on why it earned its place.",
+    title: "See why a post works,",
+    muted: "not just that it does.",
     demoLabel: "Demo: a post and its editor analysis",
     demo: <DetailDemo />,
   },
   {
-    eyebrow: "Share",
-    title: "Hand your client a board.",
-    body: "Save references to private boards with notes on what to adapt. When you're ready, send a read-only link that expires on its own.",
+    title: "Hand over a board,",
+    muted: "in one click.",
     demoLabel: "Demo: a research board and its share link",
     demo: <BoardDemo />,
   },
@@ -34,30 +34,47 @@ const steps: { eyebrow: string; title: string; body: string; demoLabel: string; 
 export default function HowItWorks() {
   return (
     <section id="how-it-works">
-      <Wrapper variant="standard" className="py-24">
-        <Text tag="h2" variant="displaySM" className="text-base-900 font-display font-thin">
-          How it works
-        </Text>
-        <div className="mt-12 space-y-24">
-          {steps.map((step, i) => (
-            <div key={step.eyebrow} className="grid items-start gap-8 lg:grid-cols-3 lg:gap-12">
-              <div className="text-balance lg:pt-8">
-                <Text tag="p" variant="textXS" className="text-base-600 uppercase font-medium">
-                  {`0${i + 1} · ${step.eyebrow}`}
-                </Text>
-                <Text tag="h3" variant="displayXS" className="text-base-900 font-display font-light mt-4">
-                  {step.title}
-                </Text>
-                <Text tag="p" variant="textBase" className="text-base-600 mt-4">
-                  {step.body}
-                </Text>
-              </div>
-              <div role="group" aria-label={step.demoLabel} className="lg:col-span-2 p-4 sm:p-8 bg-base-50 rounded-lg">
-                {step.demo}
-              </div>
-            </div>
-          ))}
+      <Wrapper variant="standard" className="py-20">
+        <div className="text-balance max-w-2xl mx-auto text-center">
+          <Text tag="h2" variant="displayMD" className="text-base-900 font-display font-thin">
+            How it works
+          </Text>
+          <Text tag="p" variant="textBase" className="text-base-600 mt-4">
+            From brief to board in three steps. Each card is a working piece of the product, so try it.
+          </Text>
         </div>
+        <ul className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {steps.map((step) => (
+            <li
+              key={step.title}
+              className="relative flex aspect-[343/429] min-h-110 flex-col overflow-hidden rounded-xl bg-base-50 md:aspect-[421/560]"
+            >
+              <div className="relative z-10 flex items-start justify-between gap-3 px-6 py-7 lg:px-8">
+                {/* The muted half always starts the second line, so no card ends on a stray word */}
+                <Text tag="h3" variant="displayXS" className="text-base-900 font-display font-light">
+                  {step.title}
+                  <span className="block text-base-500">{step.muted}</span>
+                </Text>
+                <Button
+                  isLink
+                  iconOnly
+                  size="sm"
+                  variant="none"
+                  href="/signup"
+                  aria-label={`Get access: ${step.title}`}
+                  className="shrink-0 bg-white text-base-900 ring-1 ring-base-200 hover:bg-base-100 focus:outline-base-300"
+                >
+                  <ArrowUpRight className="size-4" />
+                </Button>
+              </div>
+              {/* The window runs off the card's bottom edge, which fades it out; controls stay in the clear area above */}
+              <div role="group" aria-label={step.demoLabel} className="relative min-h-0 flex-1">
+                <div className="absolute inset-x-6 top-0 lg:inset-x-8">{step.demo}</div>
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/5 bg-linear-to-b from-transparent to-base-50" />
+              </div>
+            </li>
+          ))}
+        </ul>
       </Wrapper>
     </section>
   );

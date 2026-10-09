@@ -5,7 +5,8 @@ import Categories from "@/components/home/Categories";
 import ClosingCta from "@/components/home/ClosingCta";
 import HomeHero from "@/components/home/HomeHero";
 import HowItWorks from "@/components/home/HowItWorks";
-import SafeToShare from "@/components/home/SafeToShare";
+import McpSection from "@/components/home/McpSection";
+import ProblemSolution from "@/components/home/ProblemSolution";
 import { faqs } from "@/components/home/faqs";
 
 export const metadata: Metadata = {
@@ -18,9 +19,10 @@ export default function HomePage() {
   return (
     <>
       <HomeHero />
+      <ProblemSolution />
       <HowItWorks />
       <Categories />
-      <SafeToShare />
+      <McpSection />
       <Faq faqs={faqs} />
       <ClosingCta />
     </>
