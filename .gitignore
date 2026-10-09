@@ -16,6 +16,7 @@ pnpm-debug.log*
 # Environment variables
 .env
 .env.production
+.env*.local
 
 # macOS-specific files
 .DS_Store
@@ -36,3 +37,17 @@ pnpm-debug.log*
 *.swp
 *.tmp
 Thumbs.db
+
+# Library post images are downloaded locally and kept out of git
+public/images/library/
+# Staging copy of the `library` storage bucket (scripts/download-library-images.mjs)
+data/storage/
+
+# Supabase CLI state (linked project, pooler URL)
+supabase/.temp/
+supabase/.branches/
+
+# Raw Apify exports and the seed built from them: they hold commenters'
+# usernames and comments, so they stay out of this public repo
+data/instagram/
+supabase/seed.sql

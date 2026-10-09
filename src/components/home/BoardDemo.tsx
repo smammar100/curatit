@@ -7,11 +7,13 @@ import Button from "@/components/fundations/elements/Button";
 // Components
 import AppWindow from "./AppWindow";
 import PostCover from "./PostCover";
-import { board, brands, posts, type Post } from "./demo";
+import { board } from "./demo";
+import { usePosts } from "./HomePosts";
 
 // Layout follows the window's own width (AppWindow is a container), so it works inside a card
 export default function BoardDemo() {
   const [shared, setShared] = useState(false);
+  const posts = usePosts(board.references.map((reference) => reference.post));
 
   return (
     <AppWindow title="Boards">
@@ -20,7 +22,7 @@ export default function BoardDemo() {
           {board.name}
         </Text>
         <p className="mt-1 text-xs text-base-500">
-          {shared ? "Shared, read-only" : "Private"} · {board.references.length} references
+          {shared ? "Shared, read-only" : "Private"} · {posts.length} references
         </p>
         {/* The share controls stay at the top left, clear of the card's fades */}
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -41,14 +43,14 @@ export default function BoardDemo() {
           )}
         </div>
         <ul className="mt-3 divide-y divide-base-100">
-          {board.references.map(({ post: id, note }) => {
-            const post: Post = posts[id];
+          {posts.map((post) => {
+            const { note } = board.references.find((reference) => reference.post === post.shortCode)!;
             return (
-              <li key={id} className="flex items-center gap-3 py-2.5">
-                <PostCover brand={post.brand} slide={post.slides[0]} className="w-10 shrink-0 rounded shadow-sm" />
+              <li key={post.shortCode} className="flex items-center gap-3 py-2.5">
+                <PostCover post={post} sizes="40px" className="w-10 shrink-0 rounded shadow-sm" />
                 <div className="min-w-0">
                   <p className="truncate text-xs font-medium text-base-900">
-                    {brands[post.brand].name} — {post.hook}
+                    {post.brand.name} — {post.hook}
                   </p>
                   <p className="mt-0.5 text-xs text-base-600">{note}</p>
                 </div>

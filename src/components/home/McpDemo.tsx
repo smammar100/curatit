@@ -6,7 +6,8 @@ import { motion, useInView, useReducedMotion } from "framer-motion";
 import Symbol from "@/components/assets/Symbol";
 // Components
 import PostCover from "./PostCover";
-import { brands, briefs, posts, type Post } from "./demo";
+import { briefs } from "./demo";
+import { usePosts } from "./HomePosts";
 
 const brief = briefs[0];
 const statuses = ["Reading the brief…", "Searching the library…"];
@@ -36,6 +37,7 @@ export default function McpDemo() {
   const inView = useInView(ref, { amount: 0.4 });
   const reduceMotion = useReducedMotion();
   const [step, setStep] = useState<Step>(4);
+  const posts = usePosts(brief.results.map((result) => result.post));
 
   useEffect(() => {
     if (!inView || reduceMotion) return;
@@ -50,7 +52,7 @@ export default function McpDemo() {
     return () => timers.forEach(clearTimeout);
   }, [inView, reduceMotion]);
 
-  const status = step === 2 ? statuses[0] : step === 3 ? statuses[1] : step === 4 ? `Found ${brief.results.length} posts` : "";
+  const status = step === 2 ? statuses[0] : step === 3 ? statuses[1] : step === 4 ? `Found ${posts.length} posts` : "";
 
   return (
     <div
@@ -70,8 +72,8 @@ export default function McpDemo() {
             animate={step >= 1 ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 12, scale: 0.96 }}
             transition={step >= 1 ? { type: "spring", stiffness: 300, damping: 26 } : { duration: 0.3 }}
           >
-            Show me <strong className="font-medium">bold type</strong> launches for a{" "}
-            <strong className="font-medium">new drink</strong>
+            Show me <strong className="font-medium">launch carousels</strong> that{" "}
+            <strong className="font-medium">show the product</strong>
           </motion.p>
         </div>
         <motion.div
@@ -94,18 +96,17 @@ export default function McpDemo() {
               : { x: { duration: 0 }, opacity: { duration: 0.3 } }
           }
         >
-          {brief.results.map(({ post: id }, i) => {
-            const post: Post = posts[id];
+          {posts.map((post, i) => {
             return (
               <motion.li
-                key={id}
+                key={post.shortCode}
                 className="w-36 shrink-0 sm:w-40"
                 initial={false}
                 animate={step === 4 ? { x: 0 } : { x: 48 }}
                 transition={step === 4 ? { type: "spring", stiffness: 260, damping: 28, delay: i * 0.08 } : { duration: 0 }}
               >
-                <PostCover brand={post.brand} slide={post.slides[0]} className="rounded shadow" />
-                <p className="mt-2 truncate text-xs font-medium text-base-900">{brands[post.brand].name}</p>
+                <PostCover post={post} sizes="160px" className="rounded shadow" />
+                <p className="mt-2 truncate text-xs font-medium text-base-900">{post.brand.name}</p>
                 <p className="mt-0.5 line-clamp-1 text-xs text-base-600">{post.hook}</p>
               </motion.li>
             );

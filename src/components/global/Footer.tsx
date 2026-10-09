@@ -9,7 +9,7 @@ import Wrapper from "@/components/fundations/containers/Wrapper";
 export default function Footer() {
   return (
     <footer className="bg-base-50 overflow-hidden">
-      <Wrapper className="py-24">
+      <Wrapper className="py-20">
         <div className="max-w-2xl mx-auto">
           <div className="text-center text-balance">
             <Symbol className="inline-block size-12 text-base-900" />
@@ -51,7 +51,7 @@ export default function Footer() {
           </div>
         </div>
       </Wrapper>
-      <Logo className="text-base-100 mt-8 -mx-24 -mb-24" />
+      <Logo className="text-base-100 -mx-24 -mb-24" />
     </footer>
   );
 }

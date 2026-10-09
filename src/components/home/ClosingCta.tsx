@@ -3,32 +3,20 @@ import Text from "@/components/fundations/elements/Text";
 import Button from "@/components/fundations/elements/Button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 // Components
+import Image from "next/image";
+import type { LibraryPost } from "@/lib/posts";
 import LogoReel from "./LogoReel";
-import { brands, type Brand } from "./demo";
-import { cx } from "@/lib/cx";
 
-// Stand-in app icons from the demo brands. Replace with real brand logos by passing
-// <Image fill /> elements (or any node that fills its box) to the reels.
-function BrandTile({ brand }: { brand: Brand }) {
-  return (
-    <div
-      aria-hidden="true"
-      className={cx(
-        "flex size-full items-center justify-center text-[44px] leading-none",
-        brand.serif ? "font-display" : "font-sans font-extrabold tracking-[-0.04em]"
-      )}
-      style={{ backgroundColor: brand.bg, color: brand.fg }}
-    >
-      {brand.name[0]}
-    </div>
-  );
-}
+// One tile per brand in the library: the cover of its newest post (posts come newest first)
+export default function ClosingCta({ posts }: { posts: LibraryPost[] }) {
+  const brands = new Set<string>();
+  const newestPerBrand = posts.filter((post) => !brands.has(post.brand.slug) && brands.add(post.brand.slug));
+  const tiles = newestPerBrand.map((post) => (
+    <Image key={post.brand.slug} src={post.images[0]} alt="" fill sizes="96px" className="object-cover" />
+  ));
+  const left = tiles.filter((_, i) => i % 2 === 0);
+  const right = tiles.filter((_, i) => i % 2 === 1);
 
-const tiles = Object.values(brands).map((brand) => <BrandTile key={brand.name} brand={brand} />);
-const left = tiles.filter((_, i) => i % 2 === 0);
-const right = tiles.filter((_, i) => i % 2 === 1);
-
-export default function ClosingCta() {
   return (
     <section className="overflow-hidden bg-white">
       <Wrapper variant="standard" className="py-20">

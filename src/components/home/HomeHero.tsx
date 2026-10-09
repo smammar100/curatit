@@ -4,26 +4,16 @@ import Button from "@/components/fundations/elements/Button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 // Components
 import { ImageStreamHero } from "@/components/ui/image-stream-hero";
+import { optimizedImage, type LibraryPost } from "@/lib/posts";
+import { heroPosts } from "./demo";
 
-// Unsplash photos, one or two per library category. The corridor shows the first
-// nine (its default card count), and it is decorative, so the images carry no alt text.
-const unsplash = (id: string) => ({
-  src: `https://images.unsplash.com/photo-${id}?w=640&q=75&auto=format&fit=crop`,
-});
+// Covers of real library posts, one brand each. The corridor shows the first nine
+// (its default card count), and it is decorative, so the images carry no alt text.
+export default function HomeHero({ posts }: { posts: LibraryPost[] }) {
+  const images = heroPosts
+    .flatMap((shortCode) => posts.find((post) => post.shortCode === shortCode) ?? [])
+    .map((post) => ({ src: optimizedImage(post.images[0]) }));
 
-const images = [
-  unsplash("1542291026-7eec264c27ff"), // Sports
-  unsplash("1495474472287-4d71bcdd2085"), // Food & Drink
-  unsplash("1436491865332-7a61a109cc05"), // Travel
-  unsplash("1515886657613-9f3515b0c78f"), // Shopping
-  unsplash("1556742049-0cfed4f6a45d"), // Finance
-  unsplash("1489599849927-2ee91cede3ba"), // Entertainment
-  unsplash("1546069901-ba9599a7e63c"), // Food & Drink
-  unsplash("1517649763962-0c623066013b"), // Sports
-  unsplash("1505740420928-5e560c06d30e"), // Shopping
-];
-
-export default function HomeHero() {
   return (
     <section>
       <ImageStreamHero images={images} className="h-svh min-h-[40rem] w-full bg-white">

@@ -7,12 +7,14 @@ import Search from "@/components/fundations/icons/Search";
 // Components
 import AppWindow from "./AppWindow";
 import PostCover from "./PostCover";
-import { brands, briefs, posts, type Post } from "./demo";
+import { briefs } from "./demo";
+import { usePosts } from "./HomePosts";
 
 // Layout follows the window's own width (AppWindow is a container), so it works inside a card
 export default function SearchDemo() {
   const [active, setActive] = useState(0);
   const brief = briefs[active];
+  const posts = usePosts(brief.results.map((result) => result.post));
 
   return (
     <AppWindow title="Library">
@@ -46,12 +48,12 @@ export default function SearchDemo() {
           ))}
         </div>
         <ul className="mt-4 grid grid-cols-2 gap-3 @md:grid-cols-3" aria-live="polite">
-          {brief.results.map(({ post: id, matched }, i) => {
-            const post: Post = posts[id];
+          {posts.map((post, i) => {
+            const { matched } = brief.results.find((result) => result.post === post.shortCode)!;
             return (
-              <li key={id} className={i === 2 ? "hidden @md:block" : undefined}>
-                <PostCover brand={post.brand} slide={post.slides[0]} className="rounded shadow" />
-                <p className="mt-2 text-xs font-medium text-base-900">{brands[post.brand].name}</p>
+              <li key={post.shortCode} className={i === 2 ? "hidden @md:block" : undefined}>
+                <PostCover post={post} sizes="(min-width: 1024px) 120px, 40vw" className="rounded shadow" />
+                <p className="mt-2 text-xs font-medium text-base-900">{post.brand.name}</p>
                 <p className="mt-0.5 line-clamp-2 text-xs text-base-600">{post.hook}</p>
                 <p className="mt-1.5 text-xs text-base-500">Matched {matched.join(", ")}</p>
               </li>

@@ -1,0 +1,68 @@
+{
+  "brand": "Nike",
+  "handle": "nike",
+  "profileUrl": "https://www.instagram.com/nike/",
+  "scrapedAt": "2026-10-09T18:39:23Z",
+  "posts": [
+    {
+      "shortCode": "DePopGlnxXJ",
+      "url": "https://www.instagram.com/p/DePopGlnxXJ/",
+      "format": "carousel",
+      "postedAt": "2026-10-08T19:00:16Z",
+      "caption": "Two worlds. One force.\n\nNike Nigo x J-Hope Air Force 1 launches 10.17 on humanmade.jp, and 10.22 globally.",
+      "likes": 1475823,
+      "comments": 3848,
+      "width": 1080,
+      "height": 1357,
+      "image": "/images/library/nike/DePopGlnxXJ.jpg"
+    },
+    {
+      "shortCode": "Dd7YYNtn-9H",
+      "url": "https://www.instagram.com/p/Dd7YYNtn-9H/",
+      "format": "carousel",
+      "postedAt": "2026-09-30T22:13:20Z",
+      "caption": "@lalalalisa_m has landed. And she’s wearing the newest Moon Shoe.\n\nFirst prototyped in 1971 for speed on the track, now the Moon Shoe is designed for life in orbit.\n\nLaunching globally on 10.1",
+      "likes": 1480257,
+      "comments": 5672,
+      "width": 1080,
+      "height": 1357,
+      "image": "/images/library/nike/Dd7YYNtn-9H.jpg"
+    },
+    {
+      "shortCode": "DdcI8NLmY21",
+      "url": "https://www.instagram.com/p/DdcI8NLmY21/",
+      "format": "carousel",
+      "postedAt": "2026-09-18T19:01:59Z",
+      "caption": "Nike Atelier for Sha’Carri Richardson reflects the beauty of London after rainfall through luminous details, weathered textures, and sculptural silhouettes defined by strength and movement.\n\nThe bespoke look debuts on the red carpet at @athlos A26 in London. \n\nBuilt to push beyond convention, the Nike FlyWeb bra uses computational design to engineer fit and support down to the millimeter. Precision-made for an athlete redefining power on and off the track.\n\nThe Nike Atelier Vomero Premium takes a performance silhouette into new territory, embellished with hand-set Swarovski® Crystals shimmering like water droplets above reflective Air Zoom units.\n\n“You don’t have to choose one version of yourself. Every side of you can be powerful.”\n\nSha’Carri Richardson\n\nLight and movement shape every detail of the Nike Atelier jacket, with hand-set Swarovski® Crystals that catch the light like raindrops across the reflective outer layer.\n\nMade in Japan from premium crackled leather, the Nike Atelier Duffel Mini is accessorized with oversized custom charms that celebrate Sha’Carri’s connection to the track.\n\nNike Atelier. One of One.",
+      "likes": 63018,
+      "comments": 1363,
+      "width": 1080,
+      "height": 1350,
+      "image": "/images/library/nike/DdcI8NLmY21.jpg"
+    },
+    {
+      "shortCode": "DdNIWqQPrFM",
+      "url": "https://www.instagram.com/p/DdNIWqQPrFM/",
+      "format": "static",
+      "postedAt": "2026-09-12T23:09:11Z",
+      "caption": "Respectfully brutal. @bokrugby tough out a series only rugby’s greatest can produce.",
+      "likes": 112525,
+      "comments": 954,
+      "width": 1080,
+      "height": 1440,
+      "image": "/images/library/nike/DdNIWqQPrFM.jpg"
+    },
+    {
+      "shortCode": "DdMeNa0O_x_",
+      "url": "https://www.instagram.com/p/DdMeNa0O_x_/",
+      "format": "static",
+      "postedAt": "2026-09-12T17:01:28Z",
+      "caption": "New York, Paris, Melbourne, and London have one thing in common. @nielsvink goes four for four on the year, securing the calendar year Grand Slam, by winning major titles in every corner of the globe.",
+      "likes": 65926,
+      "comments": 288,
+      "width": 1080,
+      "height": 1350,
+      "image": "/images/library/nike/DdMeNa0O_x_.jpg"
+    }
+  ]
+}

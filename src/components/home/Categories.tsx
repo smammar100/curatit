@@ -6,20 +6,21 @@ import Wrapper from "@/components/fundations/containers/Wrapper";
 import type { IconProps } from "@/components/fundations/icons/Icon";
 import AirplaneTilt from "@/components/fundations/icons/AirplaneTilt";
 import Basketball from "@/components/fundations/icons/Basketball";
+import CoatHanger from "@/components/fundations/icons/CoatHanger";
+import Cpu from "@/components/fundations/icons/Cpu";
 import CreditCard from "@/components/fundations/icons/CreditCard";
-import FilmSlate from "@/components/fundations/icons/FilmSlate";
 import ForkKnife from "@/components/fundations/icons/ForkKnife";
-import ShoppingBag from "@/components/fundations/icons/ShoppingBag";
 // Components
 import { InteractiveFolderGallery } from "@/components/ui/interactive-folder-gallery";
+import type { LibraryPost } from "@/lib/posts";
 import PostCover from "./PostCover";
-import { categories, posts, type Post } from "./demo";
+import { categories } from "./demo";
 
 const icons: Record<string, ComponentType<IconProps>> = {
   "Food & Drink": ForkKnife,
   Sports: Basketball,
-  Entertainment: FilmSlate,
-  Shopping: ShoppingBag,
+  Technology: Cpu,
+  Fashion: CoatHanger,
   Finance: CreditCard,
   "Travel & Transportation": AirplaneTilt,
 };
@@ -34,7 +35,23 @@ function folderTone(hue: number) {
   };
 }
 
-export default function Categories() {
+// The newest posts in a category, taking one brand at a time so a folder isn't all one brand
+function folderPosts(posts: LibraryPost[], category: string, count = 5) {
+  const queues = Map.groupBy(
+    posts.filter((post) => post.category.slug === category),
+    (post) => post.brand.slug
+  );
+  const picked: LibraryPost[] = [];
+  while (picked.length < count && [...queues.values()].some((queue) => queue.length)) {
+    for (const queue of queues.values()) {
+      const next = queue.shift();
+      if (next && picked.length < count) picked.push(next);
+    }
+  }
+  return picked;
+}
+
+export default function Categories({ posts }: { posts: LibraryPost[] }) {
   return (
     <section>
       <Wrapper variant="standard" className="py-20">
@@ -50,7 +67,7 @@ export default function Categories() {
         </div>
         <ul className="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
           {categories.map((category) => {
-            const examples: Post[] = category.posts.map((id) => posts[id]);
+            const examples = folderPosts(posts, category.category);
             const Icon = icons[category.name];
             return (
               <li key={category.name}>
@@ -60,8 +77,8 @@ export default function Categories() {
                   tone={folderTone(category.hue)}
                   icon={<Icon className="size-6" />}
                   photos={examples.map((post) => ({
-                    id: post.hook,
-                    content: <PostCover brand={post.brand} slide={post.slides[0]} className="size-full" />,
+                    id: post.shortCode,
+                    content: <PostCover post={post} sizes="320px" className="size-full" />,
                   }))}
                 />
               </li>
