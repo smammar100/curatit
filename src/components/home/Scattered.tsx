@@ -5,7 +5,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { cx } from "@/lib/cx";
 import PostCover from "./PostCover";
-import { posts, type PostId } from "./demo";
+import { scattered } from "./demo";
+import { usePost } from "./HomePosts";
 import { useIntroOnce } from "./useIntroOnce";
 
 /*
@@ -20,15 +21,16 @@ import { useIntroOnce } from "./useIntroOnce";
 
 const SCENE = { w: 1400, h: 1000 };
 
-function Cover({ id, className }: { id: PostId; className?: string }) {
-  return <PostCover brand={posts[id].brand} slide={posts[id].slides[0]} className={className} />;
+function Cover({ id, className }: { id: string; className?: string }) {
+  const post = usePost(id);
+  return post ? <PostCover post={post} sizes="120px" className={className} /> : null;
 }
 
 function Card({ className, children }: { className?: string; children: ReactNode }) {
   return <div className={cx("rounded-md bg-white shadow ring-1 ring-base-200", className)}>{children}</div>;
 }
 
-function Phone({ id, name }: { id: PostId; name: string }) {
+function Phone({ id, name }: { id: string; name: string }) {
   return (
     <Card className="overflow-hidden">
       <div className="flex h-5 items-center justify-between px-2.5 text-[9px] font-medium text-base-900">
@@ -46,12 +48,12 @@ function Phone({ id, name }: { id: PostId; name: string }) {
 }
 
 const sheetRows = [
-  ["Fizzwell", "instagram.com/p/C8xQ2m…", ""],
-  ["??", "instagram.com/p/C7aLp0…", "the big word one"],
-  ["Stridewise", "instagram.com/p/C9kT1v…", ""],
+  ["Wise", "instagram.com/p/DeJsl6…", ""],
+  ["??", "instagram.com/p/DdscgU…", "the 26 outfits one"],
+  ["Airbnb", "instagram.com/p/Dd6t2U…", ""],
   ["", "pinterest.com/pin/3391…", "ask Sam"],
-  ["Oat & Ember", "instagram.com/p/C6uRw8…", ""],
-  ["Lumen", "tiktok.com/@lumen/vid…", "??"],
+  ["Uber Eats", "instagram.com/p/Dd9aD_…", ""],
+  ["Tripadvisor", "tiktok.com/@tripadvisor/vid…", "??"],
   ["", "drive.google.com/file/d…", ""],
 ];
 
@@ -71,17 +73,16 @@ const scraps: Scrap[] = [
           <span className="text-base-500">All posts</span>
         </div>
         <div className="mt-2 grid grid-cols-2 gap-1">
-          <Cover id="fizzwellYuzu" className="rounded-sm" />
-          <Cover id="lumenReview" className="rounded-sm" />
-          <Cover id="parcelGifts" className="rounded-sm" />
-          <Cover id="kinetikJersey" className="rounded-sm" />
+          {scattered.saved.map((id) => (
+            <Cover key={id} id={id} className="rounded-sm" />
+          ))}
         </div>
         <p className="mt-2 text-[11px] text-base-500">2,318 posts · no folders</p>
       </Card>
     ),
   },
-  { key: "shot-a", x: 350, y: 70, w: 150, rotate: -5, delay: 0.2, node: <Phone id="stridewiseLighter" name="IMG_4821.PNG" /> },
-  { key: "shot-b", x: 440, y: 125, w: 150, rotate: 4, delay: 0.3, node: <Phone id="oatEmberSourdough" name="IMG_4830.PNG" /> },
+  { key: "shot-a", x: 350, y: 70, w: 150, rotate: -5, delay: 0.2, node: <Phone id={scattered.screenshots[0]} name="IMG_4821.PNG" /> },
+  { key: "shot-b", x: 440, y: 125, w: 150, rotate: 4, delay: 0.3, node: <Phone id={scattered.screenshots[1]} name="IMG_4830.PNG" /> },
   {
     key: "chat",
     x: 640,
@@ -96,7 +97,7 @@ const scraps: Scrap[] = [
             <span className="font-medium text-base-900">Priya</span> · 10:42
           </p>
           <p className="mt-0.5 text-[14px] leading-snug text-base-900">
-            do you have that carousel from the drinks brand? the one with the giant word on the first slide
+            do you have that carousel from the money app? the one with the phone on every slide
           </p>
         </div>
         <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-accent-600 text-[11px] font-semibold text-white">
@@ -145,13 +146,13 @@ const scraps: Scrap[] = [
     delay: 0.65,
     node: (
       <Card className="p-4">
-        <p className="text-[15px] font-semibold text-base-900">References — Spring launch</p>
+        <p className="text-[15px] font-semibold text-base-900">References — Payments launch</p>
         <ul className="mt-2 space-y-1 text-[12px] text-base-600">
-          <li>• instagram.com/p/C8xQ2m… (yellow one?)</li>
-          <li>• the Stridewise 198g post → ask Jo</li>
+          <li>• instagram.com/p/DeJsl6… (green one?)</li>
+          <li>• the Coinbase card-pack post → ask Jo</li>
           <li>• pinterest board → link dead</li>
           <li>• see slack thread from March</li>
-          <li className="text-base-400">• TODO: find the carousel with the big word</li>
+          <li className="text-base-400">• TODO: find the carousel with the phone</li>
         </ul>
       </Card>
     ),
@@ -168,9 +169,9 @@ const scraps: Scrap[] = [
           <span className="font-medium text-base-900">moodboard-spring-v2</span> · Design file
         </p>
         <div className="relative h-48 bg-base-50">
-          <Cover id="maisonSalt" className="absolute top-4 left-5 w-16 rotate-[-6deg] rounded-sm shadow-sm" />
-          <Cover id="tallypaySplit" className="absolute top-10 left-28 w-20 rotate-[3deg] rounded-sm shadow-sm" />
-          <Cover id="wayfarerCities" className="absolute top-3 right-6 w-16 rotate-[8deg] rounded-sm shadow-sm" />
+          <Cover id={scattered.canvas[0]} className="absolute top-4 left-5 w-16 rotate-[-6deg] rounded-sm shadow-sm" />
+          <Cover id={scattered.canvas[1]} className="absolute top-10 left-28 w-20 rotate-[3deg] rounded-sm shadow-sm" />
+          <Cover id={scattered.canvas[2]} className="absolute top-3 right-6 w-16 rotate-[8deg] rounded-sm shadow-sm" />
           <span className="absolute top-28 left-44 rounded-sm bg-base-900 px-1.5 py-0.5 text-[10px] text-white">Sam</span>
           <span className="absolute top-36 right-14 rounded-sm bg-accent-600 px-1.5 py-0.5 text-[10px] text-white">Jo</span>
         </div>
@@ -241,12 +242,9 @@ const scraps: Scrap[] = [
       <Card className="p-3">
         <p className="text-[11px] font-medium text-base-900">moodboard_v7.pdf</p>
         <div className="mt-2 grid grid-cols-3 gap-1">
-          <Cover id="northbankCredit" className="rounded-sm" />
-          <Cover id="pixelforgeCoop" className="rounded-sm" />
-          <Cover id="staybrightPacking" className="rounded-sm" />
-          <Cover id="parcelTestimonial" className="rounded-sm" />
-          <Cover id="stridewise10k" className="rounded-sm" />
-          <Cover id="fizzwellMultipack" className="rounded-sm" />
+          {scattered.pdf.map((id) => (
+            <Cover key={id} id={id} className="rounded-sm" />
+          ))}
         </div>
         <p className="mt-2 text-[10px] text-base-500">14 MB · page 3 of 22</p>
       </Card>
@@ -260,7 +258,7 @@ const scraps: Scrap[] = [
     delay: 1.1,
     node: (
       <div className="rounded-2xl rounded-bl-sm bg-base-100 px-4 py-2.5 text-[13px] leading-snug text-base-900">
-        sending you a few screenshots, the yellow one is somewhere in there
+        sending you a few screenshots, the green one is somewhere in there
       </div>
     ),
   },

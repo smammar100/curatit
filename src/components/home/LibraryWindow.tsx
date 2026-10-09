@@ -1,9 +1,12 @@
+"use client";
+
 // Fundation
 import Search from "@/components/fundations/icons/Search";
 // Components
 import AppWindow from "./AppWindow";
 import PostCover from "./PostCover";
-import { board, brands, briefs, posts, type Post } from "./demo";
+import { board, briefs } from "./demo";
+import { usePosts } from "./HomePosts";
 import { cx } from "@/lib/cx";
 
 const brief = briefs[0];
@@ -11,6 +14,9 @@ const boards = [board.name, "Q3 banking campaign", "Harlo — site refresh"];
 
 // The solution: one Curatit window with the brief, its results and a board, all in one place.
 export default function LibraryWindow({ className }: { className?: string }) {
+  const results = usePosts(brief.results.map((result) => result.post));
+  const references = usePosts(board.references.map((reference) => reference.post));
+
   return (
     <div
       role="img"
@@ -44,12 +50,12 @@ export default function LibraryWindow({ className }: { className?: string }) {
               ))}
             </div>
             <ul className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
-              {brief.results.map(({ post: id, matched }, i) => {
-                const post: Post = posts[id];
+              {results.map((post, i) => {
+                const { matched } = brief.results.find((result) => result.post === post.shortCode)!;
                 return (
-                  <li key={id} className={i === 2 ? "hidden sm:block" : undefined}>
-                    <PostCover brand={post.brand} slide={post.slides[0]} className="rounded shadow" />
-                    <p className="mt-2 truncate text-xs font-medium text-base-900">{brands[post.brand].name}</p>
+                  <li key={post.shortCode} className={i === 2 ? "hidden sm:block" : undefined}>
+                    <PostCover post={post} sizes="(min-width: 640px) 180px, 40vw" className="rounded shadow" />
+                    <p className="mt-2 truncate text-xs font-medium text-base-900">{post.brand.name}</p>
                     <p className="mt-0.5 line-clamp-1 text-xs text-base-600">{post.hook}</p>
                     <p className="mt-1 line-clamp-1 text-xs text-base-500">Matched {matched.join(", ")}</p>
                   </li>
@@ -59,15 +65,15 @@ export default function LibraryWindow({ className }: { className?: string }) {
           </div>
           <aside className="hidden w-64 shrink-0 border-l border-base-100 p-4 lg:block">
             <p className="font-display text-base text-base-900">{board.name}</p>
-            <p className="mt-0.5 text-xs text-base-500">Private · {board.references.length} references</p>
+            <p className="mt-0.5 text-xs text-base-500">Private · {references.length} references</p>
             <ul className="mt-3 divide-y divide-base-100">
-              {board.references.map(({ post: id, note }) => {
-                const post: Post = posts[id];
+              {references.map((post) => {
+                const { note } = board.references.find((reference) => reference.post === post.shortCode)!;
                 return (
-                  <li key={id} className="flex items-center gap-3 py-2.5">
-                    <PostCover brand={post.brand} slide={post.slides[0]} className="w-9 shrink-0 rounded shadow-sm" />
+                  <li key={post.shortCode} className="flex items-center gap-3 py-2.5">
+                    <PostCover post={post} sizes="36px" className="w-9 shrink-0 rounded shadow-sm" />
                     <div className="min-w-0">
-                      <p className="truncate text-xs font-medium text-base-900">{brands[post.brand].name}</p>
+                      <p className="truncate text-xs font-medium text-base-900">{post.brand.name}</p>
                       <p className="line-clamp-2 text-xs text-base-600">{note}</p>
                     </div>
                   </li>
