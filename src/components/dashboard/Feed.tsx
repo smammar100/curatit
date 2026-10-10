@@ -5,6 +5,7 @@
 // the grid shows them. ?view=newest|saved and ?q= open the feed on a view or search, which is
 // how other dashboard pages send you back here.
 import { useEffect, useMemo, useState } from "react";
+import BoardList from "./BoardList";
 import { useBoards } from "./boards";
 import Grid from "./Grid";
 import Header, { VIEWS, type View } from "./Header";
@@ -64,10 +65,15 @@ export default function Feed() {
     <div className="min-h-dvh bg-white">
       <Header view={view} onView={setView} query={query} onQuery={setQuery} />
       <main className="px-4 pt-2 pb-24 sm:px-6">
+        {/* The Saved view opens on the boards, then every saved post */}
+        {view === "Saved" && !query && status !== "loading" && <BoardList />}
         {view === "Saved" && status === "loading" ? (
           <GridSkeleton label="Loading your saved posts" />
         ) : shown.length ? (
-          <Grid posts={shown} />
+          <>
+            {view === "Saved" && !query && boards.length > 0 && <h2 className="mb-5 text-[17px] font-medium text-base-900">All saved posts</h2>}
+            <Grid posts={shown} />
+          </>
         ) : (
           <Empty view={view} query={query} onClear={() => setQuery("")} onBrowse={() => setView("For you")} />
         )}

@@ -4,11 +4,12 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { safeNext } from "@/lib/auth";
 import { createClient } from "@/utils/supabase/server";
 
-// Where Supabase sends people back to: from Google, and from the links in its emails (confirm
-// sign-up, reset password). The default email templates and OAuth both bring a PKCE ?code= to
-// exchange for a session; a customised template can send ?token_hash=&type= instead. Either
-// way the session cookies are set on this response and the visitor goes on to ?next=. Failures
-// (an expired link, one opened in another browser) go to sign-in with the error code.
+// Where Supabase sends people back to from the links in its emails (confirm sign-up, reset
+// password), and from an OAuth provider if one is added. The default email templates bring a
+// PKCE ?code= to exchange for a session; a customised template can send ?token_hash=&type=
+// instead. Either way the session cookies are set on this response and the visitor goes on to
+// ?next=. Failures (an expired link, one opened in another browser) go to sign-in with the
+// error code.
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const next = safeNext(params.get("next"));

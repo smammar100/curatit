@@ -22,8 +22,9 @@ import SealCheck from "@/components/fundations/icons/SealCheck";
 import type { PostDetail } from "@/lib/posts";
 import { cx } from "@/lib/cx";
 import { BoardThumb, NAME_MAX, useBoards } from "./boards";
+import { boardHref } from "./BoardView";
 import { feedHref } from "./Feed";
-import { backToFeed, postHref, ratio } from "./Grid";
+import { backToPage, postHref, ratio } from "./Grid";
 
 const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
 const day = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
@@ -44,7 +45,7 @@ export default function PostView({ post }: { post: PostDetail }) {
   const previous = at > 0 ? list[at - 1] : null;
   const next = at >= 0 && at < list.length - 1 ? list[at + 1] : null;
 
-  const close = () => (backToFeed() ? router.back() : router.push("/dashboard"));
+  const close = () => (backToPage() ? router.back() : router.push("/dashboard"));
   const closeRef = useRef(close);
   closeRef.current = close;
 
@@ -367,14 +368,16 @@ function BoardsOn({ post }: { post: PostDetail }) {
         <ul className="mt-3 space-y-2">
           {on.map((b) => (
             <li key={b.id} className="flex items-center gap-3 rounded-xl p-2 ring-1 ring-base-200">
-              <BoardThumb board={b} className="size-9" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-base-900">{b.name}</p>
-                <p className="text-xs text-base-500 tabular-nums">
-                  {b.items.length} {b.items.length === 1 ? "post" : "posts"}
-                  {b.shared && " · Shared"}
-                </p>
-              </div>
+              <Link href={boardHref(b.id)} className="flex min-w-0 flex-1 items-center gap-3 rounded-lg hover:text-accent-600">
+                <BoardThumb board={b} className="size-9" />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{b.name}</p>
+                  <p className="text-xs text-base-500 tabular-nums">
+                    {b.items.length} {b.items.length === 1 ? "post" : "posts"}
+                    {b.shareToken && " · Shared"}
+                  </p>
+                </div>
+              </Link>
               <button
                 type="button"
                 onClick={() => remove(post.shortCode, b.id)}

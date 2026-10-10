@@ -13,13 +13,12 @@ import {
   requestPasswordReset,
   resendConfirmation,
   signIn,
-  signInWithGoogle,
   signUp,
   updatePassword,
   type AuthState,
 } from "@/app/auth/actions";
 import { authMessage } from "@/lib/auth";
-import { AuthField, AuthNotice, OrDivider } from "./AuthParts";
+import { AuthField, AuthNotice } from "./AuthParts";
 
 const linkClass = "font-medium text-accent-500 hover:text-accent-600";
 
@@ -63,19 +62,6 @@ function Submit({ pending, idle, busy }: { pending: boolean; idle: string; busy:
   );
 }
 
-function GoogleButton() {
-  const [state, action, pending] = useActionState(signInWithGoogle, {});
-  return (
-    <form action={action} className="space-y-3">
-      <Next />
-      <Button size="base" variant="muted" type="submit" disabled={pending} className="w-full disabled:opacity-70">
-        {pending ? "Opening Google…" : "Continue with Google"}
-      </Button>
-      {state.error && <AuthNotice>{state.error}</AuthNotice>}
-    </form>
-  );
-}
-
 export function SignInForm() {
   const [state, action, pending] = useActionState(signIn, {});
   const linkError = useParam("error");
@@ -83,29 +69,25 @@ export function SignInForm() {
   return (
     <>
       <Heading title="Welcome back">Sign in to pick up your boards where you left them.</Heading>
-      <div className="mt-6 space-y-5">
-        <GoogleButton />
-        <OrDivider />
-        <form action={action} className="space-y-4">
-          <Next />
-          <AuthField id="email" label="Email address" type="email" placeholder="you@example.com" inputMode="email" autoComplete="email" required defaultValue={state.email} />
-          <AuthField
-            id="password"
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            autoComplete="current-password"
-            required
-            aside={
-              <Link href="/forgot-password" className="text-xs font-medium text-base-500 hover:text-accent-600">
-                Forgot password?
-              </Link>
-            }
-          />
-          {error && <AuthNotice>{error}</AuthNotice>}
-          <Submit pending={pending} idle="Sign in" busy="Signing in…" />
-        </form>
-      </div>
+      <form action={action} className="mt-6 space-y-4">
+        <Next />
+        <AuthField id="email" label="Email address" type="email" placeholder="you@example.com" inputMode="email" autoComplete="email" required defaultValue={state.email} />
+        <AuthField
+          id="password"
+          label="Password"
+          type="password"
+          placeholder="••••••••"
+          autoComplete="current-password"
+          required
+          aside={
+            <Link href="/forgot-password" className="text-xs font-medium text-base-500 hover:text-accent-600">
+              Forgot password?
+            </Link>
+          }
+        />
+        {error && <AuthNotice>{error}</AuthNotice>}
+        <Submit pending={pending} idle="Sign in" busy="Signing in…" />
+      </form>
       <Footer>
         Don&apos;t have an account?{" "}
         <Link href="/signup" className={linkClass}>
@@ -122,26 +104,22 @@ export function SignUpForm() {
   return (
     <>
       <Heading title="Create your account">Search by brief and save the posts worth studying.</Heading>
-      <div className="mt-6 space-y-5">
-        <GoogleButton />
-        <OrDivider />
-        <form action={action} className="space-y-4">
-          <Next />
-          <AuthField id="email" label="Email address" type="email" placeholder="you@example.com" inputMode="email" autoComplete="email" required defaultValue={state.email} />
-          <AuthField
-            id="password"
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            autoComplete="new-password"
-            minLength={8}
-            required
-            aside={<span className="text-xs text-base-400">8 or more characters</span>}
-          />
-          {state.error && <AuthNotice>{state.error}</AuthNotice>}
-          <Submit pending={pending} idle="Create account" busy="Creating account…" />
-        </form>
-      </div>
+      <form action={action} className="mt-6 space-y-4">
+        <Next />
+        <AuthField id="email" label="Email address" type="email" placeholder="you@example.com" inputMode="email" autoComplete="email" required defaultValue={state.email} />
+        <AuthField
+          id="password"
+          label="Password"
+          type="password"
+          placeholder="••••••••"
+          autoComplete="new-password"
+          minLength={8}
+          required
+          aside={<span className="text-xs text-base-400">8 or more characters</span>}
+        />
+        {state.error && <AuthNotice>{state.error}</AuthNotice>}
+        <Submit pending={pending} idle="Create account" busy="Creating account…" />
+      </form>
       <Footer>
         Already have an account?{" "}
         <Link href="/signin" className={linkClass}>

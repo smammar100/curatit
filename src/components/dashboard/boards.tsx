@@ -1,8 +1,8 @@
 "use client";
 
 // The dashboard's boards: the signed-in person's boards from public.boards / board_posts, saving
-// a post to one or taking it off, making a new one, the toast that confirms each, and the
-// "Save" menu on each tile. The pages are static, so the boards load in the browser once the
+// a post to one or taking it off, making, renaming, describing, sharing and deleting boards,
+// notes on a board's posts, the toast that confirms each, and the "Save" menu on each tile. The pages are static, so the boards load in the browser once the
 // page is up (Row Level Security limits them to the owner's). Every change shows at once and is
 // written in the background; if the write fails it's undone and the toast says so. A new board
 // gets its id here (crypto.randomUUID), so a post can be saved to it while it's still being
@@ -28,6 +28,13 @@ type BoardsValue = {
   remove: (post: string, board: string) => void;
   // Makes a board (with a first post, if given) and returns its id straight away
   createBoard: (name: string, firstPost?: string) => string;
+  // Renames a board, or changes its description (null clears it)
+  updateBoard: (id: string, patch: { name?: string; description?: string | null }) => void;
+  deleteBoard: (id: string) => void;
+  // A post's note on a board ("" clears it)
+  setNote: (post: string, board: string, note: string) => void;
+  // Turns the read-only link on (a new token every time, so an old link stays dead) or off
+  setSharing: (id: string, on: boolean) => void;
   // Shows a short confirmation, or a problem, at the bottom of the screen
   notify: (text: string, tone?: "done" | "error") => void;
 };
@@ -85,7 +92,7 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
             id: row.id,
             name: row.name,
             description: row.description ?? undefined,
-            shared: !!row.share_token,
+            shareToken: row.share_token,
             updatedAt: row.updated_at,
             // A post that's been unpublished since can't be shown, so it's left out
             items: row.board_posts
@@ -156,7 +163,7 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     const post = firstPost ? byCode.get(firstPost) : undefined;
-    setBoards((list) => [{ id, name, shared: false, updatedAt: now, items: post ? [{ post: post.shortCode, addedAt: now }] : [] }, ...list]);
+    setBoards((list) => [{ id, name, shareToken: null, updatedAt: now, items: post ? [{ post: post.shortCode, addedAt: now }] : [] }, ...list]);
     notify(post ? `Saved to ${name}` : `Created ${name}`);
 
     const created = Promise.resolve(supabase.from("boards").insert({ id, name })).then(({ error }) => !error);
@@ -180,10 +187,76 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
     return id;
   };
 
+  const updateBoard = (id: string, patch: { name?: string; description?: string | null }) => {
+    const board = boards.find((b) => b.id === id);
+    if (!board) return;
+    const before = { name: board.name, description: board.description };
+    const local = { ...(patch.name !== undefined && { name: patch.name }), ...(patch.description !== undefined && { description: patch.description ?? undefined }) };
+    change(id, (b) => ({ ...b, ...local, updatedAt: new Date().toISOString() }));
+    write(
+      id,
+      () => supabase.from("boards").update(patch).eq("id", id),
+      () => {
+        change(id, (b) => ({ ...b, ...before }));
+        notify("Couldn’t save that change. Try again.", "error");
+      },
+    );
+  };
+
+  const deleteBoard = (id: string) => {
+    const board = boards.find((b) => b.id === id);
+    if (!board) return;
+    setBoards((list) => list.filter((b) => b.id !== id));
+    notify(`Deleted ${board.name}`);
+    write(
+      id,
+      () => supabase.from("boards").delete().eq("id", id),
+      () => {
+        setBoards((list) => [board, ...list]);
+        notify(`Couldn’t delete ${board.name}. Try again.`, "error");
+      },
+    );
+  };
+
+  const setNote = (code: string, boardId: string, note: string) => {
+    const post = byCode.get(code);
+    const item = boards.find((b) => b.id === boardId)?.items.find((i) => i.post === code);
+    const text = note.trim();
+    if (!post || !item || text === (item.note ?? "")) return;
+    const withNote = (value?: string) => (b: Board) => ({ ...b, items: b.items.map((i) => (i.post === code ? { ...i, note: value } : i)) });
+    change(boardId, withNote(text || undefined));
+    write(
+      boardId,
+      () => supabase.from("board_posts").update({ note: text || null }).eq("board_id", boardId).eq("post_id", post.id),
+      () => {
+        change(boardId, withNote(item.note));
+        notify("Couldn’t save the note. Try again.", "error");
+      },
+    );
+  };
+
+  const setSharing = (id: string, on: boolean) => {
+    const board = boards.find((b) => b.id === id);
+    if (!board) return;
+    const token = on ? crypto.randomUUID() : null;
+    change(id, (b) => ({ ...b, shareToken: token }));
+    if (!on) notify(`${board.name} is private again`);
+    write(
+      id,
+      () => supabase.from("boards").update({ share_token: token }).eq("id", id),
+      () => {
+        change(id, (b) => ({ ...b, shareToken: board.shareToken }));
+        notify(on ? "Couldn’t make a link. Try again." : "Couldn’t turn the link off. Try again.", "error");
+      },
+    );
+  };
+
   const sorted = useMemo(() => boards.toSorted((a, b) => b.updatedAt.localeCompare(a.updatedAt)), [boards]);
 
   return (
-    <BoardsContext.Provider value={{ boards: sorted, status, list: posts, posts: byCode, save, remove, createBoard, notify }}>
+    <BoardsContext.Provider
+      value={{ boards: sorted, status, list: posts, posts: byCode, save, remove, createBoard, updateBoard, deleteBoard, setNote, setSharing, notify }}
+    >
       {children}
       <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
         {toast && (

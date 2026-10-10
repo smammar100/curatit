@@ -16,7 +16,7 @@ const MESSAGES: Record<string, string> = {
   weak_password: "Choose a longer password, at least 8 characters.",
   same_password: "That’s your current password. Choose a new one.",
   email_address_invalid: "That email address doesn’t look right.",
-  email_address_not_authorized: "We can’t send email to that address yet. Try another, or use Google.",
+  email_address_not_authorized: "We can’t send email to that address yet. Try another one.",
   signup_disabled: "New sign-ups are closed for now.",
   over_email_send_rate_limit: "Too many emails sent just now. Wait a few minutes and try again.",
   over_request_rate_limit: "Too many attempts. Wait a minute and try again.",
@@ -27,7 +27,6 @@ const MESSAGES: Record<string, string> = {
   pkce_code_verifier_not_found: "Open the link in the same browser you started in, or ask for a new one.",
   access_denied: "Sign-in was cancelled or the link is no longer valid.",
   session_missing: "Your reset link has expired. Ask for a new one.",
-  provider_disabled: "Google sign-in isn’t switched on yet. Use your email for now.",
 };
 
 export function authMessage(code: string | null | undefined) {
