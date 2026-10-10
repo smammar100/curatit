@@ -1,10 +1,11 @@
 import Link from "next/link";
 // Assets
-import Logo from "@/components/assets/Logo";
+import Lockup from "@/components/assets/Lockup";
 // Fundations
 import Button from "@/components/fundations/elements/Button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 // Components
+import ThemeToggle from "@/components/global/ThemeToggle";
 import MobileNav from "./MobileNav";
 // Quick access links
 const links = [
@@ -24,7 +25,7 @@ export default function Navigation() {
           {/* Logo left, links centred on the page, account buttons right */}
           <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full gap-3 relative">
             <Link href="/" className="w-fit shrink-0 foucs:outline-none" aria-label="Go to homepage">
-              <Logo className="h-4 text-base-900" />
+              <Lockup />
             </Link>
             <div className="flex items-center justify-center gap-6">
               {links.map((link) => (
@@ -38,6 +39,7 @@ export default function Navigation() {
               ))}
             </div>
             <div className="flex items-center justify-end gap-2">
+              <ThemeToggle className="shrink-0" />
               <Button isLink size="xs" variant="muted" href="/signin" className="shrink-0">
                 Sign in
               </Button>

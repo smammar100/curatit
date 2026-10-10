@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 // Components
 import PostCover from "./PostCover";
 import { easeOut, introItem, introScale, useIntro, useLoop } from "./DemoParts";
@@ -23,10 +23,10 @@ export default function DetailDemo() {
   if (!post) return null;
 
   return (
-    <motion.div ref={ref} {...intro} className="flex h-full flex-col items-center pb-10">
+    <m.div ref={ref} {...intro} className="flex h-full flex-col items-center pb-10">
       <ol className="grid w-full grid-cols-5 gap-1.5">
         {post.images.map((_, i) => (
-          <motion.li key={i} variants={introItem}>
+          <m.li key={i} variants={introItem}>
             <button
               type="button"
               aria-label={`Slide ${i + 1}: ${detail.sequence[i]}`}
@@ -43,7 +43,7 @@ export default function DetailDemo() {
               <PostCover post={post} slide={i} sizes="56px" className="rounded" />
               {/* One ring that glides to the selected slide */}
               {i === slide && (
-                <motion.span
+                <m.span
                   layoutId={ringId}
                   aria-hidden="true"
                   className="absolute -inset-1 rounded-md ring-2 ring-base-800"
@@ -51,15 +51,15 @@ export default function DetailDemo() {
                 />
               )}
             </button>
-          </motion.li>
+          </m.li>
         ))}
       </ol>
-      <motion.p variants={introItem} className="mt-3 text-center text-xs text-base-600" aria-live={playing ? "off" : "polite"}>
+      <m.p variants={introItem} className="mt-3 text-center text-xs text-base-600" aria-live={playing ? "off" : "polite"}>
         <span className="font-medium text-base-900">{detail.sequence[slide]}</span> · {slide + 1} / {count}
-      </motion.p>
-      <motion.div variants={introScale} className="relative mt-3 aspect-4/5 min-h-0 flex-1">
+      </m.p>
+      <m.div variants={introScale} className="relative mt-3 aspect-4/5 min-h-0 flex-1">
         <AnimatePresence initial={false}>
-          <motion.div
+          <m.div
             key={slide}
             className="absolute inset-0"
             initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
@@ -68,9 +68,9 @@ export default function DetailDemo() {
             transition={{ duration: 0.3, ease: easeOut }}
           >
             <PostCover post={post} slide={slide} sizes="260px" className="h-full rounded shadow" />
-          </motion.div>
+          </m.div>
         </AnimatePresence>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

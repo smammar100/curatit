@@ -85,7 +85,7 @@ export default function SearchDialog({ items }: { items: SearchItem[] }) {
       >
         <div className="min-h-screen px-4 text-center">
           <div
-            className="fixed inset-0 bg-base-950/50 backdrop-blur transition-opacity"
+            className="fixed inset-0 bg-black/50 backdrop-blur transition-opacity"
             onClick={close}
           ></div>
           <div className="inline-block w-full max-w-2xl p-8 b- mb-8 mt-12 lg:mt-48 bg-base-50 rounded-lg text-left align-middle transition-all transform relative">

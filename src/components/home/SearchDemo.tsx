@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 // Components
 import BrandName from "./BrandName";
 import PostCover from "./PostCover";
@@ -22,8 +22,8 @@ export default function SearchDemo() {
   const intro = useIntro();
 
   return (
-    <motion.div ref={ref} {...intro} className="flex h-full flex-col pb-10">
-      <motion.div variants={introItem}>
+    <m.div ref={ref} {...intro} className="flex h-full flex-col pb-10">
+      <m.div variants={introItem}>
         <BriefTabs
           active={active}
           onChange={(i) => {
@@ -31,11 +31,11 @@ export default function SearchDemo() {
             setActive(i);
           }}
         />
-      </motion.div>
-      <motion.div variants={introItem} className="mt-3">
+      </m.div>
+      <m.div variants={introItem} className="mt-3">
         <QueryField query={typed} typing={!done} />
-      </motion.div>
-      <motion.ul
+      </m.div>
+      <m.ul
         variants={introItem}
         className="mt-4 min-h-0 flex-1 divide-y divide-base-200 overflow-hidden"
         aria-live={playing ? "off" : "polite"}
@@ -43,7 +43,7 @@ export default function SearchDemo() {
         {posts.map((post, i) => {
           const { matched } = brief.results.find((result) => result.post === post.shortCode)!;
           return (
-            <motion.li
+            <m.li
               key={post.shortCode}
               className="flex items-center gap-3 py-3"
               initial={false}
@@ -61,10 +61,10 @@ export default function SearchDemo() {
                   ))}
                 </div>
               </div>
-            </motion.li>
+            </m.li>
           );
         })}
-      </motion.ul>
-    </motion.div>
+      </m.ul>
+    </m.div>
   );
 }

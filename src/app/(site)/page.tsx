@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 // Components
 import Faq from "@/components/global/Faq";
-import Categories from "@/components/home/Categories";
 import ClosingCta from "@/components/home/ClosingCta";
 import HomeHero from "@/components/home/HomeHero";
 import { HomePostsProvider } from "@/components/home/HomePosts";
 import HowItWorks from "@/components/home/HowItWorks";
+import HydrateOnView from "@/components/home/HydrateOnView";
 import McpSection from "@/components/home/McpSection";
-import ProblemSolution from "@/components/home/ProblemSolution";
-import { featuredPosts } from "@/components/home/demo";
+import { categories, detail, featuredPosts } from "@/components/home/demo";
+import { Categories, ProblemSolution } from "@/components/home/islands";
 import { faqs } from "@/components/home/faqs";
-import { getPublishedPosts } from "@/lib/posts";
+import { categoryPosts, getPublishedPosts, withCoverOnly } from "@/lib/posts";
 
 export const metadata: Metadata = {
   title: { absolute: "Curatit: find the brand posts worth studying" },
@@ -23,18 +23,35 @@ export const revalidate = 3600;
 
 export default async function HomePage() {
   const posts = await getPublishedPosts();
-  // The client demos only need the posts they show
-  const featured = posts.filter((post) => featuredPosts.includes(post.shortCode));
+  // Client components get only the posts they show, and only the cover unless they need
+  // every slide; the rest stays on the server, out of the page's data
+  const featured = posts
+    .filter((post) => featuredPosts.includes(post.shortCode))
+    .map((post) => (post.shortCode === detail.post ? post : withCoverOnly(post)));
+  const gallery = categories.flatMap((category) => categoryPosts(posts, category.category, 10)).map(withCoverOnly);
 
+  // Below the hero, each section keeps its server HTML and only comes alive as it scrolls
+  // into view, so a phone's first seconds go to the hero alone (see HydrateOnView). The FAQ
+  // is server-only, so it has nothing to hydrate.
   return (
     <HomePostsProvider posts={featured}>
       <HomeHero posts={posts} />
-      <ProblemSolution />
-      <HowItWorks />
-      <Categories posts={posts} />
-      <McpSection />
+      <HydrateOnView>
+        <ProblemSolution />
+      </HydrateOnView>
+      <HydrateOnView>
+        <HowItWorks />
+      </HydrateOnView>
+      <HydrateOnView>
+        <Categories posts={gallery} />
+      </HydrateOnView>
+      <HydrateOnView>
+        <McpSection />
+      </HydrateOnView>
       <Faq faqs={faqs} />
-      <ClosingCta posts={posts} />
+      <HydrateOnView>
+        <ClosingCta posts={posts} />
+      </HydrateOnView>
     </HomePostsProvider>
   );
 }

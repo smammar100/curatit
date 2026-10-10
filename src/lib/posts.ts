@@ -11,10 +11,10 @@ export type LibraryPost = {
   postedAt: string;
   width: number | null;
   height: number | null;
-  // logo is the public URL of the brand's mark in the `library` bucket, if it has one
+  // logo is the URL of the brand's mark in the `library` bucket (via /lib), if it has one
   brand: { name: string; slug: string; logo: string | null };
   category: { name: string; slug: string };
-  // Public URLs in the `library` bucket, cover first, then each carousel slide
+  // URLs of the post's files in the `library` bucket (via /lib), cover first, then each carousel slide
   images: string[];
 };
 
@@ -49,7 +49,8 @@ export const getPublishedPosts = cache(async (): Promise<LibraryPost[]> => {
     .returns<Row[]>();
   if (error) throw new Error(`Could not load library posts from Supabase: ${error.message}`);
 
-  const bucket = supabase.storage.from("library");
+  // /lib/<path> is rewritten to the public `library` bucket (next.config.ts)
+  const libraryUrl = (path: string) => `/lib/${path}`;
   return data
     .filter((row) => row.brands?.categories && row.post_images.length)
     .map((row) => ({
@@ -63,16 +64,36 @@ export const getPublishedPosts = cache(async (): Promise<LibraryPost[]> => {
       brand: {
         name: row.brands!.name,
         slug: row.brands!.slug,
-        logo: row.brands!.logo_path ? bucket.getPublicUrl(row.brands!.logo_path).data.publicUrl : null,
+        logo: row.brands!.logo_path ? libraryUrl(row.brands!.logo_path) : null,
       },
       category: row.brands!.categories!,
       images: row.post_images
         .toSorted((a, b) => a.position - b.position)
-        .map((image) => bucket.getPublicUrl(image.path).data.publicUrl),
+        .map((image) => libraryUrl(image.path)),
     }));
 });
 
 // A URL from Next's image optimizer, for places that need a plain <img> src
-export function optimizedImage(src: string, width = 640) {
-  return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=75`;
+export function optimizedImage(src: string, width = 640, quality = 75) {
+  return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=${quality}`;
 }
+
+// The newest posts in a category, taking one brand at a time so a set isn't all one brand
+export function categoryPosts(posts: LibraryPost[], category: string, count: number) {
+  const queues = Map.groupBy(
+    posts.filter((post) => post.category.slug === category),
+    (post) => post.brand.slug
+  );
+  const picked: LibraryPost[] = [];
+  while (picked.length < count && [...queues.values()].some((queue) => queue.length)) {
+    for (const queue of queues.values()) {
+      const next = queue.shift();
+      if (next && picked.length < count) picked.push(next);
+    }
+  }
+  return picked;
+}
+
+// A post with only its cover, for places that never show the other slides. Keeps the
+// data the page sends to the browser small.
+export const withCoverOnly = (post: LibraryPost): LibraryPost => ({ ...post, images: post.images.slice(0, 1) });

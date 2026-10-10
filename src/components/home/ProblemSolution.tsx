@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type CSSProperties } from "react";
-import { motion, useMotionValueEvent, useScroll, useTransform } from "framer-motion";
+import { m, useMotionValueEvent, useScroll, useTransform } from "framer-motion";
 // Fundation
 import Text from "@/components/fundations/elements/Text";
 import Wrapper from "@/components/fundations/containers/Wrapper";
@@ -75,9 +75,9 @@ export default function ProblemSolution() {
             </div>
             <div className="relative mt-6 flex-1 md:mt-10">
               <Scattered className="absolute inset-0" />
-              <motion.div className="absolute inset-0 bg-white" style={{ opacity: solutionOpacity }} aria-hidden={!solved}>
+              <m.div className="absolute inset-0 bg-white" style={{ opacity: solutionOpacity }} aria-hidden={!solved}>
                 <LibraryWindow className="absolute inset-0" />
-              </motion.div>
+              </m.div>
             </div>
           </div>
         </Wrapper>

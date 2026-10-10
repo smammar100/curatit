@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 // Fundations
 import Button from "@/components/fundations/elements/Button";
 // Components
@@ -29,8 +29,8 @@ export default function BoardDemo() {
   }, [copied]);
 
   return (
-    <motion.div ref={ref} {...intro} className="flex h-full flex-col pb-10">
-      <motion.div variants={introItem} className="flex items-center gap-2">
+    <m.div ref={ref} {...intro} className="flex h-full flex-col pb-10">
+      <m.div variants={introItem} className="flex items-center gap-2">
         <input
           readOnly
           value="curatit.com/s/k7Qm2xVbR4"
@@ -53,15 +53,15 @@ export default function BoardDemo() {
         >
           {copied ? "Copied" : "Copy"}
         </Button>
-      </motion.div>
-      <motion.div variants={introItem} className="mt-5">
+      </m.div>
+      <m.div variants={introItem} className="mt-5">
         <p className="font-display text-xl leading-tight font-light text-base-900">{board.name}</p>
         <p className="mt-0.5 text-xs text-base-500">Read-only · {posts.length} references</p>
-      </motion.div>
+      </m.div>
       {/* Bleeds into the card's right padding so the last cover is cut by the edge. A size
           container, so each item can take its width from the strip's height (cqh). */}
-      <motion.div variants={introFromRight} className="-mr-6 mt-3 min-h-0 flex-1 overflow-hidden [container-type:size] lg:-mr-8">
-        <motion.ul
+      <m.div variants={introFromRight} className="-mr-6 mt-3 min-h-0 flex-1 overflow-hidden [container-type:size] lg:-mr-8">
+        <m.ul
           className="flex h-full gap-3"
           animate={playing ? { x: [0, -32] } : { x: 0 }}
           transition={
@@ -81,8 +81,8 @@ export default function BoardDemo() {
               </li>
             );
           })}
-        </motion.ul>
-      </motion.div>
-    </motion.div>
+        </m.ul>
+      </m.div>
+    </m.div>
   );
 }

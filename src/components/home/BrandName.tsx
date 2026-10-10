@@ -13,7 +13,7 @@ export default function BrandName({ brand, className }: { brand: LibraryPost["br
           alt=""
           width={16}
           height={16}
-          className="size-4 shrink-0 rounded-sm outline-1 -outline-offset-1 outline-black/10"
+          className="size-4 shrink-0 rounded-sm outline-1 -outline-offset-1 outline-edge"
         />
       )}
       <span className="truncate">{brand.name}</span>

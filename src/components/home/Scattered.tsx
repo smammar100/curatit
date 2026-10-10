@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState, type ReactNode } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { cx } from "@/lib/cx";
 import PostCover from "./PostCover";
 import { scattered } from "./demo";
@@ -100,7 +100,7 @@ const scraps: Scrap[] = [
             do you have that carousel from the money app? the one with the phone on every slide
           </p>
         </div>
-        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-accent-600 text-[11px] font-semibold text-white">
+        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-accent-600 text-[11px] font-semibold text-paper">
           3
         </span>
       </Card>
@@ -173,7 +173,7 @@ const scraps: Scrap[] = [
           <Cover id={scattered.canvas[1]} className="absolute top-10 left-28 w-20 rotate-[3deg] rounded-sm shadow-sm" />
           <Cover id={scattered.canvas[2]} className="absolute top-3 right-6 w-16 rotate-[8deg] rounded-sm shadow-sm" />
           <span className="absolute top-28 left-44 rounded-sm bg-base-900 px-1.5 py-0.5 text-[10px] text-white">Sam</span>
-          <span className="absolute top-36 right-14 rounded-sm bg-accent-600 px-1.5 py-0.5 text-[10px] text-white">Jo</span>
+          <span className="absolute top-36 right-14 rounded-sm bg-accent-600 px-1.5 py-0.5 text-[10px] text-paper">Jo</span>
         </div>
       </Card>
     ),
@@ -314,7 +314,7 @@ export default function Scattered({ className }: { className?: string }) {
           ))}
         </svg>
         {scraps.map((scrap) => (
-          <motion.div
+          <m.div
             key={scrap.key}
             className="absolute"
             style={{ left: scrap.x, top: scrap.y, width: scrap.w, rotate: scrap.rotate ?? 0 }}
@@ -328,7 +328,7 @@ export default function Scattered({ className }: { className?: string }) {
             }
           >
             {scrap.node}
-          </motion.div>
+          </m.div>
         ))}
       </div>
     </div>

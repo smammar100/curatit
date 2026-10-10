@@ -1,5 +1,6 @@
-"use client";
-
+// Not a client component: the corridor is CSS keyframes computed once at render, and the
+// only hooks (useId, useMemo) run on the server too. That keeps its code and the hydration
+// of eighteen animated cards out of the browser's work on the homepage.
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
@@ -115,6 +116,9 @@ function keyframes(dir: 1 | -1, name: string, p: Required<CorridorPath>) {
 
 export type StreamImage = {
   src: string;
+  /** Optional responsive sources, so small screens load small files. */
+  srcSet?: string;
+  sizes?: string;
   /** Only used if you drop the decorative treatment; the corridor is aria-hidden. */
   alt?: string;
 };
@@ -224,6 +228,8 @@ export function ImageStreamHero({
                   {img ? (
                     <img
                       src={img.src}
+                      srcSet={img.srcSet}
+                      sizes={img.sizes}
                       alt={img.alt ?? ""}
                       loading="lazy"
                       decoding="async"

@@ -4,9 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 // Assets
-import Logo from "@/components/assets/Logo";
+import Lockup from "@/components/assets/Lockup";
 // Fundations
 import Button from "@/components/fundations/elements/Button";
+import ThemeToggle from "@/components/global/ThemeToggle";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 // Icons
 import Burger from "@/components/fundations/icons/Burger";
@@ -18,7 +19,7 @@ const links = [
   { href: "/pricing", text: "Pricing" },
   { href: "/blog", text: "Blog" },
   { href: "/about", text: "About" },
-]
+];
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -47,22 +48,27 @@ export default function MobileNav() {
       <Wrapper variant="standard" className="py-3">
         <div className="flex items-center justify-between">
           <Link href="/" aria-label="Go to homepage">
-            <Logo className="h-4 text-base-900" />
+            <Lockup />
           </Link>
-          <Button
-            iconOnly
-            size="xs"
-            variant="default"
-            type="button"
-            aria-expanded={open}
-            aria-label="Open menu"
-            onClick={() => setOpen(!open)}
-          >
-            <Burger className="size-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button
+              iconOnly
+              size="xs"
+              variant="default"
+              type="button"
+              aria-expanded={open}
+              aria-label="Open menu"
+              onClick={() => setOpen(!open)}
+            >
+              <Burger className="size-4" />
+            </Button>
+          </div>
         </div>
       </Wrapper>
-      <div className={open ? "md:hidden bg-white" : "hidden md:hidden bg-white"}>
+      <div
+        className={open ? "md:hidden bg-white" : "hidden md:hidden bg-white"}
+      >
         <Wrapper variant="standard" className="py-4">
           <div className="flex flex-col">
             {links.map((link) => (
@@ -76,10 +82,22 @@ export default function MobileNav() {
             ))}
           </div>
           <div className="mt-8 flex items-center gap-2">
-            <Button isLink size="xs" variant="muted" href="/signin" className="shrink-0">
+            <Button
+              isLink
+              size="xs"
+              variant="muted"
+              href="/signin"
+              className="shrink-0"
+            >
               Sign in
             </Button>
-            <Button isLink size="xs" variant="default" href="/signup" className="shrink-0">
+            <Button
+              isLink
+              size="xs"
+              variant="default"
+              href="/signup"
+              className="shrink-0"
+            >
               Sign up
             </Button>
           </div>
