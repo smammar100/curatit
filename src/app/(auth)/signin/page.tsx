@@ -20,11 +20,12 @@ export default function SignInPage() {
         </Text>
       </div>
       <div className="mt-6 space-y-5">
-        <Button size="base" variant="muted" type="button" className="w-full">
+        {/* Until sign-in is wired to Supabase, both ways in lead straight to the dashboard */}
+        <Button isLink size="base" variant="muted" href="/dashboard" className="w-full">
           Continue with Google
         </Button>
         <OrDivider />
-        <form className="space-y-4">
+        <form action="/dashboard" className="space-y-4">
           <AuthField id="email" label="Email address" type="email" placeholder="you@example.com" inputMode="email" autoComplete="email" />
           <AuthField
             id="password"

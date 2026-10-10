@@ -14,7 +14,7 @@ export const sources = [
   },
   {
     file: "data/instagram/ubereats.json",
-    category: { name: "Food delivery", slug: "food-delivery" },
+    category: { name: "Food & drink", slug: "food-delivery" },
     brand: { name: "Uber Eats", slug: "uber-eats", websiteUrl: "https://www.ubereats.com" },
     // @uber1 co-posts on @ubereats, but it's Uber's account, so it isn't filed here
     brandAccounts: ["ubereats"],
@@ -97,15 +97,103 @@ export const sources = [
   },
   {
     file: "data/instagram/deliveroo.json",
-    category: { name: "Food delivery", slug: "food-delivery" },
+    category: { name: "Food & drink", slug: "food-delivery" },
     brand: { name: "Deliveroo", slug: "deliveroo", websiteUrl: "https://deliveroo.co.uk" },
     brandAccounts: ["deliveroo"],
   },
   {
     file: "data/instagram/instacart.json",
-    category: { name: "Food delivery", slug: "food-delivery" },
+    category: { name: "Food & drink", slug: "food-delivery" },
     brand: { name: "Instacart", slug: "instacart", websiteUrl: "https://www.instacart.com" },
     brandAccounts: ["instacart"],
+  },
+  {
+    file: "data/instagram/shopify.json",
+    category: { name: "E-commerce", slug: "ecommerce" },
+    brand: { name: "Shopify", slug: "shopify", websiteUrl: "https://www.shopify.com" },
+    brandAccounts: ["shopify"],
+  },
+  {
+    file: "data/instagram/kfc.json",
+    category: { name: "Food & drink", slug: "food-delivery" },
+    brand: { name: "KFC", slug: "kfc", websiteUrl: "https://www.kfc.com" },
+    brandAccounts: ["kfc"],
+  },
+  {
+    file: "data/instagram/cocacola.json",
+    category: { name: "Food & drink", slug: "food-delivery" },
+    brand: { name: "Coca-Cola", slug: "coca-cola", websiteUrl: "https://www.coca-cola.com" },
+    brandAccounts: ["cocacola"],
+  },
+  {
+    file: "data/instagram/mcdonalds.json",
+    category: { name: "Food & drink", slug: "food-delivery" },
+    brand: { name: "McDonald's", slug: "mcdonalds", websiteUrl: "https://www.mcdonalds.com" },
+    // Licensed partners like @spongebob co-post on @mcdonalds; @officialhappymeal is McDonald's own
+    brandAccounts: ["mcdonalds", "officialhappymeal"],
+  },
+  {
+    file: "data/instagram/burgerking.json",
+    category: { name: "Food & drink", slug: "food-delivery" },
+    brand: { name: "Burger King", slug: "burger-king", websiteUrl: "https://www.bk.com" },
+    brandAccounts: ["burgerking"],
+  },
+  {
+    file: "data/instagram/underarmour.json",
+    category: { name: "Sportswear", slug: "sportswear" },
+    brand: { name: "Under Armour", slug: "under-armour", websiteUrl: "https://www.underarmour.com" },
+    // Sport accounts publish with @underarmour as co-author; athletes like @mikelarteta are not filed here
+    brandAccounts: ["underarmour", "uafootball", "uadugout"],
+  },
+  {
+    file: "data/instagram/robinhoodapp.json",
+    category: { name: "Fintech", slug: "fintech" },
+    brand: { name: "Robinhood", slug: "robinhood", websiteUrl: "https://robinhood.com" },
+    brandAccounts: ["robinhoodapp"],
+  },
+  {
+    file: "data/instagram/wealthsimple.json",
+    category: { name: "Fintech", slug: "fintech" },
+    brand: { name: "Wealthsimple", slug: "wealthsimple", websiteUrl: "https://www.wealthsimple.com" },
+    brandAccounts: ["wealthsimple"],
+  },
+  {
+    file: "data/instagram/wealthfront.json",
+    category: { name: "Fintech", slug: "fintech" },
+    brand: { name: "Wealthfront", slug: "wealthfront", websiteUrl: "https://www.wealthfront.com" },
+    brandAccounts: ["wealthfront"],
+  },
+  {
+    file: "data/instagram/expedia.json",
+    category: { name: "Travel", slug: "travel" },
+    brand: { name: "Expedia", slug: "expedia", websiteUrl: "https://www.expedia.com" },
+    // @expediagroup is the parent company, so it isn't filed here
+    brandAccounts: ["expedia"],
+  },
+  {
+    file: "data/instagram/uber.json",
+    category: { name: "Travel", slug: "travel" },
+    brand: { name: "Uber", slug: "uber", websiteUrl: "https://www.uber.com" },
+    brandAccounts: ["uber"],
+  },
+  {
+    file: "data/instagram/amazon.json",
+    category: { name: "E-commerce", slug: "ecommerce" },
+    brand: { name: "Amazon", slug: "amazon", websiteUrl: "https://www.amazon.com" },
+    // @amazonkindle is Amazon's own; film partners that co-post are not filed here
+    brandAccounts: ["amazon", "amazonkindle"],
+  },
+  {
+    file: "data/instagram/binance.json",
+    category: { name: "Fintech", slug: "fintech" },
+    brand: { name: "Binance", slug: "binance", websiteUrl: "https://www.binance.com" },
+    brandAccounts: ["binance"],
+  },
+  {
+    file: "data/instagram/doordash.json",
+    category: { name: "Food & drink", slug: "food-delivery" },
+    brand: { name: "DoorDash", slug: "doordash", websiteUrl: "https://www.doordash.com" },
+    brandAccounts: ["doordash"],
   },
 ];
 

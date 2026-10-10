@@ -13,6 +13,7 @@ import CoatHanger from "@/components/fundations/icons/CoatHanger";
 import Cpu from "@/components/fundations/icons/Cpu";
 import CreditCard from "@/components/fundations/icons/CreditCard";
 import ForkKnife from "@/components/fundations/icons/ForkKnife";
+import ShoppingBag from "@/components/fundations/icons/ShoppingBag";
 // Components
 import { categoryPosts, type LibraryPost } from "@/lib/posts";
 import { cx } from "@/lib/cx";
@@ -28,6 +29,7 @@ const icons: Record<string, ComponentType<IconProps>> = {
   Fashion: CoatHanger,
   Finance: CreditCard,
   "Travel & Transportation": AirplaneTilt,
+  "E-commerce": ShoppingBag,
 };
 
 // Every tab shares lightness and chroma; only the hue changes, so the six read as one set.
@@ -56,7 +58,7 @@ export default function Categories({ posts }: { posts: LibraryPost[] }) {
       <Wrapper variant="standard" className="py-20">
         <div className="text-balance max-w-3xl mx-auto text-center">
           <Text tag="h2" variant="displaySM" className="text-base-900 font-display font-thin">
-            Six categories, studied closely
+            Seven categories, studied closely
           </Text>
           <Text tag="p" variant="textBase" className="text-base-600 mt-4">
             Every post is tagged from one vocabulary of 36 terms for objective, format, structure and
