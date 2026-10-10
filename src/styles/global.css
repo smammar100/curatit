@@ -58,6 +58,24 @@
       transform: translateY(-50%);
     }
   }
+  /* Dashboard toast and menus: a short rise and fade in (exits are instant) */
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
   @keyframes wall-up {
     from {
       transform: translateY(-50%);

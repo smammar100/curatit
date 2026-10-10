@@ -73,6 +73,47 @@ export const getPublishedPosts = cache(async (): Promise<LibraryPost[]> => {
     }));
 });
 
+// One post with everything its detail page shows: every slide, the full caption and the
+// counts at scrape time (Instagram reports a hidden like count as -1, kept here as null)
+export type PostDetail = LibraryPost & { caption: string; likes: number | null; comments: number | null };
+
+export const getPostDetail = cache(async (shortCode: string): Promise<PostDetail | null> => {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("instagram_posts")
+    .select(
+      "short_code, url, format, caption, posted_at, dimensions_width, dimensions_height, likes_count, comments_count, brands(name, slug, logo_path, categories(name, slug)), post_images(position, path)"
+    )
+    .eq("is_published", true)
+    .eq("short_code", shortCode)
+    .returns<(Row & { likes_count: number | null; comments_count: number | null })[]>()
+    .maybeSingle();
+  if (error) throw new Error(`Could not load post ${shortCode} from Supabase: ${error.message}`);
+  if (!data?.brands?.categories || !data.post_images.length) return null;
+
+  const libraryUrl = (path: string) => `/lib/${path}`;
+  const count = (value: number | null) => (value == null || value < 0 ? null : value);
+  return {
+    shortCode: data.short_code,
+    url: data.url,
+    format: data.format,
+    hook: hookFrom(data.caption),
+    caption: (data.caption ?? "").trim(),
+    postedAt: data.posted_at,
+    width: data.dimensions_width,
+    height: data.dimensions_height,
+    likes: count(data.likes_count),
+    comments: count(data.comments_count),
+    brand: {
+      name: data.brands.name,
+      slug: data.brands.slug,
+      logo: data.brands.logo_path ? libraryUrl(data.brands.logo_path) : null,
+    },
+    category: data.brands.categories,
+    images: data.post_images.toSorted((a, b) => a.position - b.position).map((image) => libraryUrl(image.path)),
+  };
+});
+
 // A URL from Next's image optimizer, for places that need a plain <img> src
 export function optimizedImage(src: string, width = 640, quality = 75) {
   return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=${quality}`;
