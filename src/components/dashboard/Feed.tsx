@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useBoards } from "./boards";
 import Grid from "./Grid";
 import Header, { VIEWS, type View } from "./Header";
+import { GridSkeleton } from "./Skeleton";
 import type { DashPost } from "./types";
 
 // Every word of the query appears in the post's hook, brand, category or format
@@ -26,7 +27,7 @@ export const feedHref = (view: View, query = "") => {
 };
 
 export default function Feed() {
-  const { boards, list, posts: byCode } = useBoards();
+  const { boards, status, list, posts: byCode } = useBoards();
   const [query, setQuery] = useState("");
   const [view, setView] = useState<View>("For you");
 
@@ -45,8 +46,12 @@ export default function Feed() {
     if (location.pathname === "/dashboard") history.replaceState(null, "", feedHref(view, query));
   }, [view, query]);
 
+  // Everything on any board, most recently saved first
   const saved = useMemo(
-    () => [...new Set(boards.flatMap((board) => board.items.map((item) => item.post)))].flatMap((code) => byCode.get(code) ?? []),
+    () =>
+      [...new Set(boards.flatMap((board) => board.items).toSorted((a, b) => b.addedAt.localeCompare(a.addedAt)).map((item) => item.post))].flatMap(
+        (code) => byCode.get(code) ?? [],
+      ),
     [boards, byCode],
   );
   const shown = useMemo(() => {
@@ -59,7 +64,9 @@ export default function Feed() {
     <div className="min-h-dvh bg-white">
       <Header view={view} onView={setView} query={query} onQuery={setQuery} />
       <main className="px-4 pt-2 pb-24 sm:px-6">
-        {shown.length ? (
+        {view === "Saved" && status === "loading" ? (
+          <GridSkeleton label="Loading your saved posts" />
+        ) : shown.length ? (
           <Grid posts={shown} />
         ) : (
           <Empty view={view} query={query} onClear={() => setQuery("")} onBrowse={() => setView("For you")} />

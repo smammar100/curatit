@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 // Components
 import { BoardsProvider } from "@/components/dashboard/boards";
 import { PrefsProvider } from "@/components/dashboard/prefs";
-import type { Board, DashPost } from "@/components/dashboard/types";
-import { board as demoBoard } from "@/components/home/demo";
+import { UserProvider } from "@/components/dashboard/user";
+import type { DashPost } from "@/components/dashboard/types";
 import { getPublishedPosts } from "@/lib/posts";
 
 export const metadata: Metadata = { title: "Curatit", robots: { index: false, follow: false } };
@@ -13,9 +13,10 @@ export const metadata: Metadata = { title: "Curatit", robots: { index: false, fo
 export const revalidate = 3600;
 
 // The signed-in area. The boards and the grid size live here, so they carry over between the
-// feed and a post. Design first: real library posts, and sample boards until sign-in is wired
-// to Supabase and the boards load from public.boards. `modal` is the @modal slot, where a post
-// opens over the feed; the page under it goes inert while it's open (PostView, by this id).
+// feed and a post. The proxy keeps it for signed-in visitors; UserProvider reads who they are
+// and BoardsProvider loads their boards, both in the browser, so the pages stay static.
+// `modal` is the @modal slot, where a post opens over the feed; the page under it goes inert
+// while it's open (PostView, by this id).
 export default async function DashboardLayout({ children, modal }: { children: ReactNode; modal: ReactNode }) {
   const all = await getPublishedPosts();
 
@@ -25,6 +26,7 @@ export default async function DashboardLayout({ children, modal }: { children: R
   const posts: DashPost[] = Array.from({ length: longest }, (_, i) => byBrand.flatMap((list) => list[i] ?? []))
     .flat()
     .map((post) => ({
+      id: post.id,
       shortCode: post.shortCode,
       hook: post.hook,
       brand: post.brand,
@@ -36,20 +38,14 @@ export default async function DashboardLayout({ children, modal }: { children: R
       cover: post.images[0],
     }));
 
-  const inCategory = (slug: string, count: number) =>
-    all.filter((post) => post.category.slug === slug).slice(0, count).map((post) => ({ post: post.shortCode }));
-  const boards: Board[] = [
-    { id: "payments", name: demoBoard.name, shared: true, updated: "2 hours ago", items: [...demoBoard.references] },
-    { id: "holiday", name: "Q4 holiday campaign", shared: false, updated: "Yesterday", items: inCategory("food-delivery", 6) },
-    { id: "drops", name: "Sportswear drops", shared: true, updated: "3 days ago", items: inCategory("sportswear", 4) },
-  ];
-
   return (
-    <PrefsProvider>
-      <BoardsProvider initial={boards} posts={posts}>
-        <div id="dashboard-page">{children}</div>
-        {modal}
-      </BoardsProvider>
-    </PrefsProvider>
+    <UserProvider>
+      <PrefsProvider>
+        <BoardsProvider posts={posts}>
+          <div id="dashboard-page">{children}</div>
+          {modal}
+        </BoardsProvider>
+      </PrefsProvider>
+    </UserProvider>
   );
 }

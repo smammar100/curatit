@@ -4,7 +4,6 @@
 // your profile, saved posts, contact and log out, then the theme (light, dark, system) and the
 // grid size, both remembered on this device.
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import Link from "next/link";
 // Icons
 import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
 import CaretDown from "@/components/fundations/icons/CaretDown";
@@ -16,11 +15,13 @@ import Sun from "@/components/fundations/icons/Sun";
 import { getThemeMode, setThemeMode, type ThemeMode } from "@/components/global/theme";
 import { SITE_URL } from "@/lib/site";
 import { cx } from "@/lib/cx";
-import { Avatar } from "./boards";
+import { signOut } from "@/app/auth/actions";
+import { Avatar, useUser } from "./user";
 import { useGridSize } from "./prefs";
 
 export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: number; onShowSaved: () => void }) {
   const { size: gridSize, setSize: onGridSize } = useGridSize();
+  const user = useUser();
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>("system");
   const ref = useRef<HTMLDivElement>(null);
@@ -70,8 +71,8 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
         >
           <div className="flex items-center justify-between gap-3 px-3 py-2.5">
             <div className="min-w-0">
-              <p className="truncate text-base font-medium text-base-900">Alex Morgan</p>
-              <p className="truncate text-sm text-base-500">alex@{host}</p>
+              <p className="truncate text-base font-medium text-base-900">{user?.name ?? " "}</p>
+              <p className="truncate text-sm text-base-500">{user?.email ?? " "}</p>
             </div>
             <Avatar />
           </div>
@@ -94,10 +95,12 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
             Contact us
             <ChatDots className="size-5" />
           </a>
-          <Link role="menuitem" href="/signin" className={item}>
-            Log out
-            <SignOut className="size-5" />
-          </Link>
+          <form action={signOut}>
+            <button type="submit" role="menuitem" className={item}>
+              Log out
+              <SignOut className="size-5" />
+            </button>
+          </form>
 
           <div className="mx-3 my-2 h-px bg-base-100" />
 
