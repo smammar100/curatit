@@ -18,15 +18,15 @@ const steps: { title: string; muted: string; demoLabel: string; demo: ReactNode 
     demo: <SearchDemo />,
   },
   {
-    title: "See why a post works,",
+    title: "See why it works,",
     muted: "not just that it does.",
-    demoLabel: "Demo: a post and its editor analysis",
+    demoLabel: "Demo: a carousel's slides, each labelled with its role",
     demo: <DetailDemo />,
   },
   {
     title: "Hand over a board,",
     muted: "in one click.",
-    demoLabel: "Demo: a research board and its share link",
+    demoLabel: "Demo: a shared board as the client sees it",
     demo: <BoardDemo />,
   },
 ];
@@ -47,7 +47,7 @@ export default function HowItWorks() {
           {steps.map((step) => (
             <li
               key={step.title}
-              className="relative flex aspect-[343/429] min-h-110 flex-col overflow-hidden rounded-xl bg-base-50 md:aspect-[421/560]"
+              className="relative flex aspect-[343/429] min-h-110 flex-col overflow-clip rounded-xl bg-base-50 md:aspect-[421/560]"
             >
               <div className="relative z-10 flex items-start justify-between gap-3 px-6 py-7 lg:px-8">
                 {/* The muted half always starts the second line, so no card ends on a stray word */}
@@ -67,9 +67,9 @@ export default function HowItWorks() {
                   <ArrowUpRight className="size-4" />
                 </Button>
               </div>
-              {/* The window runs off the card's bottom edge, which fades it out; controls stay in the clear area above */}
+              {/* Every illustration fills the same box and runs off the card's bottom edge, which fades it out */}
               <div role="group" aria-label={step.demoLabel} className="relative min-h-0 flex-1">
-                <div className="absolute inset-x-6 top-0 lg:inset-x-8">{step.demo}</div>
+                <div className="absolute inset-x-6 top-0 -bottom-6 lg:inset-x-8">{step.demo}</div>
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/5 bg-linear-to-b from-transparent to-base-50" />
               </div>
             </li>

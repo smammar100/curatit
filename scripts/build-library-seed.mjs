@@ -33,9 +33,10 @@ for (const source of sources) {
     `insert into public.categories (name, slug) values (${q(category.name)}, ${q(category.slug)})`,
     "on conflict (slug) do update set name = excluded.name;",
     "",
-    "insert into public.brands (name, slug, website_url, category_id)",
-    `values (${q(brand.name)}, ${q(brand.slug)}, ${q(brand.websiteUrl)}, ${categoryId})`,
-    "on conflict (slug) do update set name = excluded.name, website_url = excluded.website_url, category_id = excluded.category_id;",
+    // logos/<slug>.webp comes from scripts/download-brand-logos.mjs
+    "insert into public.brands (name, slug, website_url, category_id, logo_path)",
+    `values (${q(brand.name)}, ${q(brand.slug)}, ${q(brand.websiteUrl)}, ${categoryId}, ${q(`logos/${brand.slug}.webp`)})`,
+    "on conflict (slug) do update set name = excluded.name, website_url = excluded.website_url, category_id = excluded.category_id, logo_path = excluded.logo_path;",
     "",
     "insert into public.scrape_runs (actor, run_id, dataset_id, data_detail_level, target_url, item_count, scraped_at, notes)",
     `values (${q(data.actor)}, ${q(data.runId)}, ${q(data.datasetId)}, ${q(data.dataDetailLevel)}, ${q(data.source)}, ${data.items.length}, ${q(data.scrapedAt)}, ${q(data.note)})`,

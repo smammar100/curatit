@@ -4,6 +4,7 @@
 import Search from "@/components/fundations/icons/Search";
 // Components
 import AppWindow from "./AppWindow";
+import BrandName from "./BrandName";
 import PostCover from "./PostCover";
 import { board, briefs } from "./demo";
 import { usePosts } from "./HomePosts";
@@ -55,7 +56,7 @@ export default function LibraryWindow({ className }: { className?: string }) {
                 return (
                   <li key={post.shortCode} className={i === 2 ? "hidden sm:block" : undefined}>
                     <PostCover post={post} sizes="(min-width: 640px) 180px, 40vw" className="rounded shadow" />
-                    <p className="mt-2 truncate text-xs font-medium text-base-900">{post.brand.name}</p>
+                    <BrandName brand={post.brand} className="mt-2" />
                     <p className="mt-0.5 line-clamp-1 text-xs text-base-600">{post.hook}</p>
                     <p className="mt-1 line-clamp-1 text-xs text-base-500">Matched {matched.join(", ")}</p>
                   </li>
@@ -73,7 +74,7 @@ export default function LibraryWindow({ className }: { className?: string }) {
                   <li key={post.shortCode} className="flex items-center gap-3 py-2.5">
                     <PostCover post={post} sizes="36px" className="w-9 shrink-0 rounded shadow-sm" />
                     <div className="min-w-0">
-                      <p className="truncate text-xs font-medium text-base-900">{post.brand.name}</p>
+                      <BrandName brand={post.brand} />
                       <p className="line-clamp-2 text-xs text-base-600">{note}</p>
                     </div>
                   </li>

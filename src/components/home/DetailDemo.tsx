@@ -1,82 +1,76 @@
 "use client";
 
-import { useState } from "react";
-// Fundations
-import Button from "@/components/fundations/elements/Button";
-import CaretLeft from "@/components/fundations/icons/CaretLeft";
-import CaretRight from "@/components/fundations/icons/CaretRight";
+import { useId, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 // Components
-import AppWindow from "./AppWindow";
 import PostCover from "./PostCover";
+import { easeOut, introItem, introScale, useIntro, useLoop } from "./DemoParts";
 import { detail } from "./demo";
 import { usePost } from "./HomePosts";
+import { cx } from "@/lib/cx";
 
-// Layout follows the window's own width (AppWindow is a container), so it works inside a card
+// A carousel as its strip of slides, each labelled with its role; pick one to see it large.
+// While on screen it steps through the slides on its own; clicking a slide takes over.
+// Fills its box (HowItWorks gives every illustration the same one).
 export default function DetailDemo() {
   const [slide, setSlide] = useState(0);
   const post = usePost(detail.post);
+  const count = post?.images.length ?? 1;
+  const { ref, playing, stop } = useLoop<HTMLDivElement>(2200, () => setSlide((i) => (i + 1) % count));
+  const ringId = useId();
+  const reduceMotion = useReducedMotion();
+  const intro = useIntro();
   if (!post) return null;
-  const count = post.images.length;
-
-  const analysis = [
-    { label: "Brand", value: `${post.brand.name} · ${post.category.name}` },
-    { label: "Objective", value: detail.objective },
-    { label: "Format", value: `${detail.format} ${post.format} · ${count} slides` },
-    { label: "Structure", value: detail.structure },
-    { label: "Visual style", value: detail.styles.join(", ") },
-  ];
 
   return (
-    <AppWindow title={`${post.brand.name} — ${post.hook}`}>
-      <div className="grid gap-5 p-4 @sm:grid-cols-2 @sm:p-5">
-        <div>
-          {/* Controls sit above the slide, so they stay reachable when the window is cropped below */}
-          <div className="mb-2.5 flex items-center justify-between gap-2">
-            <Button
+    <motion.div ref={ref} {...intro} className="flex h-full flex-col items-center pb-10">
+      <ol className="grid w-full grid-cols-5 gap-1.5">
+        {post.images.map((_, i) => (
+          <motion.li key={i} variants={introItem}>
+            <button
               type="button"
-              iconOnly
-              size="xxs"
-              variant="muted"
-              aria-label="Previous slide"
-              disabled={slide === 0}
-              onClick={() => setSlide(slide - 1)}
-              className="disabled:opacity-40"
+              aria-label={`Slide ${i + 1}: ${detail.sequence[i]}`}
+              aria-pressed={i === slide}
+              onClick={() => {
+                stop();
+                setSlide(i);
+              }}
+              className={cx(
+                "relative block w-full rounded transition-opacity duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400",
+                i === slide ? "opacity-100" : "opacity-60 hover:opacity-100"
+              )}
             >
-              <CaretLeft className="size-3.5" />
-            </Button>
-            <p className="truncate text-xs text-base-600" aria-live="polite">
-              <span className="font-medium text-base-900">{detail.sequence[slide]}</span> · {slide + 1} / {count}
-            </p>
-            <Button
-              type="button"
-              iconOnly
-              size="xxs"
-              variant="muted"
-              aria-label="Next slide"
-              disabled={slide === count - 1}
-              onClick={() => setSlide(slide + 1)}
-              className="disabled:opacity-40"
-            >
-              <CaretRight className="size-3.5" />
-            </Button>
-          </div>
-          <PostCover post={post} slide={slide} sizes="(min-width: 1024px) 200px, 176px" className="max-w-44 rounded shadow @sm:max-w-none" />
-        </div>
-        <div>
-          <dl className="divide-y divide-base-100 text-xs">
-            {analysis.map((row) => (
-              <div key={row.label} className="flex justify-between gap-3 py-2">
-                <dt className="shrink-0 text-base-500">{row.label}</dt>
-                <dd className="text-right text-base-900">{row.value}</dd>
-              </div>
-            ))}
-          </dl>
-          <div className="mt-3 rounded-md bg-base-50 p-3">
-            <p className="text-xs font-medium text-base-900">Why it&apos;s here</p>
-            <p className="mt-1 text-xs leading-relaxed text-base-600">{detail.reason}</p>
-          </div>
-        </div>
-      </div>
-    </AppWindow>
+              <PostCover post={post} slide={i} sizes="56px" className="rounded" />
+              {/* One ring that glides to the selected slide */}
+              {i === slide && (
+                <motion.span
+                  layoutId={ringId}
+                  aria-hidden="true"
+                  className="absolute -inset-1 rounded-md ring-2 ring-base-800"
+                  transition={reduceMotion ? { duration: 0 } : { type: "spring", duration: 0.4, bounce: 0 }}
+                />
+              )}
+            </button>
+          </motion.li>
+        ))}
+      </ol>
+      <motion.p variants={introItem} className="mt-3 text-center text-xs text-base-600" aria-live={playing ? "off" : "polite"}>
+        <span className="font-medium text-base-900">{detail.sequence[slide]}</span> · {slide + 1} / {count}
+      </motion.p>
+      <motion.div variants={introScale} className="relative mt-3 aspect-4/5 min-h-0 flex-1">
+        <AnimatePresence initial={false}>
+          <motion.div
+            key={slide}
+            className="absolute inset-0"
+            initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={reduceMotion ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0, transition: { duration: 0.2 } }}
+            transition={{ duration: 0.3, ease: easeOut }}
+          >
+            <PostCover post={post} slide={slide} sizes="260px" className="h-full rounded shadow" />
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
+    </motion.div>
   );
 }

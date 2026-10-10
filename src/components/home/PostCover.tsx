@@ -18,7 +18,7 @@ export default function PostCover({
   className?: string;
 }) {
   return (
-    <div aria-hidden="true" className={cx("relative aspect-4/5 overflow-hidden bg-base-100 select-none", className)}>
+    <div aria-hidden="true" className={cx("relative aspect-4/5 overflow-hidden bg-base-100 ring-1 ring-base-900/5 select-none", className)}>
       <Image
         src={post.images[slide] ?? post.images[0]}
         alt=""

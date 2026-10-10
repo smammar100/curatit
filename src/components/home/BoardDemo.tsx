@@ -1,64 +1,88 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 // Fundations
-import Text from "@/components/fundations/elements/Text";
 import Button from "@/components/fundations/elements/Button";
 // Components
-import AppWindow from "./AppWindow";
+import BrandName from "./BrandName";
 import PostCover from "./PostCover";
+import { introFromRight, introItem, useIntro, useLoop } from "./DemoParts";
 import { board } from "./demo";
 import { usePosts } from "./HomePosts";
+import { cx } from "@/lib/cx";
 
-// Layout follows the window's own width (AppWindow is a container), so it works inside a card
+// The board as the client opens it: the share link, then the references with their notes
+// in a strip that runs off the right edge. While on screen the strip drifts and the link
+// copies itself every few seconds; clicking Copy takes over.
+// Fills its box (HowItWorks gives every illustration the same one).
 export default function BoardDemo() {
-  const [shared, setShared] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const { ref, playing, stop } = useLoop<HTMLDivElement>(5000, () => setCopied(true));
   const posts = usePosts(board.references.map((reference) => reference.post));
+  const intro = useIntro();
+
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 1500);
+    return () => clearTimeout(timer);
+  }, [copied]);
 
   return (
-    <AppWindow title="Boards">
-      <div className="p-4 @sm:p-5">
-        <Text tag="p" variant="displayXS" className="text-base-900 font-display font-light">
-          {board.name}
-        </Text>
-        <p className="mt-1 text-xs text-base-500">
-          {shared ? "Shared, read-only" : "Private"} · {posts.length} references
-        </p>
-        {/* The share controls stay at the top left, clear of the card's fades */}
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Button type="button" size="xs" variant={shared ? "muted" : "default"} onClick={() => setShared(!shared)}>
-            {shared ? "Revoke link" : "Share"}
-          </Button>
-          {shared && (
-            <>
-              <input
-                readOnly
-                value="curatit.com/s/k7Qm2xVbR4"
-                aria-label="Share link"
-                onFocus={(event) => event.currentTarget.select()}
-                className="block h-8 w-52 rounded-md border border-transparent bg-white px-3 py-2 text-xs leading-tight text-base-500 shadow-sm ring-1 ring-base-200 focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none"
-              />
-              <span className="text-xs text-base-500">Expires in 7 days</span>
-            </>
+    <motion.div ref={ref} {...intro} className="flex h-full flex-col pb-10">
+      <motion.div variants={introItem} className="flex items-center gap-2">
+        <input
+          readOnly
+          value="curatit.com/s/k7Qm2xVbR4"
+          aria-label="Share link"
+          onFocus={(event) => event.currentTarget.select()}
+          className={cx(
+            "block h-9 min-w-0 flex-1 rounded-md border border-transparent px-3 text-xs shadow-sm ring-1 transition-colors duration-150 focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none",
+            copied ? "bg-accent-50 text-base-900 ring-accent-200" : "bg-white text-base-600 ring-base-200"
           )}
-        </div>
-        <ul className="mt-3 divide-y divide-base-100">
+        />
+        <Button
+          type="button"
+          size="sm"
+          variant="default"
+          onClick={() => {
+            stop();
+            setCopied(true);
+          }}
+          className="w-18 shrink-0"
+        >
+          {copied ? "Copied" : "Copy"}
+        </Button>
+      </motion.div>
+      <motion.div variants={introItem} className="mt-5">
+        <p className="font-display text-xl leading-tight font-light text-base-900">{board.name}</p>
+        <p className="mt-0.5 text-xs text-base-500">Read-only · {posts.length} references</p>
+      </motion.div>
+      {/* Bleeds into the card's right padding so the last cover is cut by the edge. A size
+          container, so each item can take its width from the strip's height (cqh). */}
+      <motion.div variants={introFromRight} className="-mr-6 mt-3 min-h-0 flex-1 overflow-hidden [container-type:size] lg:-mr-8">
+        <motion.ul
+          className="flex h-full gap-3"
+          animate={playing ? { x: [0, -32] } : { x: 0 }}
+          transition={
+            playing
+              ? { duration: 6, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" }
+              : { duration: 0.4, ease: "easeOut" }
+          }
+        >
           {posts.map((post) => {
             const { note } = board.references.find((reference) => reference.post === post.shortCode)!;
             return (
-              <li key={post.shortCode} className="flex items-center gap-3 py-2.5">
-                <PostCover post={post} sizes="40px" className="w-10 shrink-0 rounded shadow-sm" />
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-medium text-base-900">
-                    {post.brand.name} — {post.hook}
-                  </p>
-                  <p className="mt-0.5 text-xs text-base-600">{note}</p>
-                </div>
+              // Cover height is the strip minus the two caption lines (2.5rem); width follows at 4:5
+              <li key={post.shortCode} className="w-[calc((100cqh-2.5rem)*0.8)] shrink-0">
+                <PostCover post={post} sizes="180px" className="w-full rounded shadow-sm" />
+                <BrandName brand={post.brand} className="mt-2" />
+                <p className="truncate text-xs text-base-500">{note}</p>
               </li>
             );
           })}
-        </ul>
-      </div>
-    </AppWindow>
+        </motion.ul>
+      </motion.div>
+    </motion.div>
   );
 }

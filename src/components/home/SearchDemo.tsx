@@ -1,66 +1,70 @@
 "use client";
 
 import { useState } from "react";
-// Fundations
-import Button from "@/components/fundations/elements/Button";
-import Search from "@/components/fundations/icons/Search";
+import { motion } from "framer-motion";
 // Components
-import AppWindow from "./AppWindow";
+import BrandName from "./BrandName";
 import PostCover from "./PostCover";
+import { BriefTabs, QueryField, Tag, easeOut, introItem, useIntro, useLoop, useTyped } from "./DemoParts";
 import { briefs } from "./demo";
 import { usePosts } from "./HomePosts";
 
-// Layout follows the window's own width (AppWindow is a container), so it works inside a card
+// A brief and the posts it returns, as a list with the terms each one matched.
+// While on screen it cycles through the briefs: the query types out, then the
+// results arrive one by one. Clicking a brief takes over from the loop.
+// Fills its box (HowItWorks gives every illustration the same one).
 export default function SearchDemo() {
   const [active, setActive] = useState(0);
+  const { ref, playing, stop } = useLoop<HTMLDivElement>(4500, () => setActive((i) => (i + 1) % briefs.length));
   const brief = briefs[active];
   const posts = usePosts(brief.results.map((result) => result.post));
+  const { typed, done } = useTyped(brief.query, playing);
+  const intro = useIntro();
 
   return (
-    <AppWindow title="Library">
-      <div className="p-4 @sm:p-5">
-        <div className="flex h-8 items-center gap-2 rounded-md bg-white px-3 text-xs ring-1 ring-base-200 shadow-sm">
-          <Search className="size-3.5 shrink-0 text-base-400" />
-          <span className="sr-only">Brief:</span>
-          <span className="truncate text-base-900">{brief.query}</span>
-        </div>
-        <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs">
-          <span className="text-base-500">Read as</span>
-          {brief.readAs.map((term) => (
-            <span key={term} className="rounded-md bg-base-50 px-2 py-1 text-base-900">
-              {term}
-            </span>
-          ))}
-        </div>
-        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-base-500">Try a brief</span>
-          {briefs.map((option, i) => (
-            <Button
-              key={option.label}
-              type="button"
-              size="xxs"
-              variant={i === active ? "default" : "muted"}
-              aria-pressed={i === active}
-              onClick={() => setActive(i)}
+    <motion.div ref={ref} {...intro} className="flex h-full flex-col pb-10">
+      <motion.div variants={introItem}>
+        <BriefTabs
+          active={active}
+          onChange={(i) => {
+            stop();
+            setActive(i);
+          }}
+        />
+      </motion.div>
+      <motion.div variants={introItem} className="mt-3">
+        <QueryField query={typed} typing={!done} />
+      </motion.div>
+      <motion.ul
+        variants={introItem}
+        className="mt-4 min-h-0 flex-1 divide-y divide-base-200 overflow-hidden"
+        aria-live={playing ? "off" : "polite"}
+      >
+        {posts.map((post, i) => {
+          const { matched } = brief.results.find((result) => result.post === post.shortCode)!;
+          return (
+            <motion.li
+              key={post.shortCode}
+              className="flex items-center gap-3 py-3"
+              initial={false}
+              animate={done ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+              transition={done ? { duration: 0.3, ease: easeOut, delay: i * 0.08 } : { duration: 0 }}
             >
-              {option.label}
-            </Button>
-          ))}
-        </div>
-        <ul className="mt-4 grid grid-cols-2 gap-3 @md:grid-cols-3" aria-live="polite">
-          {posts.map((post, i) => {
-            const { matched } = brief.results.find((result) => result.post === post.shortCode)!;
-            return (
-              <li key={post.shortCode} className={i === 2 ? "hidden @md:block" : undefined}>
-                <PostCover post={post} sizes="(min-width: 1024px) 120px, 40vw" className="rounded shadow" />
-                <p className="mt-2 text-xs font-medium text-base-900">{post.brand.name}</p>
-                <p className="mt-0.5 line-clamp-2 text-xs text-base-600">{post.hook}</p>
-                <p className="mt-1.5 text-xs text-base-500">Matched {matched.join(", ")}</p>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    </AppWindow>
+              <PostCover post={post} sizes="48px" className="w-12 shrink-0 rounded shadow-sm" />
+              <div className="min-w-0">
+                <BrandName brand={post.brand} />
+                <div className="mt-1.5 flex gap-1 overflow-hidden">
+                  {matched.slice(0, 2).map((term) => (
+                    <Tag key={term} className="shrink-0">
+                      {term}
+                    </Tag>
+                  ))}
+                </div>
+              </div>
+            </motion.li>
+          );
+        })}
+      </motion.ul>
+    </motion.div>
   );
 }

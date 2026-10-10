@@ -7,7 +7,7 @@
 // Example briefs for the search demo, with the terms Curatit reads from each brief and what it returns
 export const briefs = [
   {
-    label: "Launch that shows the product",
+    label: "Launch",
     query: "launch carousel that shows the product",
     readAs: ["Product launch", "Carousel", "Product UI"],
     results: [
@@ -17,7 +17,7 @@ export const briefs = [
     ],
   },
   {
-    label: "Saveable how-to",
+    label: "How-to",
     query: "saveable how-to carousel",
     readAs: ["Educational", "Listicle", "Carousel"],
     results: [
@@ -27,7 +27,7 @@ export const briefs = [
     ],
   },
   {
-    label: "Customer story with proof",
+    label: "Case study",
     query: "customer story that proves it",
     readAs: ["Customer story", "Claim–proof"],
     results: [
@@ -41,12 +41,6 @@ export const briefs = [
 // The post the detail demo opens: Wise's eSIM launch
 export const detail = {
   post: "DeJsl6nF39v",
-  objective: "Product launch",
-  format: "Graphic",
-  structure: "Announcement–benefits–CTA",
-  styles: ["Product UI", "Brand colour", "Bold typography"],
-  reason:
-    "Every slide puts the app on screen, so the launch shows the product instead of describing it. Brand green carries the set; the cover breaks it with a real photo behind the phone.",
   // Each slide's role, in order
   sequence: ["Announcement", "Benefit", "Benefit", "Benefit", "CTA"],
 };
@@ -55,9 +49,9 @@ export const detail = {
 export const board = {
   name: "Payments app launch",
   references: [
-    { post: "DeJsl6nF39v", note: "One benefit per slide, with the app on screen." },
-    { post: "DdoBhR8DTdG", note: "Teaser the day before: one photo and a date." },
-    { post: "Dd6t2UpFLsO", note: "Numbered features, then a two-word sign-off." },
+    { post: "DeJsl6nF39v", note: "One benefit per slide" },
+    { post: "DdoBhR8DTdG", note: "Teaser: a photo and a date" },
+    { post: "Dd6t2UpFLsO", note: "Numbered features" },
   ],
 } satisfies { name: string; references: { post: string; note: string }[] };
 
@@ -92,13 +86,12 @@ export const featuredPosts = [
   ]),
 ];
 
-// The six folders, each filled with the newest posts from one library category.
-// `hue` is the OKLCH hue of the folder colour.
+// The six category tabs, each mapped to a library category (Categories.tsx)
 export const categories = [
-  { name: "Food & Drink", category: "food-delivery", hue: 35 },
-  { name: "Sports", category: "sportswear", hue: 135 },
-  { name: "Technology", category: "technology", hue: 300 },
-  { name: "Fashion", category: "fashion", hue: 80 },
-  { name: "Finance", category: "fintech", hue: 175 },
-  { name: "Travel & Transportation", category: "travel", hue: 240 },
+  { name: "Food & Drink", category: "food-delivery" },
+  { name: "Sports", category: "sportswear" },
+  { name: "Technology", category: "technology" },
+  { name: "Fashion", category: "fashion" },
+  { name: "Finance", category: "fintech" },
+  { name: "Travel & Transportation", category: "travel" },
 ];
