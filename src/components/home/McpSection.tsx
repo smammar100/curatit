@@ -5,7 +5,7 @@ import Wrapper from "@/components/fundations/containers/Wrapper";
 // Assets
 import ClientMark, { clientMarks } from "@/components/assets/ClientMarks";
 // Components
-import McpDemo from "./McpDemo";
+import { McpDemo } from "./islands";
 
 export default function McpSection() {
   return (

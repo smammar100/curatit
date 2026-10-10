@@ -78,8 +78,23 @@ Usage rules:
 - There are no tinted color panels and no hue rotation - the page stays
   monochrome warm gray; the screenshots inside cards provide the color.
 - Dark surfaces are rare and purposeful: the default Button (`bg-base-800`)
-  and the search modal backdrop (`bg-base-950`). No dark mode - do not add
-  `dark:` classes.
+  and the search modal backdrop (`bg-black/50`).
+- **Dark theme** (`data-theme="dark"` on `<html>`, set before paint by
+  `global/ThemeScript` from localStorage or the system, switched by
+  `global/ThemeToggle` in both navigations): the tokens flip, the classes do
+  not. `:root[data-theme="dark"]` in `global.css` redefines `--color-white`
+  (paper becomes a warm near-black), reverses the `base` scale (cards sit a
+  step lighter than the canvas) and desaturates `accent` by a quarter. So keep
+  writing `bg-white`, `text-base-900`, `bg-base-50`, and never add `dark:`
+  for a colour. Two semantic tokens exist for what must not flip or must
+  flip differently: `text-paper` for text on an accent fill (the accent
+  Button, badges on `bg-accent-600`), and `edge` for the 1px line inside
+  images and on floating surfaces (`outline-edge`, `ring-edge`: black/10 in
+  light, white/10 in dark). Shadows are invisible on dark, so a surface that
+  needs separation there adds `dark:ring-1 dark:ring-edge` - the one
+  legitimate `dark:` use. Inline colours in client components use
+  `light-dark(light, dark)` (see `Categories`), and prose/Shiki colours are
+  mapped to the tokens in `global.css`.
 
 ## Layout and spacing
 
@@ -126,7 +141,7 @@ Reuse these before writing anything new:
 - **Text**: the only sanctioned type scale (see Typography).
 - **Wrapper**: the only page-width container. Don't hand-roll
   `max-w-* mx-auto` wrappers.
-- **Form inputs** share one canonical recipe (see `src/app/(auth)/signin/page.tsx`,
+- **Form inputs** share one canonical recipe (see `components/auth/AuthParts.tsx`,
   `Footer.tsx`, `sites/SearchDialog.tsx`): `h-9 rounded-md bg-white ring-1 ring-base-200
   placeholder-base-400 shadow-sm focus:border-accent-500 focus:ring-accent-100
   focus:ring-2 text-xs`. Copy it verbatim for new inputs.
@@ -173,7 +188,7 @@ Don't:
 - Don't put accent color on headings, backgrounds, or body copy; it is for
   hovers, focus, links, and the accent Button.
 - Don't introduce new fonts, colors outside `@theme`, gradients, or `dark:`
-  classes.
+  classes for colour (the tokens flip; see Color system).
 - Don't use default Tailwind `slate`/`gray`/`zinc`/`orange` classes - the
   scales here are `base-*` and `accent-*`.
 - Don't shadow cards or buttons, and don't exceed `rounded-lg` outside the

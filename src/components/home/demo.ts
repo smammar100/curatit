@@ -86,12 +86,13 @@ export const featuredPosts = [
   ]),
 ];
 
-// The six category tabs, each mapped to a library category (Categories.tsx)
+// The six category tabs, each mapped to a library category (Categories.tsx).
+// `hue` is the OKLCH hue of the tab's colour; lightness and chroma are shared.
 export const categories = [
-  { name: "Food & Drink", category: "food-delivery" },
-  { name: "Sports", category: "sportswear" },
-  { name: "Technology", category: "technology" },
-  { name: "Fashion", category: "fashion" },
-  { name: "Finance", category: "fintech" },
-  { name: "Travel & Transportation", category: "travel" },
+  { name: "Food & Drink", category: "food-delivery", hue: 35 },
+  { name: "Sports", category: "sportswear", hue: 135 },
+  { name: "Technology", category: "technology", hue: 300 },
+  { name: "Fashion", category: "fashion", hue: 80 },
+  { name: "Finance", category: "fintech", hue: 175 },
+  { name: "Travel & Transportation", category: "travel", hue: 240 },
 ];

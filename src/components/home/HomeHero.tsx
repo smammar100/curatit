@@ -9,10 +9,22 @@ import { heroPosts } from "./demo";
 
 // Covers of real library posts, one brand each. The corridor shows the first nine
 // (its default card count), and it is decorative, so the images carry no alt text.
+//
+// The cards are in motion and never larger than a third of the hero's width, so they get
+// a lower quality than the library's stills and only the widths that fit: on a phone that
+// is the 256px file, which keeps the hero's images out of the way of the first paint.
+const HERO_QUALITY = 60;
+
 export default function HomeHero({ posts }: { posts: LibraryPost[] }) {
   const images = heroPosts
     .flatMap((shortCode) => posts.find((post) => post.shortCode === shortCode) ?? [])
-    .map((post) => ({ src: optimizedImage(post.images[0]) }));
+    .map((post) => ({
+      src: optimizedImage(post.images[0], 640, HERO_QUALITY),
+      srcSet: [256, 384, 640]
+        .map((width) => `${optimizedImage(post.images[0], width, HERO_QUALITY)} ${width}w`)
+        .join(", "),
+      sizes: "33vw",
+    }));
 
   return (
     <section>

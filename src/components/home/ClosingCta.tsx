@@ -5,7 +5,7 @@ import Wrapper from "@/components/fundations/containers/Wrapper";
 // Components
 import Image from "next/image";
 import type { LibraryPost } from "@/lib/posts";
-import LogoReel from "./LogoReel";
+import { LogoReel } from "./islands";
 
 // One app-icon tile per brand in the library: its logo. Brands without one fall back to
 // the cover of their newest post (posts come newest first).

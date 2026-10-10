@@ -4,7 +4,7 @@ import { cx } from "@/lib/cx";
 
 const variantClasses = {
   default: "text-white bg-base-800 hover:bg-base-700 focus:outline-base-700",
-  accent: "text-white bg-accent-600 hover:bg-accent-500 focus:outline-accent-500",
+  accent: "text-paper bg-accent-600 hover:bg-accent-500 focus:outline-accent-500",
   muted: "text-base-900 bg-base-50 hover:bg-base-100 focus:outline-base-300",
   none: "",
 };

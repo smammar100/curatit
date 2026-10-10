@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import { m, useInView, useReducedMotion } from "framer-motion";
 import { cx } from "@/lib/cx";
 
 /*
@@ -101,7 +101,7 @@ export default function LogoReel({
         if (virtual === n - 1) virtual = -1;
         if (virtual > SLOTS) return null;
         return (
-          <motion.div
+          <m.div
             key={i}
             className="absolute top-0 left-0 overflow-hidden rounded-[20px] shadow-sm"
             style={{ width: SIZE, height: SIZE }}
@@ -110,7 +110,7 @@ export default function LogoReel({
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
             {item}
-          </motion.div>
+          </m.div>
         );
       })}
     </div>

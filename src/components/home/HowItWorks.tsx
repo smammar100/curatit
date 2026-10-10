@@ -6,9 +6,7 @@ import Wrapper from "@/components/fundations/containers/Wrapper";
 // Icons
 import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
 // Components
-import BoardDemo from "./BoardDemo";
-import DetailDemo from "./DetailDemo";
-import SearchDemo from "./SearchDemo";
+import { BoardDemo, DetailDemo, SearchDemo } from "./islands";
 
 const steps: { title: string; muted: string; demoLabel: string; demo: ReactNode }[] = [
   {
