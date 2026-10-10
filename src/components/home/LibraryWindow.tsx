@@ -1,90 +1,152 @@
 "use client";
 
+// The solution in the problem → solution scroll: the real dashboard, drawn small. Its header (the
+// mark, For you / Newest / Saved, the search pill holding the brief, Create, Upgrade and the
+// account), the feed as a masonry of library posts at their own proportions, dealt row by row
+// like the real grid, and one post being saved: its hover state with "Saved", the Save menu open
+// on the board it went to, and the toast that confirms it. It mirrors components/dashboard, so
+// keep the two in step when the dashboard changes.
+import Image from "next/image";
 // Fundation
+import Symbol from "@/components/assets/Symbol";
+import Check from "@/components/fundations/icons/Check";
+import Lightning from "@/components/fundations/icons/Lightning";
+import Plus from "@/components/fundations/icons/Plus";
 import Search from "@/components/fundations/icons/Search";
+import CaretDown from "@/components/fundations/icons/CaretDown";
+import type { LibraryPost } from "@/lib/posts";
 // Components
 import AppWindow from "./AppWindow";
 import BrandName from "./BrandName";
-import PostCover from "./PostCover";
-import { board, briefs } from "./demo";
+import { board, libraryWindow } from "./demo";
 import { usePosts } from "./HomePosts";
 import { cx } from "@/lib/cx";
 
-const brief = briefs[0];
-const boards = [board.name, "Q3 banking campaign", "Harlo — site refresh"];
+// Five columns in a wide window, four in a medium one, three on a phone
+const COLUMNS = 5;
+const ratio = (post: LibraryPost) => (post.width && post.height ? post.width / post.height : 0.8);
 
-// The solution: one Curatit window with the brief, its results and a board, all in one place.
+// Each post to the column that's shortest so far, as the dashboard's grid deals them
+function intoColumns(posts: LibraryPost[]) {
+  const columns: LibraryPost[][] = Array.from({ length: COLUMNS }, () => []);
+  const heights = Array<number>(COLUMNS).fill(0);
+  for (const post of posts) {
+    const shortest = heights.indexOf(Math.min(...heights));
+    columns[shortest].push(post);
+    heights[shortest] += 1 / ratio(post);
+  }
+  return columns;
+}
+
 export default function LibraryWindow({ className }: { className?: string }) {
-  const results = usePosts(brief.results.map((result) => result.post));
-  const references = usePosts(board.references.map((reference) => reference.post));
+  const posts = usePosts(libraryWindow.posts);
+  const boardCovers = usePosts(board.references.map((reference) => reference.post));
+  const columns = intoColumns(posts);
 
   return (
     <div
       role="img"
-      aria-label="The Curatit library: a brief typed into search, the posts it returned with why each matched, and a board of saved references"
+      aria-label="The Curatit dashboard: a brief searched for, the library's posts that match it, and one of them saved to a board"
       className={cx("pointer-events-none select-none", className)}
     >
-      <AppWindow title="Curatit — Library" className="h-full">
-        <div className="flex h-full">
-          <nav className="hidden w-44 shrink-0 border-r border-base-100 p-4 text-xs md:block">
-            <p className="rounded-md bg-base-50 px-2 py-1.5 font-medium text-base-900">Library</p>
-            <p className="px-2 py-1.5 text-base-600">Boards</p>
-            <p className="px-2 py-1.5 text-base-600">Shared with me</p>
-            <p className="mt-4 px-2 text-[11px] font-medium uppercase tracking-wide text-base-500">Boards</p>
-            {boards.map((name) => (
-              <p key={name} className="truncate px-2 py-1.5 text-base-600">
-                {name}
-              </p>
-            ))}
-          </nav>
-          <div className="min-w-0 flex-1 p-4 sm:p-6">
-            <div className="flex h-9 items-center gap-2 rounded-md bg-white px-4 text-xs ring-1 ring-base-200 shadow-sm">
-              <Search className="size-3.5 shrink-0 text-base-400" />
-              <span className="truncate text-base-900">{brief.query}</span>
-            </div>
-            <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
-              <span className="text-base-500">Read as</span>
-              {brief.readAs.map((term) => (
-                <span key={term} className="rounded-md bg-base-50 px-2 py-1 text-base-900">
-                  {term}
+      <AppWindow title="Curatit" className="flex h-full flex-col">
+        {/* The header */}
+        <div className="flex h-12 shrink-0 items-center gap-3 px-4 @lg:gap-5">
+          <div className="flex items-center gap-3 @lg:gap-4">
+            <Symbol className="size-5 text-base-900" />
+            <div className="hidden items-center gap-3 text-xs font-medium @lg:flex">
+              <span className="text-base-900">For you</span>
+              <span className="text-base-500">Newest</span>
+              <span className="relative text-base-500">
+                Saved
+                <span className="absolute -top-2 -right-3.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-accent-600 px-0.5 text-[8px] text-paper tabular-nums">
+                  {board.references.length}
                 </span>
-              ))}
+              </span>
             </div>
-            <ul className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
-              {results.map((post, i) => {
-                const { matched } = brief.results.find((result) => result.post === post.shortCode)!;
-                return (
-                  <li key={post.shortCode} className={i === 2 ? "hidden sm:block" : undefined}>
-                    <PostCover post={post} sizes="(min-width: 640px) 180px, 40vw" className="rounded shadow" />
-                    <BrandName brand={post.brand} className="mt-2" />
-                    <p className="mt-0.5 line-clamp-1 text-xs text-base-600">{post.hook}</p>
-                    <p className="mt-1 line-clamp-1 text-xs text-base-500">Matched {matched.join(", ")}</p>
-                  </li>
-                );
-              })}
-            </ul>
           </div>
-          <aside className="hidden w-64 shrink-0 border-l border-base-100 p-4 lg:block">
-            <p className="font-display text-base text-base-900">{board.name}</p>
-            <p className="mt-0.5 text-xs text-base-500">Private · {references.length} references</p>
-            <ul className="mt-3 divide-y divide-base-100">
-              {references.map((post) => {
-                const { note } = board.references.find((reference) => reference.post === post.shortCode)!;
-                return (
-                  <li key={post.shortCode} className="flex items-center gap-3 py-2.5">
-                    <PostCover post={post} sizes="36px" className="w-9 shrink-0 rounded shadow-sm" />
-                    <div className="min-w-0">
-                      <BrandName brand={post.brand} />
-                      <p className="line-clamp-2 text-xs text-base-600">{note}</p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-            <p className="mt-3 rounded-md bg-base-50 px-3 py-2 text-center text-xs font-medium text-base-900">Share read-only link</p>
-          </aside>
+          <div className="mx-auto flex h-8 min-w-0 flex-1 items-center gap-2 rounded-full bg-white px-3 text-xs ring-1 ring-base-200 @lg:max-w-[22rem]">
+            <Search className="size-3 shrink-0 text-base-500" />
+            <span className="truncate text-base-900">{libraryWindow.query}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="flex h-7 items-center gap-1 rounded-full px-2.5 text-xs font-medium text-base-900 ring-1 ring-base-200">
+              <Plus className="size-3" />
+              <span className="hidden @md:inline">Create</span>
+            </span>
+            <span className="hidden size-7 items-center justify-center rounded-full text-base-900 ring-1 ring-base-200 @md:flex">
+              <Lightning className="size-3" />
+            </span>
+            <span className="flex size-7 items-center justify-center rounded-full bg-accent-100 text-[9px] font-medium text-accent-700">AM</span>
+            <span className="hidden size-7 items-center justify-center rounded-full bg-base-100 text-base-900 @md:flex">
+              <CaretDown className="size-3" />
+            </span>
+          </div>
+        </div>
+
+        {/* The feed, running off the bottom like a real screen */}
+        <div className="relative min-h-0 flex-1 overflow-hidden px-4 pt-1">
+          <div className="grid grid-cols-3 items-start gap-2.5 @lg:grid-cols-4 @lg:gap-3 @3xl:grid-cols-5">
+            {columns.map((column, c) => (
+              <ul key={c} className={cx("flex flex-col gap-2.5 @lg:gap-3", c === 3 && "hidden @lg:flex", c === 4 && "hidden @3xl:flex")}>
+                {column.map((post) => (
+                  <Tile key={post.shortCode} post={post} saved={post.shortCode === libraryWindow.saved} boardCovers={boardCovers} />
+                ))}
+              </ul>
+            ))}
+          </div>
+
+          {/* The toast the save sets off */}
+          <p className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-md bg-base-900 px-3 py-1.5 text-[11px] whitespace-nowrap text-white shadow-lg">
+            <Check className="size-2.5" />
+            Saved to {board.name}
+          </p>
         </div>
       </AppWindow>
     </div>
+  );
+}
+
+// One post in the feed. The saved one shows the hover state (brand chip and Saved) with the
+// Save menu open below it.
+function Tile({ post, saved, boardCovers }: { post: LibraryPost; saved: boolean; boardCovers: LibraryPost[] }) {
+  return (
+    <li className={cx("relative", saved && "z-10")}>
+      <div className="relative w-full overflow-hidden rounded-sm bg-base-100" style={{ aspectRatio: ratio(post) }}>
+        <Image src={post.images[0]} alt="" fill sizes="(min-width: 1024px) 170px, 30vw" draggable={false} className="object-cover" />
+      </div>
+      {saved && (
+        <>
+          <div className="absolute inset-x-0 top-0 flex justify-end p-1.5">
+            <span className="flex h-6 items-center gap-1 rounded-md bg-white/95 px-2 text-[10px] font-medium text-base-900 shadow-sm">
+              <Check className="size-2.5" />
+              Saved
+            </span>
+          </div>
+          <span className="absolute bottom-1.5 left-1.5 rounded-md bg-white/95 px-1.5 py-1 shadow-sm">
+            <BrandName brand={post.brand} />
+          </span>
+          {/* The Save menu, as the dashboard draws it */}
+          <div className="absolute top-9 right-1.5 w-44 rounded-lg bg-white p-1 text-[11px] shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)] ring-1 ring-edge">
+            <p className="px-2 pt-1 pb-1.5 text-[10px] font-medium text-base-500">Save to board</p>
+            {libraryWindow.boards.map((name, i) => (
+              <p key={name} className={cx("flex items-center gap-2 rounded-md px-2 py-1.5 text-base-900", i === 0 && "bg-base-50")}>
+                <span className="relative size-5 shrink-0 overflow-hidden rounded-sm bg-base-100">
+                  {i === 0 && boardCovers[0] && <Image src={boardCovers[0].images[0]} alt="" fill sizes="20px" className="object-cover" />}
+                </span>
+                <span className="min-w-0 flex-1 truncate">{name}</span>
+                {i === 0 && <Check className="size-2.5 shrink-0 text-base-500" />}
+              </p>
+            ))}
+            <p className="flex items-center gap-2 rounded-md px-2 py-1.5 text-base-900">
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-sm bg-base-100">
+                <Plus className="size-2.5" />
+              </span>
+              New board
+            </p>
+          </div>
+        </>
+      )}
+    </li>
   );
 }

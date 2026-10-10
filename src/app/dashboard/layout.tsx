@@ -40,12 +40,17 @@ export default async function DashboardLayout({ children, modal }: { children: R
 
   return (
     <UserProvider>
-      <PrefsProvider>
-        <BoardsProvider posts={posts}>
-          <div id="dashboard-page">{children}</div>
-          {modal}
-        </BoardsProvider>
-      </PrefsProvider>
+      {/* The app's base type: the scale's body role (13/20, see lib/type-scale.ts), inherited by
+          everything here that doesn't set a role of its own. A box-less wrapper, so it reaches the
+          modal slot and the toasts without adding layout */}
+      <div className="contents text-body">
+        <PrefsProvider>
+          <BoardsProvider posts={posts}>
+            <div id="dashboard-page">{children}</div>
+            {modal}
+          </BoardsProvider>
+        </PrefsProvider>
+      </div>
     </UserProvider>
   );
 }

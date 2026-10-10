@@ -13,7 +13,8 @@ import Lightning from "@/components/fundations/icons/Lightning";
 import Plus from "@/components/fundations/icons/Plus";
 import { cx } from "@/lib/cx";
 import AccountMenu from "./AccountMenu";
-import { NewBoardForm, useBoards } from "./boards";
+import { useBoards } from "./boards";
+import NewBoardDialog from "./NewBoardDialog";
 import SearchBox from "./SearchBox";
 
 export const VIEWS = ["For you", "Newest", "Saved"] as const;
@@ -51,11 +52,11 @@ export default function Header({
               type="button"
               aria-current={option === view ? "page" : undefined}
               onClick={() => onView(option)}
-              className="relative text-[17px] font-medium whitespace-nowrap text-base-500 transition-colors duration-150 hover:text-base-900 aria-[current=page]:text-base-900"
+              className="relative text-title font-medium whitespace-nowrap text-base-500 transition-colors duration-150 hover:text-base-900 aria-[current=page]:text-base-900"
             >
               {option}
               {option === "Saved" && savedCount > 0 && (
-                <span className="absolute -top-2.5 -right-4 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-600 px-1 text-[11px] font-medium text-paper tabular-nums">
+                <span className="absolute -top-2.5 -right-4 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-600 px-1 text-micro font-medium text-paper tabular-nums">
                   {savedCount}
                 </span>
               )}
@@ -106,7 +107,7 @@ function ViewMenu({ view, onChange, className }: { view: View | null; onChange: 
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 text-[17px] font-medium text-base-900"
+        className="flex items-center gap-1.5 text-title font-medium text-base-900"
       >
         {view ?? "Feed"}
         <CaretDown className={cx("size-3.5 transition-transform duration-200 ease-out", open && "rotate-180")} />
@@ -126,7 +127,7 @@ function ViewMenu({ view, onChange, className }: { view: View | null; onChange: 
                 onChange(option);
                 setOpen(false);
               }}
-              className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-base-900 hover:bg-base-50"
+              className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-body text-base-900 hover:bg-base-50"
             >
               {option}
               {option === view && <span className="size-1.5 rounded-full bg-base-900" aria-hidden="true" />}
@@ -138,53 +139,22 @@ function ViewMenu({ view, onChange, className }: { view: View | null; onChange: 
   );
 }
 
-// Create: a popover that asks for the new board's name
+// Create: opens the new board dialog
 function CreateBoard() {
-  const { createBoard } = useBoards();
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const close = (event: PointerEvent) => !ref.current?.contains(event.target as Node) && setOpen(false);
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", close);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", close);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
   return (
-    <div ref={ref} className="relative">
+    <>
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen(true)}
         aria-label="Create a board"
         aria-haspopup="dialog"
-        aria-expanded={open}
-        className="flex h-11 items-center gap-1.5 rounded-full px-3 text-[17px] font-medium text-base-900 ring-1 ring-base-200 transition-[background-color,scale] duration-150 hover:bg-base-50 active:scale-[0.96] md:px-5"
+        className="flex h-11 items-center gap-1.5 rounded-full px-3 text-title font-medium text-base-900 ring-1 ring-base-200 transition-[background-color,scale] duration-150 hover:bg-base-50 active:scale-[0.96] md:px-5"
       >
         <Plus className="size-4.5" />
         <span className="hidden md:inline">Create</span>
       </button>
-      {open && (
-        <div
-          role="dialog"
-          aria-label="New board"
-          className="absolute top-full right-0 z-40 mt-2 w-72 origin-top-right animate-[menu-in_150ms_cubic-bezier(0.23,1,0.32,1)] rounded-2xl bg-white p-2 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)] ring-1 ring-edge motion-reduce:animate-none"
-        >
-          <p className="px-2 pt-1 pb-2 text-xs font-medium text-base-500">New board</p>
-          <NewBoardForm
-            open
-            onCreate={(name) => {
-              createBoard(name);
-              setOpen(false);
-            }}
-          />
-        </div>
-      )}
-    </div>
+      <NewBoardDialog open={open} onClose={() => setOpen(false)} />
+    </>
   );
 }

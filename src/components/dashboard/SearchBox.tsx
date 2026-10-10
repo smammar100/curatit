@@ -127,7 +127,7 @@ export default function SearchBox({
               onFocus={() => setOpen(true)}
               placeholder="Try ‘launch carousel that shows the product’"
               autoComplete="off"
-              className="h-full w-full rounded-full border-0 bg-transparent pr-12 pl-12 text-base text-base-900 placeholder-base-500 focus:ring-0 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+              className="h-full w-full rounded-full border-0 bg-transparent pr-12 pl-12 text-body pointer-coarse:text-[16px] text-base-900 placeholder-base-500 focus:ring-0 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
             />
             {query ? (
               <button
@@ -142,7 +142,7 @@ export default function SearchBox({
                 <Close className="size-3.5" />
               </button>
             ) : (
-              <kbd className="pointer-events-none absolute right-4 hidden h-6 min-w-6 items-center justify-center rounded-md px-1.5 font-sans text-xs text-base-500 ring-1 ring-base-200 md:flex">
+              <kbd className="pointer-events-none absolute right-4 hidden h-6 min-w-6 items-center justify-center rounded-md px-1.5 font-sans text-caption text-base-500 ring-1 ring-base-200 md:flex">
                 /
               </kbd>
             )}
@@ -206,9 +206,9 @@ function Section({ title, onClear, children }: { title: string; onClear?: () => 
   return (
     <section className="mt-6 first:mt-0">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-base font-medium text-base-900">{title}</h2>
+        <h2 className="text-subtitle font-medium text-base-900">{title}</h2>
         {onClear && (
-          <button type="button" onClick={onClear} className="text-sm text-base-500 hover:text-base-900">
+          <button type="button" onClick={onClear} className="text-body text-base-500 hover:text-base-900">
             Clear
           </button>
         )}
@@ -228,7 +228,7 @@ function Chip({ onClick, children }: { onClick: () => void; children: ReactNode 
     <button
       type="button"
       onClick={onClick}
-      className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-base-50 px-4 text-sm font-medium whitespace-nowrap text-base-900 transition-[background-color,scale] duration-150 hover:bg-base-100 active:scale-[0.96]"
+      className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-base-50 px-4 text-body font-medium whitespace-nowrap text-base-900 transition-[background-color,scale] duration-150 hover:bg-base-100 active:scale-[0.96]"
     >
       {children}
     </button>

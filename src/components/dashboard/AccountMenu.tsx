@@ -47,12 +47,12 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
     setTheme(mode);
   };
 
-  const item = "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-base font-medium text-base-900 hover:bg-base-50";
+  const item = "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-subtitle font-medium text-base-900 hover:bg-base-50";
   const host = new URL(SITE_URL).host;
 
   return (
     <div ref={ref} className="relative flex items-center gap-2">
-      <Avatar className="hidden size-11 text-sm sm:flex" />
+      <Avatar className="hidden size-11 text-body sm:flex" />
       <button
         type="button"
         aria-label="Account menu"
@@ -71,8 +71,8 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
         >
           <div className="flex items-center justify-between gap-3 px-3 py-2.5">
             <div className="min-w-0">
-              <p className="truncate text-base font-medium text-base-900">{user?.name ?? " "}</p>
-              <p className="truncate text-sm text-base-500">{user?.email ?? " "}</p>
+              <p className="truncate text-subtitle font-medium text-base-900">{user?.name ?? " "}</p>
+              <p className="truncate text-body text-base-500">{user?.email ?? " "}</p>
             </div>
             <Avatar />
           </div>
@@ -87,7 +87,7 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
           >
             <span className="flex items-center gap-2">
               Saved posts
-              <span className="rounded-md bg-base-100 px-1.5 py-0.5 text-xs font-medium text-base-600 tabular-nums">{savedCount}</span>
+              <span className="rounded-md bg-base-100 px-1.5 py-0.5 text-caption font-medium text-base-600 tabular-nums">{savedCount}</span>
             </span>
             <BookmarkSimple className="size-5" />
           </button>
@@ -105,7 +105,7 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
           <div className="mx-3 my-2 h-px bg-base-100" />
 
           <div className="flex items-center justify-between px-3 py-2">
-            <span className="text-base font-medium text-base-900">Theme</span>
+            <span className="text-subtitle font-medium text-base-900">Theme</span>
             <Segmented
               label="Theme"
               value={theme}
@@ -118,7 +118,7 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
             />
           </div>
           <div className="flex items-center justify-between px-3 py-2">
-            <span className="text-base font-medium text-base-900">Grid size</span>
+            <span className="text-subtitle font-medium text-base-900">Grid size</span>
             <Segmented
               label="Grid size"
               value={gridSize}
