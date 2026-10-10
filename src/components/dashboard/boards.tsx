@@ -26,8 +26,9 @@ type BoardsValue = {
   posts: Map<string, DashPost>;
   save: (post: string, board: string) => void;
   remove: (post: string, board: string) => void;
-  // Makes a board (with a first post, if given) and returns its id straight away
-  createBoard: (name: string, firstPost?: string) => string;
+  // Makes a board and returns its id straight away: with a short description, shared by link,
+  // and with a first post, if given
+  createBoard: (name: string, options?: { description?: string; shared?: boolean; firstPost?: string }) => string;
   // Renames a board, or changes its description (null clears it)
   updateBoard: (id: string, patch: { name?: string; description?: string | null }) => void;
   deleteBoard: (id: string) => void;
@@ -159,14 +160,16 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
     );
   };
 
-  const createBoard = (name: string, firstPost?: string) => {
+  const createBoard = (name: string, { description, shared, firstPost }: { description?: string; shared?: boolean; firstPost?: string } = {}) => {
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     const post = firstPost ? byCode.get(firstPost) : undefined;
-    setBoards((list) => [{ id, name, shareToken: null, updatedAt: now, items: post ? [{ post: post.shortCode, addedAt: now }] : [] }, ...list]);
+    const shareToken = shared ? crypto.randomUUID() : null;
+    const about = description?.trim() || undefined;
+    setBoards((list) => [{ id, name, description: about, shareToken, updatedAt: now, items: post ? [{ post: post.shortCode, addedAt: now }] : [] }, ...list]);
     notify(post ? `Saved to ${name}` : `Created ${name}`);
 
-    const created = Promise.resolve(supabase.from("boards").insert({ id, name })).then(({ error }) => !error);
+    const created = Promise.resolve(supabase.from("boards").insert({ id, name, description: about ?? null, share_token: shareToken })).then(({ error }) => !error);
     creating.current.set(id, created);
     created.then((ok) => {
       creating.current.delete(id);
@@ -263,7 +266,7 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
           <p
             key={toast.id}
             role={toast.tone === "error" ? "alert" : undefined}
-            className="flex max-w-sm animate-[toast-in_180ms_cubic-bezier(0.23,1,0.32,1)] items-center gap-2 rounded-lg bg-base-900 px-4 py-2.5 text-sm text-white shadow-lg motion-reduce:animate-none"
+            className="flex max-w-sm animate-[toast-in_180ms_cubic-bezier(0.23,1,0.32,1)] items-center gap-2 rounded-lg bg-base-900 px-4 py-2.5 text-body text-white shadow-lg motion-reduce:animate-none"
           >
             {toast.tone === "error" ? <WarningCircle className="size-4 shrink-0" /> : <Check className="size-3.5 shrink-0" />}
             <span className="min-w-0">{toast.text}</span>
@@ -294,7 +297,7 @@ export function NewBoardForm({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={cx("flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm text-base-900 hover:bg-base-50", className)}
+        className={cx("flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-body text-base-900 hover:bg-base-50", className)}
       >
         <span className="flex size-7 shrink-0 items-center justify-center rounded bg-base-100">
           <Plus className="size-3.5" />
@@ -320,13 +323,13 @@ export function NewBoardForm({
           onChange={(event) => setName(event.target.value)}
           maxLength={NAME_MAX}
           placeholder="Board name"
-          className="h-9 w-full rounded-md border-0 bg-white px-3 text-sm text-base-900 ring-1 ring-base-200 placeholder:text-base-400 focus:ring-2 focus:ring-accent-100 focus:outline-none"
+          className="h-9 w-full rounded-md border-0 bg-white px-3 text-body text-base-900 ring-1 ring-base-200 placeholder:text-base-400 focus:ring-2 focus:ring-accent-100 focus:outline-none"
         />
       </label>
       <button
         type="submit"
         disabled={!name.trim()}
-        className="h-9 shrink-0 rounded-md bg-base-900 px-3 text-sm font-medium text-white transition-[background-color,scale] duration-150 hover:bg-base-800 active:scale-[0.96] disabled:bg-base-100 disabled:text-base-500"
+        className="h-9 shrink-0 rounded-md bg-base-900 px-3 text-body font-medium text-white transition-[background-color,scale] duration-150 hover:bg-base-800 active:scale-[0.96] disabled:bg-base-100 disabled:text-base-500"
       >
         Create
       </button>
@@ -364,7 +367,7 @@ export function SaveMenu({ post, tone = "plain", className }: { post: string; to
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         className={cx(
-          "flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-medium transition-[background-color,scale] duration-150 active:scale-[0.96]",
+          "flex h-8 items-center gap-1.5 rounded-lg px-3 text-caption font-medium transition-[background-color,scale] duration-150 active:scale-[0.96]",
           tone === "overlay" ? "bg-white/95 text-base-900 shadow-sm hover:bg-white" : "bg-base-50 text-base-900 hover:bg-base-100",
         )}
       >
@@ -376,8 +379,8 @@ export function SaveMenu({ post, tone = "plain", className }: { post: string; to
           role="menu"
           className="absolute right-0 z-20 mt-1.5 w-64 origin-top-right animate-[menu-in_150ms_cubic-bezier(0.23,1,0.32,1)] rounded-lg bg-white p-1.5 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)] ring-1 ring-edge motion-reduce:animate-none"
         >
-          <p className="px-2.5 pt-1.5 pb-2 text-xs font-medium text-base-500">Save to board</p>
-          {status === "loading" && <p className="px-2.5 py-2 text-sm text-base-500">Loading your boards…</p>}
+          <p className="px-2.5 pt-1.5 pb-2 text-caption font-medium text-base-500">Save to board</p>
+          {status === "loading" && <p className="px-2.5 py-2 text-body text-base-500">Loading your boards…</p>}
           <div className="max-h-72 overflow-y-auto">
             {boards.map((board) => {
               const inBoard = board.items.some((item) => item.post === post);
@@ -392,7 +395,7 @@ export function SaveMenu({ post, tone = "plain", className }: { post: string; to
                     else save(post, board.id);
                     setOpen(false);
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm text-base-900 hover:bg-base-50"
+                  className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-body text-base-900 hover:bg-base-50"
                 >
                   <BoardThumb board={board} className="size-7" />
                   <span className="min-w-0 flex-1 truncate">{board.name}</span>
@@ -405,7 +408,7 @@ export function SaveMenu({ post, tone = "plain", className }: { post: string; to
             <NewBoardForm
               label={boards.length ? "New board" : "Make your first board"}
               onCreate={(name) => {
-                createBoard(name, post);
+                createBoard(name, { firstPost: post });
                 setOpen(false);
               }}
             />

@@ -55,6 +55,16 @@ export const board = {
   ],
 } satisfies { name: string; references: { post: string; note: string }[] };
 
+// The library window (the "solution" in the problem → solution scroll): the dashboard's feed
+// after the launch brief was searched, in reading order. The second post sits in the second
+// column, where its Save menu is shown open, saved to the board above.
+export const libraryWindow = {
+  query: briefs[0].query,
+  posts: ["Dd6t2UpFLsO", "DeJsl6nF39v", "DeRrE8MoEjx", "DdoBhR8DTdG", "DePhAU1iUEo", "DeSAJSDIMcQ", "DeFNMhPnZ4t", "DdscgU9n5lJ", "DeCR5f0Nctv", "DVpWe9ujaT_", "Dd9aD_hR7EV", "DeO6wGiE6x0"],
+  saved: "DeJsl6nF39v",
+  boards: [board.name, "Q4 holiday campaign", "Sportswear drops"],
+};
+
 // Covers in the hero's corridor, one per brand across the categories
 export const heroPosts = [
   "DdcI8NLmY21", // Nike
@@ -82,6 +92,7 @@ export const featuredPosts = [
     ...briefs.flatMap((brief) => brief.results.map((result) => result.post)),
     detail.post,
     ...board.references.map((reference) => reference.post),
+    ...libraryWindow.posts,
     ...Object.values(scattered).flat(),
   ]),
 ];

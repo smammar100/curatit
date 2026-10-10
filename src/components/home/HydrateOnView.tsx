@@ -56,10 +56,19 @@ export default function HydrateOnView({ children }: { children: ReactNode }) {
     // From its first visible pixel. No margin ahead of the viewport: the first section
     // starts right where the hero ends, so any margin would render it on load. A render
     // takes a frame or two and the markup is identical, so nothing visibly changes.
+    //
+    // The root is one pixel shorter at the bottom. A section that starts exactly at the fold
+    // (the first one does: the hero is a screen tall) otherwise counts as intersecting from
+    // the start with a ratio of 0, and since scrolling it into view never crosses a
+    // threshold after that, the observer never called back and the section never came to
+    // life. One pixel in, it crosses into the shortened root and fires.
     const reveal = () => startTransition(() => setShow(true));
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.intersectionRatio > 0) reveal();
-    });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) reveal();
+      },
+      { rootMargin: "0px 0px -1px 0px" },
+    );
     observer.observe(element);
 
     // Tabbing into a section still showing server HTML: render it now, and remember where

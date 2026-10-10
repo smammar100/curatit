@@ -54,7 +54,7 @@ const initials = (name: string) =>
 export function Avatar({ className }: { className?: string }) {
   const user = useUser();
   const [broken, setBroken] = useState(false);
-  const base = cx("flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-medium", className);
+  const base = cx("flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full text-caption font-medium", className);
   if (!user) return <span aria-hidden="true" className={cx(base, "bg-base-100")} />;
   if (user.avatar && !broken) {
     return (

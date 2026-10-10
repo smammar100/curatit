@@ -119,7 +119,7 @@ export default function PostView({ post }: { post: PostDetail }) {
               className="object-contain"
             />
           </div>
-          <div className="absolute top-4 left-4 flex gap-1.5 text-xs text-white">
+          <div className="absolute top-4 left-4 flex gap-1.5 text-caption text-white">
             {count > 1 && (
               <p className="rounded-full bg-black/60 px-2.5 py-1 tabular-nums" aria-live="polite">
                 {index + 1} / {count}
@@ -143,15 +143,15 @@ export default function PostView({ post }: { post: PostDetail }) {
         {/* The panel */}
         <div className="flex flex-col lg:min-h-0">
           <header className="flex items-center gap-3.5 px-6 pt-6 pb-5">
-            <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-base-100 text-lg font-medium text-base-700 outline-1 -outline-offset-1 outline-edge">
+            <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-base-100 text-title font-medium text-base-700 outline-1 -outline-offset-1 outline-edge">
               {post.brand.logo ? <Image src={post.brand.logo} alt="" fill sizes="48px" className="object-cover" /> : post.brand.name[0]}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="flex items-center gap-1.5 text-[17px] leading-tight font-medium text-base-900">
+              <p className="flex items-center gap-1.5 text-title font-medium text-base-900">
                 <span className="truncate">{post.brand.name}</span>
                 {post.verified && <SealCheck className="size-4 shrink-0" aria-label="Verified" />}
               </p>
-              <p className="mt-0.5 truncate text-sm text-base-500">
+              <p className="mt-0.5 truncate text-body text-base-500">
                 {post.handle && <>@{post.handle} · </>}
                 <Link href={feedHref("For you", post.category.name)} className="hover:text-base-900">
                   {post.category.name}
@@ -162,7 +162,7 @@ export default function PostView({ post }: { post: PostDetail }) {
               href={post.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-base-50 pr-3 pl-3.5 text-sm font-medium text-base-900 transition-[background-color,scale] duration-150 hover:bg-base-100 active:scale-[0.96]"
+              className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-base-50 pr-3 pl-3.5 text-body font-medium text-base-900 transition-[background-color,scale] duration-150 hover:bg-base-100 active:scale-[0.96]"
             >
               Instagram
               <ArrowUpRight className="size-3.5" />
@@ -170,10 +170,10 @@ export default function PostView({ post }: { post: PostDetail }) {
           </header>
 
           <div className="px-6 pb-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
-            <h1 id="post-title" className="text-2xl leading-tight font-medium text-pretty text-base-900">
+            <h1 id="post-title" className="font-display text-display font-light text-pretty text-base-900">
               {caption.title}
             </h1>
-            <p className="mt-2 text-sm text-base-500">Posted {day.format(new Date(post.postedAt))}</p>
+            <p className="mt-2 text-body text-base-500">Posted {day.format(new Date(post.postedAt))}</p>
             <Caption paragraphs={caption.body} />
             <Performance post={post} />
             <Section title="Boards">
@@ -231,7 +231,7 @@ function SlideButton({ side, disabled, onClick }: { side: "left" | "right"; disa
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mt-6 border-t border-base-100 pt-5">
-      <h2 className="mb-3 text-xs font-medium text-base-500">{title}</h2>
+      <h2 className="mb-3 text-caption font-medium text-base-500">{title}</h2>
       {children}
     </section>
   );
@@ -281,7 +281,7 @@ function Caption({ paragraphs }: { paragraphs: string[] }) {
   if (!paragraphs.length) return null;
   return (
     <div className="mt-5">
-      <div ref={ref} className={cx("space-y-3 text-[15px] leading-relaxed text-pretty text-base-700", !open && "line-clamp-6")}>
+      <div ref={ref} className={cx("space-y-3 text-subtitle text-pretty text-base-700", !open && "line-clamp-6")}>
         {paragraphs.map((paragraph, i) => (
           <p key={i} className="whitespace-pre-line">
             {linkify(paragraph)}
@@ -289,7 +289,7 @@ function Caption({ paragraphs }: { paragraphs: string[] }) {
         ))}
       </div>
       {(clipped || open) && (
-        <button type="button" onClick={() => setOpen((o) => !o)} className="mt-2 text-sm font-medium text-base-900 hover:underline">
+        <button type="button" onClick={() => setOpen((o) => !o)} className="mt-2 text-body font-medium text-base-900 hover:underline">
           {open ? "Show less" : "Show more"}
         </button>
       )}
@@ -332,12 +332,12 @@ function Performance({ post }: { post: PostDetail }) {
       <dl className="grid grid-cols-3 gap-2">
         {cells.map(([label, value]) => (
           <div key={label} className="flex min-w-0 flex-col-reverse rounded-2xl bg-base-50 px-3.5 py-3">
-            <dt className="truncate text-xs text-base-500">{label}</dt>
-            <dd className="text-xl font-medium text-base-900 tabular-nums">{value}</dd>
+            <dt className="truncate text-caption text-base-500">{label}</dt>
+            <dd className="text-title font-medium text-base-900 tabular-nums">{value}</dd>
           </div>
         ))}
       </dl>
-      <p className="mt-3 text-sm text-pretty text-base-600">
+      <p className="mt-3 text-body text-pretty text-base-600">
         {rank != null && (
           <>
             <span className="text-base-900 tabular-nums">
@@ -360,10 +360,10 @@ function Performance({ post }: { post: PostDetail }) {
 function BoardsOn({ post }: { post: PostDetail }) {
   const { boards, status, remove } = useBoards();
   const on = boards.filter((b) => b.items.some((item) => item.post === post.shortCode));
-  if (status === "loading") return <p className="text-sm text-base-500">Loading your boards…</p>;
+  if (status === "loading") return <p className="text-body text-base-500">Loading your boards…</p>;
   return (
     <>
-      <p className="text-sm text-base-500">{on.length ? `On ${on.length === 1 ? "1 board" : `${on.length} boards`}` : "Not on a board yet"}</p>
+      <p className="text-body text-base-500">{on.length ? `On ${on.length === 1 ? "1 board" : `${on.length} boards`}` : "Not on a board yet"}</p>
       {on.length > 0 && (
         <ul className="mt-3 space-y-2">
           {on.map((b) => (
@@ -371,8 +371,8 @@ function BoardsOn({ post }: { post: PostDetail }) {
               <Link href={boardHref(b.id)} className="flex min-w-0 flex-1 items-center gap-3 rounded-lg hover:text-accent-600">
                 <BoardThumb board={b} className="size-9" />
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{b.name}</p>
-                  <p className="text-xs text-base-500 tabular-nums">
+                  <p className="truncate text-body font-medium">{b.name}</p>
+                  <p className="text-caption text-base-500 tabular-nums">
                     {b.items.length} {b.items.length === 1 ? "post" : "posts"}
                     {b.shareToken && " · Shared"}
                   </p>
@@ -415,7 +415,7 @@ function SaveForm({ post }: { post: PostDetail }) {
         if (naming) {
           const trimmed = name.trim();
           if (!trimmed) return;
-          setChoice(createBoard(trimmed, post.shortCode));
+          setChoice(createBoard(trimmed, { firstPost: post.shortCode }));
           setName("");
         } else if (board) save(post.shortCode, board);
       }}
@@ -429,7 +429,7 @@ function SaveForm({ post }: { post: PostDetail }) {
             onChange={(event) => setName(event.target.value)}
             maxLength={NAME_MAX}
             placeholder={boards.length ? "Name the new board" : "Name your first board"}
-            className="h-12 w-full rounded-full border-0 bg-base-50 pr-10 pl-5 text-base text-base-900 placeholder:text-base-400 focus:ring-2 focus:ring-base-300"
+            className="h-12 w-full rounded-full border-0 bg-base-50 pr-10 pl-5 text-body pointer-coarse:text-[16px] text-base-900 placeholder:text-base-400 focus:ring-2 focus:ring-base-300"
           />
           {boards.length > 0 && (
             <button
@@ -449,7 +449,7 @@ function SaveForm({ post }: { post: PostDetail }) {
             value={status === "loading" ? "" : board}
             disabled={status === "loading"}
             onChange={(event) => setChoice(event.target.value)}
-            className="h-12 w-full truncate rounded-full border-0 bg-base-50 pr-10 pl-5 text-base text-base-900 focus:ring-2 focus:ring-base-300 disabled:text-base-500"
+            className="h-12 w-full truncate rounded-full border-0 bg-base-50 pr-10 pl-5 text-body pointer-coarse:text-[16px] text-base-900 focus:ring-2 focus:ring-base-300 disabled:text-base-500"
           >
             {status === "loading" && <option value="">Loading boards…</option>}
             {boards.map((b) => (
@@ -464,7 +464,7 @@ function SaveForm({ post }: { post: PostDetail }) {
       <button
         type="submit"
         disabled={status === "loading" || (naming ? !name.trim() : inChosen)}
-        className="h-12 shrink-0 rounded-full bg-base-900 px-6 text-base font-medium text-white transition-[background-color,scale] duration-150 hover:bg-base-800 active:scale-[0.96] disabled:bg-base-100 disabled:text-base-500"
+        className="h-12 shrink-0 rounded-full bg-base-900 px-6 text-subtitle font-medium text-white transition-[background-color,scale] duration-150 hover:bg-base-800 active:scale-[0.96] disabled:bg-base-100 disabled:text-base-500"
       >
         {inChosen && !naming ? "Saved" : "Save"}
       </button>

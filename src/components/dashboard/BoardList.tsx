@@ -14,7 +14,7 @@ export default function BoardList() {
   if (!boards.length) return null;
   return (
     <section aria-labelledby="boards-heading" className="mb-14">
-      <h2 id="boards-heading" className="mb-5 text-[17px] font-medium text-base-900">
+      <h2 id="boards-heading" className="mb-5 text-title font-medium text-base-900">
         Boards
       </h2>
       <ul className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
@@ -22,8 +22,8 @@ export default function BoardList() {
           <li key={board.id}>
             <Link href={boardHref(board.id)} className="group block">
               <Mosaic board={board} />
-              <p className="mt-2.5 truncate text-[15px] font-medium text-base-900">{board.name}</p>
-              <p className="text-sm text-base-500 tabular-nums">
+              <p className="mt-2.5 truncate text-subtitle font-medium text-base-900">{board.name}</p>
+              <p className="text-body text-base-500 tabular-nums">
                 {board.items.length} {board.items.length === 1 ? "post" : "posts"}
                 {board.shareToken && " · Shared"}
               </p>

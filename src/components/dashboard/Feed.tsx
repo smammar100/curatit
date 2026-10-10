@@ -71,7 +71,7 @@ export default function Feed() {
           <GridSkeleton label="Loading your saved posts" />
         ) : shown.length ? (
           <>
-            {view === "Saved" && !query && boards.length > 0 && <h2 className="mb-5 text-[17px] font-medium text-base-900">All saved posts</h2>}
+            {view === "Saved" && !query && boards.length > 0 && <h2 className="mb-5 text-title font-medium text-base-900">All saved posts</h2>}
             <Grid posts={shown} />
           </>
         ) : (
@@ -86,8 +86,8 @@ function Empty({ view, query, onClear, onBrowse }: { view: View; query: string; 
   const nothingSaved = view === "Saved" && !query;
   return (
     <div className="mx-auto max-w-sm py-24 text-center">
-      <p className="text-base text-base-900">{nothingSaved ? "Nothing saved yet" : `Nothing matches ‘${query}’`}</p>
-      <p className="mt-2 text-sm text-base-600">
+      <p className="text-subtitle font-medium text-base-900">{nothingSaved ? "Nothing saved yet" : `Nothing matches ‘${query}’`}</p>
+      <p className="mt-2 text-body text-base-600">
         {nothingSaved
           ? "Save posts from your feed and they’ll collect here, and on your boards."
           : "Try a format or a goal instead, like ‘carousel’ or ‘launch’."}
@@ -95,7 +95,7 @@ function Empty({ view, query, onClear, onBrowse }: { view: View; query: string; 
       <button
         type="button"
         onClick={nothingSaved ? onBrowse : onClear}
-        className="mt-6 text-sm font-medium text-accent-600 hover:text-accent-500"
+        className="mt-6 text-body font-medium text-accent-600 hover:text-accent-500"
       >
         {nothingSaved ? "Back to your feed" : "Clear search"}
       </button>
