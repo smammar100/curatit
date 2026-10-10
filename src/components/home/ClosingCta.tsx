@@ -7,12 +7,13 @@ import Image from "next/image";
 import type { LibraryPost } from "@/lib/posts";
 import LogoReel from "./LogoReel";
 
-// One tile per brand in the library: the cover of its newest post (posts come newest first)
+// One app-icon tile per brand in the library: its logo. Brands without one fall back to
+// the cover of their newest post (posts come newest first).
 export default function ClosingCta({ posts }: { posts: LibraryPost[] }) {
-  const brands = new Set<string>();
-  const newestPerBrand = posts.filter((post) => !brands.has(post.brand.slug) && brands.add(post.brand.slug));
+  const seen = new Set<string>();
+  const newestPerBrand = posts.filter((post) => !seen.has(post.brand.slug) && seen.add(post.brand.slug));
   const tiles = newestPerBrand.map((post) => (
-    <Image key={post.brand.slug} src={post.images[0]} alt="" fill sizes="96px" className="object-cover" />
+    <Image key={post.brand.slug} src={post.brand.logo ?? post.images[0]} alt="" fill sizes="96px" className="object-cover" />
   ));
   const left = tiles.filter((_, i) => i % 2 === 0);
   const right = tiles.filter((_, i) => i % 2 === 1);

@@ -11,7 +11,8 @@ export type LibraryPost = {
   postedAt: string;
   width: number | null;
   height: number | null;
-  brand: { name: string; slug: string };
+  // logo is the public URL of the brand's mark in the `library` bucket, if it has one
+  brand: { name: string; slug: string; logo: string | null };
   category: { name: string; slug: string };
   // Public URLs in the `library` bucket, cover first, then each carousel slide
   images: string[];
@@ -25,7 +26,7 @@ type Row = {
   posted_at: string;
   dimensions_width: number | null;
   dimensions_height: number | null;
-  brands: { name: string; slug: string; categories: { name: string; slug: string } | null } | null;
+  brands: { name: string; slug: string; logo_path: string | null; categories: { name: string; slug: string } | null } | null;
   post_images: { position: number; path: string }[];
 };
 
@@ -41,7 +42,7 @@ export const getPublishedPosts = cache(async (): Promise<LibraryPost[]> => {
   const { data, error } = await supabase
     .from("instagram_posts")
     .select(
-      "short_code, url, format, caption, posted_at, dimensions_width, dimensions_height, brands(name, slug, categories(name, slug)), post_images(position, path)"
+      "short_code, url, format, caption, posted_at, dimensions_width, dimensions_height, brands(name, slug, logo_path, categories(name, slug)), post_images(position, path)"
     )
     .eq("is_published", true)
     .order("posted_at", { ascending: false })
@@ -59,7 +60,11 @@ export const getPublishedPosts = cache(async (): Promise<LibraryPost[]> => {
       postedAt: row.posted_at,
       width: row.dimensions_width,
       height: row.dimensions_height,
-      brand: { name: row.brands!.name, slug: row.brands!.slug },
+      brand: {
+        name: row.brands!.name,
+        slug: row.brands!.slug,
+        logo: row.brands!.logo_path ? bucket.getPublicUrl(row.brands!.logo_path).data.publicUrl : null,
+      },
       category: row.brands!.categories!,
       images: row.post_images
         .toSorted((a, b) => a.position - b.position)

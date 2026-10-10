@@ -5,6 +5,7 @@ import { motion, useInView, useReducedMotion } from "framer-motion";
 // Assets
 import Symbol from "@/components/assets/Symbol";
 // Components
+import BrandName from "./BrandName";
 import PostCover from "./PostCover";
 import { briefs } from "./demo";
 import { usePosts } from "./HomePosts";
@@ -106,7 +107,7 @@ export default function McpDemo() {
                 transition={step === 4 ? { type: "spring", stiffness: 260, damping: 28, delay: i * 0.08 } : { duration: 0 }}
               >
                 <PostCover post={post} sizes="160px" className="rounded shadow" />
-                <p className="mt-2 truncate text-xs font-medium text-base-900">{post.brand.name}</p>
+                <BrandName brand={post.brand} className="mt-2" />
                 <p className="mt-0.5 line-clamp-1 text-xs text-base-600">{post.hook}</p>
               </motion.li>
             );
