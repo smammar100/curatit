@@ -49,6 +49,18 @@
   /* 1px edge drawn just inside images and on floating surfaces: pure black at 10% (white at
      10% in dark mode), never a tinted neutral */
   --color-edge: oklch(0 0 0 / 0.1);
+  /* The band that sweeps across a loading skeleton: a step lighter than base-100 in both themes */
+  --color-shimmer: oklch(0.964 0.003 84.4);
+  /* Loading skeletons (components/dashboard/Skeleton.tsx): a band of light crossing the block */
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+  @keyframes shimmer {
+    from {
+      background-position: 150% 0;
+    }
+    to {
+      background-position: -50% 0;
+    }
+  }
   /* The sign-in wall (components/auth/PostWall.tsx): columns drift by half their height, which
      is one copy of their covers, and loop */
   --animate-wall-down: wall-down 80s linear infinite;
@@ -119,6 +131,7 @@
   --color-accent-900: oklch(0.35 0.06 35);
   --color-accent-950: oklch(0.28 0.04 38);
   --color-edge: oklch(1 0 0 / 0.1);
+  --color-shimmer: oklch(0.32 0.007 84);
 }
 /* While the theme switches, nothing tweens: every colour would otherwise animate on its own clock */
 [data-theme-switching] *,

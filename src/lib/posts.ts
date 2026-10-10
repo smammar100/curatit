@@ -73,26 +73,56 @@ export const getPublishedPosts = cache(async (): Promise<LibraryPost[]> => {
     }));
 });
 
-// One post with everything its detail page shows: every slide, the full caption and the
-// counts at scrape time (Instagram reports a hidden like count as -1, kept here as null)
-export type PostDetail = LibraryPost & { caption: string; likes: number | null; comments: number | null };
+// One post with everything its detail page shows: every slide (and which were videos on
+// Instagram, where the library keeps only the cover frame), the full caption, the counts at
+// scrape time (Instagram reports a hidden like count as -1, kept here as null), the account
+// that posted it, and how its likes compare with the brand's other posts and the category's
+export type PostDetail = LibraryPost & {
+  caption: string;
+  likes: number | null;
+  comments: number | null;
+  handle: string | null;
+  verified: boolean;
+  // One per image, in the same order
+  videos: boolean[];
+  stats: { brandAverage: number | null; brandPosts: number; rank: number | null; ranked: number };
+};
+
+type DetailRow = Row & {
+  likes_count: number | null;
+  comments_count: number | null;
+  owner_username: string | null;
+  owner: { is_verified: boolean | null } | null;
+  instagram_post_media: { position: number; type: string | null }[];
+};
 
 export const getPostDetail = cache(async (shortCode: string): Promise<PostDetail | null> => {
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("instagram_posts")
     .select(
-      "short_code, url, format, caption, posted_at, dimensions_width, dimensions_height, likes_count, comments_count, brands(name, slug, logo_path, categories(name, slug)), post_images(position, path)"
+      "short_code, url, format, caption, posted_at, dimensions_width, dimensions_height, likes_count, comments_count, owner_username, owner:instagram_accounts!instagram_posts_owner_id_fkey(is_verified), brands(name, slug, logo_path, categories(name, slug)), post_images(position, path), instagram_post_media!instagram_post_media_post_id_fkey(position, type)"
     )
     .eq("is_published", true)
     .eq("short_code", shortCode)
-    .returns<(Row & { likes_count: number | null; comments_count: number | null })[]>()
+    .returns<DetailRow[]>()
     .maybeSingle();
   if (error) throw new Error(`Could not load post ${shortCode} from Supabase: ${error.message}`);
   if (!data?.brands?.categories || !data.post_images.length) return null;
 
+  // Every post in the category, to place this one's likes
+  const category = data.brands.categories;
+  const peers = await supabase.from("library_posts").select("brand_slug, likes_count").eq("category_slug", category.slug);
+  if (peers.error) throw new Error(`Could not load ${category.slug} posts from Supabase: ${peers.error.message}`);
+
   const libraryUrl = (path: string) => `/lib/${path}`;
   const count = (value: number | null) => (value == null || value < 0 ? null : value);
+  const likes = count(data.likes_count);
+  const counted = peers.data.filter((p) => count(p.likes_count) != null) as { brand_slug: string; likes_count: number }[];
+  const brand = counted.filter((p) => p.brand_slug === data.brands!.slug);
+  const images = data.post_images.toSorted((a, b) => a.position - b.position);
+  const media = new Map(data.instagram_post_media.map((m) => [m.position, m.type?.toLowerCase()]));
+
   return {
     shortCode: data.short_code,
     url: data.url,
@@ -102,15 +132,24 @@ export const getPostDetail = cache(async (shortCode: string): Promise<PostDetail
     postedAt: data.posted_at,
     width: data.dimensions_width,
     height: data.dimensions_height,
-    likes: count(data.likes_count),
+    likes,
     comments: count(data.comments_count),
+    handle: data.owner_username,
+    verified: !!data.owner?.is_verified,
     brand: {
       name: data.brands.name,
       slug: data.brands.slug,
       logo: data.brands.logo_path ? libraryUrl(data.brands.logo_path) : null,
     },
-    category: data.brands.categories,
-    images: data.post_images.toSorted((a, b) => a.position - b.position).map((image) => libraryUrl(image.path)),
+    category,
+    images: images.map((image) => libraryUrl(image.path)),
+    videos: images.map((image) => (data.format === "video" ? image.position === 0 : media.get(image.position) === "video")),
+    stats: {
+      brandAverage: brand.length ? brand.reduce((sum, p) => sum + p.likes_count, 0) / brand.length : null,
+      brandPosts: brand.length,
+      rank: likes == null ? null : 1 + counted.filter((p) => p.likes_count > likes).length,
+      ranked: counted.length,
+    },
   };
 });
 

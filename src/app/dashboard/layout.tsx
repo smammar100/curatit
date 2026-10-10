@@ -14,8 +14,9 @@ export const revalidate = 3600;
 
 // The signed-in area. The boards and the grid size live here, so they carry over between the
 // feed and a post. Design first: real library posts, and sample boards until sign-in is wired
-// to Supabase and the boards load from public.boards.
-export default async function DashboardLayout({ children }: { children: ReactNode }) {
+// to Supabase and the boards load from public.boards. `modal` is the @modal slot, where a post
+// opens over the feed; the page under it goes inert while it's open (PostView, by this id).
+export default async function DashboardLayout({ children, modal }: { children: ReactNode; modal: ReactNode }) {
   const all = await getPublishedPosts();
 
   // Brands interleaved so the feed doesn't open on a run of posts from one brand
@@ -46,7 +47,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   return (
     <PrefsProvider>
       <BoardsProvider initial={boards} posts={posts}>
-        {children}
+        <div id="dashboard-page">{children}</div>
+        {modal}
       </BoardsProvider>
     </PrefsProvider>
   );

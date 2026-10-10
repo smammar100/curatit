@@ -38,7 +38,7 @@ export default function Header({
   const savedCount = useMemo(() => new Set(boards.flatMap((board) => board.items.map((item) => item.post))).size, [boards]);
 
   return (
-    <header className="sticky top-0 z-30 grid h-23 grid-cols-[auto_1fr_auto] items-center gap-4 bg-white px-4 sm:px-6 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
+    <header className="sticky top-0 z-30 grid h-23 grid-cols-[auto_1fr_auto] items-center gap-4 bg-white px-4 sm:px-6 lg:grid-cols-[1fr_minmax(0,36rem)_1fr] lg:gap-8">
       <div className="flex items-center gap-6">
         <Link href="/dashboard" aria-label="Your feed" className="text-base-900">
           <Symbol className="size-8" />
@@ -51,7 +51,7 @@ export default function Header({
               type="button"
               aria-current={option === view ? "page" : undefined}
               onClick={() => onView(option)}
-              className="relative text-[17px] font-medium text-base-500 transition-colors duration-150 hover:text-base-900 aria-[current=page]:text-base-900"
+              className="relative text-[17px] font-medium whitespace-nowrap text-base-500 transition-colors duration-150 hover:text-base-900 aria-[current=page]:text-base-900"
             >
               {option}
               {option === "Saved" && savedCount > 0 && (
@@ -65,7 +65,7 @@ export default function Header({
         <ViewMenu view={view} onChange={onView} className="hidden sm:block lg:hidden" />
       </div>
 
-      <SearchBox query={query} onQuery={onQuery} onSearch={onSearch} className="w-full lg:w-[min(36rem,46vw)]" />
+      <SearchBox query={query} onQuery={onQuery} onSearch={onSearch} className="w-full" />
 
       <div className="flex items-center justify-end gap-2">
         <button
