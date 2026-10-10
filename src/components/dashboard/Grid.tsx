@@ -8,6 +8,7 @@ import Link from "next/link";
 import BrandName from "@/components/home/BrandName";
 import { cx } from "@/lib/cx";
 import { SaveMenu } from "./boards";
+import { Block, GridSkeleton } from "./Skeleton";
 import { useGridSize, type GridSize } from "./prefs";
 import type { DashPost } from "./types";
 
@@ -19,6 +20,15 @@ const gapFor = (width: number) => Math.round(Math.min(40, Math.max(24, width * 0
 
 export const ratio = (post: Pick<DashPost, "width" | "height">) => (post.width && post.height ? post.width / post.height : 0.8);
 export const postHref = (shortCode: string) => `/dashboard/p/${shortCode}`;
+
+// A tile clicked in the feed opens its post over the feed (an intercepted route), so closing
+// the post can step back to the feed as it was, scroll and all, instead of loading it again
+let openedOverFeed = false;
+export function backToFeed() {
+  const was = openedOverFeed;
+  openedOverFeed = false;
+  return was;
+}
 
 // Deals the posts across the columns, each to the one that is currently shortest, so the
 // order reads across the top row first and the columns end close together. Plain CSS
@@ -57,6 +67,9 @@ export default function Grid({ posts, priority = true }: { posts: DashPost[]; pr
 
   return (
     <div ref={ref}>
+      {/* Until the width is known (in the server's HTML, before the page's code has loaded)
+          the grid's shape stands in, so the feed never opens on a blank page */}
+      {count === 0 && <GridSkeleton />}
       {count > 0 && (
         <div className="grid items-start" style={{ gridTemplateColumns: `repeat(${count}, minmax(0, 1fr))`, columnGap: gap }}>
           {columns.map((column, c) => (
@@ -73,11 +86,22 @@ export default function Grid({ posts, priority = true }: { posts: DashPost[]; pr
 }
 
 function Tile({ post, priority, sizes }: { post: DashPost; priority: boolean; sizes: string }) {
+  // The tile shimmers until its image has arrived, then the shimmer stops
+  const [loaded, setLoaded] = useState(false);
   return (
     <li className="group relative">
-      <Link href={postHref(post.shortCode)} className="block">
+      <Link href={postHref(post.shortCode)} scroll={false} onClick={() => (openedOverFeed = location.pathname === "/dashboard")} className="block">
         <div className="relative w-full overflow-hidden rounded bg-base-100" style={{ aspectRatio: ratio(post) }}>
-          <Image src={post.cover} alt={post.hook} fill sizes={sizes} priority={priority} className="object-cover" />
+          {!loaded && <Block className="absolute inset-0" />}
+          <Image
+            src={post.cover}
+            alt={post.hook}
+            fill
+            sizes={sizes}
+            priority={priority}
+            onLoad={() => setLoaded(true)}
+            className="object-cover"
+          />
         </div>
       </Link>
       {/* Revealed on hover or keyboard focus; always there where there is no hover */}

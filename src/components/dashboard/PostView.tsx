@@ -1,10 +1,13 @@
 "use client";
 
-// A post's detail page, after Cosmos's element page (Mobbin: cosmos.so element detail), with
-// Telescope's slide arrows and thumbnail strip for carousels. One card: the post large on the
-// left, its details on the right (brand, hook, counts, caption, the boards it's on) and a
-// board picker with Save at the foot. More from the same category underneath.
-import { useEffect, useMemo, useRef, useState } from "react";
+// A post, opened over the feed: the "Closeup" direction, chosen from a five-way prototype on
+// 2026-10-10 (after Pinterest's and Savee's closeups). The post sits large on a dark stage on
+// the left; the panel on the right has the brand, the hook and the caption as its body, how the
+// post did against its brand and category, the boards it's on, and a board picker with Save at
+// its foot. Arrows at the window's edges step through the feed; Close (or Escape) goes back to
+// it. From the feed this renders in the layout's @modal slot over the live feed (an intercepted
+// route); opened from a link, the page puts the feed underneath, so both look the same.
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,347 +15,407 @@ import { useRouter } from "next/navigation";
 import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
 import CaretLeft from "@/components/fundations/icons/CaretLeft";
 import CaretRight from "@/components/fundations/icons/CaretRight";
+import Close from "@/components/fundations/icons/Close";
+import Play from "@/components/fundations/icons/Play";
+import SealCheck from "@/components/fundations/icons/SealCheck";
 // Components
-import BrandName from "@/components/home/BrandName";
 import type { PostDetail } from "@/lib/posts";
 import { cx } from "@/lib/cx";
 import { BoardThumb, useBoards } from "./boards";
 import { feedHref } from "./Feed";
-import Grid, { ratio } from "./Grid";
-import Header from "./Header";
+import { backToFeed, postHref, ratio } from "./Grid";
 
-const RELATED = 24;
-const formats = { static: "Single image", carousel: "Carousel", video: "Video" } as const;
 const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
-const longDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" });
+const day = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+
+// The page under the modal, which goes inert while it's open (the id is set in the dashboard layout)
+const PAGE_ID = "dashboard-page";
 
 export default function PostView({ post }: { post: PostDetail }) {
   const router = useRouter();
   const { list } = useBoards();
-  const [query, setQuery] = useState("");
-
-  // Same brand first, then the rest of the category, newest first within each
-  const related = useMemo(() => {
-    const others = list.filter((item) => item.category.slug === post.category.slug && item.shortCode !== post.shortCode);
-    const sameBrand = others.filter((item) => item.brand.slug === post.brand.slug);
-    const rest = others.filter((item) => item.brand.slug !== post.brand.slug);
-    return [...sameBrand, ...rest].slice(0, RELATED);
-  }, [list, post]);
-
-  return (
-    <div className="min-h-dvh bg-white">
-      <Header
-        view={null}
-        onView={(view) => router.push(feedHref(view))}
-        query={query}
-        onQuery={setQuery}
-        onSearch={(text) => router.push(feedHref("For you", text))}
-      />
-      <main className="px-4 pb-24 sm:px-6">
-        <article className="grid overflow-hidden rounded-[28px] ring-1 ring-base-200 lg:grid-cols-[minmax(0,1fr)_24rem]">
-          <Stage post={post} />
-          <Details post={post} />
-        </article>
-        {related.length > 0 && (
-          <section className="mt-16" aria-labelledby="related-heading">
-            <h2 id="related-heading" className="mb-6 text-[17px] font-medium text-base-900">
-              More in {post.category.name}
-            </h2>
-            <Grid posts={related} priority={false} />
-          </section>
-        )}
-      </main>
-    </div>
-  );
-}
-
-// The post itself: one slide at a time, with arrows, a counter and thumbnails for carousels
-function Stage({ post }: { post: PostDetail }) {
-  const router = useRouter();
-  const [index, setIndex] = useState(0);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const count = post.images.length;
+  const [index, setIndex] = useState(0);
   const go = (next: number) => setIndex(Math.min(count - 1, Math.max(0, next)));
 
-  // ← and → step through the slides, unless you're typing
+  // The posts either side of this one in the feed
+  const at = list.findIndex((item) => item.shortCode === post.shortCode);
+  const previous = at > 0 ? list[at - 1] : null;
+  const next = at >= 0 && at < list.length - 1 ? list[at + 1] : null;
+
+  const close = () => (backToFeed() ? router.back() : router.push("/dashboard"));
+  const closeRef = useRef(close);
+  closeRef.current = close;
+
+  // While open: the page underneath can't be scrolled, focused or read, focus moves into the
+  // post (and back to what opened it after), Escape closes it and ← / → step through slides
   useEffect(() => {
-    if (count < 2) return;
+    const page = document.getElementById(PAGE_ID);
+    const opener = document.activeElement as HTMLElement | null;
+    page?.setAttribute("inert", "");
+    // Hiding the scrollbar would widen the page and reflow the grid behind, so pad it back
+    const root = document.documentElement;
+    const scrollbar = window.innerWidth - root.clientWidth;
+    root.style.overflow = "hidden";
+    if (scrollbar > 0) root.style.paddingRight = `${scrollbar}px`;
+    dialogRef.current?.focus({ preventScroll: true });
     const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") return closeRef.current();
       const target = event.target as HTMLElement;
       if (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable || event.metaKey || event.ctrlKey) return;
       if (event.key === "ArrowLeft") setIndex((i) => Math.max(0, i - 1));
       if (event.key === "ArrowRight") setIndex((i) => Math.min(count - 1, i + 1));
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      page?.removeAttribute("inert");
+      root.style.overflow = "";
+      root.style.paddingRight = "";
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
+    };
   }, [count]);
 
-  // Back to wherever you came from on the site, or the feed if you arrived here directly
-  const back = () => {
-    const fromSite = document.referrer.startsWith(location.origin);
-    if (fromSite && history.length > 1) router.back();
-    else router.push("/dashboard");
-  };
-
   const r = ratio(post);
+  const video = post.videos[index];
+  const caption = useMemo(() => splitCaption(post), [post]);
+
   return (
-    <div className="relative flex flex-col items-center justify-center gap-5 px-6 py-16 sm:px-16 lg:min-h-[min(calc(100dvh-8rem),56rem)]">
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="post-title"
+      tabIndex={-1}
+      className="fixed inset-0 z-40 flex items-center justify-center p-3 outline-none sm:p-10 lg:px-24"
+    >
+      {/* The dimmed feed; a click on it closes the post */}
+      <div aria-hidden="true" onClick={close} className="absolute inset-0 bg-black/55 backdrop-blur-sm" />
+
       <button
         type="button"
-        onClick={back}
-        aria-label="Back"
-        className="absolute top-5 left-5 flex size-10 items-center justify-center rounded-full text-base-900 ring-1 ring-base-200 transition-[background-color,scale] duration-150 hover:bg-base-50 active:scale-[0.96]"
+        onClick={close}
+        aria-label="Close"
+        className="absolute top-5 right-5 z-10 flex size-11 items-center justify-center rounded-full bg-black/50 text-white transition-[background-color,scale] duration-150 hover:bg-white/20 active:scale-[0.96] lg:bg-white/10"
       >
-        <CaretLeft className="size-4" />
+        <Close className="size-4" />
       </button>
+      {previous && <StepLink side="left" shortCode={previous.shortCode} />}
+      {next && <StepLink side="right" shortCode={next.shortCode} />}
 
-      {/* As tall as the window allows under the header: the stage's padding, plus the counter
-          and thumbnails on a carousel, come off the height */}
-      <div className="relative w-full" style={{ maxWidth: `min(100%, calc((min(100dvh, 64rem) - ${count > 1 ? 22 : 16}rem) * ${r}))` }}>
-        <div className="relative w-full overflow-hidden rounded bg-base-100 outline-1 -outline-offset-1 outline-edge" style={{ aspectRatio: r }}>
-          <Image
-            key={post.images[index]}
-            src={post.images[index]}
-            alt={count > 1 ? `${post.hook} (slide ${index + 1} of ${count})` : post.hook}
-            fill
-            sizes="(min-width: 1024px) 50vw, 100vw"
-            priority={index === 0}
-            className="object-cover"
-          />
+      <article className="relative grid h-full max-h-[54rem] w-full max-w-[76rem] grid-cols-[minmax(0,1fr)] overflow-y-auto rounded-[28px] bg-white shadow-2xl lg:grid-cols-[minmax(0,1fr)_27rem] lg:overflow-hidden">
+        {/* The post */}
+        <div className="relative flex h-[62dvh] items-center justify-center bg-black p-6 sm:p-10 lg:h-auto">
+          <div className="relative h-full max-h-full max-w-full" style={{ aspectRatio: r }}>
+            <Image
+              key={post.images[index]}
+              src={post.images[index]}
+              alt={count > 1 ? `${post.hook} (slide ${index + 1} of ${count})` : post.hook}
+              fill
+              sizes="(min-width: 1024px) 55vw, 100vw"
+              priority
+              className="object-contain"
+            />
+          </div>
+          <div className="absolute top-4 left-4 flex gap-1.5 text-xs text-white">
+            {count > 1 && (
+              <p className="rounded-full bg-black/60 px-2.5 py-1 tabular-nums" aria-live="polite">
+                {index + 1} / {count}
+              </p>
+            )}
+            {video && (
+              <p className="flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1" title="A video on Instagram; the library keeps its cover frame">
+                <Play className="size-3" />
+                Video cover
+              </p>
+            )}
+          </div>
+          {count > 1 && (
+            <>
+              <SlideButton side="left" disabled={index === 0} onClick={() => go(index - 1)} />
+              <SlideButton side="right" disabled={index === count - 1} onClick={() => go(index + 1)} />
+            </>
+          )}
         </div>
-        {count > 1 && (
-          <>
-            <SlideButton side="left" disabled={index === 0} onClick={() => go(index - 1)} />
-            <SlideButton side="right" disabled={index === count - 1} onClick={() => go(index + 1)} />
-          </>
-        )}
-      </div>
 
-      {count > 1 && (
-        <div className="flex flex-col items-center gap-3">
-          <p className="text-xs text-base-500 tabular-nums" aria-live="polite">
-            {index + 1} / {count}
-          </p>
-          <ol className="flex max-w-full gap-1.5 overflow-x-auto p-1 scrollbar-hide" aria-label="Slides">
-            {post.images.map((src, i) => (
-              <li key={src} className="shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIndex(i)}
-                  aria-label={`Slide ${i + 1}`}
-                  aria-current={i === index ? "true" : undefined}
-                  className="relative block w-10 overflow-hidden rounded-sm bg-base-100 opacity-60 transition-opacity duration-150 hover:opacity-100 aria-[current]:opacity-100 aria-[current]:ring-2 aria-[current]:ring-base-900 aria-[current]:ring-offset-2 aria-[current]:ring-offset-white"
-                  style={{ aspectRatio: r }}
-                >
-                  <Image src={src} alt="" fill sizes="40px" className="object-cover" />
-                </button>
-              </li>
-            ))}
-          </ol>
+        {/* The panel */}
+        <div className="flex flex-col lg:min-h-0">
+          <header className="flex items-center gap-3.5 px-6 pt-6 pb-5">
+            <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-base-100 text-lg font-medium text-base-700 outline-1 -outline-offset-1 outline-edge">
+              {post.brand.logo ? <Image src={post.brand.logo} alt="" fill sizes="48px" className="object-cover" /> : post.brand.name[0]}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="flex items-center gap-1.5 text-[17px] leading-tight font-medium text-base-900">
+                <span className="truncate">{post.brand.name}</span>
+                {post.verified && <SealCheck className="size-4 shrink-0" aria-label="Verified" />}
+              </p>
+              <p className="mt-0.5 truncate text-sm text-base-500">
+                {post.handle && <>@{post.handle} · </>}
+                <Link href={feedHref("For you", post.category.name)} className="hover:text-base-900">
+                  {post.category.name}
+                </Link>
+              </p>
+            </div>
+            <a
+              href={post.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-base-50 pr-3 pl-3.5 text-sm font-medium text-base-900 transition-[background-color,scale] duration-150 hover:bg-base-100 active:scale-[0.96]"
+            >
+              Instagram
+              <ArrowUpRight className="size-3.5" />
+            </a>
+          </header>
+
+          <div className="px-6 pb-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+            <h1 id="post-title" className="text-2xl leading-tight font-medium text-pretty text-base-900">
+              {caption.title}
+            </h1>
+            <p className="mt-2 text-sm text-base-500">Posted {day.format(new Date(post.postedAt))}</p>
+            <Caption paragraphs={caption.body} />
+            <Performance post={post} />
+            <Section title="Boards">
+              <BoardsOn post={post} />
+            </Section>
+          </div>
+
+          <footer className="sticky bottom-0 border-t border-base-100 bg-white p-4">
+            <SaveForm post={post} />
+          </footer>
         </div>
-      )}
+      </article>
     </div>
+  );
+}
+
+// The previous or next post in the feed, at the window's edge. It replaces the address rather
+// than adding to it, so Back still closes the post instead of stepping through every one seen.
+function StepLink({ side, shortCode }: { side: "left" | "right"; shortCode: string }) {
+  const Caret = side === "left" ? CaretLeft : CaretRight;
+  return (
+    <Link
+      href={postHref(shortCode)}
+      replace
+      scroll={false}
+      aria-label={side === "left" ? "Previous post" : "Next post"}
+      className={cx(
+        "absolute top-1/2 hidden size-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition-[background-color,scale] duration-150 hover:bg-white/20 active:scale-[0.96] lg:flex",
+        side === "left" ? "left-5" : "right-5",
+      )}
+    >
+      <Caret className="size-5" />
+    </Link>
   );
 }
 
 function SlideButton({ side, disabled, onClick }: { side: "left" | "right"; disabled: boolean; onClick: () => void }) {
+  const Caret = side === "left" ? CaretLeft : CaretRight;
   return (
     <button
       type="button"
-      onClick={onClick}
-      disabled={disabled}
       aria-label={side === "left" ? "Previous slide" : "Next slide"}
+      disabled={disabled}
+      onClick={onClick}
       className={cx(
-        "absolute top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-base-900 shadow-md ring-1 ring-edge transition-[opacity,scale] duration-150 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-0",
-        side === "left" ? "-left-5" : "-right-5",
+        "absolute top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-base-900 transition-[opacity,scale] duration-150 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-0",
+        side === "left" ? "left-4" : "right-4",
       )}
     >
-      {side === "left" ? <CaretLeft className="size-4" /> : <CaretRight className="size-4" />}
+      <Caret className="size-4" />
     </button>
   );
 }
 
-// The right-hand panel: who posted it, what it is, what it did, and saving it
-function Details({ post }: { post: PostDetail }) {
-  const { boards, save, notify } = useBoards();
-  const [expanded, setExpanded] = useState(false);
-  const [board, setBoard] = useState(boards[0]?.id ?? "");
-  const savedIn = boards.filter((b) => b.items.some((item) => item.post === post.shortCode));
-  const inChosen = savedIn.some((b) => b.id === board);
-  const slides = post.images.length;
-
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <aside className="flex flex-col border-t border-base-200 p-6 lg:border-t-0 lg:border-l">
-      <div className="flex items-start justify-between gap-3">
-        <BrandName brand={post.brand} />
-        <MoreMenu url={post.url} onCopy={notify} />
-      </div>
-
-      <h1 className="mt-4 text-[17px] leading-snug font-medium text-pretty text-base-900">
-        <a href={post.url} target="_blank" rel="noopener noreferrer" className="group">
-          {post.hook || `${post.brand.name} on Instagram`}
-          <ArrowUpRight className="ml-1 inline size-3.5 align-[-1px] text-base-500 transition-colors group-hover:text-base-900" />
-        </a>
-      </h1>
-      <p className="mt-2 text-sm text-base-500">
-        {formats[post.format]}
-        {slides > 1 && ` · ${slides} slides`} · {longDate.format(new Date(post.postedAt))}
-      </p>
-      {(post.likes != null || post.comments != null) && (
-        <p className="mt-1 text-sm text-base-500 tabular-nums">
-          {post.likes != null && `${compact.format(post.likes)} likes`}
-          {post.likes != null && post.comments != null && " · "}
-          {post.comments != null && `${compact.format(post.comments)} comments`}
-        </p>
-      )}
-
-      {post.caption && (
-        <div className="mt-5">
-          <p className={cx("text-sm leading-relaxed whitespace-pre-line text-base-600", !expanded && "line-clamp-5")}>{post.caption}</p>
-          {post.caption.length > 220 && (
-            <button type="button" onClick={() => setExpanded((e) => !e)} className="mt-1.5 text-sm font-medium text-base-900">
-              {expanded ? "Show less" : "Show more"}
-            </button>
-          )}
-        </div>
-      )}
-
-      <div className="mt-5 flex flex-wrap gap-2">
-        <a
-          href={post.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex h-9 items-center gap-1.5 rounded-full bg-base-50 px-4 text-sm font-medium text-base-900 transition-[background-color,scale] duration-150 hover:bg-base-100 active:scale-[0.96]"
-        >
-          View on Instagram
-          <ArrowUpRight className="size-3.5" />
-        </a>
-        <Link
-          href={feedHref("For you", post.category.name)}
-          className="flex h-9 items-center rounded-full px-4 text-sm text-base-600 ring-1 ring-base-200 transition-colors duration-150 hover:text-base-900"
-        >
-          {post.category.name}
-        </Link>
-      </div>
-
-      <div className="mt-8">
-        <p className="text-sm text-base-500">{savedIn.length ? `On ${savedIn.length === 1 ? "1 board" : `${savedIn.length} boards`}` : "Not on a board yet"}</p>
-        {savedIn.length > 0 && (
-          <ul className="mt-3 space-y-2">
-            {savedIn.map((b) => (
-              <li key={b.id} className="flex items-center gap-3 rounded-xl p-2 ring-1 ring-base-200">
-                <BoardThumb board={b} className="size-9" />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-base-900">{b.name}</p>
-                  <p className="text-xs text-base-500 tabular-nums">
-                    {b.items.length} {b.items.length === 1 ? "post" : "posts"}
-                    {b.shared && " · Shared"}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* The board picker and Save sit at the foot of the panel, like Cosmos */}
-      <form
-        className="mt-auto flex gap-2 pt-8"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (board) save(post.shortCode, board);
-        }}
-      >
-        <label className="min-w-0 flex-1">
-          <span className="sr-only">Board</span>
-          <select
-            value={board}
-            onChange={(event) => setBoard(event.target.value)}
-            className="h-12 w-full truncate rounded-full border-0 bg-white pr-10 pl-5 text-base text-base-900 ring-1 ring-base-200 focus:ring-2 focus:ring-base-300"
-          >
-            {boards.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          type="submit"
-          disabled={!board || inChosen}
-          className="h-12 shrink-0 rounded-full bg-base-900 px-6 text-base font-medium text-white transition-[background-color,scale] duration-150 hover:bg-base-800 active:scale-[0.96] disabled:bg-base-100 disabled:text-base-500"
-        >
-          {inChosen ? "Saved" : "Save"}
-        </button>
-      </form>
-    </aside>
+    <section className="mt-6 border-t border-base-100 pt-5">
+      <h2 className="mb-3 text-xs font-medium text-base-500">{title}</h2>
+      {children}
+    </section>
   );
 }
 
-function MoreMenu({ url, onCopy }: { url: string; onCopy: (text: string) => void }) {
-  const [open, setOpen] = useState(false);
+// The title and the body: the caption's first sentence (whole, up to 160 characters; the
+// feed's hook is cut at 90) and the rest of it in paragraphs, without Instagram's spacer lines
+// ("." or "·" on their own)
+const TITLE_MAX = 160;
+function splitCaption(post: PostDetail) {
+  const paragraphs = (text: string) =>
+    text
+      .split(/\n\s*\n/)
+      .map((paragraph) =>
+        paragraph
+          .split("\n")
+          .filter((line) => !/^\s*[.·•\-_]?\s*$/.test(line))
+          .join("\n")
+          .trim(),
+      )
+      .filter(Boolean);
+  const [first, ...rest] = post.caption.split("\n");
+  const line = first.replace(/\s+/g, " ").trim();
+  const sentence = line.match(/^.+?[.!?](?=\s|$)/)?.[0] ?? line;
+  if (sentence && sentence.length <= TITLE_MAX) {
+    return { title: sentence, body: paragraphs([line.slice(sentence.length).trim(), ...rest].join("\n")) };
+  }
+  return { title: post.hook || `${post.brand.name} on Instagram`, body: paragraphs(post.caption) };
+}
+
+// The body under the title, with @mentions and #hashtags as links, clamped until "Show more"
+function Caption({ paragraphs }: { paragraphs: string[] }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [clipped, setClipped] = useState(false);
 
-  useEffect(() => {
-    if (!open) return;
-    const close = (event: PointerEvent) => !ref.current?.contains(event.target as Node) && setOpen(false);
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", close);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", close);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || open) return;
+    const measure = () => setClipped(el.scrollHeight > el.clientHeight + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [open, paragraphs]);
 
+  if (!paragraphs.length) return null;
   return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        aria-label="More"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-        className="relative -m-1 flex size-9 items-center justify-center rounded-full text-base-900 hover:bg-base-50"
-      >
-        <span aria-hidden="true" className="flex gap-[3px]">
-          {[0, 1, 2].map((i) => (
-            <span key={i} className="size-[3px] rounded-full bg-current" />
-          ))}
-        </span>
-      </button>
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 z-20 mt-1.5 w-52 origin-top-right animate-[menu-in_150ms_cubic-bezier(0.23,1,0.32,1)] rounded-2xl bg-white p-1.5 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)] ring-1 ring-edge motion-reduce:animate-none"
-        >
-          <button
-            type="button"
-            role="menuitem"
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(location.href);
-                onCopy("Link copied");
-              } catch {
-                onCopy("Couldn’t copy the link");
-              }
-              setOpen(false);
-            }}
-            className="flex w-full rounded-xl px-3 py-2 text-left text-sm text-base-900 hover:bg-base-50"
-          >
-            Copy link
-          </button>
-          <a
-            role="menuitem"
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm text-base-900 hover:bg-base-50"
-          >
-            Open on Instagram
-            <ArrowUpRight className="size-3.5 text-base-500" />
-          </a>
-        </div>
+    <div className="mt-5">
+      <div ref={ref} className={cx("space-y-3 text-[15px] leading-relaxed text-pretty text-base-700", !open && "line-clamp-6")}>
+        {paragraphs.map((paragraph, i) => (
+          <p key={i} className="whitespace-pre-line">
+            {linkify(paragraph)}
+          </p>
+        ))}
+      </div>
+      {(clipped || open) && (
+        <button type="button" onClick={() => setOpen((o) => !o)} className="mt-2 text-sm font-medium text-base-900 hover:underline">
+          {open ? "Show less" : "Show more"}
+        </button>
       )}
     </div>
+  );
+}
+
+// @handle (not inside an email address) and #tag, as links to Instagram
+const TOKEN = /(?<![\w@])@([A-Za-z0-9_](?:[A-Za-z0-9_.]*[A-Za-z0-9_])?)|(?<![\w#&])#([\p{L}\p{N}_]+)/gu;
+
+function linkify(text: string): ReactNode[] {
+  const out: ReactNode[] = [];
+  let last = 0;
+  for (const match of text.matchAll(TOKEN)) {
+    const [token, handle, tag] = match;
+    out.push(text.slice(last, match.index));
+    const href = handle ? `https://www.instagram.com/${handle}/` : `https://www.instagram.com/explore/tags/${encodeURIComponent(tag)}/`;
+    out.push(
+      <a key={match.index} href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-base-900 underline-offset-2 hover:underline">
+        {token}
+      </a>,
+    );
+    last = match.index + token.length;
+  }
+  out.push(text.slice(last));
+  return out;
+}
+
+// Likes and comments, and where the likes put it against the brand and the category
+function Performance({ post }: { post: PostDetail }) {
+  const { brandAverage, brandPosts, rank, ranked } = post.stats;
+  const versus = post.likes != null && brandAverage ? post.likes / brandAverage : null;
+  const cells: [string, string][] = [
+    ["Likes", post.likes == null ? "Hidden" : compact.format(post.likes)],
+    ["Comments", post.comments == null ? "—" : compact.format(post.comments)],
+    [`vs ${post.brand.name} avg`, versus == null ? "—" : `${versus.toFixed(1)}×`],
+  ];
+  return (
+    <Section title="Performance">
+      <dl className="grid grid-cols-3 gap-2">
+        {cells.map(([label, value]) => (
+          <div key={label} className="flex min-w-0 flex-col-reverse rounded-2xl bg-base-50 px-3.5 py-3">
+            <dt className="truncate text-xs text-base-500">{label}</dt>
+            <dd className="text-xl font-medium text-base-900 tabular-nums">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-3 text-sm text-pretty text-base-600">
+        {rank != null && (
+          <>
+            <span className="text-base-900 tabular-nums">
+              #{rank} of {ranked}
+            </span>{" "}
+            in {post.category.name} by likes.{" "}
+          </>
+        )}
+        {brandAverage != null && brandPosts > 1 && (
+          <>
+            {post.brand.name} averages <span className="tabular-nums">{compact.format(brandAverage)}</span> across its {brandPosts} posts here.
+          </>
+        )}
+      </p>
+    </Section>
+  );
+}
+
+// The boards this post is on
+function BoardsOn({ post }: { post: PostDetail }) {
+  const { boards } = useBoards();
+  const on = boards.filter((b) => b.items.some((item) => item.post === post.shortCode));
+  return (
+    <>
+      <p className="text-sm text-base-500">{on.length ? `On ${on.length === 1 ? "1 board" : `${on.length} boards`}` : "Not on a board yet"}</p>
+      {on.length > 0 && (
+        <ul className="mt-3 space-y-2">
+          {on.map((b) => (
+            <li key={b.id} className="flex items-center gap-3 rounded-xl p-2 ring-1 ring-base-200">
+              <BoardThumb board={b} className="size-9" />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-base-900">{b.name}</p>
+                <p className="text-xs text-base-500 tabular-nums">
+                  {b.items.length} {b.items.length === 1 ? "post" : "posts"}
+                  {b.shared && " · Shared"}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+// The board picker and Save, at the foot of the panel like Cosmos
+function SaveForm({ post }: { post: PostDetail }) {
+  const { boards, save } = useBoards();
+  const [board, setBoard] = useState(boards[0]?.id ?? "");
+  const inChosen = boards.some((b) => b.id === board && b.items.some((item) => item.post === post.shortCode));
+  return (
+    <form
+      className="flex gap-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (board) save(post.shortCode, board);
+      }}
+    >
+      <label className="min-w-0 flex-1">
+        <span className="sr-only">Board</span>
+        <select
+          value={board}
+          onChange={(event) => setBoard(event.target.value)}
+          className="h-12 w-full truncate rounded-full border-0 bg-base-50 pr-10 pl-5 text-base text-base-900 focus:ring-2 focus:ring-base-300"
+        >
+          {boards.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <button
+        type="submit"
+        disabled={!board || inChosen}
+        className="h-12 shrink-0 rounded-full bg-base-900 px-6 text-base font-medium text-white transition-[background-color,scale] duration-150 hover:bg-base-800 active:scale-[0.96] disabled:bg-base-100 disabled:text-base-500"
+      >
+        {inChosen ? "Saved" : "Save"}
+      </button>
+    </form>
   );
 }

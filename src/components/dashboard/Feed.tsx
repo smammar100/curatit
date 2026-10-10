@@ -39,9 +39,10 @@ export default function Feed() {
     if (q) setQuery(q);
   }, []);
 
-  // Keep the address in step, so a reload or a shared link opens the same feed
+  // Keep the address in step, so a reload or a shared link opens the same feed (but not while
+  // the address is a post's, opened over the feed)
   useEffect(() => {
-    history.replaceState(null, "", feedHref(view, query));
+    if (location.pathname === "/dashboard") history.replaceState(null, "", feedHref(view, query));
   }, [view, query]);
 
   const saved = useMemo(
