@@ -21,7 +21,7 @@ import SealCheck from "@/components/fundations/icons/SealCheck";
 // Components
 import type { PostDetail } from "@/lib/posts";
 import { cx } from "@/lib/cx";
-import { BoardThumb, useBoards } from "./boards";
+import { BoardThumb, NAME_MAX, useBoards } from "./boards";
 import { feedHref } from "./Feed";
 import { backToFeed, postHref, ratio } from "./Grid";
 
@@ -355,10 +355,11 @@ function Performance({ post }: { post: PostDetail }) {
   );
 }
 
-// The boards this post is on
+// The boards this post is on, each with a way to take it off
 function BoardsOn({ post }: { post: PostDetail }) {
-  const { boards } = useBoards();
+  const { boards, status, remove } = useBoards();
   const on = boards.filter((b) => b.items.some((item) => item.post === post.shortCode));
+  if (status === "loading") return <p className="text-sm text-base-500">Loading your boards…</p>;
   return (
     <>
       <p className="text-sm text-base-500">{on.length ? `On ${on.length === 1 ? "1 board" : `${on.length} boards`}` : "Not on a board yet"}</p>
@@ -367,13 +368,21 @@ function BoardsOn({ post }: { post: PostDetail }) {
           {on.map((b) => (
             <li key={b.id} className="flex items-center gap-3 rounded-xl p-2 ring-1 ring-base-200">
               <BoardThumb board={b} className="size-9" />
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-base-900">{b.name}</p>
                 <p className="text-xs text-base-500 tabular-nums">
                   {b.items.length} {b.items.length === 1 ? "post" : "posts"}
                   {b.shared && " · Shared"}
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={() => remove(post.shortCode, b.id)}
+                aria-label={`Remove from ${b.name}`}
+                className="relative flex size-8 shrink-0 items-center justify-center rounded-full text-base-500 transition-[background-color,color,scale] duration-150 before:absolute before:-inset-1 hover:bg-base-50 hover:text-base-900 active:scale-[0.96]"
+              >
+                <Close className="size-3.5" />
+              </button>
             </li>
           ))}
         </ul>
@@ -382,39 +391,79 @@ function BoardsOn({ post }: { post: PostDetail }) {
   );
 }
 
-// The board picker and Save, at the foot of the panel like Cosmos
+// The board picker and Save, at the foot of the panel like Cosmos. "New board…" swaps the
+// picker for a name field (and is all there is before the first board), and Save then makes
+// the board with this post on it.
+const NEW = "new";
+
 function SaveForm({ post }: { post: PostDetail }) {
-  const { boards, save } = useBoards();
-  const [board, setBoard] = useState(boards[0]?.id ?? "");
+  const { boards, status, save, createBoard } = useBoards();
+  const [choice, setChoice] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const board = choice ?? boards[0]?.id ?? NEW;
+  const naming = status !== "loading" && board === NEW;
   const inChosen = boards.some((b) => b.id === board && b.items.some((item) => item.post === post.shortCode));
+
   return (
     <form
       className="flex gap-2"
       onSubmit={(event) => {
         event.preventDefault();
-        if (board) save(post.shortCode, board);
+        if (naming) {
+          const trimmed = name.trim();
+          if (!trimmed) return;
+          setChoice(createBoard(trimmed, post.shortCode));
+          setName("");
+        } else if (board) save(post.shortCode, board);
       }}
     >
-      <label className="min-w-0 flex-1">
-        <span className="sr-only">Board</span>
-        <select
-          value={board}
-          onChange={(event) => setBoard(event.target.value)}
-          className="h-12 w-full truncate rounded-full border-0 bg-base-50 pr-10 pl-5 text-base text-base-900 focus:ring-2 focus:ring-base-300"
-        >
-          {boards.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name}
-            </option>
-          ))}
-        </select>
-      </label>
+      {naming ? (
+        <label className="relative min-w-0 flex-1">
+          <span className="sr-only">New board name</span>
+          <input
+            autoFocus={choice === NEW}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            maxLength={NAME_MAX}
+            placeholder={boards.length ? "Name the new board" : "Name your first board"}
+            className="h-12 w-full rounded-full border-0 bg-base-50 pr-10 pl-5 text-base text-base-900 placeholder:text-base-400 focus:ring-2 focus:ring-base-300"
+          />
+          {boards.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setChoice(null)}
+              aria-label="Back to your boards"
+              className="absolute top-1/2 right-2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-base-500 hover:bg-base-100 hover:text-base-900"
+            >
+              <Close className="size-3.5" />
+            </button>
+          )}
+        </label>
+      ) : (
+        <label className="min-w-0 flex-1">
+          <span className="sr-only">Board</span>
+          <select
+            value={status === "loading" ? "" : board}
+            disabled={status === "loading"}
+            onChange={(event) => setChoice(event.target.value)}
+            className="h-12 w-full truncate rounded-full border-0 bg-base-50 pr-10 pl-5 text-base text-base-900 focus:ring-2 focus:ring-base-300 disabled:text-base-500"
+          >
+            {status === "loading" && <option value="">Loading boards…</option>}
+            {boards.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+            <option value={NEW}>New board…</option>
+          </select>
+        </label>
+      )}
       <button
         type="submit"
-        disabled={!board || inChosen}
+        disabled={status === "loading" || (naming ? !name.trim() : inChosen)}
         className="h-12 shrink-0 rounded-full bg-base-900 px-6 text-base font-medium text-white transition-[background-color,scale] duration-150 hover:bg-base-800 active:scale-[0.96] disabled:bg-base-100 disabled:text-base-500"
       >
-        {inChosen ? "Saved" : "Save"}
+        {inChosen && !naming ? "Saved" : "Save"}
       </button>
     </form>
   );

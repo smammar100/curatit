@@ -13,7 +13,7 @@ import Lightning from "@/components/fundations/icons/Lightning";
 import Plus from "@/components/fundations/icons/Plus";
 import { cx } from "@/lib/cx";
 import AccountMenu from "./AccountMenu";
-import { useBoards } from "./boards";
+import { NewBoardForm, useBoards } from "./boards";
 import SearchBox from "./SearchBox";
 
 export const VIEWS = ["For you", "Newest", "Saved"] as const;
@@ -34,7 +34,7 @@ export default function Header({
   // A search was committed (Enter, or a pick from the panel)
   onSearch?: (query: string) => void;
 }) {
-  const { boards, createBoard } = useBoards();
+  const { boards } = useBoards();
   const savedCount = useMemo(() => new Set(boards.flatMap((board) => board.items.map((item) => item.post))).size, [boards]);
 
   return (
@@ -68,15 +68,7 @@ export default function Header({
       <SearchBox query={query} onQuery={onQuery} onSearch={onSearch} className="w-full" />
 
       <div className="flex items-center justify-end gap-2">
-        <button
-          type="button"
-          onClick={() => createBoard()}
-          aria-label="Create a board"
-          className="flex h-11 items-center gap-1.5 rounded-full px-3 text-[17px] font-medium text-base-900 ring-1 ring-base-200 transition-[background-color,scale] duration-150 hover:bg-base-50 active:scale-[0.96] md:px-5"
-        >
-          <Plus className="size-4.5" />
-          <span className="hidden md:inline">Create</span>
-        </button>
+        <CreateBoard />
         <Link
           href="/pricing"
           aria-label="Upgrade"
@@ -140,6 +132,57 @@ function ViewMenu({ view, onChange, className }: { view: View | null; onChange: 
               {option === view && <span className="size-1.5 rounded-full bg-base-900" aria-hidden="true" />}
             </button>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Create: a popover that asks for the new board's name
+function CreateBoard() {
+  const { createBoard } = useBoards();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: PointerEvent) => !ref.current?.contains(event.target as Node) && setOpen(false);
+    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Create a board"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        className="flex h-11 items-center gap-1.5 rounded-full px-3 text-[17px] font-medium text-base-900 ring-1 ring-base-200 transition-[background-color,scale] duration-150 hover:bg-base-50 active:scale-[0.96] md:px-5"
+      >
+        <Plus className="size-4.5" />
+        <span className="hidden md:inline">Create</span>
+      </button>
+      {open && (
+        <div
+          role="dialog"
+          aria-label="New board"
+          className="absolute top-full right-0 z-40 mt-2 w-72 origin-top-right animate-[menu-in_150ms_cubic-bezier(0.23,1,0.32,1)] rounded-2xl bg-white p-2 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)] ring-1 ring-edge motion-reduce:animate-none"
+        >
+          <p className="px-2 pt-1 pb-2 text-xs font-medium text-base-500">New board</p>
+          <NewBoardForm
+            open
+            onCreate={(name) => {
+              createBoard(name);
+              setOpen(false);
+            }}
+          />
         </div>
       )}
     </div>

@@ -3,6 +3,8 @@ import { createPublicClient } from "@/utils/supabase/public";
 
 // A published library post as the site shows it, read from Supabase
 export type LibraryPost = {
+  // instagram_posts.id, which board_posts refers to; the short code is what URLs use
+  id: string;
   shortCode: string;
   url: string;
   format: "static" | "carousel" | "video";
@@ -19,6 +21,7 @@ export type LibraryPost = {
 };
 
 type Row = {
+  id: string;
   short_code: string;
   url: string;
   format: LibraryPost["format"];
@@ -42,7 +45,7 @@ export const getPublishedPosts = cache(async (): Promise<LibraryPost[]> => {
   const { data, error } = await supabase
     .from("instagram_posts")
     .select(
-      "short_code, url, format, caption, posted_at, dimensions_width, dimensions_height, brands(name, slug, logo_path, categories(name, slug)), post_images(position, path)"
+      "id, short_code, url, format, caption, posted_at, dimensions_width, dimensions_height, brands(name, slug, logo_path, categories(name, slug)), post_images(position, path)"
     )
     .eq("is_published", true)
     .order("posted_at", { ascending: false })
@@ -54,6 +57,7 @@ export const getPublishedPosts = cache(async (): Promise<LibraryPost[]> => {
   return data
     .filter((row) => row.brands?.categories && row.post_images.length)
     .map((row) => ({
+      id: row.id,
       shortCode: row.short_code,
       url: row.url,
       format: row.format,
@@ -101,7 +105,7 @@ export const getPostDetail = cache(async (shortCode: string): Promise<PostDetail
   const { data, error } = await supabase
     .from("instagram_posts")
     .select(
-      "short_code, url, format, caption, posted_at, dimensions_width, dimensions_height, likes_count, comments_count, owner_username, owner:instagram_accounts!instagram_posts_owner_id_fkey(is_verified), brands(name, slug, logo_path, categories(name, slug)), post_images(position, path), instagram_post_media!instagram_post_media_post_id_fkey(position, type)"
+      "id, short_code, url, format, caption, posted_at, dimensions_width, dimensions_height, likes_count, comments_count, owner_username, owner:instagram_accounts!instagram_posts_owner_id_fkey(is_verified), brands(name, slug, logo_path, categories(name, slug)), post_images(position, path), instagram_post_media!instagram_post_media_post_id_fkey(position, type)"
     )
     .eq("is_published", true)
     .eq("short_code", shortCode)
@@ -124,6 +128,7 @@ export const getPostDetail = cache(async (shortCode: string): Promise<PostDetail
   const media = new Map(data.instagram_post_media.map((m) => [m.position, m.type?.toLowerCase()]));
 
   return {
+    id: data.id,
     shortCode: data.short_code,
     url: data.url,
     format: data.format,

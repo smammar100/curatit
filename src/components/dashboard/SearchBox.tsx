@@ -98,8 +98,8 @@ export default function SearchBox({
     name: list.find((post) => post.category.slug === category.category)?.category.name ?? category.name,
   }));
 
-  // The newest post on each board first, then the rest, without repeats
-  const saved = [...new Set(boards.flatMap((board) => board.items.map((item) => item.post)))]
+  // The posts saved most recently, on any board, without repeats
+  const saved = [...new Set(boards.flatMap((board) => board.items).toSorted((a, b) => b.addedAt.localeCompare(a.addedAt)).map((item) => item.post))]
     .slice(0, 6)
     .flatMap((code) => posts.get(code) ?? []);
 
