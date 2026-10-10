@@ -2,7 +2,7 @@
 
 // The dashboard's masonry: posts at their own proportions in as many columns as the chosen
 // tile size fits, each tile opening the post, with Save on hover.
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import BrandName from "@/components/home/BrandName";
@@ -21,12 +21,13 @@ const gapFor = (width: number) => Math.round(Math.min(40, Math.max(24, width * 0
 export const ratio = (post: Pick<DashPost, "width" | "height">) => (post.width && post.height ? post.width / post.height : 0.8);
 export const postHref = (shortCode: string) => `/dashboard/p/${shortCode}`;
 
-// A tile clicked in the feed opens its post over the feed (an intercepted route), so closing
-// the post can step back to the feed as it was, scroll and all, instead of loading it again
-let openedOverFeed = false;
-export function backToFeed() {
-  const was = openedOverFeed;
-  openedOverFeed = false;
+// A tile clicked in the feed or on a board opens its post over that page (an intercepted
+// route), so closing the post can step back to the page as it was, scroll and all, instead of
+// loading the feed again
+let openedOverPage = false;
+export function backToPage() {
+  const was = openedOverPage;
+  openedOverPage = false;
   return was;
 }
 
@@ -44,7 +45,8 @@ function intoColumns(posts: DashPost[], count: number) {
   return columns;
 }
 
-export default function Grid({ posts, priority = true }: { posts: DashPost[]; priority?: boolean }) {
+// `footer` adds something under each tile, like a board's note
+export default function Grid({ posts, priority = true, footer }: { posts: DashPost[]; priority?: boolean; footer?: (post: DashPost) => ReactNode }) {
   const { size } = useGridSize();
   const [width, setWidth] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
@@ -75,7 +77,7 @@ export default function Grid({ posts, priority = true }: { posts: DashPost[]; pr
           {columns.map((column, c) => (
             <ul key={c} className="flex flex-col" style={{ gap }}>
               {column.map((post, i) => (
-                <Tile key={post.shortCode} post={post} priority={priority && i === 0} sizes={`${Math.ceil(100 / count)}vw`} />
+                <Tile key={post.shortCode} post={post} priority={priority && i === 0} sizes={`${Math.ceil(100 / count)}vw`} footer={footer} />
               ))}
             </ul>
           ))}
@@ -85,37 +87,40 @@ export default function Grid({ posts, priority = true }: { posts: DashPost[]; pr
   );
 }
 
-function Tile({ post, priority, sizes }: { post: DashPost; priority: boolean; sizes: string }) {
+function Tile({ post, priority, sizes, footer }: { post: DashPost; priority: boolean; sizes: string; footer?: (post: DashPost) => ReactNode }) {
   // The tile shimmers until its image has arrived, then the shimmer stops
   const [loaded, setLoaded] = useState(false);
   return (
-    <li className="group relative">
-      <Link href={postHref(post.shortCode)} scroll={false} onClick={() => (openedOverFeed = location.pathname === "/dashboard")} className="block">
-        <div className="relative w-full overflow-hidden rounded bg-base-100" style={{ aspectRatio: ratio(post) }}>
-          {!loaded && <Block className="absolute inset-0" />}
-          <Image
-            src={post.cover}
-            alt={post.hook}
-            fill
-            sizes={sizes}
-            priority={priority}
-            onLoad={() => setLoaded(true)}
-            className="object-cover"
-          />
+    <li className="group/tile">
+      <div className="group relative">
+        <Link href={postHref(post.shortCode)} scroll={false} onClick={() => (openedOverPage = !location.pathname.startsWith("/dashboard/p/"))} className="block">
+          <div className="relative w-full overflow-hidden rounded bg-base-100" style={{ aspectRatio: ratio(post) }}>
+            {!loaded && <Block className="absolute inset-0" />}
+            <Image
+              src={post.cover}
+              alt={post.hook}
+              fill
+              sizes={sizes}
+              priority={priority}
+              onLoad={() => setLoaded(true)}
+              className="object-cover"
+            />
+          </div>
+        </Link>
+        {/* Revealed on hover or keyboard focus; always there where there is no hover */}
+        <div
+          className={cx(
+            "pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-opacity duration-150",
+            "group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100",
+          )}
+        >
+          <SaveMenu post={post.shortCode} tone="overlay" className="pointer-events-auto self-end" />
+          <span className="self-start rounded-md bg-white/95 px-2 py-1 shadow-sm">
+            <BrandName brand={post.brand} />
+          </span>
         </div>
-      </Link>
-      {/* Revealed on hover or keyboard focus; always there where there is no hover */}
-      <div
-        className={cx(
-          "pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-opacity duration-150",
-          "group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100",
-        )}
-      >
-        <SaveMenu post={post.shortCode} tone="overlay" className="pointer-events-auto self-end" />
-        <span className="self-start rounded-md bg-white/95 px-2 py-1 shadow-sm">
-          <BrandName brand={post.brand} />
-        </span>
       </div>
+      {footer?.(post)}
     </li>
   );
 }

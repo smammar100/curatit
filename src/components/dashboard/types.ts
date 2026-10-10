@@ -10,8 +10,8 @@ export type Board = {
   id: string;
   name: string;
   description?: string;
-  // Has a share link (boards.share_token is set)
-  shared: boolean;
+  // The token in its read-only link, /s/<token>, while it's shared (boards.share_token)
+  shareToken: string | null;
   // When a post was last added or removed, or the board renamed (see the board_activity migration)
   updatedAt: string;
   items: { post: string; note?: string; addedAt: string }[];

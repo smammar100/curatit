@@ -21,17 +21,6 @@ export function AuthField({ id, label, aside, ...input }: { id: string; label: s
   );
 }
 
-// "or" between the provider button and the email form
-export function OrDivider() {
-  return (
-    <div className="flex items-center gap-3 text-xs text-base-400" role="separator">
-      <span className="h-px flex-1 bg-base-200" />
-      or
-      <span className="h-px flex-1 bg-base-200" />
-    </div>
-  );
-}
-
 // A problem with the form, read out as soon as it appears. The palette has no red and accent is
 // for interaction, so it's a quiet panel with an icon rather than a coloured one.
 export function AuthNotice({ children }: { children: ReactNode }) {

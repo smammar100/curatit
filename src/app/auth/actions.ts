@@ -1,9 +1,9 @@
 "use server";
 
-// The auth flow's server actions. Each runs with the per-request Supabase client, so the
-// session cookies it sets travel back with the response. Links Supabase emails, and Google's
-// redirect, come back through /auth/callback, which exchanges the ?code= for a session (PKCE:
-// it has to be the browser that started the flow).
+// The auth flow's server actions (email and password; Google sign-in was taken out for now).
+// Each runs with the per-request Supabase client, so the session cookies it sets travel back
+// with the response. The links Supabase emails come back through /auth/callback, which
+// exchanges the ?code= for a session (PKCE: it has to be the browser that started the flow).
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { authMessage, safeNext } from "@/lib/auth";
@@ -57,31 +57,6 @@ export async function resendConfirmation(_: AuthState, form: FormData): Promise<
     options: { emailRedirectTo: await callback(safeNext(form.get("next"))) },
   });
   return error ? { error: authMessage(error.code), sent: email } : { sent: email };
-}
-
-// Whether a sign-in provider is switched on in the project, from Auth's public settings
-async function providerEnabled(provider: string) {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`, {
-      headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY! },
-      next: { revalidate: 300 },
-    });
-    const settings = (await response.json()) as { external?: Record<string, boolean> };
-    return !!settings.external?.[provider];
-  } catch {
-    return true;
-  }
-}
-
-export async function signInWithGoogle(_: AuthState, form: FormData): Promise<AuthState> {
-  // A disabled provider would otherwise land the visitor on Supabase's raw JSON error
-  if (!(await providerEnabled("google"))) return { error: authMessage("provider_disabled") };
-  const { data, error } = await (await supabase()).auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: await callback(safeNext(form.get("next"))) },
-  });
-  if (error || !data.url) return { error: authMessage(error?.code) };
-  redirect(data.url);
 }
 
 export async function requestPasswordReset(_: AuthState, form: FormData): Promise<AuthState> {
