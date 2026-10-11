@@ -77,43 +77,86 @@ export type Perception = z.infer<typeof Perception>;
 const Label = (dimension: Parameters<typeof slugs>[0]) => z.object({ slug: enumOf(dimension), evidence: refs });
 
 // A creative decision (Creative Intelligence 2.1): one specific, observable choice that shapes how
-// the post communicates, with what was done, why it might work, the transferable principle, when
-// to use it and when not, and the slides that show it. A post gets one to five, never padded.
+// the post communicates, with what was done, why it might work, the transferable principle, and
+// the slides that show it. A post gets one to five, never padded. From 3.0 each is one technique
+// with a short explanation shown first and a watch-out; when to use the idea moved to the post's
+// `application`, so use_when and avoid_when are only in analyses written before.
 export const CreativeDecision = z.object({
   // A short technique, written as an instruction ("Lead with a verdict, then show the comparison")
   title: text(90),
+  // 3.0: what the choice is and why it matters, in one or two sentences, shown before the rest
+  explanation: text(240).optional(),
   // What the designer did, from visible evidence
   observation: text(300),
   // Why it might work: a hedged mechanism of attention, comprehension or storytelling
   rationale: text(300),
   // The design rule underneath, in one sentence someone could reuse
   principle: text(200),
-  use_when: text(200),
-  avoid_when: text(200),
+  use_when: text(200).optional(),
+  avoid_when: text(200).optional(),
+  // 3.0: what this choice costs or risks in this post, or null when nothing notable
+  watch_out: text(200).nullable().optional(),
   evidence: refs,
   confidence: z.enum(["high", "medium", "low"]),
 });
 export type CreativeDecision = z.infer<typeof CreativeDecision>;
 
+// What synthesis writes from 3.0 (prompt 2026.10.11-4): one technique, short enough to scan
+const CreativeDecisionOutput = z.object({
+  title: text(70),
+  explanation: text(220),
+  observation: text(220),
+  rationale: text(220),
+  principle: text(160),
+  watch_out: text(180).nullable(),
+  evidence: refs,
+  confidence: z.enum(["high", "medium", "low"]),
+});
+
 // A check on what a data-driven creative (charts, statistics, prices, financial, health or
-// scientific claims, comparisons) shows, apart from how well it's designed. "unverified" when the
-// post itself can't settle it; nothing here is independently fact-checked.
+// scientific claims, comparisons) shows, apart from how well it's designed. Nothing here is
+// independently fact-checked. From 3.0 the status says what kind of statement it is: "observed"
+// (a fact about what the creative shows), "potential_concern" (something that could mislead) or
+// "cannot_verify" (a figure or claim the post doesn't let anyone check). A "verified" status is
+// reserved for real verification against a source, which the pipeline never does. Analyses
+// written before 3.0 say "sound", "concern" or "unverified"; the page reads them as observed,
+// potential concern and cannot verify.
+export const INTEGRITY_STATUS = ["observed", "potential_concern", "cannot_verify"] as const;
 export const IntegrityNote = z.object({
   // What was checked: "Start values", "Time period", "Baseline", "Inflation", "Sources and disclaimers"…
   aspect: text(60),
-  status: z.enum(["sound", "concern", "unverified"]),
+  status: z.enum(["sound", "concern", "unverified", ...INTEGRITY_STATUS]),
   note: text(240),
   evidence: refs,
 });
 export type IntegrityNote = z.infer<typeof IntegrityNote>;
+const IntegrityNoteOutput = IntegrityNote.extend({ aspect: text(48), status: z.enum(INTEGRITY_STATUS), note: text(200) });
 
-// How the visual system is actually executed, a sentence or two per dimension the tags can't say
+// How the visual system is actually executed, a sentence per dimension the tags can't say.
+// Typography and devices joined in 3.0
 const VisualNotes = z.object({
   composition: text(240).nullable(),
+  typography: text(240).nullable().optional(),
   colour: text(240).nullable(),
   imagery: text(240).nullable(),
+  devices: text(240).nullable().optional(),
   branding: text(240).nullable(),
 });
+const VisualNotesOutput = z.object({
+  composition: text(180).nullable(),
+  typography: text(180).nullable(),
+  colour: text(180).nullable(),
+  imagery: text(180).nullable(),
+  devices: text(180).nullable(),
+  branding: text(180).nullable(),
+});
+
+// A colour the post is built on and the job it does ("Background", "Headline", "Accent: the
+// stocks line"). The hex is one measured from the slides' pixels (colours.ts), never guessed
+export const ColourRole = z.object({ hex: z.string().regex(/^#[0-9a-fA-F]{6}$/), role: text(48) });
+
+// When the idea is worth using and when it isn't (3.0), for the Apply tab
+const Application = z.object({ when_to_use: some(text(160), 1, 3), when_not_to_use: some(text(160), 1, 3) });
 
 export const CreativeDna = z.object({
   schema_version: z.literal(SCHEMA_VERSION),
@@ -171,14 +214,30 @@ export const CreativeDna = z.object({
   visual_notes: VisualNotes.optional(),
   // The idea as a reusable sequence of moves: "Bold claim → Clear comparison → Visual evidence"
   creative_formula: text(160).nullable().optional(),
+  // Creative Intelligence 3.0 (prompt 2026.10.11-4), optional for the same reason:
+  // the strategy in one line of 8 to 14 words, and a sentence or two after it
+  strategy_headline: text(110).optional(),
+  strategy_summary: text(280).optional(),
+  colour_roles: some(ColourRole, 0, 6).optional(),
+  // How the words work, for a brief: voice, length, what the headline does, what the caption adds
+  copywriting: text(240).nullable().optional(),
+  application: Application.optional(),
 });
 export type CreativeDna = z.infer<typeof CreativeDna>;
 
-// What synthesis must return from 2.1 on: the same Creative DNA with the new parts required
+// What synthesis must return from 3.0 on: the same Creative DNA with the new parts required and
+// the reading text kept short (headline 8 to 14 words, explanations in a sentence or two)
 export const CreativeDnaOutput = CreativeDna.extend({
-  creative_decisions: some(CreativeDecision, 1, 5),
-  integrity_notes: some(IntegrityNote, 0, 8),
-  visual_notes: VisualNotes,
-  creative_formula: text(160).nullable(),
+  creative_decisions: some(CreativeDecisionOutput, 1, 4),
+  integrity_notes: some(IntegrityNoteOutput, 0, 8),
+  visual_notes: VisualNotesOutput,
+  creative_formula: text(140).nullable(),
+  strategy_headline: text(110),
+  strategy_summary: text(240),
+  colour_roles: some(ColourRole, 0, 6),
+  copywriting: text(220).nullable(),
+  application: Application,
+  takeaways: some(text(180), 3, 5),
+  adaptation_ideas: some(text(220), 1, 2),
 });
 export type CreativeDnaOutput = z.infer<typeof CreativeDnaOutput>;

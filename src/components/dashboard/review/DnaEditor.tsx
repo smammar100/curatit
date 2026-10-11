@@ -149,6 +149,19 @@ export default function DnaEditor({
             <span className="mb-1.5 block text-caption font-medium text-base-500">Concept</span>
             <input value={dna.concept} maxLength={160} onChange={(e) => set({ concept: e.target.value })} className={field} />
           </label>
+          {/* Creative Intelligence 3.0: the line the post page leads with */}
+          {dna.strategy_headline !== undefined && (
+            <>
+              <label className="block">
+                <span className="mb-1.5 block text-caption font-medium text-base-500">Strategy headline (8 to 14 words)</span>
+                <input value={dna.strategy_headline} maxLength={110} onChange={(e) => set({ strategy_headline: e.target.value })} className={field} />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-caption font-medium text-base-500">Strategy summary (one or two sentences)</span>
+                <textarea rows={2} value={dna.strategy_summary ?? ""} maxLength={280} onChange={(e) => set({ strategy_summary: e.target.value })} className={field} />
+              </label>
+            </>
+          )}
           <label className="block">
             <span className="mb-1.5 block text-caption font-medium text-base-500">Summary</span>
             <textarea rows={4} value={dna.creative_summary} maxLength={600} onChange={(e) => set({ creative_summary: e.target.value })} className={field} />

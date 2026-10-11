@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { clone, FIXTURE_DNA, FIXTURE_PERCEPTION, FIXTURE_POST } from "./fixtures";
-import { needsReview, validateDna, validatePerception } from "./validate";
+import { clone, FIXTURE_DNA, FIXTURE_PERCEPTION, FIXTURE_POST, legacy21 } from "./fixtures";
+import { needsReview, periodMiscounts, validateDna, validatePerception, yearRanges } from "./validate";
 
 const post = { caption: FIXTURE_POST.caption, expectedSlides: FIXTURE_POST.expectedSlides };
 const codes = (list: { code: string }[]) => list.map((issue) => issue.code);
@@ -239,5 +239,91 @@ describe("validateDna", () => {
     dna.quality.needs_review = false;
     expect(needsReview({ errors: [], warnings: [] }, dna)).toBe(false);
     expect(needsReview({ errors: [], warnings: [{ code: "uncertain", message: "" }] }, dna)).toBe(true);
+  });
+});
+
+describe("validateDna: Creative Intelligence 3.0", () => {
+  it("still accepts an analysis written before 3.0", () => {
+    expect(validateDna(legacy21(FIXTURE_DNA), post, FIXTURE_PERCEPTION).errors).toEqual([]);
+  });
+
+  it("sends back a decision that's two techniques", () => {
+    const dna = clone(FIXTURE_DNA);
+    dna.creative_decisions![0].title = "Start all lines together and label their ends";
+    expect(codes(validateDna(dna, post).errors)).toContain("compound_decision");
+    // "and" between two things, not two moves, is fine
+    dna.creative_decisions![0].title = "Set the name in black and white capitals";
+    expect(codes(validateDna(dna, post).errors)).not.toContain("compound_decision");
+  });
+
+  it("warns when two decisions say the same thing", () => {
+    const dna = clone(FIXTURE_DNA);
+    dna.creative_decisions![1] = { ...dna.creative_decisions![1], title: "Put the promise alone on the cover slide" };
+    expect(codes(validateDna(dna, post).warnings)).toContain("duplicate_decision");
+  });
+
+  it("holds the strategy headline to 8 to 14 words, give or take, and explanations to two sentences", () => {
+    const dna = clone(FIXTURE_DNA);
+    dna.strategy_headline = "Promise first";
+    expect(codes(validateDna(dna, post).errors)).toContain("too_long");
+    const long = clone(FIXTURE_DNA);
+    long.creative_decisions![0].explanation = "The cover is bold. It has one line. Nothing else is on it.";
+    expect(codes(validateDna(long, post).errors)).toContain("too_long");
+  });
+
+  it("only lets colour roles use colours measured on a slide", () => {
+    const dna = clone(FIXTURE_DNA);
+    expect(validateDna(dna, post, FIXTURE_PERCEPTION).errors).toEqual([]);
+    dna.colour_roles = [{ hex: "#ff00ff", role: "Accent" }];
+    const errors = validateDna(dna, post, FIXTURE_PERCEPTION).errors;
+    expect(codes(errors)).toEqual(["colour_not_measured"]);
+    expect(errors[0].message).toContain("#1f7a4d");
+    // A near miss from copying is fine
+    dna.colour_roles = [{ hex: "#1f7b4e", role: "Background" }];
+    expect(validateDna(dna, post, FIXTURE_PERCEPTION).errors).toEqual([]);
+  });
+
+  it("never lets a data check call a figure accurate or verified", () => {
+    const dna = clone(FIXTURE_DNA);
+    dna.integrity_notes = [{ aspect: "Figures", status: "observed", note: "The end values are accurate.", evidence: ["slide:1"] }];
+    expect(codes(validateDna(dna, post).errors)).toContain("overclaims_verification");
+    dna.integrity_notes[0].note = "The end values can't be checked from the post; they are not verified.";
+    expect(codes(validateDna(dna, post).errors)).not.toContain("overclaims_verification");
+  });
+
+  // The Wealthsimple chart: the copy says "the next 11 years" and the axis runs 2015 to 2025
+  it("catches a period counted by its labels, unless it's the post's own claim", () => {
+    const perception = clone(FIXTURE_PERCEPTION);
+    perception.slides[1].visible_text.body = "Value of TFSA\n2015 2016 2017 2018 2019 2020 2021 2022 2023 2024 2025";
+    const dna = clone(FIXTURE_DNA);
+    dna.concept = "A three-line chart showing $10,000 growing in stocks but shrinking in cash over 11 years";
+    const errors = validateDna(dna, post, perception).errors;
+    expect(codes(errors)).toContain("period_miscount");
+    expect(errors.find((e) => e.code === "period_miscount")?.message).toContain("10 years elapse");
+
+    dna.concept = "A three-line chart showing $10,000 growing in stocks but shrinking in cash from 2015 to 2025";
+    dna.integrity_notes = [{ aspect: "Time period", status: "potential_concern", note: "The copy says 11 years, but the axis runs 2015 to 2025, 10 years between labels.", evidence: ["slide:1"] }];
+    expect(codes(validateDna(dna, post, perception).errors)).not.toContain("period_miscount");
+  });
+
+  it("reads year ranges from dashes and from a chart's axis, and counts years in words", () => {
+    expect(yearRanges(["From 2015–2025", "Axis 2019 2020 2021 2022"])).toEqual([
+      [2015, 2025],
+      [2019, 2022],
+    ]);
+    expect(periodMiscounts("Cash shrank over eleven years.", [[2015, 2025]])).toEqual([{ said: 11, range: [2015, 2025] }]);
+    expect(periodMiscounts("Cash shrank over 10 years.", [[2015, 2025]])).toEqual([]);
+    expect(periodMiscounts("A 4-year span.", [[2019, 2022]])).toEqual([{ said: 4, range: [2019, 2022] }]);
+    expect(periodMiscounts("It shows 11 labelled years.", [[2015, 2025]])).toEqual([]);
+    expect(periodMiscounts("Over 11 years.", [])).toEqual([]);
+  });
+
+  it("checks the new prose for performance claims, process talk and distortion", () => {
+    const dna = clone(FIXTURE_DNA);
+    dna.application!.when_to_use = ["Make the disclaimer smaller so it doesn't compete with the chart."];
+    dna.strategy_summary = "This high-converting layout went viral.";
+    const found = codes(validateDna(dna, post).errors);
+    expect(found).toContain("recommends_distortion");
+    expect(found).toContain("performance_claim");
   });
 });

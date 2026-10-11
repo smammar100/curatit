@@ -67,6 +67,8 @@ function synthesize(request: GenerateRequest): CreativeDna {
   ];
   dna.evidence = [{ ref: "slide:0", observation: "A single headline on a flat ground", quote: null }];
   dna.quality = { image_analysis_complete: processed === expected, expected_slides: expected, processed_slides: processed, needs_review: true, uncertainties: [] };
-  dna.creative_decisions = [{ ...dna.creative_decisions![0], evidence: ["slide:0"] }];
+  dna.creative_decisions = dna.creative_decisions!.map((decision) => ({ ...decision, evidence: ["slide:0"] }));
+  // The mock sees no pixels, so its colour roles are the first slide's recorded colours
+  dna.colour_roles = (/"hex":\s*\[\s*"(#[0-9a-f]{6})"/i.exec(request.prompt)?.[1] ? [{ hex: /"hex":\s*\[\s*"(#[0-9a-f]{6})"/i.exec(request.prompt)![1], role: "Background" }] : []);
   return dna;
 }

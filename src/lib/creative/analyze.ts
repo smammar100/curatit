@@ -3,10 +3,12 @@
 // the slides again and writes the Creative DNA, checking those records, the caption and the
 // metadata against the images. Every answer goes through the zod contract and the deterministic
 // validator; one that fails gets a single repair attempt with the problems spelled out, and then
-// the post fails as invalid output for a person to look at. Two things are settled here rather
-// than by the model: a blank frame is recorded the same way every time, and each slide's role is
-// the one the narrative gives it. Nothing here writes to the database: the worker saves the result.
+// the post fails as invalid output for a person to look at. Three things are settled here rather
+// than by the model: a blank frame is recorded the same way every time, a slide's hex colours are
+// the ones measured from its pixels, and each slide's role is the one the narrative gives it.
+// Nothing here writes to the database: the worker saves the result.
 import { z } from "zod";
+import type { Swatch } from "./colours";
 import { fingerprint } from "./fingerprint";
 import { addUsage, ModelError, NO_USAGE, type GenerateRequest, type ImageInput, type ModelAdapter, type Usage } from "./model";
 import { PROMPT_VERSION } from "./pipeline";
@@ -139,6 +141,13 @@ export function blankSlide(slide: SlideObservation, wasVideo: boolean): SlideObs
   };
 }
 
+// The slide's hex values are the colours measured from its pixels, largest share first; the
+// model's colour families (words) stay. Without a measurement the model's own values are kept
+export function withMeasuredColours(slide: SlideObservation, colours: Swatch[] | undefined): SlideObservation {
+  if (!colours?.length) return slide;
+  return { ...slide, palette: { ...slide.palette, hex: colours.slice(0, 5).map((colour) => colour.hex) } };
+}
+
 function sameSlides(output: Perception, positions: number[]): Verdict {
   const got = output.slides.map((slide) => slide.position).sort((a, b) => a - b);
   const want = [...positions].sort((a, b) => a - b);
@@ -183,12 +192,14 @@ export async function analyzePost(options: {
     answers.push(value);
   }
   const blank = new Map(images.filter((image) => image.blank).map((image) => [image.position, image.wasVideo]));
+  const measured = new Map(images.map((image) => [image.position, image.colours]));
   const perceived: Perception = {
     ...answers[0],
     slides: answers
       .flatMap((answer) => answer.slides)
       .sort((a, b) => a.position - b.position)
-      .map((slide) => (blank.has(slide.position) ? blankSlide(slide, blank.get(slide.position)!) : slide)),
+      .map((slide) => (blank.has(slide.position) ? blankSlide(slide, blank.get(slide.position)!) : slide))
+      .map((slide) => withMeasuredColours(slide, measured.get(slide.position))),
     conflicts: [...new Set(answers.flatMap((answer) => answer.conflicts))].slice(0, 6),
   };
   const read = validatePerception(perceived, post);

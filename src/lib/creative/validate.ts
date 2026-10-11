@@ -6,6 +6,7 @@
 // the caption pasted back, filler, or about the pipeline rather than the post ("only the notes
 // were available"), which a designer would read. Errors mean the output can't be stored as a valid draft;
 // warnings mean it can, flagged for review.
+import { distance, rgbOf } from "./colours";
 import type { CreativeDna, EvidenceRef, Perception } from "./schema";
 
 export type Issue = { code: string; message: string; path?: string };
@@ -67,6 +68,57 @@ export function lintProse(text: string) {
     DISTORTION.test(text) && "recommends_distortion",
   ].filter((code): code is string => !!code);
 }
+
+// Creative Intelligence 3.0: the checks that keep the analysis honest and short.
+
+// A decision that's two techniques: "Start all lines together and label their ends"
+const SECOND_MOVE =
+  /\b(?:and|then|while|plus)\s+(?:also\s+)?(?:label|start|use|put|set|show|add|make|keep|let|give|lead|end|place|crop|repeat|pair|contrast|frame|stack|split|anchor|break|move|run|open|close|state|hold|save|fill|shoot|light|tint|colou?r|cut|name|number|mark|caption|highlight|annotate|align|centre|center|size|scale|layer|overlap|reveal|hide|swap|switch|echo|mirror|bookend|sign)(?:s|ed|ing)?\b/i;
+
+// A figure called checked when nothing was checked
+const OVERCLAIM = /\b(?:is|are|was|were|looks?|appears?|seems?)\s+(?!not\b)(?:(?:fully|broadly|largely|entirely)\s+)?(?:accurate|correct|verified|confirmed|fact-checked)\b|\b(?:verified|confirmed|fact-checked) (?:figures?|values?|numbers?|data)\b/i;
+
+// A period miscounted: "11 years" for 2015–2025, where 10 years elapse between the labels.
+// Ranges come from "2015–2025" anywhere in the post or the analysis, and from a slide that lists
+// three or more years (a chart's axis). A sentence that attributes the number to the post (a
+// quote, "the copy says", "labelled years") is left alone
+const YEAR_RANGE = /\b((?:19|20)\d{2})\s*(?:–|—|-|to|through|until)\s*((?:19|20)\d{2})\b/g;
+const NUMBER_WORDS: Record<string, number> = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, "twenty-five": 25, thirty: 30 };
+const YEARS = /\b(\d{1,2}|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty(?:-five)?|thirty)(?:[- ]years?\b|-year\b)/gi;
+const ATTRIBUTED = /["“”'‘’]|\b(?:says?|said|claims?|states?|stated|copy|headline|body text|caption|labell?ed|calendar|data points?)\b/i;
+
+export function yearRanges(texts: string[]) {
+  const ranges = new Map<string, [number, number]>();
+  for (const text of texts) {
+    for (const match of text.matchAll(YEAR_RANGE)) {
+      const [a, b] = [Number(match[1]), Number(match[2])];
+      if (b > a && b - a < 100) ranges.set(`${a}-${b}`, [a, b]);
+    }
+    const years = [...new Set([...text.matchAll(/\b(?:19|20)\d{2}\b/g)].map((m) => Number(m[0])))];
+    if (years.length >= 3) {
+      const [a, b] = [Math.min(...years), Math.max(...years)];
+      if (b - a < 100) ranges.set(`${a}-${b}`, [a, b]);
+    }
+  }
+  return [...ranges.values()];
+}
+
+export function periodMiscounts(prose: string, ranges: [number, number][]) {
+  const out: { said: number; range: [number, number] }[] = [];
+  if (!ranges.length) return out;
+  for (const sentence of prose.split(/(?<=[.!?])\s+/)) {
+    if (ATTRIBUTED.test(sentence)) continue;
+    for (const match of sentence.matchAll(YEARS)) {
+      const said = NUMBER_WORDS[match[1].toLowerCase()] ?? Number(match[1]);
+      const range = ranges.find(([a, b]) => said === b - a + 1);
+      if (range && !ranges.some(([a, b]) => said === b - a)) out.push({ said, range });
+    }
+  }
+  return out;
+}
+
+const sentenceCount = (s: string) => s.split(/(?<=[.!?])\s+(?=[A-Z"“])/).filter((part) => part.trim()).length;
+const wordCount = (s: string) => s.split(/\s+/).filter(Boolean).length;
 
 // Advice that fits every post and so says nothing about this one
 const GENERIC_TAKEAWAYS = [
@@ -162,9 +214,66 @@ export function validateDna(dna: CreativeDna, post: PostInput, perception?: Perc
   ];
   for (const [list, path] of allRefs) checkRefs(list, post, path, verdict);
 
-  // Decisions are distinct, and a chart or a number on a slide gets its integrity checked
-  const titles = (dna.creative_decisions ?? []).map((d) => normalise(d.title));
-  if (new Set(titles).size !== titles.length) verdict.warnings.push({ code: "duplicate_decision", message: "Two creative decisions have the same title", path: "creative_decisions" });
+  // Decisions are distinct (one technique each, no two about the same thing), and a chart or a
+  // number on a slide gets its integrity checked
+  const decisions = dna.creative_decisions ?? [];
+  decisions.forEach((d, i) => {
+    if (decisions.slice(0, i).some((e) => overlap(d.title, e.title) >= 0.75 || overlap(d.principle, e.principle) >= 0.8)) {
+      verdict.warnings.push({ code: "duplicate_decision", message: `Decision ${i + 1} repeats an earlier one`, path: `creative_decisions.${i}` });
+    }
+    if (d.explanation !== undefined && SECOND_MOVE.test(d.title)) {
+      verdict.errors.push({ code: "compound_decision", message: `"${d.title}" is two techniques: make each its own decision if both matter, otherwise keep the one that matters more`, path: `creative_decisions.${i}.title` });
+    }
+    if (d.explanation !== undefined && sentenceCount(d.explanation) > 2) {
+      verdict.errors.push({ code: "too_long", message: "The explanation is over two sentences; say it in one or two", path: `creative_decisions.${i}.explanation` });
+    }
+  });
+  if (dna.strategy_headline !== undefined) {
+    const n = wordCount(dna.strategy_headline);
+    if (n < 6 || n > 16) verdict.errors.push({ code: "too_long", message: `The strategy headline is ${n} words; write 8 to 14`, path: "strategy_headline" });
+  }
+  if (dna.strategy_summary !== undefined && sentenceCount(dna.strategy_summary) > 2) {
+    verdict.errors.push({ code: "too_long", message: "The strategy summary is over two sentences", path: "strategy_summary" });
+  }
+
+  // Colours come from the pixels: every role's hex is one measured on a slide
+  const measured = (perception?.slides ?? []).flatMap((slide) => slide.palette.hex);
+  if (measured.length) {
+    (dna.colour_roles ?? []).forEach((colour, i) => {
+      if (!measured.some((hex) => distance(rgbOf(hex.toLowerCase()), rgbOf(colour.hex.toLowerCase())) <= 30)) {
+        verdict.errors.push({ code: "colour_not_measured", message: `${colour.hex} isn't one of the measured colours (${[...new Set(measured)].slice(0, 12).join(", ")}); copy one of those`, path: `colour_roles.${i}.hex` });
+      }
+    });
+  }
+
+  // Nothing is presented as checked, and no period is miscounted
+  (dna.integrity_notes ?? []).forEach((n, i) => {
+    if (OVERCLAIM.test(n.note)) verdict.errors.push({ code: "overclaims_verification", message: "Calls a figure accurate, correct or verified; nothing here was checked against a source. Say what the post shows or states instead", path: `integrity_notes.${i}.note` });
+  });
+  const postText = [post.caption, ...(perception?.slides ?? []).map((slide) => `${slide.visible_text.headline ?? ""}\n${slide.visible_text.body ?? ""}`)];
+  const analysisText: [string | null | undefined, string][] = [
+    [dna.concept, "concept"],
+    [dna.strategy_headline, "strategy_headline"],
+    [dna.strategy_summary, "strategy_summary"],
+    [dna.creative_summary, "creative_summary"],
+    ...decisions.flatMap((d, i): [string | undefined, string][] => [
+      [d.explanation, `creative_decisions.${i}.explanation`],
+      [d.observation, `creative_decisions.${i}.observation`],
+    ]),
+    ...(dna.integrity_notes ?? []).map((n, i): [string, string] => [n.note, `integrity_notes.${i}.note`]),
+  ];
+  const ranges = yearRanges([...postText, ...analysisText.map(([s]) => s ?? "")]);
+  for (const [s, path] of analysisText) {
+    for (const miss of periodMiscounts(s ?? "", ranges)) {
+      const [a, b] = miss.range;
+      verdict.errors.push({
+        code: "period_miscount",
+        message: `"${miss.said} years" for ${a}–${b}: ${b - a} years elapse between the first and last label (${miss.said} labelled years). Say which, or attribute the number to the post if it's the post's own claim`,
+        path,
+      });
+    }
+  }
+
   const charted = perception?.slides.some((slide) => slide.imagery.includes("data-visualization")) ?? false;
   if (dna.integrity_notes !== undefined && charted && !dna.integrity_notes.length) {
     verdict.errors.push({ code: "integrity_missing", message: "A slide shows data or a chart, but integrity_notes is empty: check what it shows (start values, time period, axes, baseline, units, sources and disclaimers…)", path: "integrity_notes" });
@@ -193,8 +302,11 @@ export function validateDna(dna: CreativeDna, post: PostInput, perception?: Perc
   }
 
   // No performance claims the data can't support
-  const prose: [string, string][] = [
+  const present = (list: [string | null | undefined, string][]) => list.filter((entry): entry is [string, string] => !!entry[0]);
+  const prose: [string, string][] = present([
     [dna.concept, "concept"],
+    [dna.strategy_headline, "strategy_headline"],
+    [dna.strategy_summary, "strategy_summary"],
     [dna.creative_summary, "creative_summary"],
     [dna.content_intent, "content_intent"],
     [dna.narrative.arc, "narrative.arc"],
@@ -202,28 +314,30 @@ export function validateDna(dna: CreativeDna, post: PostInput, perception?: Perc
     ...dna.creative_rationale.map((r, i): [string, string] => [r.hypothesis, `creative_rationale.${i}`]),
     ...dna.attention_mechanisms.map((m, i): [string, string] => [m.statement, `attention_mechanisms.${i}`]),
     ...dna.takeaways.map((s, i): [string, string] => [s, `takeaways.${i}`]),
-    ...(dna.creative_decisions ?? []).flatMap((d, i): [string, string][] => [
+    ...(dna.creative_decisions ?? []).flatMap((d, i): [string | undefined, string][] => [
       [d.title, `creative_decisions.${i}.title`],
+      [d.explanation, `creative_decisions.${i}.explanation`],
       [d.observation, `creative_decisions.${i}.observation`],
       [d.rationale, `creative_decisions.${i}.rationale`],
       [d.principle, `creative_decisions.${i}.principle`],
     ]),
-  ];
+  ]);
   for (const [s, path] of prose) {
     if (PERFORMANCE_CLAIM.test(s)) verdict.errors.push({ code: "performance_claim", message: "Claims an effect the data can't show", path });
   }
 
   // What Curatit recommends never distorts data or hides a disclosure
-  const advice: [string, string][] = [
+  const advice: [string, string][] = present([
     ...dna.takeaways.map((s, i): [string, string] => [s, `takeaways.${i}`]),
     ...dna.adaptation_ideas.map((s, i): [string, string] => [s, `adaptation_ideas.${i}`]),
-    ...(dna.creative_decisions ?? []).flatMap((d, i): [string, string][] => [
+    ...(dna.creative_decisions ?? []).flatMap((d, i): [string | undefined, string][] => [
       [d.title, `creative_decisions.${i}.title`],
       [d.principle, `creative_decisions.${i}.principle`],
       [d.use_when, `creative_decisions.${i}.use_when`],
     ]),
-    ...(dna.creative_formula ? [[dna.creative_formula, "creative_formula"] as [string, string]] : []),
-  ];
+    ...(dna.application?.when_to_use ?? []).map((s, i): [string, string] => [s, `application.when_to_use.${i}`]),
+    [dna.creative_formula, "creative_formula"],
+  ]);
   for (const [s, path] of advice) {
     if (DISTORTION.test(s)) {
       verdict.errors.push({ code: "recommends_distortion", message: "Recommends distorting data or playing down a disclosure; describe the tradeoff instead of recommending it", path });
@@ -240,13 +354,18 @@ export function validateDna(dna: CreativeDna, post: PostInput, perception?: Perc
     ...dna.constraints_or_uncertainties.map((s, i): [string, string] => [s, `constraints_or_uncertainties.${i}`]),
     ...dna.quality.uncertainties.map((s, i): [string, string] => [s, `quality.uncertainties.${i}`]),
     ...dna.evidence.map((e, i): [string, string] => [e.observation, `evidence.${i}.observation`]),
-    ...(dna.creative_decisions ?? []).flatMap((d, i): [string, string][] => [
-      [d.use_when, `creative_decisions.${i}.use_when`],
-      [d.avoid_when, `creative_decisions.${i}.avoid_when`],
+    ...(dna.creative_decisions ?? []).flatMap((d, i): [string | null, string][] => [
+      [d.use_when ?? null, `creative_decisions.${i}.use_when`],
+      [d.avoid_when ?? null, `creative_decisions.${i}.avoid_when`],
+      [d.watch_out ?? null, `creative_decisions.${i}.watch_out`],
     ]),
     ...(dna.integrity_notes ?? []).map((n, i): [string, string] => [n.note, `integrity_notes.${i}.note`]),
-    ...Object.entries(dna.visual_notes ?? {}).map(([key, s]): [string | null, string] => [s, `visual_notes.${key}`]),
+    ...Object.entries(dna.visual_notes ?? {}).map(([key, s]): [string | null, string] => [s ?? null, `visual_notes.${key}`]),
     [dna.creative_formula ?? null, "creative_formula"],
+    [dna.copywriting ?? null, "copywriting"],
+    ...(dna.application?.when_to_use ?? []).map((s, i): [string, string] => [s, `application.when_to_use.${i}`]),
+    ...(dna.application?.when_not_to_use ?? []).map((s, i): [string, string] => [s, `application.when_not_to_use.${i}`]),
+    ...(dna.colour_roles ?? []).map((c, i): [string, string] => [c.role, `colour_roles.${i}.role`]),
   ];
   for (const [s, path] of readable) {
     if (!s) continue;

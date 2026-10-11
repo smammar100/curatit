@@ -1,14 +1,17 @@
-// Creative Intelligence evaluation (2.1): Curatit's analysis of a post beside an ordinary visual
-// critique of the same images by the same model, for people to rate blind with
-// docs/creative-eval/rubric.md. Curatit's side is the post's latest stored analysis (this never
-// runs the pipeline); the ordinary side asks the local Claude Code CLI, on your subscription, the
-// question anyone could ask a chat assistant. A and B are shuffled per post; the key is in key.json.
+// Creative Intelligence evaluation (3.0): for each post, the newest stored analysis ("new"), the
+// one before it from an earlier prompt ("old", when there is one) and an ordinary visual critique
+// of the same images by the same model ("generic"), for people to rate blind with
+// docs/creative-eval/rubric.md. The Curatit sides are stored versions (this never runs the
+// pipeline) shown as the post page shows them; the ordinary side asks the local Claude Code CLI,
+// on your subscription, the question anyone could ask a chat assistant. The sides are labelled A,
+// B (and C) in an order fixed per post; the key is in key.json.
 //
 //   npm run creative:compare -- --post <id> [<id>…]           some posts
 //   npm run creative:compare -- --set docs/creative-eval/eval-set.json [--limit 6]
 //   options: --out data/creative-eval  --budget 2 (US$, the ordinary side)  --model sonnet
+//            --no-generic (Curatit's two versions only, nothing spent)
 //
-// Reads .env.local (SUPABASE_SECRET_KEY). Writes <out>/<short code>.md (the two analyses, blind),
+// Reads .env.local (SUPABASE_SECRET_KEY). Writes <out>/<short code>.md (the analyses, blind),
 // ratings.csv (a row per post and side for raters), metrics.json (deterministic counts and checks
 // per side) and key.json (which side is which; keep it from raters until they're done).
 import { createHash } from "node:crypto";
@@ -17,7 +20,7 @@ import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { ClaudeCliAdapter } from "@/lib/creative/claudeCli";
 import { prepareImages } from "@/lib/creative/media";
-import { evidenceGroups, toPublicAnalysis, type PublicAnalysis, type SlideRecord } from "@/lib/creative/publicAnalysis";
+import { evidenceGroups, integritySummary, STATUS_LABEL, toPublicAnalysis, type PublicAnalysis, type SlideRecord } from "@/lib/creative/publicAnalysis";
 import { createAdminClient, SupabaseStore } from "@/lib/creative/store";
 import { lintProse } from "@/lib/creative/validate";
 
@@ -51,29 +54,34 @@ const genericPrompt = (files: string[], caption: string) =>
     "Give me a design critique of this post: what works, why, and what I could learn from it for my own work.",
   ].join("\n");
 
-// Curatit's side as text a rater reads: what the post page shows, nothing more
+// A Curatit side as text a rater reads: what the post page shows in its three tabs, nothing more
 function curatitText(a: PublicAnalysis) {
   const refs = (evidence: Parameters<typeof evidenceGroups>[0]) => evidenceGroups(evidence).map((g) => g.label).join(", ");
-  const lines = [a.concept, ""];
+  const lines = [a.headline, ...(a.summary ? [a.summary] : []), ""];
   if (a.creativeDecisions.length) {
-    lines.push("Creative decisions:");
+    lines.push("Key creative decisions:");
     a.creativeDecisions.forEach((d, i) =>
       lines.push(
         `${i + 1}. ${d.title} (${refs(d.evidence)}${d.confidence === "high" ? "" : `, ${d.confidence} confidence`})`,
-        `   What they did: ${d.observation}`,
-        `   Why it might work: ${d.rationale}`,
+        `   ${d.explanation}`,
+        ...(d.observation ? [`   Observed: ${d.observation}`] : []),
+        `   Possible effect: ${d.effect}`,
         `   Principle: ${d.principle}`,
-        `   Use it when: ${d.useWhen}`,
-        `   Avoid it when: ${d.avoidWhen}`,
+        ...(d.watchOut ? [`   Watch out: ${d.watchOut}`] : []),
       ),
     );
   } else if (a.mechanisms.length) {
     lines.push("What it does:", ...a.mechanisms.map((m) => `- ${m.text} (${refs(m.evidence)})`));
+    if (a.hypotheses.length) lines.push("", "Why it might work:", ...a.hypotheses.map((h) => `- ${h.text}`));
   }
-  if (a.integrity.length) lines.push("", "Data checks:", ...a.integrity.map((n) => `- ${n.status}: ${n.aspect}. ${n.note}`));
-  if (a.hypotheses.length) lines.push("", "Why it might work:", ...a.hypotheses.map((h) => `- ${h.text}`));
+  if (a.integrity.length) lines.push("", `Data checks (${integritySummary(a.integrity)}):`, ...a.integrity.map((n) => `- ${STATUS_LABEL[n.status]}: ${n.aspect}. ${n.note}`));
+  const visual = a.visual.filter((part) => part.insight || part.chips.length);
+  if (visual.length) lines.push("", "Visual DNA:", ...visual.map((part) => `- ${part.title}: ${[part.insight, part.chips.join(", ")].filter(Boolean).join(" ")}`));
+  if (a.colours.length) lines.push(`- Colours: ${a.colours.map((c) => (c.role ? `${c.hex} (${c.role})` : c.hex)).join(", ")}`);
   if (a.formula) lines.push("", `Formula: ${a.formula}`);
-  if (a.takeaways.length) lines.push("", "How to apply:", ...a.takeaways.map((t, i) => `${i + 1}. ${t}`));
+  if (a.takeaways.length) lines.push("", "How to execute:", ...a.takeaways.map((t, i) => `${i + 1}. ${t}`));
+  if (a.application.whenToUse.length) lines.push("", "When to use:", ...a.application.whenToUse.map((t) => `- ${t}`));
+  if (a.application.whenNotToUse.length) lines.push("", "When not to use:", ...a.application.whenNotToUse.map((t) => `- ${t}`));
   if (a.adaptations.length) lines.push("", "Adapt it elsewhere:", ...a.adaptations.map((t) => `- ${t}`));
   if (a.caveats.length) lines.push("", "Caveats:", ...a.caveats.map((t) => `- ${t}`));
   return lines.join("\n").trim();
@@ -119,12 +127,13 @@ async function main() {
 
   const client = createAdminClient();
   const store = new SupabaseStore(client);
+  const withGeneric = !argv.includes("--no-generic");
   const adapter = new ClaudeCliAdapter({ model: value("model", process.env.CREATIVE_ANALYSIS_MODEL ?? "sonnet") });
-  await adapter.preflight();
+  if (withGeneric) await adapter.preflight();
   await mkdir(out, { recursive: true });
 
   const ratings = [["post", "side", ...RUBRIC, "notes"].join(",")];
-  const key: Record<string, { A: string; B: string }> = {};
+  const key: Record<string, Record<string, string>> = {};
   const allMetrics: Record<string, Record<string, ReturnType<typeof metrics>>> = {};
   let spent = 0;
 
@@ -140,47 +149,64 @@ async function main() {
     }
     const count = manifest.images.length;
 
-    // Curatit: the latest stored version, whatever its review state, with its own slide records
-    const { data: version } = await client
+    // Curatit: the newest stored version, whatever its review state ("new"), and the version the
+    // post page shows now ("old"; when that is the newest, the newest from an earlier prompt), each
+    // with its own slide records
+    const { data: versions } = await client
       .from("post_analysis_versions")
       .select("id, version_no, prompt_version, review_decision, creative_dna, image_analysis_complete, expected_slides, processed_slides")
       .eq("post_id", post.id)
       .order("version_no", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    let curatit = "(No Curatit analysis yet.)";
-    if (version) {
+      .limit(10);
+    const latest = versions?.[0] ?? null;
+    const { data: current } = await client.from("post_analyses").select("current_version_id").eq("post_id", post.id).maybeSingle();
+    const live = versions?.find((version) => version.id === current?.current_version_id && version.id !== latest?.id);
+    const earlier = live ?? versions?.find((version) => version.prompt_version !== latest?.prompt_version) ?? null;
+    const render = async (version: typeof latest) => {
+      if (!version) return null;
       const { data: rows } = await client.from("post_slide_analyses").select("version_id, position, observation").eq("post_id", post.id).eq("version_id", version.id);
       const analysis = toPublicAnalysis({ ...version, current_version_id: version.id }, (rows ?? []) as SlideRecord[], count);
-      if (analysis) curatit = curatitText(analysis);
-    }
+      return analysis ? curatitText(analysis) : null;
+    };
+    const sides: Record<string, string> = {};
+    const fresh = await render(latest);
+    if (fresh) sides.new = fresh;
+    const old = await render(earlier);
+    if (old) sides.old = old;
 
     // The ordinary critique: same model, same images, a plain question
-    const workdir = await mkdtemp(join(tmpdir(), "curatit-compare-"));
-    let generic = "";
-    try {
-      const images = await prepareImages(manifest.images, store, workdir);
-      const result = await adapter.generate({
-        task: "synthesis",
-        system: GENERIC_SYSTEM,
-        prompt: genericPrompt(images.map((image) => basename(image.file)), manifest.caption),
-        schema: GENERIC_SCHEMA,
-        images,
-        workdir,
-        maxUsd: Math.max(0.05, budget - spent),
-      });
-      spent += result.usage.costUsd;
-      generic = (result.output as { critique: string }).critique.trim();
-    } finally {
-      await rm(workdir, { recursive: true, force: true });
+    if (withGeneric) {
+      const workdir = await mkdtemp(join(tmpdir(), "curatit-compare-"));
+      try {
+        const images = await prepareImages(manifest.images, store, workdir);
+        const result = await adapter.generate({
+          task: "synthesis",
+          system: GENERIC_SYSTEM,
+          prompt: genericPrompt(images.map((image) => basename(image.file)), manifest.caption),
+          schema: GENERIC_SCHEMA,
+          images,
+          workdir,
+          maxUsd: Math.max(0.05, budget - spent),
+        });
+        spent += result.usage.costUsd;
+        sides.generic = (result.output as { critique: string }).critique.trim();
+      } finally {
+        await rm(workdir, { recursive: true, force: true });
+      }
+    }
+    if (Object.keys(sides).length < 2) {
+      console.error(`${post.id}: fewer than two sides to compare; skipped`);
+      continue;
     }
 
-    // Blind: which side is A is fixed per post by its id, and recorded only in key.json
-    const curatitFirst = createHash("sha256").update(post.id).digest()[0] < 128;
-    const [a, b] = curatitFirst ? [curatit, generic] : [generic, curatit];
+    // Blind: the order of the sides is fixed per post by its id, and recorded only in key.json
+    const names = Object.keys(sides).sort();
+    const seed = createHash("sha256").update(post.id).digest();
+    const order = names.map((name, i) => ({ name, rank: seed[i] })).sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name));
+    const labels = order.map((_, i) => String.fromCharCode(65 + i));
     const short = manifest.short_code;
-    key[short] = curatitFirst ? { A: "curatit", B: "generic" } : { A: "generic", B: "curatit" };
-    allMetrics[short] = { curatit: metrics(curatit), generic: metrics(generic) };
+    key[short] = Object.fromEntries(order.map((side, i) => [labels[i], side.name]));
+    allMetrics[short] = Object.fromEntries(names.map((name) => [name, metrics(sides[name])]));
     await writeFile(
       join(out, `${short}.md`),
       [
@@ -188,20 +214,15 @@ async function main() {
         "",
         `${manifest.category.name ?? ""} · ${manifest.format} · ${count} ${count === 1 ? "image" : "slides"} · ${manifest.source_url}`,
         "",
-        "Open the post, then read both analyses and rate each with docs/creative-eval/rubric.md.",
+        `Open the post, then read all ${order.length} analyses and rate each with docs/creative-eval/rubric.md.`,
         "",
-        "## A",
-        "",
-        a,
-        "",
-        "## B",
-        "",
-        b,
-        "",
+        ...order.flatMap((side, i) => [`## ${labels[i]}`, "", sides[side.name], ""]),
       ].join("\n"),
     );
-    for (const side of ["A", "B"]) ratings.push([short, side, ...RUBRIC.map(() => ""), ""].join(","));
-    console.error(JSON.stringify({ post: short, curatitVersion: version?.version_no ?? null, prompt: version?.prompt_version ?? null, spentUsd: Math.round(spent * 1e4) / 1e4 }));
+    for (const label of labels) ratings.push([short, label, ...RUBRIC.map(() => ""), ""].join(","));
+    console.error(
+      JSON.stringify({ post: short, new: latest && `v${latest.version_no} ${latest.prompt_version}`, old: earlier && `v${earlier.version_no} ${earlier.prompt_version}`, spentUsd: Math.round(spent * 1e4) / 1e4 }),
+    );
   }
 
   await writeFile(join(out, "ratings.csv"), ratings.join("\n") + "\n");

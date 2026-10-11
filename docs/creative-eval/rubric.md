@@ -1,14 +1,16 @@
-# Creative Intelligence: rating rubric (2.1)
+# Creative Intelligence: rating rubric (3.0)
 
-Curatit's analysis has to beat what anyone gets by uploading the same image to a chat assistant.
-`npm run creative:compare` puts the two side by side for each post in `eval-set.json`, labelled A
-and B in an order fixed per post. Raters see the post and the two texts, never which is which
-(`key.json` holds that), and score each side in `ratings.csv`. An AI model is not a rater here:
-the deterministic counts in `metrics.json` are a sanity check, not a verdict.
+Curatit's analysis has to beat what anyone gets by uploading the same image to a chat assistant,
+and each prompt version has to beat the one before. `npm run creative:compare` puts up to three
+sides together for each post in `eval-set.json`: the newest analysis, the one from the previous
+prompt, and an ordinary critique, labelled A, B and C in an order fixed per post. Raters see the
+post and the texts, never which is which (`key.json` holds that), and score each side in
+`ratings.csv`. An AI model is not a rater here: the deterministic counts in `metrics.json` are a
+sanity check, not a verdict.
 
 ## How to rate
 
-Open the post on Instagram (or in Curatit), look at every slide, then read A and B. Score each
+Open the post on Instagram (or in Curatit), look at every slide, then read every side. Score each
 from 1 (poor) to 5 (excellent), except the two marked otherwise. Five to ten raters who work as
 designers or marketers is enough to see a difference; one rater is not.
 

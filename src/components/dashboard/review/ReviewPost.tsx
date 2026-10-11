@@ -466,16 +466,29 @@ function Refs({ refs, focus, onShow }: { refs: string[]; focus: string | null; o
   );
 }
 
+// A data check's status in words, for the 3.0 statuses and the 2.1 ones they replaced
+const STATUS_WORDS: Record<string, string> = {
+  observed: "observed",
+  potential_concern: "potential concern",
+  cannot_verify: "cannot verify",
+  sound: "sound (2.1)",
+  concern: "concern (2.1)",
+  unverified: "unverified (2.1)",
+};
+
 function DnaView({ dna, version, focus, onShow }: { dna: CreativeDna; version: Version; focus: string | null; onShow: (value: string) => void }) {
   const warnings = version.validation.warnings ?? [];
   return (
     <>
       <Section title="Summary">
-        <p className="text-subtitle text-pretty text-base-800">{dna.creative_summary}</p>
+        {/* Creative Intelligence 3.0: the strategy line the post page leads with */}
+        {dna.strategy_headline && <p className="text-subtitle font-medium text-pretty text-base-900">{dna.strategy_headline}</p>}
+        {dna.strategy_summary && <p className="mt-1 text-body text-pretty text-base-700">{dna.strategy_summary}</p>}
+        <p className={cx("text-pretty text-base-800", dna.strategy_headline ? "mt-3 text-body" : "text-subtitle")}>{dna.creative_summary}</p>
         <p className="mt-2 text-body text-base-600">{dna.content_intent}</p>
       </Section>
 
-      {/* Creative Intelligence 2.1: what the post page leads with, so it's reviewed first */}
+      {/* Creative Intelligence 2.1 and 3.0: what the post page leads with, so it's reviewed first */}
       {dna.creative_decisions && dna.creative_decisions.length > 0 && (
         <Section title={`Creative decisions (${dna.creative_decisions.length})`}>
           <ol className="space-y-4">
@@ -489,23 +502,50 @@ function DnaView({ dna, version, focus, onShow }: { dna: CreativeDna; version: V
                 <dl className="mt-1.5 grid gap-x-3 gap-y-1 text-base-700 sm:grid-cols-[7.5rem_1fr]">
                   {(
                     [
-                      ["What they did", d.observation],
-                      ["Why it might work", d.rationale],
+                      ["Explanation", d.explanation],
+                      ["Observed", d.observation],
+                      ["Possible effect", d.rationale],
                       ["Principle", d.principle],
+                      ["Watch out", d.watch_out],
                       ["Use it when", d.use_when],
                       ["Avoid it when", d.avoid_when],
                     ] as const
-                  ).map(([name, value]) => (
-                    <div key={name} className="contents">
-                      <dt className="text-caption text-base-500">{name}</dt>
-                      <dd className="text-pretty">{value}</dd>
-                    </div>
-                  ))}
+                  )
+                    .filter(([, value]) => value)
+                    .map(([name, value]) => (
+                      <div key={name} className="contents">
+                        <dt className="text-caption text-base-500">{name}</dt>
+                        <dd className="text-pretty">{value}</dd>
+                      </div>
+                    ))}
                 </dl>
               </li>
             ))}
           </ol>
           {dna.creative_formula && <p className="mt-4 text-body text-base-700"><span className="mr-2 text-caption text-base-500">Formula</span>{dna.creative_formula}</p>}
+          {dna.application && (
+            <dl className="mt-3 grid gap-x-3 gap-y-1 text-body text-base-700 sm:grid-cols-[7.5rem_1fr]">
+              <dt className="text-caption text-base-500">When to use</dt>
+              <dd className="text-pretty">{dna.application.when_to_use.join(" · ")}</dd>
+              <dt className="text-caption text-base-500">When not to</dt>
+              <dd className="text-pretty">{dna.application.when_not_to_use.join(" · ")}</dd>
+            </dl>
+          )}
+          {dna.copywriting && <p className="mt-3 text-body text-pretty text-base-700"><span className="mr-2 text-caption text-base-500">Copywriting</span>{dna.copywriting}</p>}
+        </Section>
+      )}
+
+      {dna.colour_roles && dna.colour_roles.length > 0 && (
+        <Section title="Colours (measured)">
+          <ul className="flex flex-wrap gap-x-4 gap-y-2 text-body">
+            {dna.colour_roles.map((c) => (
+              <li key={c.hex} className="flex items-center gap-2">
+                <span aria-hidden="true" className="size-4 rounded outline-1 -outline-offset-1 outline-edge" style={{ background: c.hex }} />
+                <span className="text-base-900">{c.role}</span>
+                <span className="font-mono text-micro text-base-500 uppercase">{c.hex}</span>
+              </li>
+            ))}
+          </ul>
         </Section>
       )}
 
@@ -514,7 +554,7 @@ function DnaView({ dna, version, focus, onShow }: { dna: CreativeDna; version: V
           <ul className="space-y-2 text-body">
             {dna.integrity_notes.map((n, i) => (
               <li key={i} className="text-pretty text-base-800">
-                <span className={cx("mr-2 text-caption", n.status === "concern" ? "font-medium text-danger-600" : "text-base-500")}>{n.status}</span>
+                <span className={cx("mr-2 text-caption", n.status === "concern" || n.status === "potential_concern" ? "font-medium text-danger-600" : "text-base-500")}>{STATUS_WORDS[n.status] ?? n.status}</span>
                 <span className="font-medium">{n.aspect}:</span> {n.note} <Refs refs={n.evidence} focus={focus} onShow={onShow} />
               </li>
             ))}
@@ -557,7 +597,7 @@ function DnaView({ dna, version, focus, onShow }: { dna: CreativeDna; version: V
             {[...dna.visual_system.composition.map((s) => label("layout", s)), ...dna.visual_system.typography.map((s) => label("typography", s)), ...dna.visual_system.imagery.map((s) => label("imagery", s))].join(", ")}
             <span className="block text-base-600">{dna.visual_system.text_hierarchy}</span>
             {dna.visual_notes &&
-              (["composition", "colour", "imagery", "branding"] as const).map((key) =>
+              (["composition", "typography", "colour", "imagery", "devices", "branding"] as const).map((key) =>
                 dna.visual_notes?.[key] ? (
                   <span key={key} className="mt-1 block text-base-600">
                     <span className="text-caption text-base-500">{key}:</span> {dna.visual_notes[key]}
