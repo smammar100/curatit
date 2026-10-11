@@ -12,6 +12,9 @@ export type ImageInput = {
   mimetype: string;
   // The slide was a video on Instagram; only its cover frame is saved
   wasVideo: boolean;
+  // One flat colour with nothing on it (usually a video's black cover frame), measured from the
+  // pixels in media.ts: there's nothing on it to read
+  blank?: boolean;
 };
 
 export type Usage = {

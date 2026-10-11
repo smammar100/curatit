@@ -36,6 +36,12 @@ describe("prepareImage", () => {
     expect(prepared.file.endsWith("slide-01.webp")).toBe(true);
   });
 
+  it("marks an image of one flat colour as blank, and one with anything on it as not", async () => {
+    expect((await prepareImage(image, source(await makeImage("webp", "#000000", 48, { blank: true })), workdir)).blank).toBe(true);
+    expect((await prepareImage(image, source(await makeImage("jpeg", "#1f7a4d", 400, { blank: true })), workdir)).blank).toBe(true);
+    expect((await prepareImage(image, source(await makeImage("webp", "#000000")), workdir)).blank).toBe(false);
+  });
+
   it("trusts the bytes over the extension", async () => {
     const prepared = await prepareImage(image, source(await makeImage("png")), workdir);
     expect(prepared.mimetype).toBe("image/png");

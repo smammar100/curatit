@@ -3,9 +3,13 @@
 import { MemoryStore } from "./memoryStore";
 import type { Manifest } from "./prompt";
 
-export async function makeImage(format: "webp" | "jpeg" | "png" = "webp", colour = "#1f7a4d", size = 48) {
+// A small image with a pale block on it, or one flat colour when blank
+export async function makeImage(format: "webp" | "jpeg" | "png" = "webp", colour = "#1f7a4d", size = 48, options: { blank?: boolean } = {}) {
   const { default: sharp } = await import("sharp");
-  const image = sharp({ create: { width: size, height: Math.round(size * 1.25), channels: 3, background: colour } });
+  const mark = Math.max(4, Math.round(size / 3));
+  const image = sharp({ create: { width: size, height: Math.round(size * 1.25), channels: 3, background: colour } }).composite(
+    options.blank ? [] : [{ input: { create: { width: mark, height: mark, channels: 3, background: "#f5f0e6" } }, top: 2, left: 2 }],
+  );
   const buffer = await (format === "webp" ? image.webp() : format === "jpeg" ? image.jpeg() : image.png()).toBuffer();
   return new Uint8Array(buffer);
 }
