@@ -51,3 +51,6 @@ supabase/.branches/
 # usernames and comments, so they stay out of this public repo
 data/instagram/
 supabase/seed.sql
+
+# Creative Intelligence comparison output (npm run creative:compare): analyses of real posts, rater sheets
+data/creative-eval/

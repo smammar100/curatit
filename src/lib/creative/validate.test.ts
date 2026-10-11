@@ -50,6 +50,48 @@ describe("validatePerception", () => {
 });
 
 describe("validateDna", () => {
+  it("checks a creative decision's evidence like any other", () => {
+    const dna = clone(FIXTURE_DNA);
+    dna.creative_decisions![0].evidence = ["slide:7"];
+    expect(validateDna(dna, post).errors.map((issue) => `${issue.code}@${issue.path}`)).toContain("bad_evidence_ref@creative_decisions.0");
+  });
+
+  it("refuses advice to distort data or play down a disclosure, but lets descriptions say so", () => {
+    const dna = clone(FIXTURE_DNA);
+    dna.takeaways[0] = "Keep the sources and disclaimer small and low-contrast at the bottom so they do not compete with the data.";
+    dna.takeaways[1] = "Give the lagging series a muted hue and a flat line so it looks static next to the rising ones.";
+    dna.creative_decisions![0].principle = "Truncate the y-axis so the gap between the series looks bigger.";
+    const paths = validateDna(dna, post).errors.filter((issue) => issue.code === "recommends_distortion").map((issue) => issue.path);
+    expect(paths).toEqual(["takeaways.0", "takeaways.1", "creative_decisions.0.principle"]);
+
+    const described = clone(FIXTURE_DNA);
+    described.creative_decisions![0].observation = "The sources and disclaimer sit small and low-contrast under the chart.";
+    described.creative_decisions![0].avoid_when = "When the disclaimer is material; this one is hard to read at phone size.";
+    described.takeaways[0] = "Keep every source legible at phone size, set below the chart in the body colour.";
+    expect(codes(validateDna(described, post).errors)).not.toContain("recommends_distortion");
+  });
+
+  it("refuses jargon and scores nobody measured", () => {
+    const dna = clone(FIXTURE_DNA);
+    dna.creative_decisions![0].rationale = "The contrast creates cognitive tension that may hold attention.";
+    dna.visual_notes!.colour = "A palette that rates 9/10 for warmth.";
+    const found = validateDna(dna, post).errors.map((issue) => `${issue.code}@${issue.path}`);
+    expect(found).toContain("buzzword@creative_decisions.0.rationale");
+    expect(found).toContain("invented_score@visual_notes.colour");
+  });
+
+  it("asks for an integrity check when a slide shows data, only on 2.1 analyses", () => {
+    const perception = clone(FIXTURE_PERCEPTION);
+    perception.slides[1].imagery = ["data-visualization"];
+    expect(codes(validateDna(clone(FIXTURE_DNA), post, perception).errors)).toContain("integrity_missing");
+    const older = clone(FIXTURE_DNA);
+    delete older.integrity_notes;
+    expect(codes(validateDna(older, post, perception).errors)).not.toContain("integrity_missing");
+    const checked = clone(FIXTURE_DNA);
+    checked.integrity_notes = [{ aspect: "Start values", status: "sound", note: "Every series starts from the same amount in the same year.", evidence: ["slide:1"] }];
+    expect(codes(validateDna(checked, post, perception).errors)).not.toContain("integrity_missing");
+  });
+
   it("refuses writing about the pipeline instead of the post", () => {
     const dna = clone(FIXTURE_DNA);
     dna.visual_system.brand_consistency = "As described in the notes, the eyebrow repeats on every slide.";
@@ -181,6 +223,7 @@ describe("validateDna", () => {
     single.secondary_archetypes = [];
     single.primary_archetype.evidence = ["slide:0"];
     single.attention_mechanisms = [single.attention_mechanisms[0]];
+    single.creative_decisions = [{ ...single.creative_decisions![0], evidence: ["slide:0"] }];
     single.creative_rationale = [
       { hypothesis: "A single bold line may read at a glance.", evidence: ["slide:0"] },
       { hypothesis: "The caption may carry the detail the image leaves out.", evidence: ["caption"] },

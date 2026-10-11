@@ -191,7 +191,7 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
             {analysis ? (
               <>
                 <Section title="Creative breakdown">
-                  <CreativeBreakdown analysis={analysis} index={index} onSlide={go} videos={post.videos} source={{ brand: post.brand.name, url: post.url }} />
+                  <CreativeBreakdown analysis={analysis} index={index} onSlide={go} videos={post.videos} source={{ brand: post.brand.name, url: post.url, format: post.format, slides: post.images.length }} />
                 </Section>
                 {count > 1 && analysis.slides.some(Boolean) && (
                   <Section title="Slide breakdown">

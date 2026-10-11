@@ -3,7 +3,7 @@
 // model, no inference), so it's tested against fixtures; display.ts does the reading. Everything
 // shown comes from stored, reviewed output. Storage counts slides from zero ("slide:6", and the
 // prose says "slide 6"); the screen counts from one, so the 7th image is always "Slide 7".
-import type { EvidenceTarget, Insight, PublicAnalysis, SlideDetail, VisualSection } from "./publicView";
+import type { DecisionView, EvidenceTarget, Insight, IntegrityView, PublicAnalysis, SlideDetail, VisualSection } from "./publicView";
 import type { CreativeDna, SlideObservation } from "./schema";
 import { term, type Dimension } from "./taxonomy";
 
@@ -206,6 +206,13 @@ function allProse(d: Record<string, unknown>, observations: (Record<string, unkn
     ...list(d.takeaways),
     ...list(d.adaptation_ideas),
     ...list(d.constraints_or_uncertainties),
+    d.creative_formula,
+    ...Object.values(record(d.visual_notes)),
+    ...list(d.creative_decisions).flatMap((x) => {
+      const decision = record(x);
+      return [decision.title, decision.observation, decision.rationale, decision.principle, decision.use_when, decision.avoid_when];
+    }),
+    ...list(d.integrity_notes).map((n) => record(n).note),
     ...list(record(d.quality).uncertainties),
     ...observations.flatMap((o) => (o ? [o.observation, o.brand_treatment] : [])),
   ].filter((s): s is string => typeof s === "string");
@@ -255,15 +262,16 @@ export function toPublicAnalysis(analysis: AnalysisRecord, slideRows: SlideRecor
     const evidence = observations.flatMap((o, index) => (o && o[key] === "high" && !slides[index]?.blank ? [{ kind: "slide" as const, index }] : []));
     return evidence.length ? [{ value: name, evidence }] : [];
   };
+  const notes = record(d.visual_notes);
   const visual: VisualSection[] = [
-    ...section("Composition", null, tagged("layout", visualSystem.composition, (o) => list(o.layout))),
+    ...section("Composition", prose(notes.composition), tagged("layout", visualSystem.composition, (o) => list(o.layout))),
     ...section("Typography", prose(visualSystem.text_hierarchy), tagged("typography", visualSystem.typography, typographyClasses)),
-    ...section("Imagery", null, [...tagged("imagery", visualSystem.imagery, (o) => list(o.imagery)), ...leads("people_prominence", "People lead"), ...leads("product_prominence", "Product leads")]),
-    ...section("Colour", null, tagged("palette", visualSystem.palette, (o) => list(record(o.palette).families))),
+    ...section("Imagery", prose(notes.imagery), [...tagged("imagery", visualSystem.imagery, (o) => list(o.imagery)), ...leads("people_prominence", "People lead"), ...leads("product_prominence", "Product leads")]),
+    ...section("Colour", prose(notes.colour), tagged("palette", visualSystem.palette, (o) => list(record(o.palette).families))),
     ...section("Devices and texture", prose(visualSystem.decorative_system), tagged("visual_device", deviceSlugs, (o) => list(o.devices))),
     ...section(
       "Branding",
-      null,
+      prose(notes.branding),
       slides.flatMap((slide) => (slide?.brandTreatment ? [{ value: slide.brandTreatment, evidence: [{ kind: "slide" as const, index: slide.index }] }] : [])),
     ),
     ...section("Consistency", prose(visualSystem.brand_consistency), []),
@@ -290,13 +298,32 @@ export function toPublicAnalysis(analysis: AnalysisRecord, slideRows: SlideRecor
       arc: count > 1 ? prose(narrative.arc) : null,
       roles,
     },
-    decisions: list(d.attention_mechanisms)
+    creativeDecisions: list(d.creative_decisions)
+      .map(record)
+      .flatMap((x): DecisionView[] => {
+        const [title, observation, rationale, principle, useWhen, avoidWhen] = [x.title, x.observation, x.rationale, x.principle, x.use_when, x.avoid_when].map(prose);
+        const evidence = parseEvidence(x.evidence, count).filter((target) => target.kind !== "slide" || !slides[target.index]?.blank);
+        // A decision is shown whole or not at all, and only with something to point at
+        if (!title || !observation || !rationale || !principle || !useWhen || !avoidWhen || !evidence.length) return [];
+        const confidence = x.confidence === "high" || x.confidence === "low" ? x.confidence : "medium";
+        return [{ title, observation, rationale, principle, useWhen, avoidWhen, evidence, confidence }];
+      })
+      .slice(0, 5),
+    mechanisms: list(d.attention_mechanisms)
       .map(record)
       .flatMap((m) => insight(m.kind === "interpretation" ? "interpretation" : "observation", m.statement, m.evidence))
       .slice(0, 3),
     hypotheses: list(d.creative_rationale)
       .map(record)
       .flatMap((r) => insight("hypothesis", r.hypothesis, r.evidence)),
+    integrity: list(d.integrity_notes)
+      .map(record)
+      .flatMap((x): IntegrityView[] => {
+        const [aspect, note] = [text(x.aspect), prose(x.note)];
+        const status = x.status === "sound" || x.status === "concern" || x.status === "unverified" ? x.status : null;
+        return aspect && note && status ? [{ aspect, status, note, evidence: parseEvidence(x.evidence, count) }] : [];
+      }),
+    formula: prose(d.creative_formula),
     visual,
     slides,
     takeaways: texts(d.takeaways).map((s) => oneBased(s, count, numbering)),

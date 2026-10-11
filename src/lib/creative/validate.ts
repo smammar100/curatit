@@ -37,6 +37,37 @@ const PERFORMANCE_CLAIM =
 const PROCESS_TALK =
   /\b(in|from|per|according to) the (slide )?(notes|records)\b|\bthe (slide )?(notes|records) (say|said|describe|mention|list|show|suggest|indicate|don't|do not|only)\b|\b(slide|perception|text) (notes|records)\b|\b(notes|records|transcriptions?) (was|were) (all that was )?(available|provided|given)\b|\b(not|rather than|instead of) (from )?the (image|images|slide images)( itself| themselves)?\b|\b(wasn't|weren't|was not|were not) (shown|given|provided) the (image|images)\b/i;
 
+// Advice to distort or hide what a creative shows: flattening or exaggerating a series beyond its
+// values, cutting an axis, or shrinking and fading disclosures, sources or disclaimers. Checked on
+// what Curatit recommends (takeaways, adaptations, a decision's principle and when to use it),
+// never on descriptions of what a post did, which may honestly say a disclaimer is small
+const DISTORTION = new RegExp(
+  [
+    String.raw`\bflat(?:ter)?\s+(?:line|series|curve|trend)\b`,
+    String.raw`\b(?:flatten|exaggerat|steepen)\w*\b[^.]{0,40}\b(?:line|series|curve|trend|difference|gap|values?|data)\b`,
+    String.raw`\b(?:truncat|crop|cut)\w*\b[^.]{0,30}\b(?:axis|axes|baseline|scale)\b`,
+    String.raw`\b(?:disclaim\w*|disclosures?|sources?|fine print|small print|footnotes?)\b[^.]{0,60}\b(?:small|smaller|tiny|low[- ]contrast|faint|muted|hidden|out of the way|(?:do|does)(?: not|n't) compete)\b`,
+    String.raw`\b(?:shrink|hide|bury|fade|minimi[sz]e|de-?emphasi[sz]e|tuck)\w*\b[^.]{0,40}\b(?:disclaim\w*|disclosures?|sources?|fine print|small print|footnotes?)\b`,
+  ].join("|"),
+  "i",
+);
+
+// Jargon standing in for an argument, and scores nobody measured
+const BUZZWORDS = /\b(?:cognitive tension|visual dopamine|dopamine|neurological|neuro-?marketing|subconscious(?:ly)?)\b/i;
+const INVENTED_SCORE = /\b\d+(?:\.\d+)?\s*\/\s*(?:10|100)\b|\b(?:virality|aesthetic|persuasion|effectiveness|engagement|attention) (?:score|rating|index)\b/i;
+
+// The checks that apply to any text, Curatit's or not (the evaluation harness runs them on an
+// ordinary critique too): claims of performance, jargon, invented scores, and language that
+// recommends distorting data or playing down a disclosure
+export function lintProse(text: string) {
+  return [
+    PERFORMANCE_CLAIM.test(text) && "performance_claim",
+    BUZZWORDS.test(text) && "buzzword",
+    INVENTED_SCORE.test(text) && "invented_score",
+    DISTORTION.test(text) && "recommends_distortion",
+  ].filter((code): code is string => !!code);
+}
+
 // Advice that fits every post and so says nothing about this one
 const GENERIC_TAKEAWAYS = [
   /^use (bright|bold) colou?rs?\.?$/i,
@@ -126,8 +157,18 @@ export function validateDna(dna: CreativeDna, post: PostInput, perception?: Perc
     ...dna.attention_mechanisms.map((m, i): [EvidenceRef[], string] => [m.evidence, `attention_mechanisms.${i}`]),
     ...dna.creative_rationale.map((r, i): [EvidenceRef[], string] => [r.evidence, `creative_rationale.${i}`]),
     ...dna.evidence.map((e, i): [EvidenceRef[], string] => [[e.ref], `evidence.${i}`]),
+    ...(dna.creative_decisions ?? []).map((d, i): [EvidenceRef[], string] => [d.evidence, `creative_decisions.${i}`]),
+    ...(dna.integrity_notes ?? []).map((n, i): [EvidenceRef[], string] => [n.evidence, `integrity_notes.${i}`]),
   ];
   for (const [list, path] of allRefs) checkRefs(list, post, path, verdict);
+
+  // Decisions are distinct, and a chart or a number on a slide gets its integrity checked
+  const titles = (dna.creative_decisions ?? []).map((d) => normalise(d.title));
+  if (new Set(titles).size !== titles.length) verdict.warnings.push({ code: "duplicate_decision", message: "Two creative decisions have the same title", path: "creative_decisions" });
+  const charted = perception?.slides.some((slide) => slide.imagery.includes("data-visualization")) ?? false;
+  if (dna.integrity_notes !== undefined && charted && !dna.integrity_notes.length) {
+    verdict.errors.push({ code: "integrity_missing", message: "A slide shows data or a chart, but integrity_notes is empty: check what it shows (start values, time period, axes, baseline, units, sources and disclaimers…)", path: "integrity_notes" });
+  }
 
   const slideText = new Map<number, string>();
   for (const slide of perception?.slides ?? []) slideText.set(slide.position, normalise(`${slide.visible_text.headline ?? ""} ${slide.visible_text.body ?? ""}`));
@@ -161,9 +202,32 @@ export function validateDna(dna: CreativeDna, post: PostInput, perception?: Perc
     ...dna.creative_rationale.map((r, i): [string, string] => [r.hypothesis, `creative_rationale.${i}`]),
     ...dna.attention_mechanisms.map((m, i): [string, string] => [m.statement, `attention_mechanisms.${i}`]),
     ...dna.takeaways.map((s, i): [string, string] => [s, `takeaways.${i}`]),
+    ...(dna.creative_decisions ?? []).flatMap((d, i): [string, string][] => [
+      [d.title, `creative_decisions.${i}.title`],
+      [d.observation, `creative_decisions.${i}.observation`],
+      [d.rationale, `creative_decisions.${i}.rationale`],
+      [d.principle, `creative_decisions.${i}.principle`],
+    ]),
   ];
   for (const [s, path] of prose) {
     if (PERFORMANCE_CLAIM.test(s)) verdict.errors.push({ code: "performance_claim", message: "Claims an effect the data can't show", path });
+  }
+
+  // What Curatit recommends never distorts data or hides a disclosure
+  const advice: [string, string][] = [
+    ...dna.takeaways.map((s, i): [string, string] => [s, `takeaways.${i}`]),
+    ...dna.adaptation_ideas.map((s, i): [string, string] => [s, `adaptation_ideas.${i}`]),
+    ...(dna.creative_decisions ?? []).flatMap((d, i): [string, string][] => [
+      [d.title, `creative_decisions.${i}.title`],
+      [d.principle, `creative_decisions.${i}.principle`],
+      [d.use_when, `creative_decisions.${i}.use_when`],
+    ]),
+    ...(dna.creative_formula ? [[dna.creative_formula, "creative_formula"] as [string, string]] : []),
+  ];
+  for (const [s, path] of advice) {
+    if (DISTORTION.test(s)) {
+      verdict.errors.push({ code: "recommends_distortion", message: "Recommends distorting data or playing down a disclosure; describe the tradeoff instead of recommending it", path });
+    }
   }
 
   // Everything a designer reads is about the post, not the pipeline
@@ -176,9 +240,19 @@ export function validateDna(dna: CreativeDna, post: PostInput, perception?: Perc
     ...dna.constraints_or_uncertainties.map((s, i): [string, string] => [s, `constraints_or_uncertainties.${i}`]),
     ...dna.quality.uncertainties.map((s, i): [string, string] => [s, `quality.uncertainties.${i}`]),
     ...dna.evidence.map((e, i): [string, string] => [e.observation, `evidence.${i}.observation`]),
+    ...(dna.creative_decisions ?? []).flatMap((d, i): [string, string][] => [
+      [d.use_when, `creative_decisions.${i}.use_when`],
+      [d.avoid_when, `creative_decisions.${i}.avoid_when`],
+    ]),
+    ...(dna.integrity_notes ?? []).map((n, i): [string, string] => [n.note, `integrity_notes.${i}.note`]),
+    ...Object.entries(dna.visual_notes ?? {}).map(([key, s]): [string | null, string] => [s, `visual_notes.${key}`]),
+    [dna.creative_formula ?? null, "creative_formula"],
   ];
   for (const [s, path] of readable) {
-    if (s && PROCESS_TALK.test(s)) verdict.errors.push({ code: "process_talk", message: "Talks about how the analysis was made instead of the post; describe the post itself", path });
+    if (!s) continue;
+    if (PROCESS_TALK.test(s)) verdict.errors.push({ code: "process_talk", message: "Talks about how the analysis was made instead of the post; describe the post itself", path });
+    if (BUZZWORDS.test(s)) verdict.errors.push({ code: "buzzword", message: "Uses jargon in place of an argument; say what the design does", path });
+    if (INVENTED_SCORE.test(s)) verdict.errors.push({ code: "invented_score", message: "Gives a score nobody measured", path });
   }
 
   // Not the caption pasted back, and not filler
