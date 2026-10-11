@@ -7,10 +7,11 @@ export type Taste = { industries: string[]; brands: string[]; taste: string[] };
 
 // An industry they picked counts most, then a brand they follow, then what the posts they tapped
 // have in common (brand, industry, format). Ties keep the feed's own order, so nothing shuffles
-// for no reason, and with no answers the order is unchanged.
-export function rank<P extends DashPost>(posts: P[], a: Taste): P[] {
+// for no reason, and with no answers the order is unchanged. `library` is where the tapped posts
+// are looked up: the whole library, even when `posts` is a search's results.
+export function rank<P extends DashPost>(posts: P[], a: Taste, library: DashPost[] = posts): P[] {
   if (!a.industries.length && !a.brands.length && !a.taste.length) return posts;
-  const liked = a.taste.flatMap((code) => posts.find((p) => p.shortCode === code) ?? []);
+  const liked = a.taste.flatMap((code) => library.find((p) => p.shortCode === code) ?? []);
   const likedBrands = new Set(liked.map((p) => p.brand.slug));
   const likedCategories = new Set(liked.map((p) => p.category.slug));
   const likedFormats = new Set(liked.map((p) => p.format));

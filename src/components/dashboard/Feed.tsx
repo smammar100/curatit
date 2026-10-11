@@ -8,7 +8,7 @@
 // discover|saved, ?category= (on Discover) and ?q= open the feed on a view, category or
 // search, which is how other dashboard pages send you back here.
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Button from "@/components/fundations/elements/Button";
 import BoardList from "./BoardList";
 import { useBoards } from "./boards";
@@ -39,6 +39,7 @@ export const feedHref = (view: View, query = "", category: string | null = null)
 
 export default function Feed() {
   const router = useRouter();
+  const pathname = usePathname();
   const { boards, status, list, posts: byCode } = useBoards();
   const { status: profileStatus, profile } = useProfile();
   const [query, setQuery] = useState("");
@@ -56,10 +57,14 @@ export default function Feed() {
     if (q) setQuery(q);
   }, []);
 
-  // First visit: set the feed up before showing it
+  // First visit: set the feed up before showing it. Only from the feed itself: under a post
+  // opened from a link (this is the page beneath it too) the post comes first, and the welcome
+  // waits for the next visit to the feed
+  const onFeed = pathname === "/dashboard";
+  const unset = profileStatus === "ready" && !profile.onboardedAt;
   useEffect(() => {
-    if (profileStatus === "ready" && !profile.onboardedAt) router.replace("/dashboard/welcome");
-  }, [profileStatus, profile.onboardedAt, router]);
+    if (onFeed && unset) router.replace("/dashboard/welcome");
+  }, [onFeed, unset, router]);
 
   // Keep the address in step, so a reload or a shared link opens the same feed (but not while
   // the address is a post's, opened over the feed)
@@ -78,10 +83,11 @@ export default function Feed() {
   const shown = useMemo(() => {
     const source = view === "Saved" ? saved : view === "Discover" && category ? list.filter((post) => post.category.slug === category) : list;
     const filtered = query ? source.filter((post) => matches(post, query)) : source;
-    return view === "For you" ? rank(filtered, profile) : filtered;
+    return view === "For you" ? rank(filtered, profile, list) : filtered;
   }, [list, saved, query, view, category, profile]);
-  // For you waits for the answers it ranks on, so it never shows one order and then another
-  const waiting = (view === "Saved" && status === "loading") || (view === "For you" && profileStatus === "loading");
+  // For you waits for the answers it ranks on, so it never shows one order and then another, and
+  // keeps waiting while a first visit is on its way to the welcome flow
+  const waiting = (view === "Saved" && status === "loading") || (view === "For you" && (profileStatus === "loading" || (onFeed && unset)));
 
   return (
     <div className="min-h-dvh bg-white">

@@ -43,6 +43,10 @@ export function authMessage(code: string | null | undefined) {
 
 // The forms' own checks, run before anything is sent (and again in the server actions, for a
 // submit without JavaScript). Each returns what's wrong and how to fix it, or null.
+// An address typed into the site footer's email field, handed to sign-up through sessionStorage
+// (global/FooterNewsletter writes it, auth/AuthForms' SignUpForm reads and clears it)
+export const SIGNUP_EMAIL_KEY = "curatit-signup-email";
+
 export function emailProblem(email: string) {
   const value = email.trim();
   if (!value) return "Enter your email address.";

@@ -18,7 +18,7 @@ import {
   type AuthFields,
   type AuthState,
 } from "@/app/auth/actions";
-import { authMessage, emailProblem, passwordProblem } from "@/lib/auth";
+import { authMessage, emailProblem, passwordProblem, SIGNUP_EMAIL_KEY } from "@/lib/auth";
 import { SUPPORT_MAILTO } from "@/lib/site";
 import { AuthField, AuthNotice } from "./AuthParts";
 import PasswordField from "./PasswordField";
@@ -162,6 +162,19 @@ export function SignInForm() {
 export function SignUpForm() {
   const [state, action, pending] = useActionState(signUp, {});
   const check = useValidation({ email: emailProblem, password: passwordProblem }, ["email"], state.fields);
+
+  // An address typed into the site footer's field (FooterNewsletter), handed over once
+  useEffect(() => {
+    let email: string | null = null;
+    try {
+      email = sessionStorage.getItem(SIGNUP_EMAIL_KEY);
+      sessionStorage.removeItem(SIGNUP_EMAIL_KEY);
+    } catch {
+      return;
+    }
+    const field = document.getElementById("email") as HTMLInputElement | null;
+    if (email && field && !field.value) field.value = email;
+  }, []);
   if (state.sent) return <CheckEmail email={state.sent} />;
   const error = check.any ? null : state.error;
   return (

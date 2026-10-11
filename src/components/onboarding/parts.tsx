@@ -3,7 +3,7 @@
 // The pieces of the welcome flow (Welcome.tsx): the answers being made, and the pickers for the
 // name and occupation, the brands and the taste test; the live wall; the chips of what the taps
 // say; the end. The industries are folders (Folders.tsx).
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode, type Ref } from "react";
 import Image from "next/image";
 import Check from "@/components/fundations/icons/Check";
 import Button from "@/components/fundations/elements/Button";
@@ -15,7 +15,7 @@ import { categories } from "@/components/home/demo";
 import { cx } from "@/lib/cx";
 
 // The answers while they're being made: the profile without the time it was finished
-export type Draft = Omit<Profile, "onboardedAt">;
+export type Draft = Omit<Profile, "onboardedAt" | "editor">;
 export const OCCUPATIONS = ["Designer", "Marketer", "Founder", "Agency", "Creator", "Student"];
 export const toggle = (list: string[], item: string) => (list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
 export const firstName = (name: string) => name.trim().split(/\s+/)[0] ?? "";
@@ -36,10 +36,12 @@ export function categoriesOf(posts: DashPost[]): Category[] {
   });
 }
 
-export function Heading({ id, title, sub, align = "center" }: { id?: string; title: string; sub?: string; align?: "center" | "left" }) {
+// The step's question. It takes focus when the step changes (tabIndex -1: a target, not a stop),
+// so it shows no ring of its own
+export function Heading({ ref, id, title, sub, align = "center" }: { ref?: Ref<HTMLHeadingElement>; id?: string; title: string; sub?: string; align?: "center" | "left" }) {
   return (
     <div className={cx("text-balance", align === "center" && "text-center")}>
-      <h1 id={id} className="font-display text-display font-light text-base-900">
+      <h1 ref={ref} id={id} tabIndex={-1} className="font-display text-display font-light text-base-900 outline-none">
         {title}
       </h1>
       {sub && <p className="mt-2 text-subtitle text-base-600">{sub}</p>}
@@ -65,7 +67,7 @@ export function Chip({ on, onClick, children, className }: { on: boolean; onClic
       aria-pressed={on}
       onClick={onClick}
       className={cx(
-        "flex h-10 items-center gap-2 rounded-full px-4 text-body font-medium whitespace-nowrap transition-[background-color,color,scale] duration-150 active:scale-[0.96]",
+        "flex h-11 items-center gap-2 rounded-full px-4 text-body font-medium whitespace-nowrap transition-[background-color,color,scale] duration-150 active:scale-[0.96]",
         on ? "bg-base-900 text-white" : "bg-base-50 text-base-900 hover:bg-base-100",
         className,
       )}
@@ -76,12 +78,13 @@ export function Chip({ on, onClick, children, className }: { on: boolean; onClic
 }
 
 const field =
-  "h-12 w-full rounded-full border-0 bg-base-50 px-5 text-subtitle pointer-coarse:text-[16px] text-base-900 placeholder:text-base-400 ring-1 ring-base-200 transition-[box-shadow] duration-150 focus:ring-2 focus:ring-base-400 focus:outline-none";
+  "h-12 w-full rounded-full border-0 bg-base-50 px-5 text-subtitle pointer-coarse:text-[16px] text-base-900 placeholder:text-base-400 ring-1 ring-base-200 transition-[box-shadow] duration-150 focus:ring-2 focus:ring-accent-500 focus:outline-none";
 
 // The name, then what they do as one tap. The name takes focus on arrival, except on touch
 // (the keyboard would jump up); Enter in it submits the step.
 export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: Partial<Draft>) => void }) {
   const ref = useRef<HTMLInputElement>(null);
+  const groupLabel = useId();
   useEffect(() => {
     if (!matchMedia("(pointer: coarse)").matches) ref.current?.focus();
   }, []);
@@ -92,8 +95,10 @@ export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: 
         <input ref={ref} type="text" name="name" value={value.name} onChange={(e) => onChange({ name: e.target.value })} placeholder="Your name" autoComplete="given-name" maxLength={60} className={field} />
       </label>
       <div>
-        <p className="mb-2 text-caption font-medium text-base-500">And you’re a…</p>
-        <div className="flex flex-wrap gap-1.5">
+        <p id={groupLabel} className="mb-2 text-caption font-medium text-base-600">
+          And you’re a…
+        </p>
+        <div role="group" aria-labelledby={groupLabel} className="flex flex-wrap gap-1.5">
           {OCCUPATIONS.map((occupation) => (
             <Chip key={occupation} on={value.occupation === occupation} onClick={() => onChange({ occupation: value.occupation === occupation ? null : occupation })}>
               {occupation}
@@ -127,7 +132,7 @@ export function BrandGrid({ brands, value, onChange, className }: { brands: Bran
                 </span>
               )}
             </span>
-            <span className={cx("w-full truncate text-center text-caption", on ? "font-medium text-base-900" : "text-base-600")}>{b.name}</span>
+            <span className={cx("line-clamp-2 w-full text-center text-caption leading-tight", on ? "font-medium text-base-900" : "text-base-600")}>{b.name}</span>
           </button>
         );
       })}
@@ -135,8 +140,9 @@ export function BrandGrid({ brands, value, onChange, className }: { brands: Bran
   );
 }
 
-// Posts to tap, as a grid of 4:5 tiles; once `max` are picked the rest step back
-export function TasteGrid({ posts, value, onChange, max, className }: { posts: DashPost[]; value: string[]; onChange: (next: string[]) => void; max: number; className?: string }) {
+// Posts to tap, as a grid of 4:5 tiles; once `max` are picked the rest step back. `ground` is
+// the surface they sit on, so the picked ring's gap matches it
+export function TasteGrid({ posts, value, onChange, max, ground = "white", className }: { posts: DashPost[]; value: string[]; onChange: (next: string[]) => void; max: number; ground?: "white" | "grey"; className?: string }) {
   return (
     <div className={cx("grid gap-2", className)}>
       {posts.map((p) => {
@@ -151,8 +157,9 @@ export function TasteGrid({ posts, value, onChange, max, className }: { posts: D
             disabled={full}
             onClick={() => onChange(toggle(value, p.shortCode))}
             className={cx(
-              "relative block aspect-4/5 w-full overflow-hidden rounded-lg bg-base-100 outline-1 -outline-offset-1 outline-edge transition-[opacity,scale,box-shadow] duration-150 active:scale-[0.97]",
-              on && "ring-2 ring-base-900 ring-offset-2 ring-offset-white",
+              "relative block aspect-4/5 w-full overflow-hidden rounded-lg bg-base-100 outline-1 -outline-offset-1 outline-edge transition-[opacity,scale,box-shadow] duration-150 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-base-900 active:scale-[0.97]",
+              on && "ring-2 ring-base-900 ring-offset-2",
+              on && (ground === "grey" ? "ring-offset-base-50" : "ring-offset-white"),
               full && "opacity-40",
             )}
           >
@@ -165,13 +172,26 @@ export function TasteGrid({ posts, value, onChange, max, className }: { posts: D
   );
 }
 
-// A wall of posts at their own shapes, each tile rising in when the wall changes
+// A wall of posts at their own shapes, each tile rising in when the wall changes. Posts are
+// dealt to the shortest of three columns, as the feed's grid does, so the order reads across
+// the top row: the ones that come first are the ones you see first
 export function Collage({ posts, className }: { posts: DashPost[]; className?: string }) {
+  const columns: { post: DashPost; i: number }[][] = [[], [], []];
+  const heights = [0, 0, 0];
+  posts.forEach((post, i) => {
+    const shortest = heights.indexOf(Math.min(...heights));
+    columns[shortest].push({ post, i });
+    heights[shortest] += 1 / ratio(post);
+  });
   return (
-    <div className={cx("columns-3 gap-3", className)}>
-      {posts.map((p, i) => (
-        <div key={p.shortCode} className="welcome-rise relative mb-3 break-inside-avoid overflow-hidden rounded-lg bg-base-100 outline-1 -outline-offset-1 outline-edge" style={{ aspectRatio: ratio(p), animationDelay: `${i * 30}ms` }}>
-          <Image src={p.cover} alt="" fill sizes="240px" className="object-cover" />
+    <div className={cx("grid grid-cols-3 items-start gap-3", className)}>
+      {columns.map((column, c) => (
+        <div key={c} className="flex flex-col gap-3">
+          {column.map(({ post, i }) => (
+            <div key={post.shortCode} className="welcome-rise relative overflow-hidden rounded-lg bg-base-100 outline-1 -outline-offset-1 outline-edge" style={{ aspectRatio: ratio(post), animationDelay: `${i * 30}ms` }}>
+              <Image src={post.cover} alt="" fill sizes="240px" className="object-cover" />
+            </div>
+          ))}
         </div>
       ))}
     </div>
@@ -205,7 +225,7 @@ export function Ring({ value, max, className }: { value: number; max: number; cl
 }
 
 // The end: the feed's new top six, fanned, and the way in
-export function Done({ posts, draft }: { posts: DashPost[]; draft: Draft }) {
+export function Done({ posts, draft, headingRef }: { posts: DashPost[]; draft: Draft; headingRef?: Ref<HTMLHeadingElement> }) {
   const top = rank(posts, draft).slice(0, 6);
   const who = firstName(draft.name);
   return (
@@ -214,14 +234,14 @@ export function Done({ posts, draft }: { posts: DashPost[]; draft: Draft }) {
         {top.map((p, i) => (
           <span
             key={p.shortCode}
-            className="welcome-rise relative -mx-2 aspect-4/5 w-20 overflow-hidden rounded-lg bg-base-100 shadow-[0_10px_24px_-12px_rgb(0_0_0/0.45)] outline-1 -outline-offset-1 outline-edge"
+            className="welcome-rise relative -mx-2 aspect-4/5 w-16 overflow-hidden sm:w-20 rounded-lg bg-base-100 shadow-[0_10px_24px_-12px_rgb(0_0_0/0.45)] outline-1 -outline-offset-1 outline-edge"
             style={{ rotate: `${(i - 2.5) * 7}deg`, translate: `0 ${Math.abs(i - 2.5) * 5}px`, animationDelay: `${i * 60}ms` }}
           >
             <Image src={p.cover} alt="" fill sizes="80px" className="object-cover" />
           </span>
         ))}
       </div>
-      <Heading title={`${who ? `${who}, your` : "Your"} For you is ready.`} sub={`${posts.length} posts, the ones for you first.`} />
+      <Heading ref={headingRef} title={`${who ? `${who}, your` : "Your"} For you is ready.`} sub={`${posts.length} posts, the ones for you first.`} />
       <Button isLink href="/dashboard" size="base" variant="default" className="mt-8 w-fit">
         Open For you
       </Button>
