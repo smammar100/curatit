@@ -2,11 +2,15 @@
 
 // The dashboard: the library as a feed, after Cosmos's signed-in home (chosen from a three-way
 // prototype on 2026-10-10). The header's tabs pick the view, its search filters the posts, and
-// the grid shows them. ?view=newest|saved and ?q= open the feed on a view or search, which is
-// how other dashboard pages send you back here.
+// the grid shows them. Discover adds a row of categories to browse the library by. ?view=
+// newest|discover|saved, ?category= (on Discover) and ?q= open the feed on a view, category or
+// search, which is how other dashboard pages send you back here.
 import { useEffect, useMemo, useState } from "react";
+import Button from "@/components/fundations/elements/Button";
 import BoardList from "./BoardList";
 import { useBoards } from "./boards";
+import CategoryBar from "./CategoryBar";
+import SavedArt from "./SavedArt";
 import Grid from "./Grid";
 import Header, { VIEWS, type View } from "./Header";
 import { GridSkeleton } from "./Skeleton";
@@ -19,9 +23,10 @@ export function matches(post: DashPost, query: string) {
   return words.every((word) => text.includes(word));
 }
 
-export const feedHref = (view: View, query = "") => {
+export const feedHref = (view: View, query = "", category: string | null = null) => {
   const params = new URLSearchParams();
   if (view !== "For you") params.set("view", view.toLowerCase());
+  if (view === "Discover" && category) params.set("category", category);
   if (query) params.set("q", query);
   const search = params.toString();
   return search ? `/dashboard?${search}` : "/dashboard";
@@ -31,12 +36,15 @@ export default function Feed() {
   const { boards, status, list, posts: byCode } = useBoards();
   const [query, setQuery] = useState("");
   const [view, setView] = useState<View>("For you");
+  // Discover's category (a slug), or null for All
+  const [category, setCategory] = useState<string | null>(null);
 
-  // Open on the view and search in the address, if any
+  // Open on the view, category and search in the address, if any
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const fromUrl = VIEWS.find((option) => option.toLowerCase() === params.get("view"));
     if (fromUrl) setView(fromUrl);
+    setCategory(params.get("category"));
     const q = params.get("q");
     if (q) setQuery(q);
   }, []);
@@ -44,8 +52,8 @@ export default function Feed() {
   // Keep the address in step, so a reload or a shared link opens the same feed (but not while
   // the address is a post's, opened over the feed)
   useEffect(() => {
-    if (location.pathname === "/dashboard") history.replaceState(null, "", feedHref(view, query));
-  }, [view, query]);
+    if (location.pathname === "/dashboard") history.replaceState(null, "", feedHref(view, query, category));
+  }, [view, query, category]);
 
   // Everything on any board, most recently saved first
   const saved = useMemo(
@@ -56,15 +64,16 @@ export default function Feed() {
     [boards, byCode],
   );
   const shown = useMemo(() => {
-    const source = view === "Saved" ? saved : list;
+    const source = view === "Saved" ? saved : view === "Discover" && category ? list.filter((post) => post.category.slug === category) : list;
     const filtered = query ? source.filter((post) => matches(post, query)) : source;
     return view === "Newest" ? filtered.toSorted((a, b) => b.postedAt.localeCompare(a.postedAt)) : filtered;
-  }, [list, saved, query, view]);
+  }, [list, saved, query, view, category]);
 
   return (
     <div className="min-h-dvh bg-white">
       <Header view={view} onView={setView} query={query} onQuery={setQuery} />
       <main className="px-4 pt-2 pb-24 sm:px-6">
+        {view === "Discover" && <CategoryBar posts={list} value={category} onChange={setCategory} />}
         {/* The Saved view opens on the boards, then every saved post */}
         {view === "Saved" && !query && status !== "loading" && <BoardList />}
         {view === "Saved" && status === "loading" ? (
@@ -84,20 +93,26 @@ export default function Feed() {
 
 function Empty({ view, query, onClear, onBrowse }: { view: View; query: string; onClear: () => void; onBrowse: () => void }) {
   const nothingSaved = view === "Saved" && !query;
+  // Nothing saved at all: the illustration, then how saving works
+  if (nothingSaved) {
+    return (
+      <div className="mx-auto flex max-w-sm flex-col items-center py-16 text-center">
+        <SavedArt />
+        <p className="mt-8 text-title font-medium text-base-900">Your swipe file is empty</p>
+        <p className="mt-2 text-body text-pretty text-base-600">See a carousel that stops your thumb, or a launch you wish you’d made? Hit Save. It waits here for your next brief.</p>
+        <Button size="sm" variant="default" onClick={onBrowse} className="mt-6 w-fit">
+          Start your swipe file
+        </Button>
+      </div>
+    );
+  }
+  // A search that found nothing
   return (
     <div className="mx-auto max-w-sm py-24 text-center">
-      <p className="text-subtitle font-medium text-base-900">{nothingSaved ? "Nothing saved yet" : `Nothing matches ‘${query}’`}</p>
-      <p className="mt-2 text-body text-base-600">
-        {nothingSaved
-          ? "Save posts from your feed and they’ll collect here, and on your boards."
-          : "Try a format or a goal instead, like ‘carousel’ or ‘launch’."}
-      </p>
-      <button
-        type="button"
-        onClick={nothingSaved ? onBrowse : onClear}
-        className="mt-6 text-body font-medium text-accent-600 hover:text-accent-500"
-      >
-        {nothingSaved ? "Back to your feed" : "Clear search"}
+      <p className="text-subtitle font-medium text-base-900">{`Nothing matches ‘${query}’`}</p>
+      <p className="mt-2 text-body text-base-600">Try a format or a goal instead, like ‘carousel’ or ‘launch’.</p>
+      <button type="button" onClick={onClear} className="mt-6 text-body font-medium text-accent-600 hover:text-accent-500">
+        Clear search
       </button>
     </div>
   );

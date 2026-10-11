@@ -69,6 +69,9 @@ these, never Tailwind default palettes, never hex in markup:
   and a form's error panel (`bg-danger-50 text-danger-700`). Always with an
   icon and words, never colour alone. Redder and darker than accent so an error
   never reads as a link.
+- One exception to the monochrome rule: the dashboard's search pill wears a
+  colourful `BorderBeam` (`border-beam`), a glow travelling round its edge.
+  Don't spread it to other controls.
 - `warning` (amber) and `success` (green) - only for the password strength
   meter (`auth/PasswordField`), which runs danger, warning, success with the
   level's word beside it. Don't reach for them elsewhere.

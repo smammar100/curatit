@@ -2,15 +2,20 @@
 
 // The dashboard's search, after Cosmos: a pill in the header that, when focused, opens a panel
 // under it over a dimmed page, with your recent searches, the library's categories and what
-// you saved last. Anything picked there becomes the query. Press / anywhere to focus it.
-import { useEffect, useRef, useState, type ReactNode } from "react";
+// you saved last. Anything picked there becomes the query. Press / anywhere to focus it. A
+// BorderBeam (border-beam, from Libraries.dev) runs a colourful glow around the pill's edge, which
+// moves to the panel while it's open; it holds still under reduced motion.
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import Image from "next/image";
+import { BorderBeam } from "border-beam";
 // Icons
 import Close from "@/components/fundations/icons/Close";
 import Search from "@/components/fundations/icons/Search";
+import { useDarkTheme } from "@/components/global/theme";
 import { categories } from "@/components/home/demo";
 import { cx } from "@/lib/cx";
 import { useBoards } from "./boards";
+import { CATEGORY_ICONS } from "./categoryIcons";
 
 const RECENT_KEY = "curatit-recent-searches";
 const RECENT_MAX = 8;
@@ -22,6 +27,20 @@ function readRecent(): string[] {
   } catch {
     return [];
   }
+}
+
+// The beam's travelling types don't stop for reduced motion on their own
+const REDUCE = "(prefers-reduced-motion: reduce)";
+function useReducedMotion() {
+  return useSyncExternalStore(
+    (onChange) => {
+      const query = matchMedia(REDUCE);
+      query.addEventListener("change", onChange);
+      return () => query.removeEventListener("change", onChange);
+    },
+    () => matchMedia(REDUCE).matches,
+    () => false,
+  );
 }
 
 export default function SearchBox({
@@ -41,6 +60,10 @@ export default function SearchBox({
   const [recent, setRecent] = useState<string[]>([]);
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dark = useDarkTheme();
+  const reducedMotion = useReducedMotion();
+  // The glow round the pill and, while it's open, the panel
+  const beam = { size: "md", colorVariant: "colorful", strength: 0.7, theme: dark ? "dark" : "light", active: !reducedMotion } as const;
 
   useEffect(() => setRecent(readRecent()), []);
 
@@ -116,85 +139,91 @@ export default function SearchBox({
             pick(query);
           }}
         >
-          <label className="relative flex h-13 items-center rounded-full bg-white ring-1 ring-base-200 transition-[box-shadow] duration-150 focus-within:ring-base-300">
-            <Search className="pointer-events-none absolute left-5 size-4.5 text-base-500" />
-            <span className="sr-only">Search the library</span>
-            <input
-              ref={inputRef}
-              type="search"
-              value={query}
-              onChange={(event) => onQuery(event.target.value)}
-              onFocus={() => setOpen(true)}
-              placeholder="Try ‘launch carousel that shows the product’"
-              autoComplete="off"
-              className="h-full w-full rounded-full border-0 bg-transparent pr-12 pl-12 text-body pointer-coarse:text-[16px] text-base-900 placeholder-base-500 focus:ring-0 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
-            />
-            {query ? (
-              <button
-                type="button"
-                aria-label="Clear search"
-                onClick={() => {
-                  onQuery("");
-                  inputRef.current?.focus();
-                }}
-                className="absolute right-3 flex size-8 items-center justify-center rounded-full text-base-500 hover:bg-base-50 hover:text-base-900"
-              >
-                <Close className="size-3.5" />
-              </button>
-            ) : (
-              <kbd className="pointer-events-none absolute right-4 hidden h-6 min-w-6 items-center justify-center rounded-md px-1.5 font-sans text-caption text-base-500 ring-1 ring-base-200 md:flex">
-                /
-              </kbd>
-            )}
-          </label>
+          {/* The radius is given rather than read from the pill: rounded-full computes to an
+              effectively infinite radius, which the beam can't draw */}
+          <BorderBeam {...beam} active={beam.active && !open} borderRadius={26}>
+            <label className="relative flex h-13 items-center rounded-full bg-white ring-1 ring-base-200 transition-[box-shadow] duration-150 focus-within:ring-base-300">
+              <Search className="pointer-events-none absolute left-5 size-4.5 text-base-500" />
+              <span className="sr-only">Search the library</span>
+              <input
+                ref={inputRef}
+                type="search"
+                value={query}
+                onChange={(event) => onQuery(event.target.value)}
+                onFocus={() => setOpen(true)}
+                placeholder="Try ‘launch carousel that shows the product’"
+                autoComplete="off"
+                className="h-full w-full rounded-full border-0 bg-transparent pr-12 pl-12 text-body pointer-coarse:text-[16px] text-base-900 placeholder-base-500 focus:ring-0 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+              />
+              {query ? (
+                <button
+                  type="button"
+                  aria-label="Clear search"
+                  onClick={() => {
+                    onQuery("");
+                    inputRef.current?.focus();
+                  }}
+                  className="absolute right-3 flex size-8 items-center justify-center rounded-full text-base-500 hover:bg-base-50 hover:text-base-900"
+                >
+                  <Close className="size-3.5" />
+                </button>
+              ) : (
+                <kbd className="pointer-events-none absolute right-4 hidden h-6 min-w-6 items-center justify-center rounded-md px-1.5 font-sans text-caption text-base-500 ring-1 ring-base-200 md:flex">
+                  /
+                </kbd>
+              )}
+            </label>
+          </BorderBeam>
         </form>
 
         {open && (
-          <div className="absolute inset-x-0 top-full mt-3 origin-top animate-[menu-in_150ms_cubic-bezier(0.23,1,0.32,1)] rounded-[28px] bg-white p-6 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.35)] dark:ring-1 dark:ring-edge motion-reduce:animate-none">
-            {recent.length > 0 && (
-              <Section title="Recent" onClear={clearRecent}>
-                <Row>
-                  {recent.map((item) => (
-                    <Chip key={item} onClick={() => pick(item)}>
-                      <Search className="size-4 shrink-0 text-base-500" />
-                      {item}
-                    </Chip>
-                  ))}
-                </Row>
-              </Section>
-            )}
-            <Section title="Categories">
-              <Row>
-                {chips.map((category) => (
-                  <Chip key={category.category} onClick={() => pick(category.name)}>
-                    <span
-                      aria-hidden="true"
-                      className="size-5 shrink-0 rounded-md"
-                      style={{ background: `oklch(0.7 0.12 ${category.hue})` }}
-                    />
-                    {category.name}
-                  </Chip>
-                ))}
-              </Row>
-            </Section>
-            {saved.length > 0 && (
-              <Section title="Recently saved">
-                <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                  {saved.map((post) => (
-                    <li key={post.shortCode}>
-                      <button
-                        type="button"
-                        aria-label={`Posts from ${post.brand.name}`}
-                        onClick={() => pick(post.brand.name)}
-                        className="relative block aspect-4/5 w-full overflow-hidden rounded-lg bg-base-100 outline-1 -outline-offset-1 outline-edge transition-[filter] duration-150 hover:brightness-95"
-                      >
-                        <Image src={post.cover} alt="" fill sizes="120px" className="object-cover" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </Section>
-            )}
+          // The beam's wrapper sets position: relative, so the panel is placed by a plain div outside it
+          <div className="absolute inset-x-0 top-full mt-3 origin-top animate-[menu-in_150ms_cubic-bezier(0.23,1,0.32,1)] motion-reduce:animate-none">
+            <BorderBeam {...beam} borderRadius={28}>
+              <div className="rounded-[28px] bg-white p-6 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.35)] dark:ring-1 dark:ring-edge">
+                {recent.length > 0 && (
+                  <Section title="Recent" onClear={clearRecent}>
+                    <Row>
+                      {recent.map((item) => (
+                        <Chip key={item} onClick={() => pick(item)}>
+                          <Search className="size-4 shrink-0 text-base-500" />
+                          {item}
+                        </Chip>
+                      ))}
+                    </Row>
+                  </Section>
+                )}
+                <Section title="Categories">
+                  <Row>
+                    {chips.map((category) => (
+                      <Chip key={category.category} onClick={() => pick(category.name)}>
+                        {/* The category's swatch, as a tile with its icon (Discover's icons) */}
+                        <CategorySwatch slug={category.category} hue={category.hue} />
+                        {category.name}
+                      </Chip>
+                    ))}
+                  </Row>
+                </Section>
+                {saved.length > 0 && (
+                  <Section title="Recently saved">
+                    <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                      {saved.map((post) => (
+                        <li key={post.shortCode}>
+                          <button
+                            type="button"
+                            aria-label={`Posts from ${post.brand.name}`}
+                            onClick={() => pick(post.brand.name)}
+                            className="relative block aspect-4/5 w-full overflow-hidden rounded-lg bg-base-100 outline-1 -outline-offset-1 outline-edge transition-[filter] duration-150 hover:brightness-95"
+                          >
+                            <Image src={post.cover} alt="" fill sizes="120px" className="object-cover" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </Section>
+                )}
+              </div>
+            </BorderBeam>
           </div>
         )}
       </div>
@@ -232,5 +261,18 @@ function Chip({ onClick, children }: { onClick: () => void; children: ReactNode 
     >
       {children}
     </button>
+  );
+}
+
+function CategorySwatch({ slug, hue }: { slug: string; hue: number }) {
+  const Glyph = CATEGORY_ICONS[slug];
+  return (
+    <span
+      aria-hidden="true"
+      className="flex size-6 shrink-0 items-center justify-center rounded-md"
+      style={{ background: `oklch(0.7 0.12 ${hue})`, color: `oklch(0.28 0.07 ${hue})` }}
+    >
+      {Glyph && <Glyph className="size-3.5" />}
+    </span>
   );
 }

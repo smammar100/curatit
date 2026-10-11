@@ -1,12 +1,11 @@
 "use client";
 
-// The account menu, after Cosmos: your avatar and a round chevron that opens a panel with
-// your profile, saved posts, contact and log out, then the theme (light, dark, system) and the
-// grid size, both remembered on this device.
+// The account menu, after Cosmos: your avatar is the button, and it opens a panel with your
+// profile, saved posts, contact and log out, then the theme (light, dark, system) and the grid
+// size, both remembered on this device.
 import { useEffect, useRef, useState, type ReactNode } from "react";
 // Icons
 import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
-import CaretDown from "@/components/fundations/icons/CaretDown";
 import ChatDots from "@/components/fundations/icons/ChatDots";
 import CircleHalf from "@/components/fundations/icons/CircleHalf";
 import Moon from "@/components/fundations/icons/Moon";
@@ -50,17 +49,20 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
   const item = "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-subtitle font-medium text-base-900 hover:bg-base-50";
 
   return (
-    <div ref={ref} className="relative flex items-center gap-2">
-      <Avatar className="hidden size-11 text-body sm:flex" />
+    <div ref={ref} className="relative flex items-center">
+      {/* A ring marks it as a button: on hover, and held while the menu is open */}
       <button
         type="button"
         aria-label="Account menu"
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="flex size-11 items-center justify-center rounded-full bg-base-100 text-base-900 transition-[background-color,scale] duration-150 hover:bg-base-200 active:scale-[0.96]"
+        className={cx(
+          "flex rounded-full ring-offset-2 ring-offset-white transition-[box-shadow,scale] duration-150 hover:ring-2 hover:ring-base-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-base-900 active:scale-[0.96]",
+          open && "ring-2 ring-base-300 hover:ring-base-300",
+        )}
       >
-        <CaretDown className={cx("size-4 transition-transform duration-200 ease-out", open && "rotate-180")} />
+        <Avatar className="size-11 text-body" />
       </button>
 
       {open && (

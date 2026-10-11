@@ -1,15 +1,16 @@
 "use client";
 
-// The dashboard header, after Cosmos: the mark and view tabs, a search pill in the middle,
-// Create, Upgrade and the account menu. The feed drives it directly; other dashboard pages
-// pass `onView` / `onSearch` that take you back to the feed.
+// The dashboard header, after Cosmos: the mark and the For you / Newest / Discover tabs, a
+// search pill in the middle, then Create, Saved (a bookmark with the count of saved posts) and
+// the account menu. The feed drives it directly; other dashboard pages pass `onView` /
+// `onSearch` that take you back to the feed.
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 // Assets
 import Symbol from "@/components/assets/Symbol";
 // Icons
+import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
 import CaretDown from "@/components/fundations/icons/CaretDown";
-import Lightning from "@/components/fundations/icons/Lightning";
 import Plus from "@/components/fundations/icons/Plus";
 import { cx } from "@/lib/cx";
 import AccountMenu from "./AccountMenu";
@@ -17,8 +18,10 @@ import { useBoards } from "./boards";
 import NewBoardDialog from "./NewBoardDialog";
 import SearchBox from "./SearchBox";
 
-export const VIEWS = ["For you", "Newest", "Saved"] as const;
+export const VIEWS = ["For you", "Newest", "Discover", "Saved"] as const;
 export type View = (typeof VIEWS)[number];
+// The views with a tab; Saved has the bookmark instead
+const TABS = ["For you", "Newest", "Discover"] as const satisfies readonly View[];
 
 export default function Header({
   view,
@@ -46,20 +49,15 @@ export default function Header({
         </Link>
         {/* Tabs on wide screens, a menu below that */}
         <nav aria-label="Feed" className="hidden items-center gap-6 lg:flex">
-          {VIEWS.map((option) => (
+          {TABS.map((option) => (
             <button
               key={option}
               type="button"
               aria-current={option === view ? "page" : undefined}
               onClick={() => onView(option)}
-              className="relative text-title font-medium whitespace-nowrap text-base-500 transition-colors duration-150 hover:text-base-900 aria-[current=page]:text-base-900"
+              className="text-title font-medium whitespace-nowrap text-base-500 transition-colors duration-150 hover:text-base-900 aria-[current=page]:text-base-900"
             >
               {option}
-              {option === "Saved" && savedCount > 0 && (
-                <span className="absolute -top-2.5 -right-4 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-600 px-1 text-micro font-medium text-paper tabular-nums">
-                  {savedCount}
-                </span>
-              )}
             </button>
           ))}
         </nav>
@@ -70,14 +68,22 @@ export default function Header({
 
       <div className="flex items-center justify-end gap-2">
         <CreateBoard />
-        <Link
-          href="/pricing"
-          aria-label="Upgrade"
-          title="Upgrade"
-          className="hidden size-11 items-center justify-center rounded-full text-base-900 ring-1 ring-base-200 transition-[background-color,scale] duration-150 hover:bg-base-50 active:scale-[0.96] sm:flex"
+        {/* Saved: filled while you're on it (or on one of your boards), with the count */}
+        <button
+          type="button"
+          onClick={() => onView("Saved")}
+          aria-label={savedCount ? `Saved, ${savedCount} ${savedCount === 1 ? "post" : "posts"}` : "Saved"}
+          aria-current={view === "Saved" ? "page" : undefined}
+          title="Saved"
+          className="relative flex size-11 shrink-0 items-center justify-center rounded-full text-base-900 ring-1 ring-base-200 transition-[background-color,color,scale] duration-150 hover:bg-base-50 active:scale-[0.96] aria-[current=page]:bg-base-900 aria-[current=page]:text-white aria-[current=page]:ring-base-900"
         >
-          <Lightning className="size-4.5" />
-        </Link>
+          <BookmarkSimple className="size-4.5" />
+          {savedCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-600 px-1 text-micro font-medium text-paper tabular-nums ring-2 ring-white">
+              {savedCount}
+            </span>
+          )}
+        </button>
         <AccountMenu savedCount={savedCount} onShowSaved={() => onView("Saved")} />
       </div>
     </header>
@@ -117,7 +123,7 @@ function ViewMenu({ view, onChange, className }: { view: View | null; onChange: 
           role="menu"
           className="absolute left-0 z-40 mt-2 w-44 origin-top-left animate-[menu-in_150ms_cubic-bezier(0.23,1,0.32,1)] rounded-2xl bg-white p-1.5 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)] ring-1 ring-edge motion-reduce:animate-none"
         >
-          {VIEWS.map((option) => (
+          {TABS.map((option) => (
             <button
               key={option}
               type="button"

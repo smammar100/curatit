@@ -1,5 +1,7 @@
 // The site's light / dark theme: data-theme="dark" on <html> (see ThemeScript, which applies
 // the saved choice before paint). "system" stores nothing and follows the OS.
+import { useSyncExternalStore } from "react";
+
 export type ThemeMode = "light" | "dark" | "system";
 
 const KEY = "theme";
@@ -25,4 +27,19 @@ export function setThemeMode(mode: ThemeMode) {
     else localStorage.setItem(KEY, mode);
   } catch {}
   requestAnimationFrame(() => requestAnimationFrame(() => root.removeAttribute("data-theme-switching")));
+}
+
+// Whether the page is dark right now, following data-theme as ThemeScript and setThemeMode change
+// it (light while rendering on the server). For pieces that take a theme prop instead of reading
+// the tokens, like the search's BorderBeam.
+export function useDarkTheme() {
+  return useSyncExternalStore(
+    (onChange) => {
+      const observer = new MutationObserver(onChange);
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+      return () => observer.disconnect();
+    },
+    () => document.documentElement.dataset.theme === "dark",
+    () => false,
+  );
 }
