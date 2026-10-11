@@ -23,7 +23,9 @@ const MESSAGES: Record<string, string> = {
   email_address_not_authorized: "We can’t send emails to this address yet. Use a different email address.",
   signup_disabled: "New sign-ups are paused right now. Try again later.",
   user_banned: "This account has been suspended. Contact us if you think this is a mistake.",
-  over_email_send_rate_limit: "Too many emails have been sent to this address. Wait a few minutes, then try again.",
+  // The email limit is for the whole project per hour (Supabase's own sender allows only a few),
+  // not for this address, so it isn't the person's doing
+  over_email_send_rate_limit: "We’ve sent too many emails in the last hour, so we can’t send yours yet. Try again in a little while.",
   over_request_rate_limit: "Too many attempts in a short time. Wait a minute, then try again.",
   request_timeout: "That took too long. Check your connection and try again.",
   otp_expired: "This link has expired or has already been used. Request a new one.",
