@@ -66,6 +66,14 @@
   --color-accent-800: oklch(35.02% 0.102 35.05);
   --color-accent-900: oklch(22.26% 0.055 35.39);
   --color-accent-950: oklch(16.51% 0.033 41.46);
+  /* Danger: red, for errors only (a field's note and ring, the form's error panel). Redder and
+     darker than the terracotta accent so an error never reads as a link. Text is 5.4:1 or more
+     on the card in both themes */
+  --color-danger-50: oklch(0.97 0.014 20);
+  --color-danger-100: oklch(0.93 0.035 20);
+  --color-danger-500: oklch(0.6 0.21 25);
+  --color-danger-600: oklch(0.54 0.21 26);
+  --color-danger-700: oklch(0.47 0.18 26);
   /* Base palette */
 
  --color-base-50: oklch(0.964 0.003 84.4);
@@ -190,6 +198,11 @@
   --color-accent-800: oklch(0.45 0.085 35);
   --color-accent-900: oklch(0.35 0.06 35);
   --color-accent-950: oklch(0.28 0.04 38);
+  --color-danger-50: oklch(0.26 0.06 25);
+  --color-danger-100: oklch(0.32 0.09 25);
+  --color-danger-500: oklch(0.66 0.19 24);
+  --color-danger-600: oklch(0.72 0.16 22);
+  --color-danger-700: oklch(0.82 0.1 20);
   --color-edge: oklch(1 0 0 / 0.1);
   --color-shimmer: oklch(0.32 0.007 84);
 }

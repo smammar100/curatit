@@ -7,28 +7,67 @@ export function safeNext(value: FormDataEntryValue | string | null | undefined, 
 }
 
 // Supabase Auth error codes (https://supabase.com/docs/guides/auth/debugging/error-codes) in
-// words a person can act on. Anything unlisted gets the generic line.
+// words a person can act on: what happened, then what to do. Anything unlisted gets the
+// generic line.
+const SAME_BROWSER = "Open this link in the browser where you asked for it, or request a new link.";
 const MESSAGES: Record<string, string> = {
-  invalid_credentials: "That email and password don’t match. Try again, or reset your password.",
-  email_not_confirmed: "Confirm your email first: open the link we sent when you signed up.",
-  user_already_exists: "There’s already an account with that email. Sign in instead.",
-  email_exists: "There’s already an account with that email. Sign in instead.",
-  weak_password: "Choose a longer password, at least 8 characters.",
-  same_password: "That’s your current password. Choose a new one.",
-  email_address_invalid: "That email address doesn’t look right.",
-  email_address_not_authorized: "We can’t send email to that address yet. Try another one.",
-  signup_disabled: "New sign-ups are closed for now.",
-  over_email_send_rate_limit: "Too many emails sent just now. Wait a few minutes and try again.",
-  over_request_rate_limit: "Too many attempts. Wait a minute and try again.",
-  otp_expired: "That link has expired or was already used. Ask for a new one.",
-  flow_state_not_found: "Open the link in the same browser you started in, or ask for a new one.",
-  flow_state_expired: "That link has expired. Ask for a new one.",
-  bad_code_verifier: "Open the link in the same browser you started in, or ask for a new one.",
-  pkce_code_verifier_not_found: "Open the link in the same browser you started in, or ask for a new one.",
-  access_denied: "Sign-in was cancelled or the link is no longer valid.",
-  session_missing: "Your reset link has expired. Ask for a new one.",
+  invalid_credentials: "The email or password is incorrect. Check both and try again, or reset your password.",
+  email_not_confirmed: "Confirm your email address first. Open the link we sent you when you signed up.",
+  user_already_exists: "An account with this email already exists. Sign in instead.",
+  email_exists: "An account with this email already exists. Sign in instead.",
+  weak_password: "This password isn’t strong enough. Choose a stronger one.",
+  pwned_password: "This password has appeared in a known data breach, so it isn’t safe to use. Choose a different one.",
+  same_password: "Your new password must be different from your current one.",
+  email_address_invalid: "Enter a valid email address, like name@example.com.",
+  validation_failed: "Some of the details aren’t valid. Check them and try again.",
+  email_address_not_authorized: "We can’t send emails to this address yet. Use a different email address.",
+  signup_disabled: "New sign-ups are paused right now. Try again later.",
+  user_banned: "This account has been suspended. Contact us if you think this is a mistake.",
+  over_email_send_rate_limit: "Too many emails have been sent to this address. Wait a few minutes, then try again.",
+  over_request_rate_limit: "Too many attempts in a short time. Wait a minute, then try again.",
+  request_timeout: "That took too long. Check your connection and try again.",
+  otp_expired: "This link has expired or has already been used. Request a new one.",
+  flow_state_not_found: SAME_BROWSER,
+  flow_state_expired: "This link has expired. Request a new one.",
+  bad_code_verifier: SAME_BROWSER,
+  pkce_code_verifier_not_found: SAME_BROWSER,
+  access_denied: "Sign-in was cancelled, or the link is no longer valid. Try again.",
+  session_missing: "Your password reset link has expired. Request a new one.",
 };
 
 export function authMessage(code: string | null | undefined) {
-  return (code && MESSAGES[code]) || "Something went wrong. Try again in a moment.";
+  return (code && MESSAGES[code]) || "Something went wrong on our side. Try again in a moment.";
+}
+
+// The forms' own checks, run before anything is sent (and again in the server actions, for a
+// submit without JavaScript). Each returns what's wrong and how to fix it, or null.
+export function emailProblem(email: string) {
+  const value = email.trim();
+  if (!value) return "Enter your email address.";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Enter a valid email address, like name@example.com.";
+  return null;
+}
+
+// The project's password rules, as set in the Supabase dashboard (Authentication → Sign In /
+// Providers → Email: minimum length 8, and "Lowercase, uppercase letters, digits and symbols").
+// Supabase enforces them; this copy lets the forms show them as a checklist and say exactly
+// what's missing before anything is sent. Change the two together. The symbols are the set
+// Supabase accepts, so "£" or a space doesn't count.
+const SYMBOLS = "!@#$%^&*()_+-=[]{};'\\:\"|<>?,./`~";
+
+export const PASSWORD_RULES: { id: string; label: string; missing: string; test: (password: string) => boolean }[] = [
+  { id: "length", label: "8 or more characters", missing: "at least 8 characters", test: (p) => p.length >= 8 },
+  { id: "lower", label: "A lowercase letter", missing: "a lowercase letter", test: (p) => /[a-z]/.test(p) },
+  { id: "upper", label: "An uppercase letter", missing: "an uppercase letter", test: (p) => /[A-Z]/.test(p) },
+  { id: "digit", label: "A number", missing: "a number", test: (p) => /[0-9]/.test(p) },
+  { id: "symbol", label: "A symbol, like ! ? #", missing: "a symbol (like ! ? #)", test: (p) => [...p].some((c) => SYMBOLS.includes(c)) },
+];
+
+// What a new password still needs, in a sentence, or null when it meets every rule
+export function passwordProblem(password: string) {
+  if (!password) return "Create a password.";
+  const missing = PASSWORD_RULES.filter((rule) => !rule.test(password)).map((rule) => rule.missing);
+  if (!missing.length) return null;
+  const list = missing.length === 1 ? missing[0] : `${missing.slice(0, -1).join(", ")} and ${missing.at(-1)}`;
+  return `Your password needs ${list}.`;
 }
