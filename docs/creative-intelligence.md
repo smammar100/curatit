@@ -20,7 +20,8 @@ Apify import (seed chunk per brand)
                  └─ creative_save_analysis  version + slides + run + job, in one transaction
                       └─ post_analyses (needs_review), or a proposal beside reviewed work
                            └─ /dashboard/review   an editor approves, edits, rejects, publishes
-                                └─ published: post_creative_labels → curatit_mcp_search_v2 / get_post_v2
+                                └─ published: post_creative_labels → curatit_mcp_search_v2 / get_post_v2,
+                                   and "Why it works" on the post's page in the dashboard (rebuilt on publish)
 Daily (Vercel cron) creative_reconcile      queues posts with no analysis, or changed since; never calls a model
 ```
 

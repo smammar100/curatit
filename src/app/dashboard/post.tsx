@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 // Components
 import PostView from "@/components/dashboard/PostView";
+import { getPublishedAnalysis } from "@/lib/creative/display";
 import { getPostDetail, getPublishedPosts } from "@/lib/posts";
 
 // Shared by the routes that show a post. /dashboard/p/<shortCode> fills two slots: the page
@@ -15,5 +16,6 @@ export async function postParams() {
 export async function PostModal({ params }: { params: Promise<{ shortCode: string }> }) {
   const post = await getPostDetail((await params).shortCode);
   if (!post) notFound();
-  return <PostView key={post.shortCode} post={post} />;
+  const analysis = await getPublishedAnalysis(post.id, post.images.length);
+  return <PostView key={post.shortCode} post={post} analysis={analysis} />;
 }
