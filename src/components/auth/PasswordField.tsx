@@ -2,20 +2,21 @@
 
 // The password field for sign-up and reset password: the input, a strength meter that fills as
 // you type, and the project's rules as a checklist that ticks off live (PASSWORD_RULES in
-// lib/auth, the same rules Supabase enforces). Red is kept for errors, so strength reads as
-// ink: the segments darken from a pale grey to full black as it improves.
-import { useEffect, useRef, useState } from "react";
+// lib/auth, the same rules Supabase enforces). The meter runs red, amber, light green, green
+// (the danger, warning and success tokens in global.css); the word beside it says the same in
+// a darker shade, so the level never rests on colour alone.
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Check from "@/components/fundations/icons/Check";
 import { PASSWORD_RULES } from "@/lib/auth";
 import { cx } from "@/lib/cx";
 import { AuthField } from "./AuthParts";
 
 const LEVELS = [
-  { label: "", fill: "" },
-  { label: "Weak", fill: "bg-base-300" },
-  { label: "Fair", fill: "bg-base-500" },
-  { label: "Good", fill: "bg-base-700" },
-  { label: "Strong", fill: "bg-base-900" },
+  { label: "", fill: "", text: "" },
+  { label: "Weak", fill: "bg-danger-500", text: "text-danger-600" },
+  { label: "Fair", fill: "bg-warning-500", text: "text-warning-700" },
+  { label: "Good", fill: "bg-success-400", text: "text-success-700" },
+  { label: "Strong", fill: "bg-success-600", text: "text-success-700" },
 ];
 
 // Guessable no matter which rules they meet: common passwords, a run of one character, and
@@ -43,11 +44,11 @@ export function strength(password: string) {
   return guessable(password) ? level - 1 : level;
 }
 
-export default function PasswordField({ id = "password", label = "Password", error }: { id?: string; label?: string; error?: string | null }) {
+export default function PasswordField({ id = "password", label = "Password", error }: { id?: string; label?: string; error?: ReactNode }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [value, setValue] = useState("");
   const level = strength(value);
-  const { label: word, fill } = LEVELS[level];
+  const { label: word, fill, text } = LEVELS[level];
 
   // React empties the form after its action runs; start the meter and checklist over with it
   useEffect(() => {
@@ -87,7 +88,7 @@ export default function PasswordField({ id = "password", label = "Password", err
             </span>
           ))}
         </div>
-        <p aria-live="polite" className="w-12 text-right text-xs font-medium text-base-900">
+        <p aria-live="polite" className={cx("w-12 text-right text-xs font-medium transition-colors duration-200 motion-reduce:transition-none", text)}>
           {word && <span className="sr-only">Password strength: </span>}
           {word}
         </p>

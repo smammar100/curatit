@@ -57,7 +57,7 @@ titles, labels). Never `font-semibold`/`font-bold` on a heading.
 
 ## Color system
 
-Three custom oklch scales in `@theme` (`src/styles/global.css`) - use only
+Custom oklch scales in `@theme` (`src/styles/global.css`) - use only
 these, never Tailwind default palettes, never hex in markup:
 
 - `base` - warm gray neutral scale (hue ~85-90). All text, backgrounds,
@@ -69,6 +69,9 @@ these, never Tailwind default palettes, never hex in markup:
   and a form's error panel (`bg-danger-50 text-danger-700`). Always with an
   icon and words, never colour alone. Redder and darker than accent so an error
   never reads as a link.
+- `warning` (amber) and `success` (green) - only for the password strength
+  meter (`auth/PasswordField`), which runs danger, warning, success with the
+  level's word beside it. Don't reach for them elsewhere.
 
 Usage rules:
 
