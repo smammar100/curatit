@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 
-// After an editor publishes, unpublishes or edits an analysis, rebuild the post's page so "Why it
-// works" shows the change now rather than at the dashboard's hourly revalidation. Only for editors
-// (the profile's role, read through the editor's own session); anyone else changes nothing.
+// After an editor publishes, unpublishes or edits an analysis, rebuild the post's page so its
+// Creative breakdown shows the change now rather than at the dashboard's hourly revalidation.
+// Only for editors (the profile's role, read through the editor's own session); anyone else
+// changes nothing.
 export async function refreshPostPage(shortCode: string) {
   if (!/^[A-Za-z0-9_-]{1,64}$/.test(shortCode)) return;
   const supabase = createClient(await cookies());
