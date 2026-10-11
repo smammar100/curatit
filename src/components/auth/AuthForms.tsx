@@ -15,9 +15,11 @@ import {
   signIn,
   signUp,
   updatePassword,
+  type AuthFields,
   type AuthState,
 } from "@/app/auth/actions";
 import { authMessage, emailProblem, passwordProblem } from "@/lib/auth";
+import { SUPPORT_MAILTO } from "@/lib/site";
 import { AuthField, AuthNotice } from "./AuthParts";
 import PasswordField from "./PasswordField";
 
@@ -59,12 +61,17 @@ function Footer({ children }: { children: ReactNode }) {
 // shows on submit, which is then held back with focus on the first problem; when you leave a
 // field you've typed in, for the fields in `onLeave` (not a new password, whose checklist
 // already says what's missing as you type); and it updates as you edit, so it goes the moment
-// the field is fixed. The server actions run the same checks for a submit without JavaScript.
+// the field is fixed. The server actions run the same checks for a submit without JavaScript,
+// and what they find about a field (`server`: an email that's already in use, a password
+// Supabase turned down) shows under it the same way.
 type Checks = Record<string, (value: string) => string | null>;
 const enterPassword = (value: string) => (value ? null : "Enter your password.");
 
-function useValidation(checks: Checks, onLeave: string[] = []) {
+function useValidation(checks: Checks, onLeave: string[] = [], server?: AuthFields) {
   const [errors, setErrors] = useState<Record<string, string>>({});
+  useEffect(() => {
+    if (server) setErrors(server as Record<string, string>);
+  }, [server]);
   const set = (name: string, message: string | null) =>
     setErrors((current) => {
       if ((current[name] ?? null) === message) return current;
@@ -117,7 +124,7 @@ function Submit({ pending, idle, busy }: { pending: boolean; idle: string; busy:
 export function SignInForm() {
   const [state, action, pending] = useActionState(signIn, {});
   const linkError = useParam("error");
-  const check = useValidation({ email: emailProblem, password: enterPassword }, ["email"]);
+  const check = useValidation({ email: emailProblem, password: enterPassword }, ["email"], state.fields);
   const error = check.any ? null : (state.error ?? (linkError ? authMessage(linkError) : null));
   return (
     <>
@@ -154,7 +161,7 @@ export function SignInForm() {
 
 export function SignUpForm() {
   const [state, action, pending] = useActionState(signUp, {});
-  const check = useValidation({ email: emailProblem, password: passwordProblem }, ["email"]);
+  const check = useValidation({ email: emailProblem, password: passwordProblem }, ["email"], state.fields);
   if (state.sent) return <CheckEmail email={state.sent} />;
   const error = check.any ? null : state.error;
   return (
@@ -162,7 +169,7 @@ export function SignUpForm() {
       <Heading title="Create your account">Search by brief and save the posts worth studying.</Heading>
       <form action={action} {...check.form} className="mt-6 space-y-4">
         <Next />
-        <AuthField id="email" label="Email address" type="email" placeholder="you@example.com" inputMode="email" autoComplete="email" required defaultValue={state.email} error={check.errors.email} />
+        <AuthField id="email" label="Email address" type="email" placeholder="you@example.com" inputMode="email" autoComplete="email" required defaultValue={state.email} error={check.errors.email === authMessage("email_exists") ? <EmailTaken /> : check.errors.email} />
         <PasswordField error={check.errors.password} />
         {error && <AuthNotice>{error}</AuthNotice>}
         <Submit pending={pending} idle="Create account" busy="Creating account…" />
@@ -174,6 +181,24 @@ export function SignUpForm() {
         </Link>
       </Footer>
     </>
+  );
+}
+
+// Under the email on sign-up when the address already has an account: sign in, or write to us
+function EmailTaken() {
+  const link = "font-medium underline underline-offset-2";
+  return (
+    <span>
+      {authMessage("email_exists")}{" "}
+      <Link href="/signin" className={link}>
+        Sign in
+      </Link>{" "}
+      instead, or{" "}
+      <a href={SUPPORT_MAILTO} className={link}>
+        contact support
+      </a>
+      .
+    </span>
   );
 }
 
@@ -219,7 +244,7 @@ function CheckEmail({ email }: { email: string }) {
 
 export function ForgotPasswordForm() {
   const [state, action, pending] = useActionState(requestPasswordReset, {} as AuthState);
-  const check = useValidation({ email: emailProblem }, ["email"]);
+  const check = useValidation({ email: emailProblem }, ["email"], state.fields);
   if (state.sent) {
     return (
       <>
@@ -255,7 +280,7 @@ export function ForgotPasswordForm() {
 
 export function ResetPasswordForm() {
   const [state, action, pending] = useActionState(updatePassword, {});
-  const check = useValidation({ password: (value) => (value ? passwordProblem(value) : "Enter a new password.") });
+  const check = useValidation({ password: (value) => (value ? passwordProblem(value) : "Enter a new password.") }, [], state.fields);
   const error = check.any ? null : state.error;
   return (
     <>

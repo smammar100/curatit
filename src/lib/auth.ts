@@ -13,8 +13,8 @@ const SAME_BROWSER = "Open this link in the browser where you asked for it, or r
 const MESSAGES: Record<string, string> = {
   invalid_credentials: "The email or password is incorrect. Check both and try again, or reset your password.",
   email_not_confirmed: "Confirm your email address first. Open the link we sent you when you signed up.",
-  user_already_exists: "An account with this email already exists. Sign in instead.",
-  email_exists: "An account with this email already exists. Sign in instead.",
+  user_already_exists: "This email is already in use.",
+  email_exists: "This email is already in use.",
   weak_password: "This password isn’t strong enough. Choose a stronger one.",
   pwned_password: "This password has appeared in a known data breach, so it isn’t safe to use. Choose a different one.",
   same_password: "Your new password must be different from your current one.",

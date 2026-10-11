@@ -11,7 +11,7 @@ const ringClass = { ok: "ring-base-200 focus:border-accent-500 focus:ring-accent
 
 // A labelled input; `aside` sits at the label's right, like "Forgot password?". `error` is a
 // problem with this field: it shows under it in red, turns its ring red and is read with the field
-export function AuthField({ id, label, aside, error, ...input }: { id: string; label: string; aside?: ReactNode; error?: string | null } & InputHTMLAttributes<HTMLInputElement>) {
+export function AuthField({ id, label, aside, error, ...input }: { id: string; label: string; aside?: ReactNode; error?: ReactNode } & InputHTMLAttributes<HTMLInputElement>) {
   const describedBy = [input["aria-describedby"], error && `${id}-error`].filter(Boolean).join(" ") || undefined;
   return (
     <div className="w-full">

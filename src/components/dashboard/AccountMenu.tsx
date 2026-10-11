@@ -13,7 +13,7 @@ import Moon from "@/components/fundations/icons/Moon";
 import SignOut from "@/components/fundations/icons/SignOut";
 import Sun from "@/components/fundations/icons/Sun";
 import { getThemeMode, setThemeMode, type ThemeMode } from "@/components/global/theme";
-import { SITE_URL } from "@/lib/site";
+import { SUPPORT_MAILTO } from "@/lib/site";
 import { cx } from "@/lib/cx";
 import { signOut } from "@/app/auth/actions";
 import { Avatar, useUser } from "./user";
@@ -48,7 +48,6 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
   };
 
   const item = "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-subtitle font-medium text-base-900 hover:bg-base-50";
-  const host = new URL(SITE_URL).host;
 
   return (
     <div ref={ref} className="relative flex items-center gap-2">
@@ -91,7 +90,7 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
             </span>
             <BookmarkSimple className="size-5" />
           </button>
-          <a role="menuitem" href={`mailto:hello@${host}`} className={item}>
+          <a role="menuitem" href={SUPPORT_MAILTO} className={item}>
             Contact us
             <ChatDots className="size-5" />
           </a>
