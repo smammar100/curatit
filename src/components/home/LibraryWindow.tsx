@@ -1,7 +1,7 @@
 "use client";
 
 // The solution in the problem → solution scroll: the real dashboard, drawn small. Its header (the
-// mark, For you / Newest / Discover, the search pill holding the brief, Create, Saved with its
+// mark, For you / Discover, the search pill holding the brief, Create, Saved with its
 // count, and the account), the feed as a masonry of library posts at their own proportions, dealt row by row
 // like the real grid, and one post being saved: its hover state with "Saved", the Save menu open
 // on the board it went to, and the toast that confirms it. It mirrors components/dashboard, so
@@ -55,7 +55,6 @@ export default function LibraryWindow({ className }: { className?: string }) {
             <Symbol className="size-5 text-base-900" />
             <div className="hidden items-center gap-3 text-xs font-medium @lg:flex">
               <span className="text-base-900">For you</span>
-              <span className="text-base-500">Newest</span>
               <span className="text-base-500">Discover</span>
             </div>
           </div>

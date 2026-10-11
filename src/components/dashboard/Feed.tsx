@@ -2,14 +2,19 @@
 
 // The dashboard: the library as a feed, after Cosmos's signed-in home (chosen from a three-way
 // prototype on 2026-10-10). The header's tabs pick the view, its search filters the posts, and
-// the grid shows them. Discover adds a row of categories to browse the library by. ?view=
-// newest|discover|saved, ?category= (on Discover) and ?q= open the feed on a view, category or
+// the grid shows them. For you is the library ranked on the person's onboarding answers
+// (forYou.ts); someone whose profile has none yet is sent to /dashboard/welcome first. Discover
+// adds a row of categories to browse the library by. ?view=
+// discover|saved, ?category= (on Discover) and ?q= open the feed on a view, category or
 // search, which is how other dashboard pages send you back here.
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Button from "@/components/fundations/elements/Button";
 import BoardList from "./BoardList";
 import { useBoards } from "./boards";
 import CategoryBar from "./CategoryBar";
+import { rank } from "./forYou";
+import { useProfile } from "./profile";
 import SavedArt from "./SavedArt";
 import Grid from "./Grid";
 import Header, { VIEWS, type View } from "./Header";
@@ -33,7 +38,9 @@ export const feedHref = (view: View, query = "", category: string | null = null)
 };
 
 export default function Feed() {
+  const router = useRouter();
   const { boards, status, list, posts: byCode } = useBoards();
+  const { status: profileStatus, profile } = useProfile();
   const [query, setQuery] = useState("");
   const [view, setView] = useState<View>("For you");
   // Discover's category (a slug), or null for All
@@ -48,6 +55,11 @@ export default function Feed() {
     const q = params.get("q");
     if (q) setQuery(q);
   }, []);
+
+  // First visit: set the feed up before showing it
+  useEffect(() => {
+    if (profileStatus === "ready" && !profile.onboardedAt) router.replace("/dashboard/welcome");
+  }, [profileStatus, profile.onboardedAt, router]);
 
   // Keep the address in step, so a reload or a shared link opens the same feed (but not while
   // the address is a post's, opened over the feed)
@@ -66,8 +78,10 @@ export default function Feed() {
   const shown = useMemo(() => {
     const source = view === "Saved" ? saved : view === "Discover" && category ? list.filter((post) => post.category.slug === category) : list;
     const filtered = query ? source.filter((post) => matches(post, query)) : source;
-    return view === "Newest" ? filtered.toSorted((a, b) => b.postedAt.localeCompare(a.postedAt)) : filtered;
-  }, [list, saved, query, view, category]);
+    return view === "For you" ? rank(filtered, profile) : filtered;
+  }, [list, saved, query, view, category, profile]);
+  // For you waits for the answers it ranks on, so it never shows one order and then another
+  const waiting = (view === "Saved" && status === "loading") || (view === "For you" && profileStatus === "loading");
 
   return (
     <div className="min-h-dvh bg-white">
@@ -76,8 +90,8 @@ export default function Feed() {
         {view === "Discover" && <CategoryBar posts={list} value={category} onChange={setCategory} />}
         {/* The Saved view opens on the boards, then every saved post */}
         {view === "Saved" && !query && status !== "loading" && <BoardList />}
-        {view === "Saved" && status === "loading" ? (
-          <GridSkeleton label="Loading your saved posts" />
+        {waiting ? (
+          <GridSkeleton label={view === "Saved" ? "Loading your saved posts" : "Loading your feed"} />
         ) : shown.length ? (
           <>
             {view === "Saved" && !query && boards.length > 0 && <h2 className="mb-5 text-title font-medium text-base-900">All saved posts</h2>}
