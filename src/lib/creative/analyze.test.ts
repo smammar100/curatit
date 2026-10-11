@@ -6,7 +6,7 @@ import { analyzePost, chunks, inputFingerprint } from "./analyze";
 import { prepareImages } from "./media";
 import { fail, MockAdapter } from "./mock";
 import type { CreativeDna, Perception } from "./schema";
-import { makeManifest, storeWith } from "./testkit";
+import { makeImage, makeManifest, storeWith } from "./testkit";
 
 let workdir: string;
 beforeEach(async () => {
@@ -46,8 +46,10 @@ describe("analyzePost", () => {
     expect(adapter.requests.map((r) => [r.task, r.images.map((i) => i.position)])).toEqual([
       ["perception", [0, 1, 2, 3, 4, 5, 6]],
       ["perception", [7, 8, 9, 10, 11, 12]],
-      ["synthesis", []],
+      // Synthesis opens every slide again to check what it writes
+      ["synthesis", [...Array(13).keys()]],
     ]);
+    expect(adapter.requests[2].prompt).toContain("slide-12.webp  (position 12)");
     expect(analysis.slides.map((slide) => slide.position)).toEqual([...Array(13).keys()]);
     expect(analysis.version).toMatchObject({ image_analysis_complete: true, expected_slides: 13, processed_slides: 13, review_status: "needs_review", model_id: "mock" });
     expect(analysis.version.input_fingerprint).toBe(inputFingerprint(s.manifest, "mock"));
@@ -63,6 +65,44 @@ describe("analyzePost", () => {
     expect(analysis.version.takeaways).toEqual(dna.takeaways);
     expect(analysis.version.why_it_works).toContain(dna.creative_rationale[0].hypothesis);
     expect(analysis.version.hook).toBe(dna.concept); // no observed hook text, so the concept
+  });
+
+  it("records a blank frame the same way whatever the model says, and flags it once", async () => {
+    const manifest = makeManifest("blank3", 3);
+    manifest.images[1].was_video = true;
+    const store = await storeWith(manifest);
+    store.files.set(`${manifest.images[1].bucket}/${manifest.images[1].path}`, await makeImage("webp", "#000000", 48, { blank: true }));
+    const images = await prepareImages(manifest.images, store, workdir);
+    expect(images.map((image) => image.blank)).toEqual([false, true, false]);
+
+    const adapter = new MockAdapter({ script: [(_r, p) => ({ ...(p as Perception), slides: (p as Perception).slides.map((slide) => ({ ...slide, confidence: "low" })) })] });
+    const analysis = await analyzePost({ manifest, images, adapter, maxUsd: 5, slidesPerCall: 10, workdir });
+    expect(analysis.slides[1]).toMatchObject({
+      visible_text: { headline: null, body: null },
+      legibility: "no-text",
+      typography: { classes: ["none"], weight: "none" },
+      imagery: ["video-frame"],
+      devices: ["none"],
+      people_prominence: "unknown",
+      product_prominence: "unknown",
+      confidence: "low",
+    });
+    expect(analysis.slides[0].visible_text.headline).not.toBeNull();
+    const warnings = analysis.verdict.warnings.map((issue) => `${issue.code}@${issue.path}`);
+    expect(warnings).toContain("blank_slide@slides.1");
+    expect(warnings).not.toContain("low_confidence_slide@slides.1");
+    expect(warnings).toContain("low_confidence_slide@slides.0");
+    for (const request of adapter.requests) expect(request.prompt).toContain("(position 1; the cover frame of a video slide; blank: one flat colour, nothing on it)");
+  });
+
+  it("keeps the narrative's role for every slide, so the slide records and the DNA agree", async () => {
+    const roles = ["example", "example", "cta"] as const;
+    const adapter = new MockAdapter({
+      script: [undefined, (_r, dna) => ({ ...(dna as CreativeDna), narrative: { ...(dna as CreativeDna).narrative, slide_roles: roles.map((role, position) => ({ position, role })) } })],
+    });
+    const analysis = await run(adapter, await setup(3));
+    expect(analysis.slides.map((slide) => slide.role)).toEqual(roles);
+    expect(analysis.version.perception.slides.map((slide) => slide.role)).toEqual(roles);
   });
 
   it("handles a single image as one slide at position 0", async () => {

@@ -10,6 +10,7 @@ import Link from "next/link";
 import { cx } from "@/lib/cx";
 import { loadQueue, reprocess, useIsEditor, type Queue, type QueueRow } from "./data";
 import { ago, Frame, label, money, Notice, Pill, quietButton, reviewHref, seconds, sourceLabel, StatusPill, useBusy } from "./parts";
+import { saveWalk, walkOf } from "./walk";
 
 const TABS = ["Needs review", "Failed", "Published", "Recent runs"] as const;
 type Tab = (typeof TABS)[number];
@@ -46,6 +47,12 @@ export function QueueView({ queue, failed, onRefresh }: { queue: Queue | null; f
     ["Published", counts?.published],
     ["Failed", counts?.failed],
   ];
+  // The list a post opened from here steps through with Previous and Next
+  useEffect(() => {
+    if (!queue) return;
+    const rows = tab === "Needs review" ? queue.review : tab === "Failed" ? queue.failed : tab === "Published" ? queue.published : null;
+    saveWalk(walkOf(tab, rows ? rows.map((row) => row.post) : queue.runs.flatMap((run) => (run.post ? [run.post] : []))));
+  }, [queue, tab]);
   const lists: Record<Tab, number | undefined> = {
     "Needs review": queue?.review.length,
     Failed: queue?.failed.length,

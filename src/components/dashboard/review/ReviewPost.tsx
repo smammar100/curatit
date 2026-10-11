@@ -4,18 +4,22 @@
 // positions and what was read off each), the Creative DNA on the right, every version of it, and
 // the decisions. Evidence chips jump to the slide or the caption they cite. An editor approves
 // (optionally publishing), rejects, reopens, unpublishes, edits (saved as a new version) or asks
-// for a fresh analysis (filed as a proposal beside whatever has been reviewed).
-import { useCallback, useEffect, useMemo, useState } from "react";
+// for a fresh analysis (filed as a proposal beside whatever has been reviewed). Previous and Next
+// (or K and J) step through the queue list the post was opened from.
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
 import CaretLeft from "@/components/fundations/icons/CaretLeft";
 import CaretRight from "@/components/fundations/icons/CaretRight";
+import Check from "@/components/fundations/icons/Check";
 import { cx } from "@/lib/cx";
 import type { CreativeDna, SlideObservation } from "@/lib/creative/schema";
 import { loadPostReview, reprocess, review, useIsEditor, type PostReview, type Version } from "./data";
 import DnaEditor from "./DnaEditor";
 import { ago, EvidenceChip, Frame, label, money, Notice, Pill, quietButton, reviewHref, Section, seconds, solidButton, sourceLabel, StatusPill, useBusy } from "./parts";
+import { useWalk, type WalkItem } from "./walk";
 
 export default function ReviewPost({ postId }: { postId: string }) {
   const editor = useIsEditor();
@@ -48,7 +52,17 @@ export function PostReviewView({ data, onRefresh }: { data: PostReview; onRefres
   const [focus, setFocus] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [note, setNote] = useState("");
+  // What the last decision did to which version, shown with a link on to the next post while
+  // that version is the one on screen
+  const [done, setDone] = useState<{ versionId: string; text: string } | null>(null);
   const { busy, error, run } = useBusy();
+  const walk = useWalk(data.post.id);
+  // Arriving from another post (or a link), focus lands on this post's title, so a screen reader
+  // says where you are and J / K carry on from here; never taken from anything already focused
+  const title = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (!document.activeElement || document.activeElement === document.body) title.current?.focus({ preventScroll: true });
+  }, []);
 
   const { post, analysis } = data;
   const version = data.versions.find((v) => v.id === versionId) ?? data.versions.find((v) => v.id === analysis?.current_version_id) ?? data.versions[0] ?? null;
@@ -70,13 +84,16 @@ export function PostReviewView({ data, onRefresh }: { data: PostReview; onRefres
     if (value === "caption") document.getElementById("review-caption")?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  const decide = (action: "approve" | "reject" | "reopen" | "unpublish", publish = false) =>
-    version &&
+  const decide = (action: "approve" | "reject" | "reopen" | "unpublish", publish = false) => {
+    if (!version) return;
+    setDone(null);
     run(action + (publish ? "-publish" : ""), () => review(version.id, action, { publish, note })).then((ok) => {
       if (!ok) return;
       setNote("");
+      setDone({ versionId: version.id, text: DONE[action](publish) });
       refresh(version.id);
     });
+  };
 
   return (
     <>
@@ -84,9 +101,13 @@ export function PostReviewView({ data, onRefresh }: { data: PostReview; onRefres
         <SlideViewer images={post.images} slide={slide} onSlide={setSlide} slides={slides} />
 
         <div className="min-w-0">
-          <Link href={reviewHref()} className="text-caption font-medium text-base-500 hover:text-base-900">
-            ← Review queue
-          </Link>
+          <div className="flex min-h-9 items-center justify-between gap-3">
+            <Link href={reviewHref()} className="text-caption font-medium whitespace-nowrap text-base-500 hover:text-base-900">
+              ← Review queue
+            </Link>
+            {/* Not while a decision is saving: one that failed after you'd moved on would never show */}
+            <ReviewNav {...walk} blocked={editing ? "Save or cancel the edit first" : busy ? "Wait for this to save" : null} />
+          </div>
           <p className="mt-3 flex flex-wrap items-center gap-x-2 text-caption text-base-500">
             <span className="font-medium text-base-700">{post.brand}</span>
             <span>{post.category}</span>
@@ -95,7 +116,9 @@ export function PostReviewView({ data, onRefresh }: { data: PostReview; onRefres
               {post.short_code} on Instagram <ArrowUpRight className="size-3" />
             </a>
           </p>
-          <h1 className="mt-1 font-display text-display font-light text-balance text-base-900">{dna?.concept ?? "Not analysed yet"}</h1>
+          <h1 ref={title} tabIndex={-1} className="mt-1 font-display text-display font-light text-balance text-base-900 outline-none">
+            {dna?.concept ?? "Not analysed yet"}
+          </h1>
 
           {version && (
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
@@ -123,7 +146,7 @@ export function PostReviewView({ data, onRefresh }: { data: PostReview; onRefres
                     {busy === "approve" ? "Approving…" : "Approve"}
                   </button>
                 )}
-                <button type="button" className={quietButton} disabled={!!busy} onClick={() => setEditing(true)}>
+                <button type="button" className={quietButton} disabled={!!busy} onClick={() => (setDone(null), setEditing(true))}>
                   Edit
                 </button>
                 {version.review_decision !== "rejected" && (
@@ -146,7 +169,14 @@ export function PostReviewView({ data, onRefresh }: { data: PostReview; onRefres
                   className={quietButton}
                   disabled={!!busy}
                   title="Queue a fresh analysis; it lands as a proposal next to this one"
-                  onClick={() => run("reprocess", () => reprocess(post.id)).then((ok) => void (ok && refresh()))}
+                  onClick={() => {
+                    setDone(null);
+                    run("reprocess", () => reprocess(post.id)).then((ok) => {
+                      if (!ok) return;
+                      if (version) setDone({ versionId: version.id, text: "Queued a fresh analysis. It lands as a proposal next to this one." });
+                      refresh();
+                    });
+                  }}
                 >
                   {busy === "reprocess" ? "Queuing…" : "Analyse again"}
                 </button>
@@ -162,6 +192,21 @@ export function PostReviewView({ data, onRefresh }: { data: PostReview; onRefres
                 />
               </label>
               {error && <p className="mt-2 text-caption text-danger-600">{error}</p>}
+              <div role="status">
+                {done?.versionId === version.id && !busy && (
+                  <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-body text-base-700">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Check className="size-3.5 shrink-0" />
+                      {done.text}
+                    </span>
+                    {walk.next && (
+                      <Link href={reviewHref(walk.next.id)} className="relative font-medium text-base-900 before:absolute before:-inset-x-1 before:-inset-y-3 hover:text-accent-600">
+                        Next: {walk.next.label} →
+                      </Link>
+                    )}
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -233,13 +278,80 @@ export function PostReviewView({ data, onRefresh }: { data: PostReview; onRefres
   );
 }
 
+const DONE: Record<"approve" | "reject" | "reopen" | "unpublish", (publish: boolean) => string> = {
+  approve: (publish) => (publish ? "Approved and published." : "Approved. Not public yet."),
+  reject: () => "Rejected.",
+  reopen: () => "Reopened for review.",
+  unpublish: () => "Unpublished.",
+};
+
+// Previous and next in the list the post was opened from, with its place in it. K and J do the
+// same from the keyboard (← and → already turn the slides). Off, with the reason on hover, while
+// an edit is open (so a half-written edit isn't left behind) or a decision is saving.
+function ReviewNav({ walk, index, previous, next, ready, blocked }: ReturnType<typeof useWalk> & { blocked: string | null }) {
+  const router = useRouter();
+  useEffect(() => {
+    if (blocked) return;
+    function key(event: KeyboardEvent) {
+      if (event.repeat || event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+      if (event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable], [role=menu], [role=dialog], dialog")) return;
+      // An open menu or dialog keeps the keyboard, wherever focus is
+      if (document.querySelector("[role=menu], [role=dialog], dialog[open]")) return;
+      const letter = event.key.toLowerCase();
+      const to = letter === "j" ? next : letter === "k" ? previous : null;
+      if (!to) return;
+      event.preventDefault();
+      router.push(reviewHref(to.id));
+    }
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [blocked, next, previous, router]);
+
+  if (!ready || !walk || (!previous && !next && index < 0)) return null;
+  const count = walk.items.length;
+  return (
+    <nav aria-label="Posts in this list" className="flex shrink-0 items-center gap-2">
+      <p className="text-caption whitespace-nowrap text-base-500 tabular-nums">
+        <span className="max-sm:hidden">{walk.list} · </span>
+        {index >= 0 ? `${index + 1} of ${count}` : `${count} ${count === 1 ? "post" : "posts"}`}
+      </p>
+      <Step to={previous} direction="previous" blocked={blocked} />
+      <Step to={next} direction="next" blocked={blocked} />
+    </nav>
+  );
+}
+
+function Step({ to, direction, blocked }: { to: WalkItem | null; direction: "previous" | "next"; blocked: string | null }) {
+  const Caret = direction === "previous" ? CaretLeft : CaretRight;
+  const name = direction === "previous" ? "Previous post" : "Next post";
+  const shortcut = direction === "previous" ? "K" : "J";
+  // 36px to look at, 44px to hit
+  const look = "relative flex size-9 items-center justify-center rounded-full before:absolute before:-inset-1 before:rounded-full";
+  if (!to || blocked)
+    return (
+      <span aria-hidden="true" title={to ? (blocked ?? undefined) : undefined} className={cx(look, "text-base-300")}>
+        <Caret className="size-4" />
+      </span>
+    );
+  return (
+    <Link
+      href={reviewHref(to.id)}
+      aria-label={`${name}: ${to.label}`}
+      aria-keyshortcuts={shortcut}
+      title={`${to.label} (${shortcut})`}
+      className={cx(look, "bg-base-50 text-base-900 ring-1 ring-base-200 transition-[background-color,scale] duration-150 hover:bg-base-100 active:scale-[0.96]")}
+    >
+      <Caret className="size-4" />
+    </Link>
+  );
+}
+
 function SlideViewer({ images, slide, onSlide, slides }: { images: string[]; slide: number; onSlide: (n: number) => void; slides: Map<number, SlideObservation> }) {
   const last = images.length - 1;
   const observation = slides.get(slide);
   useEffect(() => {
     function key(event: KeyboardEvent) {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest("input, textarea, select, [contenteditable]")) return;
+      if (event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable]")) return;
       if (event.key === "ArrowLeft" && slide > 0) onSlide(slide - 1);
       if (event.key === "ArrowRight" && slide < last) onSlide(slide + 1);
     }

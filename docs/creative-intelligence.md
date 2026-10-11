@@ -13,9 +13,9 @@ Apify import (seed chunk per brand)
        └─ classification_jobs (pending)
             └─ npm run creative -- work     on a person's machine, with their Claude Code subscription
                  ├─ creative_claim_jobs     lease, renewed by heartbeat; an expired lease is retried
-                 ├─ manifest + images       exact post_images paths, checked WebP/JPEG/PNG, ≤10 MB
+                 ├─ manifest + images       exact post_images paths, checked WebP/JPEG/PNG, ≤10 MB, blank frames marked
                  ├─ perception              every slide, ≤10 per call, the model must open each image
-                 ├─ synthesis               the Creative DNA from the slide notes, caption and metadata
+                 ├─ synthesis               opens every slide again; the Creative DNA, checked against the images
                  ├─ validation              zod contract + deterministic checks, one repair attempt
                  └─ creative_save_analysis  version + slides + run + job, in one transaction
                       └─ post_analyses (needs_review), or a proposal beside reviewed work
@@ -35,8 +35,8 @@ Code: `src/lib/creative/` (taxonomy, contracts, validator, prompts, adapters, pi
 The worker runs the local Claude Code CLI (`claude -p`) signed in with a claude.ai subscription:
 no API key. `ClaudeCliAdapter` removes `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` from the
 child's environment, refuses to start unless `claude auth status` reports `claude.ai` or
-`oauth_token`, and refuses on Vercel. Each call is sandboxed: `--restricted`, only the Read tool
-(none for synthesis), no MCP servers, no settings or hooks, nothing saved, in a temporary folder
+`oauth_token`, and refuses on Vercel. Each call is sandboxed: `--restricted`, only the Read tool,
+no MCP servers, no settings or hooks, nothing saved, in a temporary folder
 holding just that post's images, with a JSON Schema for the answer and a `--max-budget-usd` cap.
 The stream of tool calls is checked so a slide the model never opened fails the call.
 
@@ -93,8 +93,35 @@ analyses), and refuses everything when `CREATIVE_ANALYSIS_ENABLED=false`.
   call. Imports and reconciles never queue the same post, content and pipeline twice.
 - Size of the work, for planning: an image of 1080×1350 is about 1,900 input tokens; a 13-slide
   carousel is two perception calls (7 and 6 slides, ~25k image tokens plus ~4k of instructions)
-  and one text-only synthesis call (~10k in, ~2k out). Measure the real figures on the canary
-  (`status` and the runs table report each run's tokens and estimate).
+  and one synthesis call that opens all 13 again (~25k of images plus ~10k of records and
+  instructions in, ~2k out). The first canary (prompt `2026.10.11-1`, synthesis without images)
+  averaged $0.19 a post at list prices, $0.08 for a single image to $0.35 for 12 slides; `status`
+  and the runs table report each run's tokens and estimate.
+
+## What the prompt version 2026.10.11-2 changed, and why
+
+A check of the first canary (every analysis compared with its slides by one reviewer, each
+problem then challenged by a second) found every analysis usable but none right as it stood. The
+same mistakes recurred, so the pipeline changed rather than the ten analyses:
+
+- Synthesis wrote from the slide records alone, so it over-read them ("an all-black dress code"
+  that was mostly black, a size step between two lines set at one size, a frame that wasn't
+  there) and told designers "only the notes were available". It now opens every slide (the stream
+  check applies, as for perception), is told the records can be wrong and the image wins, and
+  any wording about notes, records or what it was given fails validation (`process_talk`) and
+  goes to the repair attempt.
+- Perception squeezed long on-slide text into a summary, dropping titles and writing a stand-in
+  ("Terminator joke row") that synthesis then quoted. Text is now copied verbatim, line by line,
+  cut with "…" if it doesn't fit, and lines set at one size stay together as the headline.
+- Labels were stretched past their definitions (a URL coded as "visit", a feature list as "tips
+  list", humour where there was none). The rule now: a slug only when its definition plainly fits;
+  leave secondary archetypes and persuasion out rather than stretch.
+- A video's black cover frame was read two ways in one post. `media.ts` measures every image
+  (a channel spread of 16 or less is one flat colour; the library's black covers spread 0, every
+  other slide over 250), the model is told the frame is blank, and `analyze.ts` records it the
+  same way every time, with a `blank_slide` warning instead of a low-confidence one.
+- A slide's own role and its role in the narrative disagreed. Perception may have seen only part
+  of a long carousel, so the narrative's role is now kept for both.
 
 ## Permissions
 

@@ -1,9 +1,11 @@
 // Creative Intelligence: one post through the model. Perception looks at every slide (in chunks
-// for long carousels, each chunk answering for exactly its own positions), then synthesis writes
-// the Creative DNA from those notes, the caption and the metadata. Every answer goes through the
-// zod contract and the deterministic validator; one that fails gets a single repair attempt with
-// the problems spelled out, and then the post fails as invalid output for a person to look at.
-// Nothing here writes to the database: the worker saves the result.
+// for long carousels, each chunk answering for exactly its own positions), then synthesis opens
+// the slides again and writes the Creative DNA, checking those records, the caption and the
+// metadata against the images. Every answer goes through the zod contract and the deterministic
+// validator; one that fails gets a single repair attempt with the problems spelled out, and then
+// the post fails as invalid output for a person to look at. Two things are settled here rather
+// than by the model: a blank frame is recorded the same way every time, and each slide's role is
+// the one the narrative gives it. Nothing here writes to the database: the worker saves the result.
 import { z } from "zod";
 import { fingerprint } from "./fingerprint";
 import { addUsage, ModelError, NO_USAGE, type GenerateRequest, type ImageInput, type ModelAdapter, type Usage } from "./model";
@@ -116,6 +118,27 @@ async function ask<T>(
   }
 }
 
+// A blank frame has nothing on it to read, whatever the model made of it
+export function blankSlide(slide: SlideObservation, wasVideo: boolean): SlideObservation {
+  return {
+    ...slide,
+    visible_text: { headline: null, body: null },
+    legibility: "no-text",
+    text_density: "none",
+    typography: { classes: ["none"], weight: "none" },
+    imagery: [wasVideo ? "video-frame" : "unknown"],
+    devices: ["none"],
+    product_prominence: "unknown",
+    people_prominence: "unknown",
+    objects: [],
+    brand_treatment: null,
+    observation: wasVideo
+      ? "Blank: the saved cover frame of this video slide is one flat colour, so what the video shows can't be told."
+      : "Blank: one flat colour with nothing on it.",
+    confidence: "low",
+  };
+}
+
 function sameSlides(output: Perception, positions: number[]): Verdict {
   const got = output.slides.map((slide) => slide.position).sort((a, b) => a - b);
   const want = [...positions].sort((a, b) => a - b);
@@ -159,29 +182,41 @@ export async function analyzePost(options: {
     );
     answers.push(value);
   }
-  const perception: Perception = {
+  const blank = new Map(images.filter((image) => image.blank).map((image) => [image.position, image.wasVideo]));
+  const perceived: Perception = {
     ...answers[0],
-    slides: answers.flatMap((answer) => answer.slides).sort((a, b) => a.position - b.position),
+    slides: answers
+      .flatMap((answer) => answer.slides)
+      .sort((a, b) => a.position - b.position)
+      .map((slide) => (blank.has(slide.position) ? blankSlide(slide, blank.get(slide.position)!) : slide)),
     conflicts: [...new Set(answers.flatMap((answer) => answer.conflicts))].slice(0, 6),
   };
-  const perceived = validatePerception(perception, post);
-  if (perceived.errors.length) {
-    throw new ModelError("invalid_output", `The slide notes don't add up: ${describe(perceived.errors).join("; ")}`, meter.usage, perception);
+  const read = validatePerception(perceived, post);
+  if (read.errors.length) {
+    throw new ModelError("invalid_output", `The slide records don't add up: ${describe(read.errors).join("; ")}`, meter.usage, perceived);
   }
+  // A blank slide says so once, rather than also as a low-confidence reading
+  const blankWarnings = [...blank.keys()].map((position) => ({ code: "blank_slide", message: `Slide ${position} is blank (one flat colour), so nothing on it was analysed`, path: `slides.${position}` }));
+  const readWarnings = [...read.warnings.filter((issue) => !(issue.code === "low_confidence_slide" && blank.has(Number(issue.path?.split(".")[1])))), ...blankWarnings];
 
-  // Synthesis. The slide counts are facts, not the model's to decide
+  // Synthesis looks at every slide again. The slide counts are facts, not the model's to decide
   const { value: dna, verdict } = await ask(
     adapter,
     meter,
-    { task: "synthesis", system: SYNTHESIS_SYSTEM, prompt: synthesisPrompt(manifest, perception), schema: DNA_SCHEMA, images: [], workdir },
+    { task: "synthesis", system: SYNTHESIS_SYSTEM, prompt: synthesisPrompt(manifest, perceived, images), schema: DNA_SCHEMA, images, workdir },
     CreativeDna.transform((value) => ({
       ...value,
-      quality: { ...value.quality, expected_slides: expected, processed_slides: perception.slides.length, image_analysis_complete: perception.slides.length === expected },
+      quality: { ...value.quality, expected_slides: expected, processed_slides: perceived.slides.length, image_analysis_complete: perceived.slides.length === expected },
     })),
-    (value) => validateDna(value, post, perception),
+    (value) => validateDna(value, post, perceived),
   );
 
-  const warnings = [...perceived.warnings, ...verdict.warnings];
+  // The narrative judges each slide in the whole sequence (perception may only have seen part of
+  // it), so its role is the one kept, and the slide records and the DNA never disagree
+  const roles = new Map(dna.narrative.slide_roles.map((entry) => [entry.position, entry.role]));
+  const perception: Perception = { ...perceived, slides: perceived.slides.map((slide) => ({ ...slide, role: roles.get(slide.position) ?? slide.role })) };
+
+  const warnings = [...readWarnings, ...verdict.warnings];
   return {
     version: {
       summary: dna.creative_summary,

@@ -3,7 +3,8 @@
 // exactly once at its zero-based position and none is invented, evidence points at slides that
 // exist, quotes are really in the caption or on the slide, "complete" is only claimed when every
 // slide was looked at, no performance is claimed that the data can't show, and the writing isn't
-// the caption pasted back or filler. Errors mean the output can't be stored as a valid draft;
+// the caption pasted back, filler, or about the pipeline rather than the post ("only the notes
+// were available"), which a designer would read. Errors mean the output can't be stored as a valid draft;
 // warnings mean it can, flagged for review.
 import type { CreativeDna, EvidenceRef, Perception } from "./schema";
 
@@ -29,6 +30,12 @@ function slideOf(ref: EvidenceRef): number | null {
 // Engagement isn't evidence of effect: no lift figures, conversion or virality claims
 const PERFORMANCE_CLAIM =
   /\b(high[- ]converting|went viral|goes viral|viral (hit|post|success)|conversion rates?|click[- ]through rates?|\bctr\b|\broi\b|drove (sales|conversions|revenue)|proven to (convert|sell|work))\b|\b\d+(\.\d+)?\s?%\s?(more|higher|increase|lift|uplift|boost|growth)\b/i;
+
+// Writing about how the analysis was made instead of about the post: "in the notes", "the slide
+// records don't say", "only the notes were available, not the image". Kept narrow, so the caption
+// "notes that…" or a Notes app screenshot pass
+const PROCESS_TALK =
+  /\b(in|from|per|according to) the (slide )?(notes|records)\b|\bthe (slide )?(notes|records) (say|said|describe|mention|list|show|suggest|indicate|don't|do not|only)\b|\b(slide|perception|text) (notes|records)\b|\b(notes|records|transcriptions?) (was|were) (all that was )?(available|provided|given)\b|\b(not|rather than|instead of) (from )?the (image|images|slide images)( itself| themselves)?\b|\b(wasn't|weren't|was not|were not) (shown|given|provided) the (image|images)\b/i;
 
 // Advice that fits every post and so says nothing about this one
 const GENERIC_TAKEAWAYS = [
@@ -157,6 +164,21 @@ export function validateDna(dna: CreativeDna, post: PostInput, perception?: Perc
   ];
   for (const [s, path] of prose) {
     if (PERFORMANCE_CLAIM.test(s)) verdict.errors.push({ code: "performance_claim", message: "Claims an effect the data can't show", path });
+  }
+
+  // Everything a designer reads is about the post, not the pipeline
+  const readable: [string | null, string][] = [
+    ...prose,
+    [dna.visual_system.text_hierarchy, "visual_system.text_hierarchy"],
+    [dna.visual_system.decorative_system, "visual_system.decorative_system"],
+    [dna.visual_system.brand_consistency, "visual_system.brand_consistency"],
+    ...dna.adaptation_ideas.map((s, i): [string, string] => [s, `adaptation_ideas.${i}`]),
+    ...dna.constraints_or_uncertainties.map((s, i): [string, string] => [s, `constraints_or_uncertainties.${i}`]),
+    ...dna.quality.uncertainties.map((s, i): [string, string] => [s, `quality.uncertainties.${i}`]),
+    ...dna.evidence.map((e, i): [string, string] => [e.observation, `evidence.${i}.observation`]),
+  ];
+  for (const [s, path] of readable) {
+    if (s && PROCESS_TALK.test(s)) verdict.errors.push({ code: "process_talk", message: "Talks about how the analysis was made instead of the post; describe the post itself", path });
   }
 
   // Not the caption pasted back, and not filler

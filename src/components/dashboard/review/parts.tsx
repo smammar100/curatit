@@ -33,7 +33,7 @@ export function Frame({ children }: { children: ReactNode }) {
 export const label = (dimension: Dimension, slug: string | null | undefined) => (slug ? (term(dimension, slug)?.label ?? slug) : "—");
 
 const STATUS: Record<ReviewStatus, string> = { draft: "Draft", needs_review: "Needs review", approved: "Approved", rejected: "Rejected" };
-const SOURCE: Record<Source, string> = { ai: "AI draft", human: "Written by an editor", mixed: "AI, edited" };
+const SOURCE: Record<Source, string> = { ai: "Written by AI", human: "Written by an editor", mixed: "AI, edited by an editor" };
 
 export function Pill({ children, tone = "plain", title }: { children: ReactNode; tone?: "plain" | "strong" | "danger"; title?: string }) {
   return (

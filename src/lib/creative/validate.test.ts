@@ -50,6 +50,23 @@ describe("validatePerception", () => {
 });
 
 describe("validateDna", () => {
+  it("refuses writing about the pipeline instead of the post", () => {
+    const dna = clone(FIXTURE_DNA);
+    dna.visual_system.brand_consistency = "As described in the notes, the eyebrow repeats on every slide.";
+    dna.constraints_or_uncertainties = ["Analysis relies on text notes rather than the image itself."];
+    dna.quality.uncertainties = ["Only the notes were available, not the image, so the wording is unverified."];
+    const paths = validateDna(dna, post, FIXTURE_PERCEPTION).errors.filter((issue) => issue.code === "process_talk").map((issue) => issue.path);
+    expect(paths).toEqual(["visual_system.brand_consistency", "constraints_or_uncertainties.0", "quality.uncertainties.0"]);
+  });
+
+  it("lets ordinary uses of the word notes through", () => {
+    const dna = clone(FIXTURE_DNA);
+    dna.evidence[0].observation = "The caption notes that the views may change.";
+    dna.visual_system.decorative_system = "A screenshot of the Notes app frames the list.";
+    dna.copy_strategy.notes = "Short lines that read like tasting notes.";
+    expect(codes(validateDna(dna, post, FIXTURE_PERCEPTION).errors)).not.toContain("process_talk");
+  });
+
   it("passes the fixture", () => {
     expect(validateDna(FIXTURE_DNA, post, FIXTURE_PERCEPTION).errors).toEqual([]);
   });

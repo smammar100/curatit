@@ -1,7 +1,8 @@
 // Creative Intelligence: fetching a post's images for the model. Each one comes from its exact
 // post_images bucket and path (never a path rebuilt from the brand or position), is checked to be
 // a real WebP, JPEG or PNG within the size limits, and is written to the run's private folder as
-// slide-NN.<ext>, NN being its zero-based position. A missing file may still be uploading (retry);
+// slide-NN.<ext>, NN being its zero-based position. An image that's one flat colour (a video's
+// black cover frame, usually) is marked blank, so the model is told there's nothing on it. A missing file may still be uploading (retry);
 // a broken one won't fix itself (dead letter), and no analysis goes ahead with a slide left out.
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -27,13 +28,20 @@ export function sniff(bytes: Uint8Array): keyof typeof EXTENSION | null {
   return null;
 }
 
-async function dimensions(bytes: Uint8Array) {
-  // sharp only reads the header here; imported lazily so nothing else pays for it
+// The widest spread between a channel's darkest and lightest pixel at which an image still counts
+// as one flat colour. Measured on the library: a black video cover spreads 0, every slide with
+// anything on it over 250
+const FLAT_SPREAD = 16;
+
+async function inspect(bytes: Uint8Array) {
+  // Imported lazily so nothing else pays for sharp
   const { default: sharp } = await import("sharp");
   const meta = await sharp(bytes, { failOn: "error" }).metadata();
-  // Decode a small version to catch a valid header over truncated data
-  await sharp(bytes, { failOn: "error" }).resize(16).raw().toBuffer();
-  return { width: meta.width ?? 0, height: meta.height ?? 0 };
+  // Decoding a small version catches a valid header over truncated data, and shows whether
+  // there's anything on the image at all
+  const { channels } = await sharp(bytes, { failOn: "error" }).resize(256, 256, { fit: "inside", withoutEnlargement: true }).removeAlpha().stats();
+  const spread = Math.max(...channels.map((channel) => channel.max - channel.min));
+  return { width: meta.width ?? 0, height: meta.height ?? 0, blank: spread <= FLAT_SPREAD };
 }
 
 export async function prepareImage(image: ManifestImage, source: ImageSource, workdir: string): Promise<ImageInput> {
@@ -49,18 +57,18 @@ export async function prepareImage(image: ManifestImage, source: ImageSource, wo
   if (bytes.length > MAX_IMAGE_BYTES) throw new ModelError("unsupported", `${where} is ${(bytes.length / 1048576).toFixed(1)} MB, over the 10 MB limit`);
   const type = sniff(bytes);
   if (!type) throw new ModelError("corrupt_media", `${where} isn't a WebP, JPEG or PNG image`);
-  let size: { width: number; height: number };
+  let info: Awaited<ReturnType<typeof inspect>>;
   try {
-    size = await dimensions(bytes);
+    info = await inspect(bytes);
   } catch (error) {
     throw new ModelError("corrupt_media", `${where} can't be decoded: ${(error as Error).message}`);
   }
-  if (!size.width || !size.height) throw new ModelError("corrupt_media", `${where} has no dimensions`);
-  if (size.width > MAX_IMAGE_SIDE || size.height > MAX_IMAGE_SIDE) throw new ModelError("unsupported", `${where} is ${size.width}×${size.height}, over ${MAX_IMAGE_SIDE}px`);
+  if (!info.width || !info.height) throw new ModelError("corrupt_media", `${where} has no dimensions`);
+  if (info.width > MAX_IMAGE_SIDE || info.height > MAX_IMAGE_SIDE) throw new ModelError("unsupported", `${where} is ${info.width}×${info.height}, over ${MAX_IMAGE_SIDE}px`);
 
   const file = join(workdir, `slide-${String(image.position).padStart(2, "0")}.${EXTENSION[type]}`);
   await writeFile(file, bytes);
-  return { position: image.position, file, mimetype: type, wasVideo: image.was_video };
+  return { position: image.position, file, mimetype: type, wasVideo: image.was_video, blank: info.blank };
 }
 
 // Every image, in position order; the first failure stops the post
