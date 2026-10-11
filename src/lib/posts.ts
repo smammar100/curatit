@@ -78,9 +78,11 @@ export const getPublishedPosts = cache(async (): Promise<LibraryPost[]> => {
 });
 
 // One post with everything its detail page shows: every slide (and which were videos on
-// Instagram, where the library keeps only the cover frame), the full caption, the counts at
-// scrape time (Instagram reports a hidden like count as -1, kept here as null), the account
-// that posted it, and how its likes compare with the brand's other posts and the category's
+// Instagram, where the library keeps only the cover frame), the full caption, the public counts
+// as scraped (Instagram reports a hidden like count as -1, kept here as null) and the account
+// that posted it. No comparison with the brand's or the category's other posts: a brand has
+// about five posts here, of different ages and formats, too few for a fair benchmark, and the
+// old "× the brand's average" read 0.0× for a quiet post (Creative Intelligence 2.0, 2026-10-11)
 export type PostDetail = LibraryPost & {
   caption: string;
   likes: number | null;
@@ -89,7 +91,6 @@ export type PostDetail = LibraryPost & {
   verified: boolean;
   // One per image, in the same order
   videos: boolean[];
-  stats: { brandAverage: number | null; brandPosts: number; rank: number | null; ranked: number };
 };
 
 type DetailRow = Row & {
@@ -114,16 +115,9 @@ export const getPostDetail = cache(async (shortCode: string): Promise<PostDetail
   if (error) throw new Error(`Could not load post ${shortCode} from Supabase: ${error.message}`);
   if (!data?.brands?.categories || !data.post_images.length) return null;
 
-  // Every post in the category, to place this one's likes
   const category = data.brands.categories;
-  const peers = await supabase.from("library_posts").select("brand_slug, likes_count").eq("category_slug", category.slug);
-  if (peers.error) throw new Error(`Could not load ${category.slug} posts from Supabase: ${peers.error.message}`);
-
   const libraryUrl = (path: string) => `/lib/${path}`;
   const count = (value: number | null) => (value == null || value < 0 ? null : value);
-  const likes = count(data.likes_count);
-  const counted = peers.data.filter((p) => count(p.likes_count) != null) as { brand_slug: string; likes_count: number }[];
-  const brand = counted.filter((p) => p.brand_slug === data.brands!.slug);
   const images = data.post_images.toSorted((a, b) => a.position - b.position);
   const media = new Map(data.instagram_post_media.map((m) => [m.position, m.type?.toLowerCase()]));
 
@@ -137,7 +131,7 @@ export const getPostDetail = cache(async (shortCode: string): Promise<PostDetail
     postedAt: data.posted_at,
     width: data.dimensions_width,
     height: data.dimensions_height,
-    likes,
+    likes: count(data.likes_count),
     comments: count(data.comments_count),
     handle: data.owner_username,
     verified: !!data.owner?.is_verified,
@@ -149,12 +143,6 @@ export const getPostDetail = cache(async (shortCode: string): Promise<PostDetail
     category,
     images: images.map((image) => libraryUrl(image.path)),
     videos: images.map((image) => (data.format === "video" ? image.position === 0 : media.get(image.position) === "video")),
-    stats: {
-      brandAverage: brand.length ? brand.reduce((sum, p) => sum + p.likes_count, 0) / brand.length : null,
-      brandPosts: brand.length,
-      rank: likes == null ? null : 1 + counted.filter((p) => p.likes_count > likes).length,
-      ranked: counted.length,
-    },
   };
 });
 
