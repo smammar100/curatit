@@ -67,5 +67,6 @@ function synthesize(request: GenerateRequest): CreativeDna {
   ];
   dna.evidence = [{ ref: "slide:0", observation: "A single headline on a flat ground", quote: null }];
   dna.quality = { image_analysis_complete: processed === expected, expected_slides: expected, processed_slides: processed, needs_review: true, uncertainties: [] };
+  dna.creative_decisions = [{ ...dna.creative_decisions![0], evidence: ["slide:0"] }];
   return dna;
 }

@@ -76,6 +76,45 @@ export type Perception = z.infer<typeof Perception>;
 
 const Label = (dimension: Parameters<typeof slugs>[0]) => z.object({ slug: enumOf(dimension), evidence: refs });
 
+// A creative decision (Creative Intelligence 2.1): one specific, observable choice that shapes how
+// the post communicates, with what was done, why it might work, the transferable principle, when
+// to use it and when not, and the slides that show it. A post gets one to five, never padded.
+export const CreativeDecision = z.object({
+  // A short technique, written as an instruction ("Lead with a verdict, then show the comparison")
+  title: text(90),
+  // What the designer did, from visible evidence
+  observation: text(300),
+  // Why it might work: a hedged mechanism of attention, comprehension or storytelling
+  rationale: text(300),
+  // The design rule underneath, in one sentence someone could reuse
+  principle: text(200),
+  use_when: text(200),
+  avoid_when: text(200),
+  evidence: refs,
+  confidence: z.enum(["high", "medium", "low"]),
+});
+export type CreativeDecision = z.infer<typeof CreativeDecision>;
+
+// A check on what a data-driven creative (charts, statistics, prices, financial, health or
+// scientific claims, comparisons) shows, apart from how well it's designed. "unverified" when the
+// post itself can't settle it; nothing here is independently fact-checked.
+export const IntegrityNote = z.object({
+  // What was checked: "Start values", "Time period", "Baseline", "Inflation", "Sources and disclaimers"…
+  aspect: text(60),
+  status: z.enum(["sound", "concern", "unverified"]),
+  note: text(240),
+  evidence: refs,
+});
+export type IntegrityNote = z.infer<typeof IntegrityNote>;
+
+// How the visual system is actually executed, a sentence or two per dimension the tags can't say
+const VisualNotes = z.object({
+  composition: text(240).nullable(),
+  colour: text(240).nullable(),
+  imagery: text(240).nullable(),
+  branding: text(240).nullable(),
+});
+
 export const CreativeDna = z.object({
   schema_version: z.literal(SCHEMA_VERSION),
   taxonomy_version: z.literal(TAXONOMY_VERSION),
@@ -125,5 +164,21 @@ export const CreativeDna = z.object({
     needs_review: z.boolean(),
     uncertainties: some(text(240), 0, 6),
   }),
+  // Creative Intelligence 2.1 (prompt 2026.10.11-3). Optional here, so analyses written before
+  // them stay valid; the model is held to them through CreativeDnaOutput
+  creative_decisions: some(CreativeDecision, 1, 5).optional(),
+  integrity_notes: some(IntegrityNote, 0, 8).optional(),
+  visual_notes: VisualNotes.optional(),
+  // The idea as a reusable sequence of moves: "Bold claim → Clear comparison → Visual evidence"
+  creative_formula: text(160).nullable().optional(),
 });
 export type CreativeDna = z.infer<typeof CreativeDna>;
+
+// What synthesis must return from 2.1 on: the same Creative DNA with the new parts required
+export const CreativeDnaOutput = CreativeDna.extend({
+  creative_decisions: some(CreativeDecision, 1, 5),
+  integrity_notes: some(IntegrityNote, 0, 8),
+  visual_notes: VisualNotes,
+  creative_formula: text(160).nullable(),
+});
+export type CreativeDnaOutput = z.infer<typeof CreativeDnaOutput>;

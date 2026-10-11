@@ -1,0 +1,221 @@
+{
+  "about": "Creative Intelligence 2.1 evaluation set: 24 published posts across all seven categories, carousels and single images, photography-, illustration-, type- and data-led, with four from finance (data and claims). Run with npm run creative:compare -- --set docs/creative-eval/eval-set.json and rate with rubric.md.",
+  "posts": [
+    {
+      "id": "4004271406676625358",
+      "short_code": "DeSB6D7NsfO",
+      "brand": "Wealthsimple",
+      "category": "fintech",
+      "format": "static",
+      "slides": 1,
+      "why": "Data visualisation: a three-line chart with a verdict headline; finance claims, small-print sources"
+    },
+    {
+      "id": "3999207439543726589",
+      "short_code": "DeACfpBGnH9",
+      "brand": "Wealthfront",
+      "category": "fintech",
+      "format": "static",
+      "slides": 1,
+      "why": "A dense quote table about AGI; attributed claims, finance brand"
+    },
+    {
+      "id": "4003661821329269896",
+      "short_code": "DeP3TbVH-SI",
+      "brand": "Wealthsimple",
+      "category": "fintech",
+      "format": "carousel",
+      "slides": 6,
+      "why": "Brand campaign carousel; finance"
+    },
+    {
+      "id": "4002789707927483638",
+      "short_code": "DeMxAgbm3T2",
+      "brand": "Wealthfront",
+      "category": "fintech",
+      "format": "carousel",
+      "slides": 3,
+      "why": "Educational carousel about fees; finance claims"
+    },
+    {
+      "id": "4004263742456715743",
+      "short_code": "DeSAKiEG9nf",
+      "brand": "adidas",
+      "category": "sportswear",
+      "format": "carousel",
+      "slides": 7,
+      "why": "Photography-led portrait series with a final product reveal"
+    },
+    {
+      "id": "4003989395673476140",
+      "short_code": "DeRByQtjGws",
+      "brand": "adidas",
+      "category": "sportswear",
+      "format": "carousel",
+      "slides": 7,
+      "why": "Store-launch carousel (seasonal, local)"
+    },
+    {
+      "id": "3984877986863034700",
+      "short_code": "DdNIWqQPrFM",
+      "brand": "Nike",
+      "category": "sportswear",
+      "format": "static",
+      "slides": 1,
+      "why": "Photography-led single image with a short line"
+    },
+    {
+      "id": "3984692633858210943",
+      "short_code": "DdMeNa0O_x_",
+      "brand": "Nike",
+      "category": "sportswear",
+      "format": "static",
+      "slides": 1,
+      "why": "Type over a portrait; event reference"
+    },
+    {
+      "id": "4004020065608353719",
+      "short_code": "DeRIwkUH0e3",
+      "brand": "Uniqlo",
+      "category": "fashion",
+      "format": "carousel",
+      "slides": 2,
+      "why": "Collaboration launch; product showcase"
+    },
+    {
+      "id": "4003355610896487133",
+      "short_code": "DeOxrepDVLd",
+      "brand": "H&M",
+      "category": "fashion",
+      "format": "carousel",
+      "slides": 5,
+      "why": "Product-led party edit"
+    },
+    {
+      "id": "4003707297944018555",
+      "short_code": "DeQBpMul557",
+      "brand": "Amazon",
+      "category": "ecommerce",
+      "format": "carousel",
+      "slides": 2,
+      "why": "Entertainment promotion; meme-adjacent"
+    },
+    {
+      "id": "4003001687346732720",
+      "short_code": "DeNhNNpl16w",
+      "brand": "Amazon",
+      "category": "ecommerce",
+      "format": "carousel",
+      "slides": 2,
+      "why": "Interactive quiz (colour guessing)"
+    },
+    {
+      "id": "4004403737560424328",
+      "short_code": "DeSf_uqiR-I",
+      "brand": "Coca-Cola",
+      "category": "food-delivery",
+      "format": "carousel",
+      "slides": 2,
+      "why": "Creator photography at a concert"
+    },
+    {
+      "id": "4003029409867539720",
+      "short_code": "DeNngoQmKUI",
+      "brand": "DoorDash",
+      "category": "food-delivery",
+      "format": "carousel",
+      "slides": 2,
+      "why": "Meme carousel"
+    },
+    {
+      "id": "4004146793232248744",
+      "short_code": "DeRlksnIK-o",
+      "brand": "Deliveroo",
+      "category": "food-delivery",
+      "format": "static",
+      "slides": 1,
+      "why": "Quote-led single image"
+    },
+    {
+      "id": "4003579870677507217",
+      "short_code": "DePkq41oxyR",
+      "brand": "Deliveroo",
+      "category": "food-delivery",
+      "format": "static",
+      "slides": 1,
+      "why": "Celebrity / TV tie-in single image"
+    },
+    {
+      "id": "4004263656540915472",
+      "short_code": "DeSAJSDIMcQ",
+      "brand": "Claude",
+      "category": "technology",
+      "format": "carousel",
+      "slides": 8,
+      "why": "Story-led product carousel with screenshots"
+    },
+    {
+      "id": "4004170999223306481",
+      "short_code": "DeRrE8MoEjx",
+      "brand": "Claude",
+      "category": "technology",
+      "format": "carousel",
+      "slides": 11,
+      "why": "Long illustrated carousel"
+    },
+    {
+      "id": "4004190374627547122",
+      "short_code": "DeRve48tpfy",
+      "brand": "ChatGPT",
+      "category": "technology",
+      "format": "static",
+      "slides": 1,
+      "why": "Dense text screenshot (zoom in)"
+    },
+    {
+      "id": "4000518951287433874",
+      "short_code": "DeEsspgtKqS",
+      "brand": "ChatGPT",
+      "category": "technology",
+      "format": "static",
+      "slides": 1,
+      "why": "Humour single image"
+    },
+    {
+      "id": "4004322168263709033",
+      "short_code": "DeSNcvVlJFp",
+      "brand": "Airbnb",
+      "category": "travel",
+      "format": "carousel",
+      "slides": 10,
+      "why": "Seasonal travel guide carousel"
+    },
+    {
+      "id": "4002848378967090612",
+      "short_code": "DeM-WSGFOW0",
+      "brand": "Airbnb",
+      "category": "travel",
+      "format": "carousel",
+      "slides": 10,
+      "why": "Editorial carousel"
+    },
+    {
+      "id": "4003473899685047929",
+      "short_code": "DePMkzqRm55",
+      "brand": "Uber",
+      "category": "travel",
+      "format": "static",
+      "slides": 1,
+      "why": "Reposted tweet, user-generated"
+    },
+    {
+      "id": "4000061423132344680",
+      "short_code": "DeDEqvNjAFo",
+      "brand": "Tripadvisor",
+      "category": "travel",
+      "format": "static",
+      "slides": 1,
+      "why": "Food photography single image"
+    }
+  ]
+}

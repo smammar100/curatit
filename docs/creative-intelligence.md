@@ -126,6 +126,44 @@ same mistakes recurred, so the pipeline changed rather than the ten analyses:
 - A slide's own role and its role in the narrative disagreed. Perception may have seen only part
   of a long carousel, so the narrative's role is now kept for both.
 
+## What prompt 2026.10.11-3 (Creative Intelligence 2.1) changed
+
+Designers can ask a chat assistant to critique a post; Curatit has to give them more than that:
+specific, evidence-backed decisions they can reuse, and honesty about what a creative shows.
+
+- **Creative decisions** (`creative_decisions`): one to five choices that most shape how the post
+  communicates, most important first, never padded to a number. Each has a title written as a
+  technique, what was done (visible evidence), why it might work (hedged), the reusable principle,
+  when to use it and when not, the slides that show it, and a confidence. On the post page they
+  lead the Breakdown tab and opening one shows its slide.
+- **Data checks** (`integrity_notes`): for anything with data, charts, prices, comparisons or
+  financial, health, insurance, investment or scientific claims. Start values, time period, axes,
+  baseline, units, transformations, inflation, end labels, missing context, assumptions, emphasis,
+  and the legibility of sources and disclaimers, each sound, concern or unverified. Figures the
+  post doesn't let the model check are unverified; nothing is presented as fact-checked, and no
+  financial, medical or investment advice is given.
+- **Visual notes and the formula** (`visual_notes`, `creative_formula`): a sentence each on how the
+  composition, colour, imagery and branding are executed, and the idea as a reusable sequence.
+- **Stricter advice.** The validator sends back any takeaway, adaptation, principle or formula that
+  recommends distorting data (flattening or exaggerating a series, cutting an axis) or playing down
+  a disclosure, jargon in place of an argument, and invented scores. Descriptions may still say
+  what a post did ("the disclaimer is tiny"), which is how a tradeoff gets explained.
+
+The new fields live inside `creative_dna` (no migration). They're optional in `CreativeDna`, so
+analyses written before stay valid and their pages show their own observations instead of
+decisions; the model is held to them through `CreativeDnaOutput`. A re-run of an approved post
+lands as a proposal beside it, as always; nothing is published without review.
+
+### Evaluation against an ordinary critique
+
+`npm run creative:compare -- --set docs/creative-eval/eval-set.json` puts each post's latest stored
+analysis beside the answer to "give me a design critique of this post" from the same model on the
+same images, labelled A and B in a fixed random order, with a rating sheet and deterministic counts.
+People rate them with `docs/creative-eval/rubric.md` (accuracy, specificity, evidence, novelty,
+usefulness, principles, limitations, redundancy, hallucinations, time to understand); a model never
+judges its own output. The set is 24 published posts across all seven categories; posts without a
+2.1 analysis need one first (`enqueue --force`, then `work`), which is a budget decision.
+
 ## Permissions
 
 | Who | Can |

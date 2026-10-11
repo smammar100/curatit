@@ -475,6 +475,53 @@ function DnaView({ dna, version, focus, onShow }: { dna: CreativeDna; version: V
         <p className="mt-2 text-body text-base-600">{dna.content_intent}</p>
       </Section>
 
+      {/* Creative Intelligence 2.1: what the post page leads with, so it's reviewed first */}
+      {dna.creative_decisions && dna.creative_decisions.length > 0 && (
+        <Section title={`Creative decisions (${dna.creative_decisions.length})`}>
+          <ol className="space-y-4">
+            {dna.creative_decisions.map((d, i) => (
+              <li key={i} className="text-body">
+                <p className="font-medium text-pretty text-base-900">
+                  <span className="mr-2 font-mono text-micro text-base-400">{String(i + 1).padStart(2, "0")}</span>
+                  {d.title} <Refs refs={d.evidence} focus={focus} onShow={onShow} />
+                  {d.confidence !== "high" && <span className="ml-2 text-caption font-normal text-base-500">{d.confidence} confidence</span>}
+                </p>
+                <dl className="mt-1.5 grid gap-x-3 gap-y-1 text-base-700 sm:grid-cols-[7.5rem_1fr]">
+                  {(
+                    [
+                      ["What they did", d.observation],
+                      ["Why it might work", d.rationale],
+                      ["Principle", d.principle],
+                      ["Use it when", d.use_when],
+                      ["Avoid it when", d.avoid_when],
+                    ] as const
+                  ).map(([name, value]) => (
+                    <div key={name} className="contents">
+                      <dt className="text-caption text-base-500">{name}</dt>
+                      <dd className="text-pretty">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </li>
+            ))}
+          </ol>
+          {dna.creative_formula && <p className="mt-4 text-body text-base-700"><span className="mr-2 text-caption text-base-500">Formula</span>{dna.creative_formula}</p>}
+        </Section>
+      )}
+
+      {dna.integrity_notes && dna.integrity_notes.length > 0 && (
+        <Section title="Data checks">
+          <ul className="space-y-2 text-body">
+            {dna.integrity_notes.map((n, i) => (
+              <li key={i} className="text-pretty text-base-800">
+                <span className={cx("mr-2 text-caption", n.status === "concern" ? "font-medium text-danger-600" : "text-base-500")}>{n.status}</span>
+                <span className="font-medium">{n.aspect}:</span> {n.note} <Refs refs={n.evidence} focus={focus} onShow={onShow} />
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
       <Section title="Classification">
         <dl className="grid gap-x-4 gap-y-2 text-body sm:grid-cols-[10rem_1fr]">
           <dt className="text-base-500">Primary archetype</dt>
@@ -509,6 +556,14 @@ function DnaView({ dna, version, focus, onShow }: { dna: CreativeDna; version: V
           <dd className="text-base-900">
             {[...dna.visual_system.composition.map((s) => label("layout", s)), ...dna.visual_system.typography.map((s) => label("typography", s)), ...dna.visual_system.imagery.map((s) => label("imagery", s))].join(", ")}
             <span className="block text-base-600">{dna.visual_system.text_hierarchy}</span>
+            {dna.visual_notes &&
+              (["composition", "colour", "imagery", "branding"] as const).map((key) =>
+                dna.visual_notes?.[key] ? (
+                  <span key={key} className="mt-1 block text-base-600">
+                    <span className="text-caption text-base-500">{key}:</span> {dna.visual_notes[key]}
+                  </span>
+                ) : null,
+              )}
           </dd>
         </dl>
       </Section>

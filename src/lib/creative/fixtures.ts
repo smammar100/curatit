@@ -141,6 +141,26 @@ export const FIXTURE_DNA: CreativeDna = {
     { ref: "slide:1", observation: "Round-up toggle with a numbered callout", quote: "Pick a rule" },
   ],
   quality: { image_analysis_complete: true, expected_slides: 3, processed_slides: 3, needs_review: true, uncertainties: [] },
+  creative_decisions: [
+    {
+      title: "State the promise on the cover, then prove it one step per slide",
+      observation: "The cover sets one bold line on a flat green ground; each following slide shows a single step of the automatic transfer.",
+      rationale: "Reading the promise first may give every step after it a reason to be read.",
+      principle: "Put the outcome on the first slide and give each later slide one job in getting there.",
+      use_when: "A product does one simple thing that takes two or three steps to show.",
+      avoid_when: "The steps need explaining side by side, or the promise can't be kept as stated.",
+      evidence: ["slide:0", "slide:1"],
+      confidence: "high",
+    },
+  ],
+  integrity_notes: [],
+  visual_notes: {
+    composition: "Centred single lines on flat grounds, with the app screen centred on the step slide.",
+    colour: "Green carries the brand; white type keeps contrast high.",
+    imagery: "Type-led cover, then a phone screen as the only picture.",
+    branding: null,
+  },
+  creative_formula: "Promise → Step → Proof → Sign-up",
 };
 
 export const clone = <T,>(value: T): T => structuredClone(value);
@@ -218,5 +238,35 @@ export function galleryFixture() {
   dna.takeaways = ["Fix one name style and position across a portrait set.", "Crop close enough that texture shows.", "Let the mark appear only on the closing slide."];
   dna.constraints_or_uncertainties = ["Slide 2's name sits over a white shirt, so contrast is weaker there."];
   dna.quality = { ...dna.quality, expected_slides: 7, processed_slides: 7, needs_review: true, uncertainties: ["The event isn't stated."] };
+  dna.creative_decisions = [
+    {
+      title: "Keep one name treatment across every portrait",
+      observation: "Each of slides 0 to 5 sets the player's name in the same spaced white capitals, low in the frame.",
+      rationale: "A fixed treatment may let the faces carry all the variety, so each swipe reads as the next player.",
+      principle: "Fix one type treatment and position across a series so the images do the varying.",
+      use_when: "A set of portraits or products shown one per slide.",
+      avoid_when: "The images vary so little that a fixed treatment turns monotonous.",
+      evidence: ["slide:0", "slide:1", "slide:2", "slide:3", "slide:4", "slide:5"],
+      confidence: "high",
+    },
+    {
+      title: "Hold the product back for the last frame",
+      observation: "Slide 6 drops to the cleat on grass with an oversized logo, the only branding in the set.",
+      rationale: "Withholding the product might make the closing frame read as a reveal.",
+      principle: "Let people carry the story and bring the product in once, at the end.",
+      use_when: "The audience follows the people more than the product.",
+      avoid_when: "The product is the news, or people may stop before the last slide.",
+      evidence: ["slide:6"],
+      confidence: "medium",
+    },
+  ];
+  dna.integrity_notes = [];
+  dna.visual_notes = {
+    composition: "Tight crops fill each frame; the name sits low and centred.",
+    colour: "Dark stadium grounds with red, white and blue kit; the closing frame turns to green turf.",
+    imagery: "Expressive close-up portraits, then one product detail.",
+    branding: "The logo appears once, oversized, on slide 6.",
+  };
+  dna.creative_formula = "Hook portrait → Repeated portraits → Product reveal";
   return { dna, slides };
 }

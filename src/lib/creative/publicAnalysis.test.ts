@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { clone, FIXTURE_DNA, FIXTURE_PERCEPTION, galleryFixture } from "./fixtures";
-import { alignSlides, evidenceGroups, numberingOf, oneBased, parseEvidence, recipeText, sentences, toPublicAnalysis, type AnalysisRecord, type SlideRecord } from "./publicAnalysis";
+import { alignSlides, evidenceGroups, numberingOf, oneBased, parseEvidence, briefText, sentences, toPublicAnalysis, type AnalysisRecord, type SlideRecord } from "./publicAnalysis";
 import type { CreativeDna, SlideObservation } from "./schema";
 import { term } from "./taxonomy";
 
@@ -81,7 +81,7 @@ describe("toPublicAnalysis", () => {
     const analysis = toPublicAnalysis(record(FIXTURE_DNA, 3), rows(FIXTURE_PERCEPTION.slides), 3)!;
     expect(analysis.concept).toBe(FIXTURE_DNA.concept);
     expect(analysis.labels[0]).toMatchObject({ label: "Type", value: term("archetype", FIXTURE_DNA.primary_archetype.slug)!.label });
-    expect(analysis.decisions.length).toBeGreaterThan(0);
+    expect(analysis.mechanisms.length).toBeGreaterThan(0);
     expect(analysis.hypotheses).toHaveLength(FIXTURE_DNA.creative_rationale.length);
     expect(analysis.visual.map((section) => section.title)).toContain("Typography");
     expect(analysis.slides.every(Boolean)).toBe(true);
@@ -104,10 +104,10 @@ describe("toPublicAnalysis", () => {
     ]);
     expect(analysis.sequence.formula).toBe(`${term("slide_role", "hook")!.label} → ${term("slide_role", "gallery-frame")!.label} ×5 → ${term("slide_role", "closing")!.label}`);
     expect(analysis.sequence.arc).toContain("Slide 7 signs off");
-    expect(analysis.decisions.map((d) => d.kind)).toEqual(["observation", "interpretation", "observation"]);
-    expect(analysis.decisions[1].text).toContain("slides 1 to 6");
+    expect(analysis.mechanisms.map((d) => d.kind)).toEqual(["observation", "interpretation", "observation"]);
+    expect(analysis.mechanisms[1].text).toContain("slides 1 to 6");
     expect(evidenceGroups(analysis.hypotheses[0].evidence).map((g) => g.label)).toEqual(["Slides 1–6"]);
-    expect(evidenceGroups(analysis.decisions[2].evidence)).toEqual([{ label: "Slide 7", target: { kind: "slide", index: 6 } }]);
+    expect(evidenceGroups(analysis.mechanisms[2].evidence)).toEqual([{ label: "Slide 7", target: { kind: "slide", index: 6 } }]);
     expect(analysis.slides[0]).toMatchObject({ index: 0, headline: "ALEX RIVERA", confidence: "high" });
     expect(analysis.slides[6]).toMatchObject({ index: 6, headline: null, brandTreatment: "Large white logo in the bottom corner over the photo." });
     expect(analysis.slides[6]!.changes).toEqual(expect.arrayContaining([expect.stringContaining("Product: low → high"), expect.stringContaining("New colours")]));
@@ -157,7 +157,7 @@ describe("toPublicAnalysis", () => {
   it("survives an old or malformed record without crashing", () => {
     for (const junk of [null, undefined, 42, "text", [], {}, { concept: "" }, { concept: 7 }]) expect(toPublicAnalysis(record(junk, 3), [], 3)).toBeNull();
     const minimal = toPublicAnalysis(record({ concept: "Just a concept", narrative: "nope", visual_system: [1], takeaways: [null, "One", 3] }, 2), [{ version_id: CURRENT, position: 0, observation: "not an object" }], 2)!;
-    expect(minimal).toMatchObject({ concept: "Just a concept", labels: [], decisions: [], hypotheses: [], takeaways: ["One"], adaptations: [], caveats: [] });
+    expect(minimal).toMatchObject({ concept: "Just a concept", labels: [], creativeDecisions: [], mechanisms: [], hypotheses: [], takeaways: ["One"], adaptations: [], caveats: [] });
     expect(minimal.slides[0]).toMatchObject({ index: 0, facts: [], colours: [] });
     expect(minimal.slides[1]).toBeNull();
   });
@@ -171,16 +171,62 @@ describe("toPublicAnalysis", () => {
   });
 });
 
-describe("recipeText", () => {
-  it("copies what's on screen, with the credit", () => {
+describe("briefText", () => {
+  it("builds a usable brief from what's on screen, with the reference and a credit", () => {
     const { dna, slides } = galleryFixture();
     const analysis = toPublicAnalysis(record(dna, 7), rows(slides), 7)!;
-    const recipe = recipeText(analysis, { brand: "Example Sports", url: "https://www.instagram.com/p/EXAMPLE/" });
-    expect(recipe).toContain(analysis.concept);
-    expect(recipe).toContain("1. Fix one name style and position across a portrait set.");
-    expect(recipe).toContain("- A running club could feature");
-    expect(recipe).toContain("Source: Example Sports on Instagram, https://www.instagram.com/p/EXAMPLE/");
-    expect(recipe).toContain("The original creative belongs to Example Sports.");
+    const brief = briefText(analysis, { brand: "Example Sports", url: "https://www.instagram.com/p/EXAMPLE/", format: "carousel", slides: 7 });
+    for (const heading of ["CREATIVE PRINCIPLE", "SUGGESTED OBJECTIVE", "CONCEPT", "FORMAT", "VISUAL DIRECTION", "CONTENT STRUCTURE", "EXECUTION STEPS", "IMPORTANT CONSTRAINTS", "ORIGINAL REFERENCE", "ATTRIBUTION"]) expect(brief).toContain(heading);
+    expect(brief).toContain("Fix one type treatment and position across a series so the images do the varying.");
+    expect(brief).toContain("Built on: Hook portrait → Repeated portraits → Product reveal");
+    expect(brief).toContain("Instagram carousel, about 7 slides");
+    expect(brief).toMatch(/- Slides 2–6: /);
+    expect(brief).toContain("1. Fix one name style and position across a portrait set.");
+    expect(brief).toContain("- The product is the news, or people may stop before the last slide.");
+    expect(brief).toContain("https://www.instagram.com/p/EXAMPLE/");
+    expect(brief).toContain("Reference creative by Example Sports, used for its principle only.");
+    expect(brief).not.toMatch(/ALEX RIVERA/);
+  });
+});
+
+describe("creative decisions (2.1)", () => {
+  it("maps decisions with one-based slides, and the formula, visual notes and data checks", () => {
+    const { dna, slides } = galleryFixture();
+    dna.integrity_notes = [
+      { aspect: "Start values", status: "sound", note: "All series start at the same amount.", evidence: ["slide:0"] },
+      { aspect: "Sources and disclaimers", status: "concern", note: "The source line on slide 6 is hard to read at phone size.", evidence: ["slide:6"] },
+    ];
+    const analysis = toPublicAnalysis(record(dna, 7), rows(slides), 7)!;
+    expect(analysis.creativeDecisions.map((d) => d.title)).toEqual(["Keep one name treatment across every portrait", "Hold the product back for the last frame"]);
+    expect(evidenceGroups(analysis.creativeDecisions[0].evidence).map((g) => g.label)).toEqual(["Slides 1–6"]);
+    expect(analysis.creativeDecisions[0].observation).toContain("slides 1 to 6");
+    expect(analysis.creativeDecisions[1].observation).toMatch(/^Slide 7 drops/);
+    expect(analysis.creativeDecisions[1].confidence).toBe("medium");
+    expect(analysis.formula).toBe("Hook portrait → Repeated portraits → Product reveal");
+    expect(analysis.visual.find((s) => s.title === "Composition")!.text).toContain("Tight crops");
+    expect(analysis.visual.find((s) => s.title === "Branding")!.text).toBe("The logo appears once, oversized, on slide 7.");
+    expect(analysis.integrity.map((n) => [n.aspect, n.status])).toEqual([["Start values", "sound"], ["Sources and disclaimers", "concern"]]);
+    expect(analysis.integrity[1].note).toContain("slide 7");
+  });
+
+  it("drops a decision that's incomplete or rests only on a blank frame, rather than show half of it", () => {
+    const { dna, slides } = galleryFixture();
+    slides[6] = { ...slides[6], visible_text: { headline: null, body: null }, legibility: "no-text", imagery: ["video-frame"], objects: [], confidence: "low", observation: "Blank: the saved cover frame of this video slide is one flat colour, so what the video shows can't be told." };
+    (dna.creative_decisions![0] as Record<string, unknown>).avoid_when = "";
+    const analysis = toPublicAnalysis(record(dna, 7), rows(slides), 7)!;
+    expect(analysis.creativeDecisions).toEqual([]);
+  });
+
+  it("shows an analysis written before 2.1 without inventing decisions for it", () => {
+    const { dna, slides } = galleryFixture();
+    delete dna.creative_decisions;
+    delete dna.integrity_notes;
+    delete dna.visual_notes;
+    delete dna.creative_formula;
+    const analysis = toPublicAnalysis(record(dna, 7), rows(slides), 7)!;
+    expect(analysis).toMatchObject({ creativeDecisions: [], integrity: [], formula: null });
+    expect(analysis.mechanisms.length).toBeGreaterThan(0);
+    expect(analysis.visual.find((s) => s.title === "Composition")!.text).toBeNull();
   });
 });
 

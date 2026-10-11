@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "creative": "tsx scripts/creative.ts",
-    "creative:test-db": "tsx scripts/creative-db-test.ts"
+    "creative:test-db": "tsx scripts/creative-db-test.ts",
+    "creative:compare": "tsx scripts/creative-compare.ts"
   },
   "dependencies": {
     "@shikijs/rehype": "^4.5.0",

@@ -28,7 +28,7 @@ export function signal(slide: SlideDetail | null) {
 
 // How many of the analysis's insights (what it does, why it might work) rest on this slide
 export const citations = (analysis: PublicAnalysis, index: number) =>
-  [...analysis.decisions, ...analysis.hypotheses].filter((insight) => insight.evidence.some((target) => target.kind === "slide" && target.index === index)).length;
+  [...analysis.creativeDecisions, ...analysis.mechanisms, ...analysis.hypotheses].filter((insight) => insight.evidence.some((target) => target.kind === "slide" && target.index === index)).length;
 
 export default function SlideBreakdown({ analysis, index, onSlide, images, videos }: Props) {
   return (

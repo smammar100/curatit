@@ -11,12 +11,12 @@ import { fingerprint } from "./fingerprint";
 import { addUsage, ModelError, NO_USAGE, type GenerateRequest, type ImageInput, type ModelAdapter, type Usage } from "./model";
 import { PROMPT_VERSION } from "./pipeline";
 import { perceptionPrompt, PERCEPTION_SYSTEM, repairPrompt, synthesisPrompt, SYNTHESIS_SYSTEM, type Manifest } from "./prompt";
-import { CreativeDna, Perception, type SlideObservation } from "./schema";
+import { CreativeDnaOutput, Perception, type CreativeDna, type SlideObservation } from "./schema";
 import { TAXONOMY_VERSION } from "./taxonomy";
 import { validateDna, validatePerception, type Issue, type Verdict } from "./validate";
 
 const PERCEPTION_SCHEMA = z.toJSONSchema(Perception, { target: "draft-7" });
-const DNA_SCHEMA = z.toJSONSchema(CreativeDna, { target: "draft-7" });
+const DNA_SCHEMA = z.toJSONSchema(CreativeDnaOutput, { target: "draft-7" });
 
 export type VersionPayload = {
   summary: string;
@@ -204,7 +204,7 @@ export async function analyzePost(options: {
     adapter,
     meter,
     { task: "synthesis", system: SYNTHESIS_SYSTEM, prompt: synthesisPrompt(manifest, perceived, images), schema: DNA_SCHEMA, images, workdir },
-    CreativeDna.transform((value) => ({
+    CreativeDnaOutput.transform((value) => ({
       ...value,
       quality: { ...value.quality, expected_slides: expected, processed_slides: perceived.slides.length, image_analysis_complete: perceived.slides.length === expected },
     })),
