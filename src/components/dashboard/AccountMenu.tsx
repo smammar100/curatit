@@ -9,6 +9,7 @@ import Link from "next/link";
 // Icons
 import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
 import ChatDots from "@/components/fundations/icons/ChatDots";
+import SealCheck from "@/components/fundations/icons/SealCheck";
 import CircleHalf from "@/components/fundations/icons/CircleHalf";
 import Moon from "@/components/fundations/icons/Moon";
 import SignOut from "@/components/fundations/icons/SignOut";
@@ -20,10 +21,13 @@ import { cx } from "@/lib/cx";
 import { signOut } from "@/app/auth/actions";
 import { Avatar, useUser } from "./user";
 import { useGridSize } from "./prefs";
+import { useProfile } from "./profile";
 
 export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: number; onShowSaved: () => void }) {
   const { size: gridSize, setSize: onGridSize } = useGridSize();
   const user = useUser();
+  const { profile } = useProfile();
+  const editor = profile.editor;
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>("system");
   const ref = useRef<HTMLDivElement>(null);
@@ -99,6 +103,12 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
             Personalise your feed
             <Sparkle className="size-5" />
           </Link>
+          {editor && (
+            <Link role="menuitem" href="/dashboard/review" className={item} onClick={() => setOpen(false)}>
+              Analysis review
+              <SealCheck className="size-5" />
+            </Link>
+          )}
           <a role="menuitem" href={SUPPORT_MAILTO} className={item}>
             Contact us
             <ChatDots className="size-5" />

@@ -19,12 +19,14 @@ export type Profile = {
   // Short codes
   taste: string[];
   onboardedAt: string | null;
+  // An editor or admin (profiles.role): sees the analysis review. Read-only; nothing here writes it
+  editor: boolean;
 };
 
-export const EMPTY_PROFILE: Profile = { name: "", occupation: null, industries: [], brands: [], taste: [], onboardedAt: null };
+export const EMPTY_PROFILE: Profile = { name: "", occupation: null, industries: [], brands: [], taste: [], onboardedAt: null, editor: false };
 
-type Row = { full_name: string | null; occupation: string | null; industries: string[] | null; brands: string[] | null; taste_posts: string[] | null; onboarded_at: string | null };
-const COLUMNS = "full_name, occupation, industries, brands, taste_posts, onboarded_at";
+type Row = { full_name: string | null; occupation: string | null; industries: string[] | null; brands: string[] | null; taste_posts: string[] | null; onboarded_at: string | null; role?: string };
+const COLUMNS = "full_name, occupation, industries, brands, taste_posts, onboarded_at, role";
 
 type Value = {
   status: "loading" | "ready" | "error";
@@ -44,8 +46,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let gone = false;
     (async () => {
-      // Row Level Security returns only the signed-in person's row
-      const { data, error } = await createClient().from("profiles").select(COLUMNS).limit(1).maybeSingle<Row>();
+      // Their own row: pinned to their id, and Row Level Security returns no other anyway
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      let query = supabase.from("profiles").select(COLUMNS);
+      if (session) query = query.eq("id", session.user.id);
+      const { data, error } = await query.limit(1).maybeSingle<Row>();
       if (gone) return;
       if (error) return setStatus("error");
       if (data) {
@@ -56,6 +64,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           brands: data.brands ?? [],
           taste: data.taste_posts ?? [],
           onboardedAt: data.onboarded_at,
+          editor: data.role === "editor" || data.role === "admin",
         });
       }
       setStatus("ready");
@@ -84,13 +93,16 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     if ("brands" in patch) row.brands = next.brands;
     if ("taste" in patch) row.taste_posts = next.taste;
     if ("onboardedAt" in patch) row.onboarded_at = next.onboardedAt;
-    const { error } = await supabase.from("profiles").update(row).eq("id", user.id);
-    if (error) {
+    // An update that matches no row isn't an error to PostgREST, so ask for the row back
+    const { data, error } = await supabase.from("profiles").update(row).eq("id", user.id).select("id");
+    if (error || !data?.length) {
       setProfile(before);
       return false;
     }
-    // The account menu shows the name from the auth account, so keep that in step too
-    if ("name" in patch && next.name.trim()) await supabase.auth.updateUser({ data: { full_name: next.name.trim() } });
+    // The account menu shows the name from the auth account, so keep that in step too, clearing
+    // it there when it's cleared here (the menu then falls back to the email). Best effort: the
+    // profile, which the feed and this flow read, is already saved
+    if ("name" in patch) await supabase.auth.updateUser({ data: { full_name: next.name.trim() || null } });
     return true;
   };
 

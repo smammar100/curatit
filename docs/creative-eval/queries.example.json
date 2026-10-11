@@ -1,0 +1,52 @@
+[
+  {
+    "query": "Fintech educational carousels with bold sans-serif type, diagram-led explanations and question hooks",
+    "request": { "category": "fintech", "format": "carousel", "archetype_family": "education", "typography": "sans-serif", "layout": "diagram", "hook_technique": "question" },
+    "relevant": []
+  },
+  {
+    "query": "Product launches announced through a collaboration",
+    "request": { "archetype": ["product-launch", "collaboration"] },
+    "relevant": []
+  },
+  {
+    "query": "Travel carousels that read as a step-by-step itinerary",
+    "request": { "category": "travel", "narrative_pattern": "step-by-step", "archetype": "utility-content" },
+    "relevant": []
+  },
+  {
+    "query": "Sportswear posts led by an athlete",
+    "request": { "category": "sportswear", "archetype": "creator-feature" },
+    "relevant": []
+  },
+  {
+    "query": "Typographic posts with almost no imagery",
+    "request": { "imagery": "typographic", "layout": "text-only" },
+    "relevant": []
+  },
+  {
+    "query": "Memes and relatable humour from tech brands",
+    "request": { "category": "technology", "archetype_family": "entertainment" },
+    "relevant": []
+  },
+  {
+    "query": "Sale or limited-drop posts with urgency",
+    "request": { "archetype_family": "promotion", "persuasion": "urgency" },
+    "relevant": []
+  },
+  {
+    "query": "Before-and-after or comparison carousels",
+    "request": { "narrative_pattern": ["before-after", "comparison-series"] },
+    "relevant": []
+  },
+  {
+    "query": "Food posts where the product fills the frame",
+    "request": { "category": "food-delivery", "imagery": "product-photography", "layout": "full-bleed" },
+    "relevant": []
+  },
+  {
+    "query": "Posts that mock up an app screen or a chat",
+    "request": { "imagery": "screenshot-ui", "query": "app" },
+    "relevant": []
+  }
+]

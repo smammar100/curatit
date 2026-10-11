@@ -32,7 +32,7 @@ export function FolderTile({ category, on, onClick }: { category: Category; on: 
       aria-pressed={on}
       onClick={onClick}
       style={tone(category.hue)}
-      className="folder group relative h-36 w-full touch-manipulation rounded-xl transition-[scale] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400 active:scale-[0.97]"
+      className="folder group relative h-36 w-full touch-manipulation rounded-xl transition-[scale] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-900 active:scale-[0.97]"
     >
       <span className="sr-only">
         {category.name}, {category.posts.length} posts
@@ -72,7 +72,7 @@ export function FolderTile({ category, on, onClick }: { category: Category; on: 
           {Glyph && <Glyph className="size-5 text-(--folder-ink)" />}
           <span className="flex max-w-[calc(100%-1rem)] items-center gap-1.5 rounded-md bg-white px-2.5 py-1 text-caption font-medium text-base-900 shadow-sm ring-1 ring-base-200">
             <span className="truncate">{category.name}</span>
-            <span className="shrink-0 text-base-500 tabular-nums">{category.posts.length}</span>
+            <span className="shrink-0 text-base-600 tabular-nums">{category.posts.length}</span>
           </span>
           {on && <Tick className="absolute top-2 right-2 size-6 ring-2 ring-white" />}
         </span>
