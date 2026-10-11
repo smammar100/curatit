@@ -1,8 +1,8 @@
 "use client";
 
 // The solution in the problem → solution scroll: the real dashboard, drawn small. Its header (the
-// mark, For you / Newest / Saved, the search pill holding the brief, Create, Upgrade and the
-// account), the feed as a masonry of library posts at their own proportions, dealt row by row
+// mark, For you / Newest / Discover, the search pill holding the brief, Create, Saved with its
+// count, and the account), the feed as a masonry of library posts at their own proportions, dealt row by row
 // like the real grid, and one post being saved: its hover state with "Saved", the Save menu open
 // on the board it went to, and the toast that confirms it. It mirrors components/dashboard, so
 // keep the two in step when the dashboard changes.
@@ -10,10 +10,9 @@ import Image from "next/image";
 // Fundation
 import Symbol from "@/components/assets/Symbol";
 import Check from "@/components/fundations/icons/Check";
-import Lightning from "@/components/fundations/icons/Lightning";
+import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
 import Plus from "@/components/fundations/icons/Plus";
 import Search from "@/components/fundations/icons/Search";
-import CaretDown from "@/components/fundations/icons/CaretDown";
 import type { LibraryPost } from "@/lib/posts";
 // Components
 import AppWindow from "./AppWindow";
@@ -57,12 +56,7 @@ export default function LibraryWindow({ className }: { className?: string }) {
             <div className="hidden items-center gap-3 text-xs font-medium @lg:flex">
               <span className="text-base-900">For you</span>
               <span className="text-base-500">Newest</span>
-              <span className="relative text-base-500">
-                Saved
-                <span className="absolute -top-2 -right-3.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-accent-600 px-0.5 text-[8px] text-paper tabular-nums">
-                  {board.references.length}
-                </span>
-              </span>
+              <span className="text-base-500">Discover</span>
             </div>
           </div>
           <div className="mx-auto flex h-8 min-w-0 flex-1 items-center gap-2 rounded-full bg-white px-3 text-xs ring-1 ring-base-200 @lg:max-w-[22rem]">
@@ -74,13 +68,13 @@ export default function LibraryWindow({ className }: { className?: string }) {
               <Plus className="size-3" />
               <span className="hidden @md:inline">Create</span>
             </span>
-            <span className="hidden size-7 items-center justify-center rounded-full text-base-900 ring-1 ring-base-200 @md:flex">
-              <Lightning className="size-3" />
+            <span className="relative flex size-7 items-center justify-center rounded-full text-base-900 ring-1 ring-base-200">
+              <BookmarkSimple className="size-3" />
+              <span className="absolute -top-1 -right-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-accent-600 px-0.5 text-[8px] text-paper tabular-nums ring-1 ring-white">
+                {board.references.length}
+              </span>
             </span>
             <span className="flex size-7 items-center justify-center rounded-full bg-accent-100 text-[9px] font-medium text-accent-700">AM</span>
-            <span className="hidden size-7 items-center justify-center rounded-full bg-base-100 text-base-900 @md:flex">
-              <CaretDown className="size-3" />
-            </span>
           </div>
         </div>
 
