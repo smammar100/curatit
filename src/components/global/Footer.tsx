@@ -14,7 +14,7 @@ import FooterNewsletter from "./FooterNewsletter";
 // The site footer, "Night" (chosen from a five-way prototype on 2026-10-11): the page's paper
 // carries on, and the footer is an inset dark panel, the one deliberately dark surface on the
 // marketing site, like a gallery after hours. A short statement and the email field, the newest
-// covers fanned in from the right edge with a wall label naming their brands, then the links.
+// covers fanned in from the right edge, then the links.
 // A server component, so it costs the page no script beyond the email field; the motion is CSS
 // (.footer-* in global.css). If the library can't be reached, it renders without the covers.
 
@@ -84,7 +84,6 @@ export default async function Footer() {
   const posts = await getPublishedPosts().catch(() => []);
   const covers = pickCovers(posts);
   const brandCount = new Set(posts.map((post) => post.brand.slug)).size;
-  const wallLabel = new Intl.ListFormat("en-GB", { style: "long", type: "conjunction" }).format(covers.map((post) => post.brand.name));
 
   return (
     <footer className="bg-white px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-3 sm:pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:px-4 lg:pb-[max(1rem,env(safe-area-inset-bottom))]">
@@ -99,15 +98,8 @@ export default async function Footer() {
               <span className="block text-[color:var(--f-quiet)]">The library never closes.</span>
               <span className="block text-[color:var(--f-ink)]">Get the new posts as they land.</span>
             </Text>
-            {/* The wall label sits level with the field's note, under the covers it names */}
-            <div className="mt-8 flex items-end justify-between gap-8">
+            <div className="mt-8">
               <FooterNewsletter />
-              {covers.length > 0 && (
-                <div className="relative z-10 hidden max-w-xs shrink-0 text-right lg:block">
-                  <p className="text-xs/5 font-medium text-[color:var(--f-ink)]">Newest in the library</p>
-                  <p className="text-xs/5 text-pretty text-[color:var(--f-quiet)]">{wallLabel}</p>
-                </div>
-              )}
             </div>
           </Wrapper>
 
