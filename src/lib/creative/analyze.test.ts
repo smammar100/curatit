@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { analyzePost, chunks, inputFingerprint } from "./analyze";
+import { distance, rgbOf } from "./colours";
 import { prepareImages } from "./media";
 import { fail, MockAdapter } from "./mock";
 import type { CreativeDna, Perception } from "./schema";
@@ -49,13 +50,33 @@ describe("analyzePost", () => {
       // Synthesis opens every slide again to check what it writes
       ["synthesis", [...Array(13).keys()]],
     ]);
-    expect(adapter.requests[2].prompt).toContain("slide-12.webp  (position 12)");
+    expect(adapter.requests[2].prompt).toContain("slide-12.webp  (position 12; measured colours: #");
     expect(analysis.slides.map((slide) => slide.position)).toEqual([...Array(13).keys()]);
     expect(analysis.version).toMatchObject({ image_analysis_complete: true, expected_slides: 13, processed_slides: 13, review_status: "needs_review", model_id: "mock" });
     expect(analysis.version.input_fingerprint).toBe(inputFingerprint(s.manifest, "mock"));
     expect(analysis.version.creative_dna.narrative.slide_roles).toHaveLength(13);
     expect(analysis.usage.calls).toBe(3);
     expect(analysis.outputs).toHaveLength(3);
+  });
+
+  it("records the colours measured from the pixels, not the model's, and holds colour roles to them", async () => {
+    const s = await setup(3);
+    const analysis = await run(new MockAdapter(), s);
+    // The test images are green (#1f7a4d) with a pale block (#f5f0e6); the mock's perception says
+    // #1f7a4d and #ffffff, and the pale block is only known from the pixels
+    for (const slide of analysis.slides) {
+      expect(distance(rgbOf(slide.palette.hex[0]), rgbOf("#1f7a4d"))).toBeLessThan(20);
+      expect(slide.palette.hex.some((hex) => distance(rgbOf(hex), rgbOf("#f5f0e6")) < 20)).toBe(true);
+      expect(slide.palette.hex).not.toContain("#ffffff");
+    }
+
+    const invented = new MockAdapter({
+      script: [undefined, (_request, answer) => ({ ...(answer as CreativeDna), colour_roles: [{ hex: "#ff00ff", role: "Accent" }] })],
+    });
+    const fixed = await run(invented, await setup(1));
+    // The repair prompt names the colours it may use
+    expect(invented.requests[2].prompt).toContain("isn't one of the measured colours");
+    expect(fixed.version.creative_dna.colour_roles?.[0].hex).not.toBe("#ff00ff");
   });
 
   it("fills the legacy fields from the DNA", async () => {

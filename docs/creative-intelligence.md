@@ -164,6 +164,54 @@ usefulness, principles, limitations, redundancy, hallucinations, time to underst
 judges its own output. The set is 24 published posts across all seven categories; posts without a
 2.1 analysis need one first (`enqueue --force`, then `work`), which is a budget decision.
 
+## What prompt 2026.10.12-1 (Creative Intelligence 3.0) changed
+
+An audit of the 2.1 analyses against their posts found the problems 3.0 is about. The Wealthsimple
+chart's analysis said "over 11 years" for an axis labelled 2015 to 2025 (10 years elapse; the post's
+own copy says 11). It marked "inflation adjustment and sources" sound because the footnote names
+them. "Start all lines at one point and label their ends" was two techniques in one decision. The
+hex values were the model's guesses. And the page was still long paragraphs.
+
+- **Strategy first.** `strategy_headline` (8 to 14 words) and `strategy_summary` (one or two
+  sentences) lead the post page.
+- **Decisions, one technique each.** Two to four, never padded. Each has a short `explanation`
+  (shown first), then on request what was observed, the possible effect, the reusable principle and
+  a `watch_out`. A title that joins two moves is sent back (`compound_decision`); near-duplicates
+  warn.
+- **Data checks say what kind of statement they are.** `observed` (a fact about what the creative
+  shows or states; stated is not verified), `potential_concern`, `cannot_verify` (listed sources
+  don't verify figures). The model never writes "verified", and the validator refuses a note that
+  calls a figure accurate, correct or verified. The prompt spells out elapsed time against labelled
+  years, real against nominal values, a shared starting value as a presentation choice (not proof),
+  legibility of fine print, and the qualifications an investment, financial, health or insurance
+  claim gives or leaves out. `period_miscount` catches "11 years" for 2015–2025 unless the sentence
+  attributes it to the post.
+- **Measured colours.** `media.ts` measures each image's main colours from its pixels
+  (`colours.ts`), the slide records keep those instead of the model's, the prompt lists them next
+  to each image, and `colour_roles` (the job each colour does) must use one of them.
+- **Posting account against visible marks.** A wordmark or series name on the image may not be the
+  posting brand; it's described as what's visible.
+- **Apply.** `application` (when to use, when not), `copywriting` (how the words work) and one or
+  two adaptations feed the Apply tab and the copied brief.
+- **Counting.** Any number given (slides, faces, lines, years) is counted on the images.
+
+Older analyses keep working: every new field is optional in `CreativeDna`, the page maps 2.1's
+statuses (sound → observed, concern → potential concern, unverified → cannot verify), uses a 2.1
+decision's observation as its explanation and its avoid-when as its watch-out, and takes the first
+sentence of the stored typography and device descriptions where 3.0 notes are missing. Nothing is
+re-analysed in bulk: a new version of an approved post lands as a proposal, as always.
+
+The first runs (proposals, not published): Wealthsimple `DeSB6D7NsfO`, Adidas `DeSAKiEG9nf`,
+Wealthfront `DeMxAgbm3T2`, Deliveroo `DeRlksnIK-o`, Claude `DeSAJSDIMcQ`.
+
+### Three-way evaluation
+
+`npm run creative:compare` now writes up to three sides per post, blind and in an order fixed per
+post: the newest stored analysis, the newest one from an earlier prompt (old Curatit), and the
+ordinary critique from the same model on the same images. `--no-generic` compares Curatit's two
+versions only and spends nothing. Rate with `docs/creative-eval/rubric.md`; a model never judges
+its own output.
+
 ## Permissions
 
 | Who | Can |

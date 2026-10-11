@@ -80,43 +80,46 @@ const key = (target: EventTarget, name: string) => {
   return event;
 };
 
+const cards = () => [...panel().querySelectorAll<HTMLButtonElement>("ol > li > button[aria-expanded]")];
+
 describe("CreativeBreakdown: Breakdown", () => {
-  it("opens on the idea, the strategy and the creative decisions, closed", () => {
+  it("opens on the strategy, its traits and the key decisions, the first open on its explanation", () => {
     render(<Harness analysis={galleryAnalysis()} />);
     expect(tabNames()).toEqual(["Breakdown", "Visual DNA", "Apply"]);
     expect(tab("Breakdown")!.getAttribute("aria-selected")).toBe("true");
-    expect(panel().textContent).toContain("A tight-crop portrait roll call");
+    expect(panel().textContent).toContain("Six named faces carry the emotion before one logo signs off");
+    expect(panel().textContent).toContain("A fixed name label turns six close portraits into one lineup");
     expect([...panel().querySelectorAll("dt")].map((dt) => dt.textContent)).toEqual(["Archetype", "Inferred goal", "Hook", "Format"]);
-    const cards = [...panel().querySelectorAll("button[aria-expanded]")];
-    expect(cards.map((b) => b.getAttribute("aria-expanded"))).toEqual(["false", "false"]);
-    expect(cards[0].textContent).toContain("Keep one name treatment across every portrait");
-    expect(cards[0].textContent).toContain("Slides 1–6");
-    expect(panel().textContent).not.toContain("What they did");
+    expect(cards().map((b) => b.getAttribute("aria-expanded"))).toEqual(["true", "false"]);
+    expect(cards()[0].textContent).toContain("Keep one name treatment across every portrait");
+    expect(cards()[0].textContent).toContain("Slides 1–6");
+    expect(panel().textContent).toContain("Every player gets the same spaced white capitals");
+    // The reasoning waits until it's asked for, and opening by default doesn't move the stage
+    expect(panel().textContent).not.toContain("Possible effect");
+    expect(stage()).toBe("image 0");
   });
 
-  it("shows a decision's slide on the stage when it's opened, and its evidence links move it too", () => {
+  it("shows a decision's slide when it's opened, its reasoning on request, and marks the one on screen", () => {
     render(<Harness analysis={galleryAnalysis()} />);
+    expect(cards()[0].textContent).toContain("on screen");
     click(button(panel(), /Hold the product back/));
     expect(stage()).toBe("image 6");
-    expect(button(panel(), /Hold the product back/)!.getAttribute("aria-expanded")).toBe("true");
-    for (const field of ["What they did", "Why it might work", "Use it when", "Avoid it when"]) expect(panel().textContent).toContain(field);
-    expect(panel().textContent).toContain("Let people carry the story and bring the product in once, at the end.");
+    expect(cards().map((b) => b.getAttribute("aria-expanded"))).toEqual(["false", "true"]);
+    expect(cards()[1].textContent).toContain("on screen");
+    expect(cards()[0].textContent).not.toContain("on screen");
     expect(within("slides").querySelector('button[aria-pressed="true"]')!.getAttribute("aria-label")).toMatch(/^Slide 7/);
+
+    click(button(panel(), /^Show the reasoning$/));
+    for (const field of ["Observed", "Possible effect", "Reusable principle", "Watch out"]) expect(panel().textContent).toContain(field);
+    expect(panel().textContent).toContain("Let people carry the story and bring the product in once, at the end.");
+    expect(panel().textContent).toContain("People who stop swiping early never see the brand.");
+    expect(button(panel(), /^Hide the reasoning$/)!.getAttribute("aria-expanded")).toBe("true");
+
     click(button(panel(), /Keep one name treatment/));
     expect(stage()).toBe("image 0");
+    click(button(panel(), /^Show the reasoning$/));
     click(button(panel(), /^Slides 1–6$/));
     expect(stage()).toBe("image 0");
-  });
-
-  it("shows three decisions and offers the rest", () => {
-    const analysis = galleryAnalysis((dna) => {
-      const [a, b] = dna.creative_decisions!;
-      dna.creative_decisions = [a, b, { ...a, title: "Third" }, { ...b, title: "Fourth" }, { ...a, title: "Fifth" }];
-    });
-    render(<Harness analysis={analysis} />);
-    expect(panel().querySelectorAll("button[aria-expanded]").length).toBe(3);
-    click(button(panel(), /^2 more decisions$/));
-    expect(panel().querySelectorAll("button[aria-expanded]").length).toBe(5);
   });
 
   it("shows an older analysis's observations, labelled for what they are, instead of decisions", () => {
@@ -125,22 +128,30 @@ describe("CreativeBreakdown: Breakdown", () => {
     });
     render(<Harness analysis={analysis} />);
     expect(panel().textContent).toContain("What it does");
-    expect(panel().textContent).not.toContain("Creative decisions");
+    expect(panel().textContent).not.toContain("Key creative decisions");
     expect(panel().textContent).toContain("Observed");
+    expect(panel().textContent).toContain("Why it might work");
   });
 
-  it("folds the data checks behind what needs noting", () => {
+  it("sums the data checks up in one line, and opens them with each one's kind in words", () => {
     const analysis = galleryAnalysis((dna) => {
       dna.integrity_notes = [
-        { aspect: "Start values", status: "sound", note: "Every series starts at the same amount.", evidence: ["slide:0"] },
-        { aspect: "Sources", status: "unverified", note: "The figures can't be checked from the post.", evidence: ["slide:6"] },
+        { aspect: "Start values", status: "observed", note: "Every series starts at the same amount.", evidence: ["slide:0"] },
+        { aspect: "Figures", status: "cannot_verify", note: "The end values can't be checked from the post.", evidence: ["slide:6"] },
+        { aspect: "Disclaimer", status: "potential_concern", note: "The fine print is small and low-contrast.", evidence: ["slide:6"] },
       ];
     });
     render(<Harness analysis={analysis} />);
-    const fold = [...panel().querySelectorAll("details")].find((d) => d.textContent!.startsWith("Data checks"))!;
-    expect(fold.querySelector("summary")!.textContent).toContain("1 to note");
-    act(() => fold.querySelector("summary")!.click());
-    expect(fold.textContent).toContain("Unverified");
+    const summary = button(panel(), /potential concern/)!;
+    expect(summary.textContent).toContain("1 potential concern · 1 observation · 1 cannot verify");
+    expect(summary.getAttribute("aria-expanded")).toBe("false");
+    expect(panel().textContent).not.toContain("The fine print is small");
+    click(summary);
+    const text = panel().textContent!;
+    expect(text.indexOf("Disclaimer")).toBeLessThan(text.indexOf("Start values"));
+    for (const label of ["Potential concern", "Cannot verify", "Observed"]) expect(text).toContain(label);
+    expect(text).toContain("No figure here was checked against its sources.");
+    expect(text).not.toMatch(/\bVerified\b|\bSound\b/);
   });
 
   it("turns tabs, not slides, with the arrow keys on the tab list", () => {
@@ -151,19 +162,42 @@ describe("CreativeBreakdown: Breakdown", () => {
     expect(document.activeElement).toBe(tab("Visual DNA"));
     expect(stage()).toBe("image 0");
   });
+
+  it("brings the new tab's start into view when the panel had scrolled past it, and otherwise stays put", () => {
+    render(<Harness analysis={galleryAnalysis()} />);
+    const pane = container.querySelector<HTMLElement>("#scroll-pane")!;
+    const marker = within("breakdown").querySelector<HTMLElement>('div[aria-hidden="true"]')!;
+    vi.spyOn(pane, "getBoundingClientRect").mockReturnValue({ top: 100 } as DOMRect);
+    const at = vi.spyOn(marker, "getBoundingClientRect").mockReturnValue({ top: -20 } as DOMRect);
+    act(() => void (pane.scrollTop = 300));
+    click(tab("Apply"));
+    expect(pane.scrollTop).toBe(180);
+    at.mockReturnValue({ top: 140 } as DOMRect);
+    click(tab("Visual DNA"));
+    expect(pane.scrollTop).toBe(180);
+  });
 });
 
 describe("CreativeBreakdown: Visual DNA", () => {
-  it("explains each part in a sentence, with the slides that show it, and the sequence as a bar", () => {
+  it("gives each part an insight, a few attributes and the slides that show them, and the colours to copy", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
     render(<Harness analysis={galleryAnalysis()} />);
     click(tab("Visual DNA"));
     const text = panel().textContent!;
+    for (const title of ["Composition", "Typography", "Colour", "Imagery", "Visual devices", "Branding & consistency", "Sequence"]) expect(text).toContain(title);
     expect(text).toContain("Tight crops fill each frame");
     expect(text).toContain("The logo appears once, oversized, on slide 7.");
-    expect(panel().querySelector('[aria-label="Approximate colours"]')).not.toBeNull();
+    expect(text).toContain("Layout changes on");
+    expect(text).not.toMatch(/Unknown|Other\b/);
+    const colours = panel().querySelector('[aria-label="Colours (measured from the image)"]')!;
+    expect(colours.textContent).toContain("Player names");
+    await act(async () => button(colours, /^Copy #0b0a10, Background$/)!.click());
+    expect(writeText).toHaveBeenCalledWith("#0b0a10");
+    expect(panel().textContent).toContain("Copied #0b0a10");
     click(button(panel(), /^Slide 7: /));
     expect(stage()).toBe("image 6");
-    expect(text).not.toMatch(/Unknown|Other\b/);
+    expect(panel().textContent).toContain("Changes from slide 6");
   });
 
   it("keeps the bar on the stage's slide when the arrows move it", () => {
@@ -179,17 +213,19 @@ describe("CreativeBreakdown: Visual DNA", () => {
 });
 
 describe("CreativeBreakdown: Apply", () => {
-  it("leads with the formula and the steps, and copies a creative brief", async () => {
+  it("leads with the formula and the steps, says when to use it, and copies a creative brief", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
     render(<Harness analysis={galleryAnalysis()} />);
     click(tab("Apply"));
     const text = panel().textContent!;
-    expect(text).toContain("Hook portrait → Repeated portraits → Product reveal");
-    for (const heading of ["How to apply", "Adapt it elsewhere", "When it's useful", "Pitfalls"]) expect(text).toContain(heading);
+    expect([...panel().querySelectorAll("h3")].map((h) => h.textContent)).toEqual(["Formula", "How to execute", "When to use", "When not to use", "Adapt it elsewhere"]);
+    expect([...panel().querySelectorAll("ol")[0].querySelectorAll("li")].map((li) => li.textContent!.replace("→", ""))).toEqual(["Hook portrait", "Repeated portraits", "Product reveal"]);
+    expect(text).toContain("A set of portraits or products shown one per slide.");
     await act(async () => button(panel(), /^Copy creative brief$/)!.click());
     const brief = writeText.mock.calls[0][0] as string;
-    expect(brief).toContain("CREATIVE PRINCIPLE");
+    expect(brief).toContain("OBJECTIVE");
+    expect(brief).toContain("ATTRIBUTION AND SOURCE");
     expect(brief).toContain("https://www.instagram.com/p/EXAMPLE/");
     expect(panel().querySelector('[role="status"]')!.textContent).toContain("Paste it");
     writeText.mockRejectedValueOnce(new Error("denied"));
@@ -199,14 +235,22 @@ describe("CreativeBreakdown: Apply", () => {
 });
 
 describe("CreativeBreakdown: thin and single records", () => {
-  it("gives a single image no sequence and no slide rows", () => {
+  it("gives a single image no sequence, no slide rows and no Slide 1 links", () => {
     const dna = clone(FIXTURE_DNA);
     dna.narrative = { pattern: "single-image", arc: "One image.", slide_roles: [{ position: 0, role: "hook" }] };
-    dna.creative_decisions = [{ ...dna.creative_decisions![0], evidence: ["slide:0"] }];
+    dna.creative_decisions = dna.creative_decisions!.map((decision) => ({ ...decision, evidence: ["slide:0"] }));
+    dna.integrity_notes = [{ aspect: "Figures", status: "cannot_verify", note: "Can't be checked from the post.", evidence: ["slide:0"] }];
     const analysis = toPublicAnalysis({ creative_dna: dna, current_version_id: "v", image_analysis_complete: true, expected_slides: 1, processed_slides: 1 }, [{ version_id: "v", position: 0, observation: FIXTURE_PERCEPTION.slides[0] }], 1)!;
     render(<Harness analysis={analysis} />);
+    click(button(panel(), /^Show the reasoning$/));
+    click(button(panel(), /cannot verify/));
+    for (const name of ["Breakdown", "Visual DNA", "Apply"]) {
+      click(tab(name));
+      expect(panel().textContent).not.toMatch(/\bSlides? \d/);
+    }
     click(tab("Visual DNA"));
     expect(panel().querySelector('[aria-label="Slides"]')).toBeNull();
+    expect(panel().textContent).not.toContain("Seen on");
     expect(container.querySelector('[data-testid="slides"]')).toBeNull();
     expect(traits(analysis).map((t) => t.label)).not.toContain("Format");
   });
@@ -217,6 +261,7 @@ describe("CreativeBreakdown: thin and single records", () => {
     render(<Harness analysis={bare} />);
     expect(tabNames()).toEqual(["Breakdown", "Visual DNA"]);
     expect(panel().querySelectorAll("dt").length).toBe(0);
+    expect(panel().textContent).toContain(dna.concept);
     expect(within("breakdown").textContent).toContain("may be incomplete");
   });
 

@@ -2,10 +2,13 @@
 // post_images bucket and path (never a path rebuilt from the brand or position), is checked to be
 // a real WebP, JPEG or PNG within the size limits, and is written to the run's private folder as
 // slide-NN.<ext>, NN being its zero-based position. An image that's one flat colour (a video's
-// black cover frame, usually) is marked blank, so the model is told there's nothing on it. A missing file may still be uploading (retry);
+// black cover frame, usually) is marked blank, so the model is told there's nothing on it, and
+// every image's main colours are measured here (colours.ts), so the hex values an analysis gives
+// are the image's, not the model's guess. A missing file may still be uploading (retry);
 // a broken one won't fix itself (dead letter), and no analysis goes ahead with a slide left out.
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { dominantColours } from "./colours";
 import { ModelError, type ImageInput } from "./model";
 import type { ManifestImage } from "./prompt";
 
@@ -41,7 +44,9 @@ async function inspect(bytes: Uint8Array) {
   // there's anything on the image at all
   const { channels } = await sharp(bytes, { failOn: "error" }).resize(256, 256, { fit: "inside", withoutEnlargement: true }).removeAlpha().stats();
   const spread = Math.max(...channels.map((channel) => channel.max - channel.min));
-  return { width: meta.width ?? 0, height: meta.height ?? 0, blank: spread <= FLAT_SPREAD };
+  // Colours at 480px: enough for thin chart lines and type to register, still quick
+  const { data, info } = await sharp(bytes, { failOn: "error" }).resize(480, 480, { fit: "inside", withoutEnlargement: true }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  return { width: meta.width ?? 0, height: meta.height ?? 0, blank: spread <= FLAT_SPREAD, colours: dominantColours(data, info.channels) };
 }
 
 export async function prepareImage(image: ManifestImage, source: ImageSource, workdir: string): Promise<ImageInput> {
@@ -68,7 +73,7 @@ export async function prepareImage(image: ManifestImage, source: ImageSource, wo
 
   const file = join(workdir, `slide-${String(image.position).padStart(2, "0")}.${EXTENSION[type]}`);
   await writeFile(file, bytes);
-  return { position: image.position, file, mimetype: type, wasVideo: image.was_video, blank: info.blank };
+  return { position: image.position, file, mimetype: type, wasVideo: image.was_video, blank: info.blank, colours: info.colours };
 }
 
 // Every image, in position order; the first failure stops the post

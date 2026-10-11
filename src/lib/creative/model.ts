@@ -3,6 +3,7 @@
 // the parsed output and what it cost. Providers: the local Claude Code CLI on the person's own
 // subscription (claudeCli.ts) and a deterministic mock for tests and dry runs (mock.ts); an
 // API-key provider can be added behind the same interface.
+import type { Swatch } from "./colours";
 import type { FailureKind } from "./states";
 
 export type ImageInput = {
@@ -15,6 +16,8 @@ export type ImageInput = {
   // One flat colour with nothing on it (usually a video's black cover frame), measured from the
   // pixels in media.ts: there's nothing on it to read
   blank?: boolean;
+  // Its main colours and their share of the image, measured from the pixels (colours.ts)
+  colours?: Swatch[];
 };
 
 export type Usage = {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { clone, FIXTURE_DNA, FIXTURE_PERCEPTION, galleryFixture } from "./fixtures";
-import { alignSlides, evidenceGroups, numberingOf, oneBased, parseEvidence, briefText, sentences, toPublicAnalysis, type AnalysisRecord, type SlideRecord } from "./publicAnalysis";
+import { clone, FIXTURE_DNA, FIXTURE_PERCEPTION, galleryFixture, legacy21 } from "./fixtures";
+import { alignSlides, evidenceGroups, integritySummary, numberingOf, oneBased, parseEvidence, briefText, sentences, toPublicAnalysis, type AnalysisRecord, type SlideRecord } from "./publicAnalysis";
 import type { CreativeDna, SlideObservation } from "./schema";
 import { term } from "./taxonomy";
 
@@ -111,11 +111,21 @@ describe("toPublicAnalysis", () => {
     expect(analysis.slides[0]).toMatchObject({ index: 0, headline: "ALEX RIVERA", confidence: "high" });
     expect(analysis.slides[6]).toMatchObject({ index: 6, headline: null, brandTreatment: "Large white logo in the bottom corner over the photo." });
     expect(analysis.slides[6]!.changes).toEqual(expect.arrayContaining([expect.stringContaining("Product: low → high"), expect.stringContaining("New colours")]));
-    const visual = Object.fromEntries(analysis.visual.map((section) => [section.title, section]));
-    expect(visual.Composition.rows.map((row) => row.value)).not.toContain("Unknown");
-    expect(evidenceGroups(visual.Composition.rows[0].evidence).map((g) => g.label)).toEqual(["Slides 1–7"]);
-    expect(visual.Consistency.text).toBe("The name placement repeats across slides 1 to 6. Slide 7 changes to a product frame.");
-    expect(visual.Branding.rows[0].evidence).toEqual([{ kind: "slide", index: 6 }]);
+    const visual = Object.fromEntries(analysis.visual.map((section) => [section.key, section]));
+    expect(analysis.visual.map((section) => section.title)).toEqual(["Composition", "Typography", "Colour", "Imagery", "Visual devices", "Branding & consistency"]);
+    expect(visual.composition.chips).not.toContain("Unknown");
+    expect(evidenceGroups(visual.composition.evidence).map((g) => g.label)).toEqual(["Slides 1–7"]);
+    expect(visual.branding.insight).toBe("The logo appears once, oversized, on slide 7.");
+    expect(visual.branding.evidence).toEqual([{ kind: "slide", index: 6 }]);
+    for (const section of analysis.visual) expect(section.chips.length).toBeLessThanOrEqual(4);
+    // What every slide shares and what changes: here the closing frame breaks every pattern
+    expect(analysis.consistency!.same).toEqual([]);
+    expect(analysis.consistency!.varies.map((change) => [change.label, evidenceGroups(change.evidence).map((g) => g.label)])).toEqual([
+      ["Layout", ["Slide 7"]],
+      ["Type", ["Slide 7"]],
+      ["Imagery", ["Slide 7"]],
+      ["Colour", ["Slide 7"]],
+    ]);
     expect(analysis.adaptations).toHaveLength(2);
     expect(analysis.caveats).toEqual(["Slide 3's name sits over a white shirt, so contrast is weaker there."]);
   });
@@ -128,8 +138,8 @@ describe("toPublicAnalysis", () => {
     expect(analysis.labels.map((l) => l.label)).toEqual(["Hook", "Format"]);
     expect(analysis.slides[0]!.facts.find((fact) => fact.label === "Devices")).toBeUndefined();
     expect(analysis.slides[6]!.facts.find((fact) => fact.label === "Type")).toBeUndefined();
-    const devices = analysis.visual.find((section) => section.title === "Devices and texture")!;
-    expect(devices.rows.map((row) => row.value)).toEqual([term("visual_device", "logo-lockup")!.label]);
+    const devices = analysis.visual.find((section) => section.key === "devices")!;
+    expect(devices.chips).toEqual([term("visual_device", "logo-lockup")!.label]);
   });
 
   it("makes swatches only from valid six-digit hex values", () => {
@@ -176,57 +186,113 @@ describe("briefText", () => {
     const { dna, slides } = galleryFixture();
     const analysis = toPublicAnalysis(record(dna, 7), rows(slides), 7)!;
     const brief = briefText(analysis, { brand: "Example Sports", url: "https://www.instagram.com/p/EXAMPLE/", format: "carousel", slides: 7 });
-    for (const heading of ["CREATIVE PRINCIPLE", "SUGGESTED OBJECTIVE", "CONCEPT", "FORMAT", "VISUAL DIRECTION", "CONTENT STRUCTURE", "EXECUTION STEPS", "IMPORTANT CONSTRAINTS", "ORIGINAL REFERENCE", "ATTRIBUTION"]) expect(brief).toContain(heading);
-    expect(brief).toContain("Fix one type treatment and position across a series so the images do the varying.");
-    expect(brief).toContain("Built on: Hook portrait → Repeated portraits → Product reveal");
-    expect(brief).toContain("Instagram carousel, about 7 slides");
+    const headings = ["OBJECTIVE", "CORE IDEA", "CREATIVE FORMULA", "RECOMMENDED VISUAL STRUCTURE", "COPYWRITING APPROACH", "PRODUCTION STEPS", "IMPORTANT CONSTRAINTS", "ATTRIBUTION AND SOURCE"];
+    expect(brief.split("\n").filter((line) => headings.includes(line))).toEqual(headings);
+    expect(brief).toContain("Built on: Fix one type treatment and position across a series so the images do the varying.");
+    expect(brief).toContain("Hook portrait → Repeated portraits → Product reveal");
+    expect(brief).toContain("- Format: Instagram carousel, about 7 slides");
     expect(brief).toMatch(/- Slides 2–6: /);
+    expect(brief).toContain("- Typography: Spaced condensed capitals, white, one line, the only text on each portrait.");
+    expect(brief).toContain("- Colour jobs: background, player names, accent, in your own palette");
+    expect(brief).toContain("Names only on the slides; the caption carries the context.");
     expect(brief).toContain("1. Fix one name style and position across a portrait set.");
+    expect(brief).toContain("- People who stop swiping early never see the brand.");
     expect(brief).toContain("- The product is the news, or people may stop before the last slide.");
-    expect(brief).toContain("https://www.instagram.com/p/EXAMPLE/");
-    expect(brief).toContain("Reference creative by Example Sports, used for its principle only.");
-    expect(brief).not.toMatch(/ALEX RIVERA/);
+    expect(brief).toContain("Reference: Example Sports, https://www.instagram.com/p/EXAMPLE/");
+    expect(brief).toContain("Used for its principle only");
+    // Never the brand's words or colour codes
+    expect(brief).not.toMatch(/ALEX RIVERA|#0b0a10|#5fb81e/i);
   });
 });
 
-describe("creative decisions (2.1)", () => {
-  it("maps decisions with one-based slides, and the formula, visual notes and data checks", () => {
+describe("creative decisions and data checks", () => {
+  it("maps 3.0 decisions with one-based slides, the explanation first, and the checks by kind", () => {
     const { dna, slides } = galleryFixture();
     dna.integrity_notes = [
-      { aspect: "Start values", status: "sound", note: "All series start at the same amount.", evidence: ["slide:0"] },
-      { aspect: "Sources and disclaimers", status: "concern", note: "The source line on slide 6 is hard to read at phone size.", evidence: ["slide:6"] },
+      { aspect: "Start values", status: "observed", note: "All series start at the same amount.", evidence: ["slide:0"] },
+      { aspect: "Sources and disclaimers", status: "potential_concern", note: "The source line on slide 6 is hard to read at phone size.", evidence: ["slide:6"] },
+      { aspect: "Figures", status: "cannot_verify", note: "The end values can't be checked from the post.", evidence: ["slide:6"] },
     ];
     const analysis = toPublicAnalysis(record(dna, 7), rows(slides), 7)!;
+    expect(analysis.headline).toBe("Six named faces carry the emotion before one logo signs off");
+    expect(analysis.summary).toContain("fixed name label");
     expect(analysis.creativeDecisions.map((d) => d.title)).toEqual(["Keep one name treatment across every portrait", "Hold the product back for the last frame"]);
     expect(evidenceGroups(analysis.creativeDecisions[0].evidence).map((g) => g.label)).toEqual(["Slides 1–6"]);
-    expect(analysis.creativeDecisions[0].observation).toContain("slides 1 to 6");
+    expect(analysis.creativeDecisions[0]).toMatchObject({
+      explanation: expect.stringContaining("same spaced white capitals"),
+      observation: expect.stringContaining("slides 1 to 6"),
+      effect: expect.stringContaining("fixed treatment"),
+      watchOut: "White names lose contrast where they cross a light shirt, as on slide 3.",
+    });
     expect(analysis.creativeDecisions[1].observation).toMatch(/^Slide 7 drops/);
     expect(analysis.creativeDecisions[1].confidence).toBe("medium");
     expect(analysis.formula).toBe("Hook portrait → Repeated portraits → Product reveal");
-    expect(analysis.visual.find((s) => s.title === "Composition")!.text).toContain("Tight crops");
-    expect(analysis.visual.find((s) => s.title === "Branding")!.text).toBe("The logo appears once, oversized, on slide 7.");
-    expect(analysis.integrity.map((n) => [n.aspect, n.status])).toEqual([["Start values", "sound"], ["Sources and disclaimers", "concern"]]);
-    expect(analysis.integrity[1].note).toContain("slide 7");
+    // Concerns first, then what can't be checked, then observations
+    expect(analysis.integrity.map((n) => [n.aspect, n.status])).toEqual([
+      ["Sources and disclaimers", "concern"],
+      ["Figures", "cannot_verify"],
+      ["Start values", "observed"],
+    ]);
+    expect(integritySummary(analysis.integrity)).toBe("1 potential concern · 1 observation · 1 cannot verify");
+    expect(analysis.integrity[0].note).toContain("slide 7");
+    expect(analysis.colours).toEqual([
+      { hex: "#0b0a10", role: "Background" },
+      { hex: "#f2eeee", role: "Player names" },
+      { hex: "#5fb81e", role: "Accent: the closing turf" },
+    ]);
+    expect(analysis.copywriting).toBe("Names only on the slides; the caption carries the context.");
+    expect(analysis.application.whenToUse).toEqual(["A set of portraits or products shown one per slide."]);
+    expect(analysis.visual.find((s) => s.key === "typography")!.insight).toBe("Spaced condensed capitals, white, one line, the only text on each portrait.");
+  });
+
+  it("never shows a check as verified, whatever the record says", () => {
+    const { dna, slides } = galleryFixture();
+    dna.integrity_notes = [{ aspect: "Figures", status: "verified" as never, note: "Checked.", evidence: ["slide:0"] }];
+    expect(toPublicAnalysis(record(dna, 7), rows(slides), 7)!.integrity).toEqual([]);
+  });
+
+  it("shows a 2.1 analysis as written: the observation leads, avoid-when is the watch-out, old statuses map across", () => {
+    const { dna, slides } = galleryFixture();
+    const old = legacy21(dna);
+    old.integrity_notes = [
+      { aspect: "Start values", status: "sound", note: "All series start at the same amount.", evidence: ["slide:0"] },
+      { aspect: "Figures", status: "unverified", note: "The end values can't be checked.", evidence: ["slide:6"] },
+      { aspect: "Disclaimer", status: "concern", note: "Tiny and low-contrast.", evidence: ["slide:6"] },
+    ];
+    const analysis = toPublicAnalysis(record(old, 7), rows(slides), 7)!;
+    expect(analysis.headline).toBe(analysis.concept);
+    expect(analysis.creativeDecisions[0]).toMatchObject({
+      explanation: expect.stringMatching(/^Each of slides 1 to 6/),
+      observation: null,
+      watchOut: "Avoid it when white names lose contrast where they cross a light shirt, as on slide 3.",
+    });
+    expect(analysis.integrity.map((n) => n.status)).toEqual(["concern", "cannot_verify", "observed"]);
+    expect(analysis.application.whenToUse).toEqual(["A set of portraits or products shown one per slide."]);
+    expect(analysis.colours.every((colour) => colour.role === null)).toBe(true);
+    expect(analysis.colours.map((colour) => colour.hex)).toContain("#0b0a10");
+    // No typography note before 3.0: the first sentence of the stored hierarchy stands in
+    expect(analysis.visual.find((s) => s.key === "typography")!.insight).toBe("A single white name sits low on every portrait.");
   });
 
   it("drops a decision that's incomplete or rests only on a blank frame, rather than show half of it", () => {
     const { dna, slides } = galleryFixture();
     slides[6] = { ...slides[6], visible_text: { headline: null, body: null }, legibility: "no-text", imagery: ["video-frame"], objects: [], confidence: "low", observation: "Blank: the saved cover frame of this video slide is one flat colour, so what the video shows can't be told." };
-    (dna.creative_decisions![0] as Record<string, unknown>).avoid_when = "";
+    (dna.creative_decisions![0] as Record<string, unknown>).principle = "";
     const analysis = toPublicAnalysis(record(dna, 7), rows(slides), 7)!;
     expect(analysis.creativeDecisions).toEqual([]);
   });
 
   it("shows an analysis written before 2.1 without inventing decisions for it", () => {
     const { dna, slides } = galleryFixture();
-    delete dna.creative_decisions;
-    delete dna.integrity_notes;
-    delete dna.visual_notes;
-    delete dna.creative_formula;
-    const analysis = toPublicAnalysis(record(dna, 7), rows(slides), 7)!;
-    expect(analysis).toMatchObject({ creativeDecisions: [], integrity: [], formula: null });
+    const old = legacy21(dna);
+    delete old.creative_decisions;
+    delete old.integrity_notes;
+    delete old.visual_notes;
+    delete old.creative_formula;
+    const analysis = toPublicAnalysis(record(old, 7), rows(slides), 7)!;
+    expect(analysis).toMatchObject({ creativeDecisions: [], integrity: [], formula: null, application: { whenToUse: [], whenNotToUse: [] } });
     expect(analysis.mechanisms.length).toBeGreaterThan(0);
-    expect(analysis.visual.find((s) => s.title === "Composition")!.text).toBeNull();
+    expect(analysis.visual.find((s) => s.key === "composition")!.insight).toBeNull();
   });
 });
 
@@ -255,7 +321,6 @@ describe("slide numbering, from the review's failing cases", () => {
     const analysis = toPublicAnalysis(record(dna, 7), rows(slides), 7)!;
     expect(analysis.concept).toBe("Six portraits, closing on the product on slide 7.");
     expect(analysis.slides[6]!.brandTreatment).toBe("Same lockup as slide 1, now oversized.");
-    expect(analysis.visual.find((s) => s.title === "Branding")!.rows[0].value).toBe("Same lockup as slide 1, now oversized.");
   });
 });
 
@@ -272,6 +337,6 @@ describe("blank frames in Visual DNA", () => {
     const { dna, slides } = galleryFixture();
     slides[3] = { ...slides[3], visible_text: { headline: null, body: null }, legibility: "no-text", imagery: ["video-frame"], objects: [], confidence: "low", devices: ["logo-lockup"], observation: "Blank: the saved cover frame of this video slide is one flat colour, so what the video shows can't be told." };
     const analysis = toPublicAnalysis(record(dna, 7), rows(slides), 7)!;
-    for (const section of analysis.visual) for (const row of section.rows) expect(row.evidence).not.toContainEqual({ kind: "slide", index: 3 });
+    for (const section of analysis.visual) expect(section.evidence).not.toContainEqual({ kind: "slide", index: 3 });
   });
 });
