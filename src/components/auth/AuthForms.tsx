@@ -3,7 +3,7 @@
 // The auth forms, each driven by a server action in src/app/auth/actions.ts. The pages are
 // static, so ?next= (where to go after signing in) and ?error= (a link that failed in
 // /auth/callback) are read from the address once the page has loaded.
-import { useActionState, useEffect, useState, type ReactNode } from "react";
+import { useActionState, useEffect, useState, type FocusEvent, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 // Fundations
 import Button from "@/components/fundations/elements/Button";
@@ -17,8 +17,9 @@ import {
   updatePassword,
   type AuthState,
 } from "@/app/auth/actions";
-import { authMessage } from "@/lib/auth";
+import { authMessage, emailProblem, passwordProblem } from "@/lib/auth";
 import { AuthField, AuthNotice } from "./AuthParts";
+import PasswordField from "./PasswordField";
 
 const linkClass = "font-medium text-accent-500 hover:text-accent-600";
 
@@ -54,6 +55,57 @@ function Footer({ children }: { children: ReactNode }) {
   );
 }
 
+// The forms check their own fields (the browser's bubbles are off: noValidate). A field's note
+// shows on submit, which is then held back with focus on the first problem; when you leave a
+// field you've typed in, for the fields in `onLeave` (not a new password, whose checklist
+// already says what's missing as you type); and it updates as you edit, so it goes the moment
+// the field is fixed. The server actions run the same checks for a submit without JavaScript.
+type Checks = Record<string, (value: string) => string | null>;
+const enterPassword = (value: string) => (value ? null : "Enter your password.");
+
+function useValidation(checks: Checks, onLeave: string[] = []) {
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const set = (name: string, message: string | null) =>
+    setErrors((current) => {
+      if ((current[name] ?? null) === message) return current;
+      const next = { ...current };
+      if (message) next[name] = message;
+      else delete next[name];
+      return next;
+    });
+  const checked = (target: EventTarget) => (target instanceof HTMLInputElement && target.name in checks ? target : null);
+  return {
+    errors,
+    any: Object.keys(errors).length > 0,
+    form: {
+      noValidate: true,
+      onSubmit(event: FormEvent<HTMLFormElement>) {
+        const form = event.currentTarget;
+        const found: Record<string, string> = {};
+        for (const [name, check] of Object.entries(checks)) {
+          const input = form.elements.namedItem(name);
+          const message = input instanceof HTMLInputElement ? check(input.value) : null;
+          if (message) found[name] = message;
+        }
+        setErrors(found);
+        const first = Object.keys(found)[0];
+        if (first) {
+          event.preventDefault();
+          (form.elements.namedItem(first) as HTMLInputElement).focus();
+        }
+      },
+      onChange(event: FormEvent<HTMLFormElement>) {
+        const input = checked(event.target);
+        if (input && errors[input.name]) set(input.name, checks[input.name](input.value));
+      },
+      onBlur(event: FocusEvent<HTMLFormElement>) {
+        const input = checked(event.target);
+        if (input && input.value && onLeave.includes(input.name)) set(input.name, checks[input.name](input.value));
+      },
+    },
+  };
+}
+
 function Submit({ pending, idle, busy }: { pending: boolean; idle: string; busy: string }) {
   return (
     <Button size="base" variant="default" type="submit" disabled={pending} aria-disabled={pending} className="w-full disabled:opacity-70">
@@ -65,15 +117,17 @@ function Submit({ pending, idle, busy }: { pending: boolean; idle: string; busy:
 export function SignInForm() {
   const [state, action, pending] = useActionState(signIn, {});
   const linkError = useParam("error");
-  const error = state.error ?? (linkError ? authMessage(linkError) : null);
+  const check = useValidation({ email: emailProblem, password: enterPassword }, ["email"]);
+  const error = check.any ? null : (state.error ?? (linkError ? authMessage(linkError) : null));
   return (
     <>
       <Heading title="Welcome back">Sign in to pick up your boards where you left them.</Heading>
-      <form action={action} className="mt-6 space-y-4">
+      <form action={action} {...check.form} className="mt-6 space-y-4">
         <Next />
-        <AuthField id="email" label="Email address" type="email" placeholder="you@example.com" inputMode="email" autoComplete="email" required defaultValue={state.email} />
+        <AuthField id="email" label="Email address" type="email" placeholder="you@example.com" inputMode="email" autoComplete="email" required defaultValue={state.email} error={check.errors.email} />
         <AuthField
           id="password"
+          error={check.errors.password}
           label="Password"
           type="password"
           placeholder="••••••••"
@@ -100,24 +154,17 @@ export function SignInForm() {
 
 export function SignUpForm() {
   const [state, action, pending] = useActionState(signUp, {});
+  const check = useValidation({ email: emailProblem, password: passwordProblem }, ["email"]);
   if (state.sent) return <CheckEmail email={state.sent} />;
+  const error = check.any ? null : state.error;
   return (
     <>
       <Heading title="Create your account">Search by brief and save the posts worth studying.</Heading>
-      <form action={action} className="mt-6 space-y-4">
+      <form action={action} {...check.form} className="mt-6 space-y-4">
         <Next />
-        <AuthField id="email" label="Email address" type="email" placeholder="you@example.com" inputMode="email" autoComplete="email" required defaultValue={state.email} />
-        <AuthField
-          id="password"
-          label="Password"
-          type="password"
-          placeholder="••••••••"
-          autoComplete="new-password"
-          minLength={8}
-          required
-          aside={<span className="text-xs text-base-400">8 or more characters</span>}
-        />
-        {state.error && <AuthNotice>{state.error}</AuthNotice>}
+        <AuthField id="email" label="Email address" type="email" placeholder="you@example.com" inputMode="email" autoComplete="email" required defaultValue={state.email} error={check.errors.email} />
+        <PasswordField error={check.errors.password} />
+        {error && <AuthNotice>{error}</AuthNotice>}
         <Submit pending={pending} idle="Create account" busy="Creating account…" />
       </form>
       <Footer>
@@ -172,6 +219,7 @@ function CheckEmail({ email }: { email: string }) {
 
 export function ForgotPasswordForm() {
   const [state, action, pending] = useActionState(requestPasswordReset, {} as AuthState);
+  const check = useValidation({ email: emailProblem }, ["email"]);
   if (state.sent) {
     return (
       <>
@@ -190,9 +238,9 @@ export function ForgotPasswordForm() {
   return (
     <>
       <Heading title="Reset your password">Enter your email and we&apos;ll send you a link to choose a new one.</Heading>
-      <form action={action} className="mt-6 space-y-4">
-        <AuthField id="email" label="Email address" type="email" placeholder="you@example.com" inputMode="email" autoComplete="email" required defaultValue={state.email} />
-        {state.error && <AuthNotice>{state.error}</AuthNotice>}
+      <form action={action} {...check.form} className="mt-6 space-y-4">
+        <AuthField id="email" label="Email address" type="email" placeholder="you@example.com" inputMode="email" autoComplete="email" required defaultValue={state.email} error={check.errors.email} />
+        {state.error && !check.any && <AuthNotice>{state.error}</AuthNotice>}
         <Submit pending={pending} idle="Send reset link" busy="Sending…" />
       </form>
       <Footer>
@@ -207,15 +255,17 @@ export function ForgotPasswordForm() {
 
 export function ResetPasswordForm() {
   const [state, action, pending] = useActionState(updatePassword, {});
+  const check = useValidation({ password: (value) => (value ? passwordProblem(value) : "Enter a new password.") });
+  const error = check.any ? null : state.error;
   return (
     <>
-      <Heading title="Choose a new password">Use 8 or more characters. You&apos;ll stay signed in on this device.</Heading>
-      <form action={action} className="mt-6 space-y-4">
-        <AuthField id="password" label="New password" type="password" placeholder="••••••••" autoComplete="new-password" minLength={8} required />
-        {state.error && (
+      <Heading title="Choose a new password">Make it one you don&apos;t use anywhere else. You&apos;ll stay signed in on this device.</Heading>
+      <form action={action} {...check.form} className="mt-6 space-y-4">
+        <PasswordField label="New password" error={check.errors.password} />
+        {error && (
           <AuthNotice>
-            {state.error}
-            {state.error === authMessage("session_missing") && (
+            {error}
+            {error === authMessage("session_missing") && (
               <>
                 {" "}
                 <Link href="/forgot-password" className="font-medium underline underline-offset-2">

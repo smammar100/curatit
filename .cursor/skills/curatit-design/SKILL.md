@@ -57,13 +57,18 @@ titles, labels). Never `font-semibold`/`font-bold` on a heading.
 
 ## Color system
 
-Two custom oklch scales in `@theme` (`src/styles/global.css`) - use only
+Three custom oklch scales in `@theme` (`src/styles/global.css`) - use only
 these, never Tailwind default palettes, never hex in markup:
 
 - `base` - warm gray neutral scale (hue ~85-90). All text, backgrounds,
   borders. Note `--color-white` itself is overridden to a warm off-white,
   so `bg-white` is paper, not pure white.
 - `accent` - terracotta / burnt orange (hue ~35).
+- `danger` - red (hue ~25), for errors only: a field's error note
+  (`text-danger-600`) and ring (`ring-danger-500`, focus `ring-danger-100`),
+  and a form's error panel (`bg-danger-50 text-danger-700`). Always with an
+  icon and words, never colour alone. Redder and darker than accent so an error
+  never reads as a link.
 
 Usage rules:
 

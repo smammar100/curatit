@@ -6,7 +6,8 @@
 // exchanges the ?code= for a session (PKCE: it has to be the browser that started the flow).
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { authMessage, safeNext } from "@/lib/auth";
+import { isAuthWeakPasswordError, type AuthError } from "@supabase/supabase-js";
+import { authMessage, emailProblem, passwordProblem, safeNext } from "@/lib/auth";
 import { SITE_URL } from "@/lib/site";
 import { createClient } from "@/utils/supabase/server";
 
@@ -26,22 +27,39 @@ async function origin() {
 
 const callback = async (next: string) => `${await origin()}/auth/callback?next=${encodeURIComponent(next)}`;
 
+// Supabase turns a password down with one code (weak_password) whether it's too short, misses a
+// required kind of character or has turned up in a breach; its reasons say which, and the
+// password itself says exactly what's missing
+function errorFor(error: AuthError, password: string) {
+  if (!isAuthWeakPasswordError(error)) return authMessage(error.code);
+  if (error.reasons.includes("pwned")) return authMessage("pwned_password");
+  return passwordProblem(password) ?? authMessage("weak_password");
+}
+
 export async function signIn(_: AuthState, form: FormData): Promise<AuthState> {
   const email = field(form, "email");
-  const { error } = await (await supabase()).auth.signInWithPassword({ email, password: String(form.get("password") ?? "") });
+  const password = String(form.get("password") ?? "");
+  // The form checks these first; this covers a submit without JavaScript
+  const problem = emailProblem(email) ?? (password ? null : "Enter your password.");
+  if (problem) return { error: problem, email };
+  const { error } = await (await supabase()).auth.signInWithPassword({ email, password });
   if (error) return { error: authMessage(error.code), email };
   redirect(safeNext(form.get("next")));
 }
 
 export async function signUp(_: AuthState, form: FormData): Promise<AuthState> {
   const email = field(form, "email");
+  const password = String(form.get("password") ?? "");
   const next = safeNext(form.get("next"));
+  // The form checks these first; this covers a submit without JavaScript
+  const problem = emailProblem(email) ?? passwordProblem(password);
+  if (problem) return { error: problem, email };
   const { data, error } = await (await supabase()).auth.signUp({
     email,
-    password: String(form.get("password") ?? ""),
+    password,
     options: { emailRedirectTo: await callback(next) },
   });
-  if (error) return { error: authMessage(error.code), email };
+  if (error) return { error: errorFor(error, password), email };
   // With email confirmation off there's a session already; otherwise the link finishes it.
   // An address that already has an account gets the same answer (Supabase doesn't say, so
   // nobody can find out who has an account by trying to sign up)
@@ -61,6 +79,8 @@ export async function resendConfirmation(_: AuthState, form: FormData): Promise<
 
 export async function requestPasswordReset(_: AuthState, form: FormData): Promise<AuthState> {
   const email = field(form, "email");
+  const problem = emailProblem(email);
+  if (problem) return { error: problem, email };
   const { error } = await (await supabase()).auth.resetPasswordForEmail(email, { redirectTo: await callback("/reset-password") });
   // Rate limits are worth saying; anything about the address itself isn't (same reason as sign-up)
   if (error && error.code?.startsWith("over_")) return { error: authMessage(error.code), email };
@@ -71,8 +91,11 @@ export async function updatePassword(_: AuthState, form: FormData): Promise<Auth
   const client = await supabase();
   const { data } = await client.auth.getUser();
   if (!data.user) return { error: authMessage("session_missing") };
-  const { error } = await client.auth.updateUser({ password: String(form.get("password") ?? "") });
-  if (error) return { error: authMessage(error.code) };
+  const password = String(form.get("password") ?? "");
+  const problem = passwordProblem(password);
+  if (problem) return { error: problem };
+  const { error } = await client.auth.updateUser({ password });
+  if (error) return { error: errorFor(error, password) };
   redirect("/dashboard");
 }
 
