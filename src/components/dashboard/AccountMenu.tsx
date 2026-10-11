@@ -1,15 +1,18 @@
 "use client";
 
 // The account menu, after Cosmos: your avatar is the button, and it opens a panel with your
-// profile, saved posts, contact and log out, then the theme (light, dark, system) and the grid
+// profile, saved posts, the welcome flow again (Personalise your feed), contact and log out,
+// then the theme (light, dark, system) and the grid
 // size, both remembered on this device.
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import Link from "next/link";
 // Icons
 import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
 import ChatDots from "@/components/fundations/icons/ChatDots";
 import CircleHalf from "@/components/fundations/icons/CircleHalf";
 import Moon from "@/components/fundations/icons/Moon";
 import SignOut from "@/components/fundations/icons/SignOut";
+import Sparkle from "@/components/fundations/icons/Sparkle";
 import Sun from "@/components/fundations/icons/Sun";
 import { getThemeMode, setThemeMode, type ThemeMode } from "@/components/global/theme";
 import { SUPPORT_MAILTO } from "@/lib/site";
@@ -92,6 +95,10 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
             </span>
             <BookmarkSimple className="size-5" />
           </button>
+          <Link role="menuitem" href="/dashboard/welcome" className={item} onClick={() => setOpen(false)}>
+            Personalise your feed
+            <Sparkle className="size-5" />
+          </Link>
           <a role="menuitem" href={SUPPORT_MAILTO} className={item}>
             Contact us
             <ChatDots className="size-5" />

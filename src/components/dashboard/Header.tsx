@@ -1,6 +1,6 @@
 "use client";
 
-// The dashboard header, after Cosmos: the mark and the For you / Newest / Discover tabs, a
+// The dashboard header, after Cosmos: the mark and the For you / Discover tabs, a
 // search pill in the middle, then Create, Saved (a bookmark with the count of saved posts) and
 // the account menu. The feed drives it directly; other dashboard pages pass `onView` /
 // `onSearch` that take you back to the feed.
@@ -18,10 +18,10 @@ import { useBoards } from "./boards";
 import NewBoardDialog from "./NewBoardDialog";
 import SearchBox from "./SearchBox";
 
-export const VIEWS = ["For you", "Newest", "Discover", "Saved"] as const;
+export const VIEWS = ["For you", "Discover", "Saved"] as const;
 export type View = (typeof VIEWS)[number];
 // The views with a tab; Saved has the bookmark instead
-const TABS = ["For you", "Newest", "Discover"] as const satisfies readonly View[];
+const TABS = ["For you", "Discover"] as const satisfies readonly View[];
 
 export default function Header({
   view,
