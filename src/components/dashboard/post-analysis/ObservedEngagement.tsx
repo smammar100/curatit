@@ -19,7 +19,7 @@ export default function ObservedEngagement({ likes, comments }: { likes: number 
           ["Comments", comments, ChatCircle],
         ] as const
       ).map(([label, value, Glyph]) => (
-        <div key={label} className="flex min-w-0 flex-col-reverse rounded-2xl bg-base-50 px-3.5 py-3">
+        <div key={label} className="flex min-w-0 flex-col gap-0.5 rounded-2xl bg-base-50 px-3.5 py-3">
           <dt className="flex min-w-0 items-center gap-1.5 text-caption text-base-500">
             <Glyph className="size-3.5 shrink-0" aria-hidden="true" />
             <span className="truncate">{label}</span>
