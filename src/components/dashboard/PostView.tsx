@@ -2,9 +2,10 @@
 
 // A post, opened over the feed: the "Closeup" direction, chosen from a five-way prototype on
 // 2026-10-10 (after Pinterest's and Savee's closeups). The post sits large on a dark stage on
-// the left; the panel on the right has the brand, the hook and the caption as its body, how the
-// post did against its brand and category, the boards it's on, and a board picker with Save at
-// its foot. Arrows at the window's edges step through the feed; Close (or Escape) goes back to
+// the left; the panel on the right has the brand, the hook and the caption as its body, why it
+// works (its published analysis, with each slide's role, which the stage shows too), how the post
+// did against its brand and category, the boards it's on, and a board picker with Save at its
+// foot. Arrows at the window's edges step through the feed; Close (or Escape) goes back to
 // it. From the feed this renders in the layout's @modal slot over the live feed (an intercepted
 // route); opened from a link, the page puts the feed underneath, so both look the same.
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -19,6 +20,7 @@ import Close from "@/components/fundations/icons/Close";
 import Play from "@/components/fundations/icons/Play";
 import SealCheck from "@/components/fundations/icons/SealCheck";
 // Components
+import type { PostAnalysis } from "@/lib/creative/display";
 import type { PostDetail } from "@/lib/posts";
 import { cx } from "@/lib/cx";
 import { BoardThumb, NAME_MAX, useBoards } from "./boards";
@@ -32,7 +34,7 @@ const day = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", ye
 // The page under the modal, which goes inert while it's open (the id is set in the dashboard layout)
 const PAGE_ID = "dashboard-page";
 
-export default function PostView({ post }: { post: PostDetail }) {
+export default function PostView({ post, analysis }: { post: PostDetail; analysis: PostAnalysis | null }) {
   const router = useRouter();
   const { list } = useBoards();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -80,6 +82,7 @@ export default function PostView({ post }: { post: PostDetail }) {
 
   const r = ratio(post);
   const video = post.videos[index];
+  const role = analysis?.roles[index] ?? null;
   const caption = useMemo(() => splitCaption(post), [post]);
 
   return (
@@ -123,6 +126,7 @@ export default function PostView({ post }: { post: PostDetail }) {
             {count > 1 && (
               <p className="rounded-full bg-black/60 px-2.5 py-1 tabular-nums" aria-live="polite">
                 {index + 1} / {count}
+                {role && ` · ${role}`}
               </p>
             )}
             {video && (
@@ -175,6 +179,7 @@ export default function PostView({ post }: { post: PostDetail }) {
             </h1>
             <p className="mt-2 text-body text-base-500">Posted {day.format(new Date(post.postedAt))}</p>
             <Caption paragraphs={caption.body} />
+            {analysis && <WhyItWorks analysis={analysis} index={index} onSlide={go} />}
             <Performance post={post} />
             <Section title="Boards">
               <BoardsOn post={post} />
@@ -316,6 +321,85 @@ function linkify(text: string): ReactNode[] {
   }
   out.push(text.slice(last));
   return out;
+}
+
+// The post's published analysis: what it is, how it's put together slide by slide (a role
+// shows its slide on the stage), why it might work and what's worth taking from it. Only an
+// analysis an editor has approved and published gets here.
+function WhyItWorks({ analysis, index, onSlide }: { analysis: PostAnalysis; index: number; onSlide: (slide: number) => void }) {
+  return (
+    <Section title="Why it works">
+      <p className="text-subtitle text-pretty text-base-900">{analysis.concept}</p>
+      {analysis.labels.length > 0 && (
+        <dl className="mt-4 grid grid-cols-2 gap-2">
+          {analysis.labels.map(([name, value]) => (
+            <div key={name} className="flex min-w-0 flex-col-reverse rounded-2xl bg-base-50 px-3.5 py-3">
+              <dt className="text-caption text-base-500">{name}</dt>
+              <dd className="text-body font-medium text-pretty text-base-900">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {analysis.hookText && (
+        <p className="mt-3 text-body text-pretty text-base-600">
+          Opens on <q className="text-base-900">{analysis.hookText}</q>
+        </p>
+      )}
+
+      {analysis.roles.length > 0 && (
+        <>
+          <h3 className="mt-6 text-caption font-medium text-base-500">Slide by slide</h3>
+          <ol className="mt-2 flex flex-wrap gap-2">
+            {analysis.roles.map((slideRole, i) => (
+              <li key={i}>
+                <button
+                  type="button"
+                  aria-pressed={i === index}
+                  aria-label={`Show slide ${i + 1}${slideRole ? `: ${slideRole}` : ""}`}
+                  onClick={() => onSlide(i)}
+                  className="relative inline-flex h-9 items-center gap-1.5 rounded-full bg-base-50 px-3 text-caption font-medium text-base-700 ring-1 ring-base-200 transition-[background-color,color] duration-150 before:absolute before:-inset-y-1 before:inset-x-0 hover:bg-base-100 hover:text-base-900 aria-pressed:bg-base-900 aria-pressed:text-white aria-pressed:ring-base-900"
+                >
+                  <span className="tabular-nums opacity-60">{i + 1}</span>
+                  {slideRole ?? "Slide"}
+                </button>
+              </li>
+            ))}
+          </ol>
+          {analysis.arc && <p className="mt-3 text-body text-pretty text-base-600">{analysis.arc}</p>}
+        </>
+      )}
+
+      {analysis.why.length > 0 && (
+        <>
+          <h3 className="mt-6 text-caption font-medium text-base-500">Why it might work</h3>
+          <ul className="mt-2 space-y-2 text-body text-pretty text-base-700">
+            {analysis.why.map((hypothesis, i) => (
+              <li key={i} className="flex gap-2.5">
+                <span aria-hidden="true" className="mt-2 size-1 shrink-0 rounded-full bg-base-400" />
+                {hypothesis}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {analysis.takeaways.length > 0 && (
+        <>
+          <h3 className="mt-6 text-caption font-medium text-base-500">Worth taking</h3>
+          <ol className="mt-2 space-y-2 text-body text-pretty text-base-700">
+            {analysis.takeaways.map((takeaway, i) => (
+              <li key={i} className="flex gap-2.5">
+                <span className="w-3 shrink-0 text-base-400 tabular-nums">{i + 1}</span>
+                {takeaway}
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
+
+      <p className="mt-5 text-caption text-pretty text-base-500">Written by AI from every slide and the caption, then checked by Curatit&apos;s editors.</p>
+    </Section>
+  );
 }
 
 // Likes and comments, and where the likes put it against the brand and the category

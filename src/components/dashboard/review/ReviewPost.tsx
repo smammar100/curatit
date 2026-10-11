@@ -16,6 +16,7 @@ import CaretRight from "@/components/fundations/icons/CaretRight";
 import Check from "@/components/fundations/icons/Check";
 import { cx } from "@/lib/cx";
 import type { CreativeDna, SlideObservation } from "@/lib/creative/schema";
+import { refreshPostPage } from "@/app/dashboard/review/actions";
 import { loadPostReview, reprocess, review, useIsEditor, type PostReview, type Version } from "./data";
 import DnaEditor from "./DnaEditor";
 import { ago, EvidenceChip, Frame, label, money, Notice, Pill, quietButton, reviewHref, Section, seconds, solidButton, sourceLabel, StatusPill, useBusy } from "./parts";
@@ -71,6 +72,9 @@ export function PostReviewView({ data, onRefresh }: { data: PostReview; onRefres
   const isCurrent = version && analysis?.current_version_id === version.id;
   const dna = version?.creative_dna;
 
+  // The post's page in the dashboard shows the published analysis; rebuild it now, not within the hour
+  const republish = () => void refreshPostPage(post.short_code).catch(() => {});
+
   // Reload, then show this version
   const refresh = async (select?: string) => {
     await onRefresh();
@@ -91,6 +95,7 @@ export function PostReviewView({ data, onRefresh }: { data: PostReview; onRefres
       if (!ok) return;
       setNote("");
       setDone({ versionId: version.id, text: DONE[action](publish) });
+      republish();
       refresh(version.id);
     });
   };
@@ -258,6 +263,7 @@ export function PostReviewView({ data, onRefresh }: { data: PostReview; onRefres
               onCancel={() => setEditing(false)}
               onSaved={(id) => {
                 setEditing(false);
+                republish();
                 refresh(id);
               }}
             />
