@@ -133,6 +133,18 @@ describe("MCP over HTTP with the SDK client", () => {
     expect(get.status).toBe(405);
   });
 
+  it("advertises the authorization server's own scope once an issuer is configured", async () => {
+    const t = testRuntime();
+    resetConfigCache();
+    t.rt.config = loadConfig({ NODE_ENV: "test", NEXT_PUBLIC_SUPABASE_URL: "https://x.supabase.co", NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "pk", SUPABASE_SECRET_KEY: "sk", CURATIT_PUBLIC_BASE_URL: "https://curatit.test", CURATIT_OAUTH_ISSUER: "https://x.supabase.co/auth/v1" } as NodeJS.ProcessEnv);
+    const withIssuer = createMcpHttp(t.rt, t.verifier);
+    const doc = await (await withIssuer.protectedResourceMetadata(new Request("https://curatit.test/.well-known/oauth-protected-resource/mcp"))).json();
+    expect(doc.authorization_servers).toEqual(["https://x.supabase.co/auth/v1"]);
+    expect(doc.scopes_supported).toEqual(["email"]);
+    const res = await withIssuer.mcp(new Request(url, { method: "POST", headers: { "content-type": "application/json", accept: "application/json, text/event-stream" }, body: "{}" }));
+    expect(res.headers.get("WWW-Authenticate")).toContain('scope="email"');
+  });
+
   it("refuses a foreign Origin with 403 and allows the site's own or none", async () => {
     const body = JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping" });
     const make = (origin?: string) => new Request(url, { method: "POST", headers: { "content-type": "application/json", accept: "application/json, text/event-stream", Authorization: "Bearer full", ...(origin ? { Origin: origin } : {}) }, body });

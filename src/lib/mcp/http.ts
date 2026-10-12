@@ -6,6 +6,9 @@
 
 import { createMcpHandler, getOAuthProtectedResourceMetadataUrl, originValidationResponse, requireBearerAuth, type McpHttpHandler } from "@modelcontextprotocol/server";
 import { SCOPES, SERVER_INFO } from "./config";
+
+// What Supabase Auth's OAuth server accepts as a scope (its default)
+const OAUTH_SCOPES = ["email"];
 import type { Verifier } from "./auth/verifier";
 import { createCuratitServer } from "./server";
 import type { Runtime } from "./tools";
@@ -24,10 +27,15 @@ export function createMcpHttp(rt: Runtime, verifier: Verifier): McpHttp {
   let handler: McpHttpHandler | null = null;
   const entry = () => (handler ??= createMcpHandler(() => createCuratitServer(rt), { legacy: "stateless", onerror: (error) => rt.log.warn("mcp.transport", { error: error.message }) }));
 
+  // The scopes a client should ask the authorization server for. Supabase's OAuth server has
+  // no custom scopes and refuses unknown ones ("unsupported scope: curatit:read"), so with an
+  // issuer configured the document and the challenge name its scope, `email`; OAuth tokens get
+  // both Curatit scopes anyway (auth/oauth.ts). Curatit's own scopes stay for personal tokens.
+  const advertisedScopes = config.oauthIssuer ? OAUTH_SCOPES : [...SCOPES];
   const metadataDocument = () => ({
     resource: config.mcpUrl.href,
     ...(config.oauthIssuer ? { authorization_servers: [config.oauthIssuer.href] } : {}),
-    scopes_supported: [...SCOPES],
+    scopes_supported: advertisedScopes,
     bearer_methods_supported: ["header"],
     resource_name: "Curatit",
     resource_documentation: new URL("/docs/mcp", config.publicBaseUrl).href,
@@ -57,7 +65,7 @@ export function createMcpHttp(rt: Runtime, verifier: Verifier): McpHttp {
       if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(request.headers.get("origin")) });
 
       const auth = await gate(request);
-      if (auth instanceof Response) return withChallengeScope(auth, resourceMetadataUrl);
+      if (auth instanceof Response) return withChallengeScope(auth, resourceMetadataUrl, advertisedScopes);
 
       const response = await entry().fetch(request, { authInfo: auth });
       const headers = new Headers(response.headers);
@@ -78,10 +86,10 @@ function safeHostname(origin: string) {
 
 // The SDK's challenge names the metadata URL; the spec also asks for the scopes the server
 // understands, so a client knows what to request
-function withChallengeScope(response: Response, resourceMetadataUrl: string) {
+function withChallengeScope(response: Response, resourceMetadataUrl: string, scopes: string[]) {
   if (response.status !== 401) return response;
   const headers = new Headers(response.headers);
   const existing = headers.get("WWW-Authenticate") ?? `Bearer resource_metadata="${resourceMetadataUrl}"`;
-  if (!/\bscope=/.test(existing)) headers.set("WWW-Authenticate", `${existing}, scope="${SCOPES.join(" ")}"`);
+  if (!/\bscope=/.test(existing)) headers.set("WWW-Authenticate", `${existing}, scope="${scopes.join(" ")}"`);
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
