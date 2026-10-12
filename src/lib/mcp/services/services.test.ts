@@ -56,6 +56,7 @@ describe("search", () => {
     expect(data.posts[0]).toMatchObject({ short_code: FIXTURE_IDS.carouselShortCode, analysis_available: true, format: "carousel" });
     expect(data.posts[0].match_reasons).toContain("layout: match — seen on slide 1, 2");
     expect(data.posts[0].thumbnail.media_id).toBe(`${FIXTURE_IDS.carousel}.0`);
+    expect(data.posts[0].thumbnail.url).toBe("https://storage.example/library/fixture/fixture-co/carousel/FIX00001/01.webp");
     expect(data.posts[0].classification?.creative_approach).toBe("this-or-that");
     expect(data.applied).toMatchObject({ query: "cash", query_mode: "all_words", sort: "relevance", filters: { layouts: ["framed-card"] } });
   });
