@@ -109,8 +109,8 @@ export type RawPost = {
   categories: RawCategory[];
   images: RawImageRef[];
   analysis: { summary: string | null; hook: string | null; why_it_works: string | null; takeaways: string[] | null; published_at: string | null } | null;
-  // An empty object when the post has no published analysis
-  creative: RawDetailAnalysis | Record<string, never>;
+  // Null (no row found) or an empty object when the post has no published analysis
+  creative: RawDetailAnalysis | Record<string, never> | null;
 };
 
 export type RawTerm = { slug: string; label: string; description: string | null; parent: string | null; synonyms: string[]; posts: number };
