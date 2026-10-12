@@ -51,7 +51,7 @@ export function GridSkeleton({ label = "Loading posts" }: { label?: string }) {
 // The header's shape: the mark, the tabs, the search pill and the buttons
 export function HeaderSkeleton() {
   return (
-    <div aria-hidden="true" className="grid h-23 grid-cols-[auto_1fr_auto] items-center gap-4 px-4 sm:px-6 lg:grid-cols-[1fr_minmax(0,36rem)_1fr] lg:gap-8">
+    <div aria-hidden="true" className="grid h-23 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 sm:gap-4 sm:px-6 lg:grid-cols-[1fr_minmax(0,36rem)_1fr] lg:gap-8">
       <div className="flex items-center gap-6">
         <Symbol className="size-8 text-base-900" />
         <div className="hidden items-center gap-6 lg:flex">

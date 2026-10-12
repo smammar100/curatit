@@ -27,10 +27,7 @@ export default async function SitesTagPage({ params }: { params: Promise<{ tag: 
       <Search />
       <section>
         <Wrapper variant="standard" className="py-24 lg:pt-48">
-          <Text
-            tag="h1"
-            variant="displayLG"
-            className="text-base-900 font-display font-light text-center max-w-xl mx-auto text-balance"
+          <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 text-center max-w-xl mx-auto text-balance"
           >
             Explore all sites related to {tag}
           </Text>

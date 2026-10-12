@@ -8,9 +8,9 @@ export default function SubmitPage() {
   return (
     <section>
       <Wrapper variant="standard" className="py-24 lg:pt-48">
-        <Wrapper variant="narrow">
+        <div className="mx-auto max-w-xl sm:px-8">
           <div className="text-balance">
-            <Text tag="h1" variant="displayMD" className="text-base-900 font-display font-thin">
+            <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
               Submit your site to Curatit
             </Text>
             <Text tag="p" variant="textBase" className="mt-2 ext-base-600 text-balance">
@@ -40,7 +40,7 @@ export default function SubmitPage() {
             <h4>If not selected</h4>
             <p>Don’t give up—refine your tool and try again with future projects.</p>
           </Wrapper>
-        </Wrapper>
+        </div>
       </Wrapper>
     </section>
   );

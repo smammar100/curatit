@@ -13,8 +13,9 @@ import FooterNewsletter from "./FooterNewsletter";
 
 // The site footer, "Night" (chosen from a five-way prototype on 2026-10-11): the page's paper
 // carries on, and the footer is an inset dark panel, one of two deliberately dark surfaces (with Vision's panel) on the
-// marketing site, like a gallery after hours. A short statement and the email field, the newest
-// covers fanned in from the right edge, then the links.
+// marketing site, like a gallery after hours. The full logo (the mark turning beside the wordmark)
+// over a short statement (and the email field, hidden for now), the newest covers fanned in from
+// the right edge, then the links.
 // A server component, so it costs the page no script beyond the email field; the motion is CSS
 // (.footer-* in global.css). If the library can't be reached, it renders without the covers.
 
@@ -32,6 +33,7 @@ const LINKS = [
     title: "Company",
     links: [
       { label: "Vision", href: "/vision" },
+      { label: "Roadmap", href: "/roadmap" },
       { label: "Blog", href: "/blog" },
       { label: "Advertise", href: "/advertise" },
       { label: "Contact", href: SUPPORT_MAILTO },
@@ -43,6 +45,10 @@ const LEGAL = [
   { label: "Privacy", href: "/legal/privacy" },
   { label: "Terms", href: "/legal/terms" },
 ];
+
+// The email field is hidden until there's a mailing list (2026-10-12); FooterNewsletter is kept,
+// so turning this back on brings it back as it was
+const SHOW_NEWSLETTER = false;
 
 const FAN = 5;
 const SPREAD_DEG = 12;
@@ -83,24 +89,33 @@ function FooterLink({ href, className, children }: { href: string; className?: s
 export default async function Footer() {
   const posts = await getPublishedPosts().catch(() => []);
   const covers = pickCovers(posts);
-  const brandCount = new Set(posts.map((post) => post.brand.slug)).size;
 
   return (
-    <footer className="bg-white px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-3 sm:pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:px-4 lg:pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <footer className="bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="footer-panel relative isolate overflow-clip rounded-[1.5rem] sm:rounded-[2rem]">
-        {/* The statement and the email field, with the covers on the right */}
+        {/* The logo and the statement, with the covers on the right */}
         <div className="relative">
           <Wrapper className="relative pt-10 pb-6 sm:pt-12 lg:pt-20 lg:pb-10">
             <div className="flex h-24 items-start sm:h-28 lg:h-auto">
-              <Symbol className="footer-mark size-9 text-[color:var(--f-ink)] lg:size-10" aria-hidden="true" />
+              <Link
+                href="/"
+                aria-label="Curatit home"
+                className="inline-flex items-center gap-2.5 rounded-sm text-[color:var(--f-ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--f-focus)] sm:gap-3 lg:gap-4"
+              >
+                {/* Smaller on phones, where the covers fan in beside it */}
+                <Symbol className="footer-mark size-7 shrink-0 sm:size-8 lg:size-10" aria-hidden="true" />
+                <Logo className="h-5 w-auto sm:h-6 lg:h-8" aria-hidden="true" />
+              </Link>
             </div>
             <Text tag="h2" variant="displayMD" className="mt-4 max-w-md font-display font-light text-balance lg:mt-10">
               <span className="block text-[color:var(--f-quiet)]">The library never closes.</span>
               <span className="block text-[color:var(--f-ink)]">Get the new posts as they land.</span>
             </Text>
-            <div className="mt-8">
-              <FooterNewsletter />
-            </div>
+            {SHOW_NEWSLETTER && (
+              <div className="mt-8">
+                <FooterNewsletter />
+              </div>
+            )}
           </Wrapper>
 
           {covers.length > 0 && (
@@ -128,26 +143,8 @@ export default async function Footer() {
           )}
         </div>
 
-        {/* The shelf the covers fade toward, edge to edge */}
-        <div className="h-px bg-[color:var(--f-line)]" />
-
         <Wrapper className="pt-12 pb-6 lg:pt-14">
           <div className="grid gap-x-8 gap-y-10 lg:grid-cols-12">
-            <div className="lg:col-span-5">
-              <Link
-                href="/"
-                aria-label="Curatit home"
-                className="inline-flex min-h-11 items-center rounded-sm text-[color:var(--f-ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--f-focus)]"
-              >
-                <Logo className="h-5 w-auto" aria-hidden="true" />
-              </Link>
-              <p className="mt-2 max-w-xs text-sm text-pretty text-[color:var(--f-body)]">
-                {posts.length > 0
-                  ? `${posts.length} real Instagram posts from ${brandCount} brands, curated for designers.`
-                  : "Real Instagram posts from real brands, curated for designers."}
-              </p>
-            </div>
-
             <nav aria-label="Footer" className="grid grid-cols-2 gap-x-6 gap-y-8 lg:col-span-7 lg:col-start-7">
               {LINKS.map((group) => (
                 <div key={group.title}>

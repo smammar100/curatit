@@ -97,7 +97,7 @@ export default function OverviewPage() {
   return (
     <section>
       <Wrapper variant="standard" className="py-24 lg:pt-48">
-        <Text tag="h1" variant="displayLG" className="text-base-900 font-display font-thin">
+        <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
           Overview
         </Text>
         <div className="space-y-12 mt-12">

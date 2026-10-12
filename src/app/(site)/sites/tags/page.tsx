@@ -16,7 +16,7 @@ export default function SitesTagsPage() {
       <Search />
       <section>
         <Wrapper variant="narrow" className="py-24 lg:pt-48">
-          <Text tag="h1" variant="displayLG" className="text-base-900 font-display font-thin text-center">
+          <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 text-center">
             We got tags!
           </Text>
 

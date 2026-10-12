@@ -68,15 +68,15 @@ export default function Faq({ faqs = defaultFaqs }: { faqs?: { question: string;
             Everything you need to know about our platform.
           </Text>
         </div>
-        <Wrapper variant="narrow" className="mt-12">
+        <div className="mx-auto mt-12 max-w-xl sm:px-8">
           <div>
             {faqs.map((faq) => (
               <details key={faq.question} className="group cursor-pointer">
-                <summary className="text-sm leading-normal text-base-900  font-medium flex items-center justify-between w-full px-8 py-4 text-left select-none hover:text-accent-500 focus:text-accent-500">
+                <summary className="text-sm leading-normal text-base-900  font-medium flex items-center justify-between w-full py-4 text-left sm:px-8 select-none hover:text-accent-500 focus:text-accent-500">
                   {faq.question}
                   <Plus className="size-4 duration-300 ease-out transform group-open:-rotate-45" />
                 </summary>
-                <div className="py-4 px-8">
+                <div className="py-4 sm:px-8">
                   <Text tag="p" variant="textSM" className="text-base-600 text-balance">
                     {faq.answer}
                   </Text>
@@ -84,7 +84,7 @@ export default function Faq({ faqs = defaultFaqs }: { faqs?: { question: string;
               </details>
             ))}
           </div>
-        </Wrapper>
+        </div>
       </Wrapper>
     </section>
   );

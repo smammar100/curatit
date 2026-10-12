@@ -3,7 +3,6 @@ import Wrapper from "@/components/fundations/containers/Wrapper";
 import Button from "@/components/fundations/elements/Button";
 import Text from "@/components/fundations/elements/Text";
 import LinkedinLogo from "@/components/fundations/icons/LinkedinLogo";
-import FounderPhoto from "@/components/vision/FounderPhoto";
 import SelectionGraph from "@/components/vision/SelectionGraph";
 import Signature from "@/components/vision/Signature";
 import { getPublishedPosts, type LibraryPost } from "@/lib/posts";
@@ -17,9 +16,7 @@ export const revalidate = 3600;
 
 const FOUNDER = {
   name: "Syed Mohammad Ammar",
-  initials: "SA",
   title: "Founder, Curatit",
-  photo: "/images/founder.jpg",
   linkedin: "https://www.linkedin.com/in/syedmammar/",
 };
 
@@ -48,11 +45,11 @@ export default async function VisionPage() {
 
   return (
     <>
-      <section className="px-2 pt-20 sm:px-4">
+      <section className="px-4 pt-20">
         <div className="vision-night overflow-clip rounded-[1.5rem] sm:rounded-[2rem]">
           <Wrapper variant="standard" className="pt-24 pb-20 lg:pt-32 lg:pb-28">
             <div className="mx-auto max-w-2xl text-center">
-              <Text tag="h1" variant="display3XL" className="font-display font-light text-balance text-base-900">
+              <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 text-balance">
                 Taste you can learn from.
               </Text>
               {/* A note from the founder, in his own voice, signed below */}
@@ -77,7 +74,6 @@ export default async function VisionPage() {
             <div className="mx-auto mt-14 flex max-w-md flex-col items-center text-center">
               <Signature className="w-64 text-base-900 sm:w-80" />
               <div className="mt-8 flex items-center gap-3 text-left">
-                <FounderPhoto src={FOUNDER.photo} initials={FOUNDER.initials} className="size-12" />
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-base-900">{FOUNDER.name}</p>
                   <p className="text-sm text-base-600">{FOUNDER.title}</p>
