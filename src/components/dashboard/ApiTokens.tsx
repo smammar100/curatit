@@ -112,7 +112,7 @@ export default function ApiTokens() {
           <legend className="text-caption font-medium text-base-600">Scopes</legend>
           {SCOPES.map((scope) => (
             <label key={scope} className="mt-2 flex cursor-pointer items-start gap-3">
-              <input type="checkbox" checked={scopes.includes(scope)} onChange={(e) => setScopes((s) => (e.target.checked ? [...s, scope] : s.filter((x) => x !== scope)))} className="mt-1 size-4 rounded border-base-300 text-base-900 focus:ring-base-400" />
+              <input type="checkbox" checked={scopes.includes(scope)} onChange={(e) => setScopes((s) => (e.target.checked ? [...s, scope] : s.filter((x) => x !== scope)))} className="mt-1 size-4 rounded border-base-300 text-accent-600 focus:ring-base-400" />
               <span>
                 <code className="font-mono text-caption text-base-900">{scope}</code>
                 <span className="block text-caption text-base-600">{SCOPE_HELP[scope]}</span>
