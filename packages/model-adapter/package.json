@@ -1,0 +1,22 @@
+{
+  "name": "@curatit/model-adapter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A reference tool loop that lets a model API without MCP support use Curatit's research API through function calling.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "curatit-research": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "engines": {
+    "node": ">=20.19"
+  }
+}
