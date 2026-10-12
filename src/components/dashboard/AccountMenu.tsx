@@ -1,7 +1,8 @@
 "use client";
 
 // The account menu, after Cosmos: your avatar is the button, and it opens a panel with your
-// profile, saved posts, the welcome flow again (Personalise your feed), contact and log out,
+// profile, saved posts, the welcome flow again (Personalise your feed), API tokens (for MCP
+// clients), contact and log out,
 // then the theme (light, dark, system) and the grid
 // size, both remembered on this device.
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -11,6 +12,7 @@ import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
 import ChatDots from "@/components/fundations/icons/ChatDots";
 import SealCheck from "@/components/fundations/icons/SealCheck";
 import CircleHalf from "@/components/fundations/icons/CircleHalf";
+import Key from "@/components/fundations/icons/Key";
 import Moon from "@/components/fundations/icons/Moon";
 import SignOut from "@/components/fundations/icons/SignOut";
 import Sparkle from "@/components/fundations/icons/Sparkle";
@@ -109,6 +111,10 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
               <SealCheck className="size-5" />
             </Link>
           )}
+          <Link role="menuitem" href="/dashboard/settings/tokens" className={item} onClick={() => setOpen(false)}>
+            API tokens
+            <Key className="size-5" />
+          </Link>
           <a role="menuitem" href={SUPPORT_MAILTO} className={item}>
             Contact us
             <ChatDots className="size-5" />
