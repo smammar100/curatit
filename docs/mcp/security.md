@@ -17,7 +17,7 @@ Supabase's OAuth server is **off** on the project today. To turn it on: Supabase
 Known upstream limits, recorded rather than hidden:
 
 - **Audience.** The MCP spec says a resource server MUST validate the token's audience. Supabase sets `aud` to `"authenticated"` for every token and ignores RFC 8707 `resource` (supabase/auth#2610). Mitigation: exact issuer plus `client_id` plus RLS. A token issued by Curatit's Supabase project for an OAuth client is valid for Curatit's Supabase API and for this server, and nothing else; there is no third audience it could be replayed to. This is a documented deviation until Supabase binds `aud`.
-- **Scopes.** No custom scopes; consent shows Supabase's own (`email`, `profile`, …). Curatit's scopes apply to tokens, not to consent.
+- **Scopes.** No custom scopes, and Supabase refuses unknown ones (`unsupported scope: curatit:read`, seen on the first live run). So with an issuer configured the resource metadata and the 401 challenge advertise Supabase's `email` scope, which is what OAuth clients then request; every OAuth token still gets both Curatit scopes server-side. Curatit's own scopes are advertised, and enforced, for personal access tokens.
 - **Client registration.** Pre-registration through the admin API works; DCR is a toggle; CIMD isn't supported (#2850), so each DCR reconnect creates a client.
 - **Issue #2820** reports `GET /oauth/authorizations/{id}` answering 400 for public clients that send `resource` or `offline_access`, which Claude and ChatGPT do. Unverified here (the server is off). If it reproduces, OAuth from those hosts is blocked on Supabase and personal access tokens remain the path.
 - The `scope` claim inside the JWT is unverified; the server doesn't depend on it.
