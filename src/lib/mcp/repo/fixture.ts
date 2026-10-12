@@ -86,7 +86,8 @@ const single: RawPost = {
   categories: [{ name: "Fintech", slug: "fintech" }],
   images: [{ bucket: "library", path: "fixture/fixture-co/static/FIX00002/01.webp", position: 0 }],
   analysis: null,
-  creative: {},
+  // Null, as the catalog function returns it for a post with no published analysis
+  creative: null,
 };
 
 const terms: RawTerms = {
@@ -116,8 +117,8 @@ const posts = [carousel, single];
 export function createFixtureCatalog(): CatalogRepository & { calls: string[] } {
   const calls: string[] = [];
   const compact = (post: RawPost): RawCompactAnalysis | null => {
-    const creative = post.creative as RawDetailAnalysis;
-    if (!creative.analysis_version) return null;
+    const creative = post.creative as RawDetailAnalysis | null;
+    if (!creative?.analysis_version) return null;
     const { hook: _h, narrative: _n, copy_strategy: _c, attention_mechanisms: _a, adaptation_ideas: _i, constraints_or_uncertainties: _u, ...rest } = creative;
     return rest;
   };
