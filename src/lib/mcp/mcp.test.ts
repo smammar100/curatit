@@ -64,6 +64,11 @@ describe("MCP over HTTP with the SDK client", () => {
       const search = tools.find((t) => t.name === "curatit_search_posts")!;
       expect(search.annotations).toMatchObject({ readOnlyHint: true, destructiveHint: false, openWorldHint: false });
       expect(search.outputSchema).toBeTruthy();
+      expect(search._meta?.ui?.resourceUri).toBe("ui://curatit/search-results");
+      const resources = await client.listResources();
+      expect(resources.resources.some((r) => r.uri === "ui://curatit/search-results")).toBe(true);
+      const widget = await client.readResource({ uri: "ui://curatit/search-results" });
+      expect(widget.contents[0]).toMatchObject({ uri: "ui://curatit/search-results", mimeType: "text/html;profile=mcp-app" });
       const result = await client.callTool({ name: "curatit_search_posts", arguments: { query: "cash" } });
       expect(result.isError).toBeFalsy();
       const envelope = result.structuredContent as { data: { posts: { short_code: string }[] }; request_id: string; provenance: unknown };
