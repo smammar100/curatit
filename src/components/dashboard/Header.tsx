@@ -42,7 +42,7 @@ export default function Header({
   const savedCount = useMemo(() => new Set(boards.flatMap((board) => board.items.map((item) => item.post))).size, [boards]);
 
   return (
-    <header className="sticky top-0 z-30 grid h-23 grid-cols-[auto_1fr_auto] items-center gap-4 bg-white px-4 sm:px-6 lg:grid-cols-[1fr_minmax(0,36rem)_1fr] lg:gap-8">
+    <header className="sticky top-0 z-30 grid h-23 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 bg-white px-4 sm:gap-4 sm:px-6 lg:grid-cols-[1fr_minmax(0,36rem)_1fr] lg:gap-8">
       <div className="flex items-center gap-6">
         <Link href="/dashboard" aria-label="Your feed" className="text-base-900">
           <Symbol className="size-8" />

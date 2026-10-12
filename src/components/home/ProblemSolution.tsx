@@ -57,7 +57,7 @@ export default function ProblemSolution() {
           {/* The stage fills the viewport height on phones and keeps a 7:5 shape above */}
           <div className="relative mx-auto flex h-(--stage-h) w-full flex-col overflow-hidden md:aspect-7/5 md:h-auto md:w-[min(100%,calc(var(--stage-h)*7/5))]">
             {/* Both headings share one grid cell, so the rows below don't move when the text swaps */}
-            <div className="grid px-6 pt-20 text-center">
+            <div className="grid pt-20 text-center sm:px-6">
               {(["problem", "solution"] as const).map((key) => (
                 <div
                   key={key}

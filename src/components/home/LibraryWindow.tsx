@@ -120,7 +120,7 @@ function Tile({ post, saved, boardCovers }: { post: LibraryPost; saved: boolean;
             <BrandName brand={post.brand} />
           </span>
           {/* The Save menu, as the dashboard draws it */}
-          <div className="absolute top-9 right-1.5 w-44 rounded-lg bg-white p-1 text-[11px] shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)] ring-1 ring-edge">
+          <div className="absolute top-9 right-1.5 w-36 rounded-lg bg-white p-1 text-[11px] shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)] ring-1 ring-edge @lg:w-44">
             <p className="px-2 pt-1 pb-1.5 text-[10px] font-medium text-base-500">Save to board</p>
             {libraryWindow.boards.map((name, i) => (
               <p key={name} className={cx("flex items-center gap-2 rounded-md px-2 py-1.5 text-base-900", i === 0 && "bg-base-50")}>

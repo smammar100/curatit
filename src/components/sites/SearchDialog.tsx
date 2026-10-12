@@ -64,7 +64,7 @@ export default function SearchDialog({ items }: { items: SearchItem[] }) {
 
   return (
     <div className="relative p-4">
-      <div className="fixed bottom-6 left-1/2 w-full w-fit max-w-xl justify-center -translate-x-1/2 z-50 flex bg-base-100 max-w-xs p-2 rounded-xl">
+      <div className="fixed bottom-6 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-xs -translate-x-1/2 justify-center rounded-xl bg-base-100 p-2">
         <button
           type="button"
           className="mx-auto flex gap-2 items-center block w-full px-4 py-2 text-xs text-left leading-tight align-middle bg-white border border-transparent transition duration-300 ease-in-out focus:z-10 h-9 rounded-md text-base-500 ring-1 ring-base-200 placeholder-base-400 focus:border-accent-500 focus:ring-accent-100 focus:ring-2 focus:outline-none shadow-sm"

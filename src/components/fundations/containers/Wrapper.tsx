@@ -5,12 +5,14 @@ type WrapperProps = HTMLAttributes<HTMLDivElement> & {
   variant?: "narrow" | "standard" | "prose";
 };
 
-// Map each variant to its specific classes
+// Map each variant to its specific classes. The page gutter is 16px on phones and 32px from
+// `sm` up; a narrow column inside a standard one is a plain `mx-auto max-w-xl sm:px-8` div, so
+// the gutter isn't doubled on phones
 const variantClasses = {
   // Wrappers for standard sections
-  standard: "mx-auto px-8   max-w-7xl 2xl:max-w-[110rem]    ",
+  standard: "mx-auto px-4 sm:px-8 max-w-7xl 2xl:max-w-[110rem]",
   // Wrapper for narrow sections
-  narrow: "mx-auto px-8  max-w-xl",
+  narrow: "mx-auto px-4 sm:px-8 max-w-xl",
   // Wrappers for prose sections
   prose:
     "prose text-base-600 prose-headings:text-base-900  prose-pre:border-0  prose-blockquote:text-accent-600 prose-a:text-accent-600 prose-a:hover:text-accent-500 prose-a:duration-200  max-w-none prose-pre:text-sm prose-strong:text-base-900  prose-pre:rounded-2xl",

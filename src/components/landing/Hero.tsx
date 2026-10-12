@@ -7,7 +7,7 @@ export default function Hero() {
     <section>
       <Wrapper variant="standard" className="pt-24 lg:pt-48">
         <div className="text-balance max-w-3xl mx-auto text-center">
-          <Text tag="h1" variant="displayLG" className="text-base-900 font-display font-light">
+          <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
             <span className="block"> No concepts.</span>
             <span className="block">Just real websites.</span>
           </Text>

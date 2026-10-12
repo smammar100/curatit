@@ -24,7 +24,7 @@ export default function StoreLayout({
           <div>
             <div className="flex flex-wrap justify-between gap-4">
               <div className="max-w-xl text-balance">
-                <Text tag="h1" variant="displayLG" className="text-base-900 font-display font-thin">
+                <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
                   {frontmatter.title}
                 </Text>
                 <Text tag="p" variant="textBase" className="text-base-600 mt-4">

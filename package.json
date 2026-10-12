@@ -13,6 +13,7 @@
     "creative": "tsx scripts/creative.ts",
     "creative:test-db": "tsx scripts/creative-db-test.ts",
     "creative:compare": "tsx scripts/creative-compare.ts",
+    "changelog:draft": "node scripts/changelog-draft.mjs",
     "mcp:bridge:build": "npm run build --workspace @curatit/mcp-bridge",
     "mcp:adapter:build": "npm run build --workspace @curatit/model-adapter",
     "test:mcp:live": "vitest run tests/mcp",

@@ -25,7 +25,7 @@ export default function SitesLayout({
         <Wrapper variant="standard" className="py-24">
           <div className="flex flex-wrap justify-between gap-4">
             <div className="max-w-xl text-balance">
-              <Text tag="h1" variant="displayMD" className="text-base-900 font-display font-thin capitalize">
+              <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 capitalize">
                 {frontmatter.title}
               </Text>
               <Text tag="p" variant="textSM" className="text-base-600 mt-4">
