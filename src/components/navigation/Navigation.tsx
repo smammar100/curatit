@@ -10,10 +10,8 @@ import MobileNav from "./MobileNav";
 // Quick access links
 const links = [
   { href: "/#how-it-works", text: "How it works" },
-  { href: "/library", text: "Library" },
   { href: "/pricing", text: "Pricing" },
-  { href: "/blog", text: "Blog" },
-  { href: "/about", text: "About" },
+  { href: "/vision", text: "Vision" },
 ];
 
 export default function Navigation() {

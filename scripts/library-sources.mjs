@@ -65,6 +65,12 @@ export const sources = [
     brandAccounts: ["coinbase"],
   },
   {
+    file: "data/instagram/publicapp.json",
+    category: { name: "Fintech", slug: "fintech" },
+    brand: { name: "Public", slug: "public", websiteUrl: "https://public.com" },
+    brandAccounts: ["publicapp"],
+  },
+  {
     file: "data/instagram/wiseaccount.json",
     category: { name: "Fintech", slug: "fintech" },
     brand: { name: "Wise", slug: "wise", websiteUrl: "https://wise.com" },
@@ -175,6 +181,12 @@ export const sources = [
     category: { name: "Travel", slug: "travel" },
     brand: { name: "Uber", slug: "uber", websiteUrl: "https://www.uber.com" },
     brandAccounts: ["uber"],
+  },
+  {
+    file: "data/instagram/bolt.json",
+    category: { name: "Travel", slug: "travel" },
+    brand: { name: "Bolt", slug: "bolt", websiteUrl: "https://bolt.eu" },
+    brandAccounts: ["bolt"],
   },
   {
     file: "data/instagram/amazon.json",
