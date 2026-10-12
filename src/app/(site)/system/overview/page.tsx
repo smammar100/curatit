@@ -10,7 +10,7 @@ const pages = [
         title: "Pages",
         links: [
           { href: "/", text: "Home" },
-          { href: "/about", text: "About" },
+          { href: "/vision", text: "Vision" },
           { href: "/404", text: "404" },
         ],
       },

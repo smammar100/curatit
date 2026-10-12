@@ -990,3 +990,95 @@
     }
   }
 }
+/* Vision page (vision/SelectionGraph): a light sweeps down the selected cover once, as if it
+   were being read. Off under reduced motion */
+.vision-scan {
+  top: -25%;
+  background: linear-gradient(to bottom, transparent, rgb(255 255 255 / 0.28) 70%, rgb(255 255 255 / 0.75) 74%, transparent 76%);
+  animation: vision-scan 1.2s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+@keyframes vision-scan {
+  to {
+    transform: translateY(500%);
+  }
+}
+/* Vision page "Night" panel (2026-10-12): it inverts the page, like the footer. On the light
+   site it takes the dark tokens, on the dark site the light ones, scoped to the one inset panel,
+   so everything inside (the graph, the type, the signature) flips with them. The second
+   deliberately dark surface after the footer */
+.vision-night {
+  color-scheme: dark;
+  --color-white: oklch(0.175 0.004 80);
+  --color-base-50: oklch(0.215 0.005 80);
+  --color-base-100: oklch(0.26 0.006 82);
+  --color-base-200: oklch(0.32 0.007 84);
+  --color-base-300: oklch(0.4 0.008 85);
+  --color-base-400: oklch(0.5 0.008 86);
+  --color-base-500: oklch(0.6 0.008 87);
+  --color-base-600: oklch(0.7 0.008 88);
+  --color-base-700: oklch(0.78 0.007 88);
+  --color-base-800: oklch(0.86 0.006 88);
+  --color-base-900: oklch(0.93 0.005 88);
+  --color-edge: oklch(1 0 0 / 0.1);
+  background: var(--color-white);
+  color: var(--color-base-900);
+}
+:root[data-theme="dark"] .vision-night {
+  color-scheme: light;
+  --color-white: oklch(0.986 0.002 67.8);
+  --color-base-50: oklch(0.964 0.003 84.4);
+  --color-base-100: oklch(0.922 0.007 88.56);
+  --color-base-200: oklch(0.836 0.012 89.69);
+  --color-base-300: oklch(0.751 0.01 87.44);
+  --color-base-400: oklch(0.664 0.009 84.55);
+  --color-base-500: oklch(0.569 0.008 88.63);
+  --color-base-600: oklch(0.482 0.007 84.55);
+  --color-base-700: oklch(0.398 0.005 91.46);
+  --color-base-800: oklch(0.309 0.004 84.54);
+  --color-base-900: oklch(0.223 0.002 67.71);
+  --color-edge: oklch(0 0 0 / 0.1);
+}
+
+/* The founder's signature (vision/Signature): each stroke's dash runs out once, in order, when it
+   scrolls into view; hidden until then, and simply drawn under reduced motion */
+.signature path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.signature[data-play] path {
+  animation-name: signature-write;
+  animation-timing-function: cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  animation-fill-mode: forwards;
+}
+@keyframes signature-write {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .signature path {
+    stroke-dashoffset: 0;
+  }
+  .signature[data-play] path {
+    animation: none;
+  }
+}
+
+/* The dashed ring round the selected post turns slowly (the `rotate` property, so it composes
+   with the centring translate) */
+.vision-reticle {
+  animation: vision-turn 16s linear infinite;
+}
+@keyframes vision-turn {
+  to {
+    rotate: 360deg;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vision-scan {
+    display: none;
+  }
+  .vision-reticle {
+    animation: none;
+  }
+}

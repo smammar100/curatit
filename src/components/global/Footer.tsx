@@ -31,7 +31,7 @@ const LINKS = [
   {
     title: "Company",
     links: [
-      { label: "About", href: "/about" },
+      { label: "Vision", href: "/vision" },
       { label: "Blog", href: "/blog" },
       { label: "Advertise", href: "/advertise" },
       { label: "Contact", href: SUPPORT_MAILTO },

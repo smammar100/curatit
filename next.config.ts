@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/library/**" },
     ],
   },
+  // The About page became Vision (2026-10-12); old links still land
+  async redirects() {
+    return [{ source: "/about", destination: "/vision", permanent: true }];
+  },
   async rewrites() {
     if (!supabaseUrl) return [];
     // /lib/<path> is the `library` bucket. A short local path keeps every image URL
