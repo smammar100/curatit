@@ -62,6 +62,53 @@ export type Database = {
           },
         ]
       }
+      api_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          last_used_at: string | null
+          name: string
+          owner_id: string
+          prefix: string
+          revoked_at: string | null
+          scopes: string[]
+          token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          last_used_at?: string | null
+          name: string
+          owner_id?: string
+          prefix: string
+          revoked_at?: string | null
+          scopes: string[]
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_used_at?: string | null
+          name?: string
+          owner_id?: string
+          prefix?: string
+          revoked_at?: string | null
+          scopes?: string[]
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_tokens_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       boards: {
         Row: {
           created_at: string
@@ -1688,12 +1735,17 @@ export type Database = {
         }
         Returns: Json
       }
+      curatit_api_token_verify: { Args: { p_token_hash: string }; Returns: Json }
       curatit_mcp_catalog_stats: { Args: never; Returns: Json }
       curatit_mcp_creative_terms: {
         Args: { p_dimension?: string }
         Returns: Json
       }
       curatit_mcp_get_post: { Args: { p_id: string }; Returns: Json }
+      curatit_rate_limit_hit: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number }
+        Returns: Json
+      }
       curatit_mcp_get_post_v2: { Args: { p_id: string }; Returns: Json }
       curatit_mcp_resolve_filter: {
         Args: { p_kind: string; p_value: string }
