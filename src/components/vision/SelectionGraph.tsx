@@ -6,10 +6,14 @@
 // frame darkens, a dashed ring turns around it, a light sweeps down the cover as if it were being
 // read, and its readout counts up to its slide count. Pointing at a post selects it and holds the
 // walk. The drift and the flow run on requestAnimationFrame straight into the DOM (no React
-// renders per frame), only while the graph is on screen and the tab is visible; under reduced
-// motion everything holds still on the first post. Original work, made for Curatit.
+// renders per frame), only while the graph is on screen and the tab is visible; a Pause button
+// under it stops all of it (WCAG 2.2.2), and under reduced motion everything holds still on the
+// first post. It works with three to five posts: the walk only visits the ones there are.
+// Original work, made for Curatit.
 import Image from "next/image";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import Pause from "@/components/fundations/icons/Pause";
+import Play from "@/components/fundations/icons/Play";
 import type { LibraryPost } from "@/lib/posts";
 import { cx } from "@/lib/cx";
 
@@ -77,6 +81,8 @@ const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
   const nodes = useMemo(() => posts.slice(0, NODES.length), [posts]);
   const edges = useMemo(() => EDGES.filter(([a, b]) => a < nodes.length && b < nodes.length), [nodes]);
+  // The walk visits only the posts there are (with three or four, nodes 3 and 4 don't exist)
+  const walk = useMemo(() => WALK.filter((i) => i < nodes.length), [nodes]);
   const root = useRef<HTMLDivElement>(null);
   // The covers' hexagon clip, by an id CSS can reference (useId's colons removed)
   const clip = `vision-hex-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
@@ -90,6 +96,9 @@ export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
   const [held, setHeld] = useState<number | null>(null);
   const [visible, setVisible] = useState(false);
   const [still, setStill] = useState(false);
+  const [paused, setPaused] = useState(false);
+  // Motion runs only on screen, unpaused, and without a reduced-motion preference
+  const moving = visible && !still && !paused;
 
   useEffect(() => {
     const query = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -106,20 +115,20 @@ export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
 
   // The walk
   useEffect(() => {
-    if (still || !visible || held != null) return;
+    if (!moving || held != null || walk.length < 2) return;
     const timer = setInterval(() => {
       if (document.hidden) return;
       setStep((s) => {
-        handoff.current = { from: WALK[s % WALK.length], to: WALK[(s + 1) % WALK.length], at: performance.now() };
+        handoff.current = { from: walk[s % walk.length], to: walk[(s + 1) % walk.length], at: performance.now() };
         return s + 1;
       });
     }, STEP_MS);
     return () => clearInterval(timer);
-  }, [still, visible, held]);
+  }, [moving, held, walk]);
 
   // The drift and the flow, every frame, straight into the DOM
   useEffect(() => {
-    if (still || !visible) return;
+    if (!moving) return;
     let frame = 0;
     let width = root.current?.clientWidth ?? 0;
     const resize = new ResizeObserver(([entry]) => (width = entry.contentRect.width));
@@ -159,7 +168,7 @@ export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
       const dot = handoffEl.current;
       if (dot) {
         const p = move ? (now - move.at) / HANDOFF_MS : 1;
-        if (move && p < 1) {
+        if (move && p < 1 && at[move.from] && at[move.to]) {
           const e = ease(Math.max(0, p));
           dot.setAttribute("cx", (at[move.from].x + (at[move.to].x - at[move.from].x) * e).toFixed(2));
           dot.setAttribute("cy", (at[move.from].y + (at[move.to].y - at[move.from].y) * e).toFixed(2));
@@ -173,16 +182,20 @@ export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
       cancelAnimationFrame(frame);
       resize.disconnect();
     };
-  }, [still, visible, nodes, edges]);
+  }, [moving, nodes, edges]);
 
-  const active = held ?? (still ? 0 : WALK[step % WALK.length]);
+  const active = held ?? (still || !walk.length ? 0 : walk[step % walk.length]);
+  // The selected post's count-up and scan play when it's actually seen, not off screen on load
+  const run = `${step}-${held}-${visible}`;
 
   return (
+    <div className="relative">
     <div
       ref={root}
       role="img"
-      aria-label={`${nodes.length} posts from the library, joined by the techniques they share`}
-      className="relative mx-auto aspect-3/2 w-full select-none"
+      aria-label={`An illustration: ${nodes.length} recent posts from the library, one from each of ${nodes.length} categories, joined by lines`}
+      data-paused={paused || still || undefined}
+      className="@container relative mx-auto aspect-3/2 w-full select-none"
     >
       <svg viewBox={`0 0 ${FIELD.w} ${FIELD.h}`} className="absolute inset-0 size-full overflow-visible" aria-hidden="true">
         <defs>
@@ -212,8 +225,10 @@ export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
               ref={(el) => {
                 flowEls.current[k] = el;
               }}
+              cx={NODES[a].x}
+              cy={NODES[a].y}
               r={0.45}
-              className="fill-base-400"
+              className={cx("fill-base-400", !moving && "opacity-0")}
             />
           ))}
         {!still && <circle ref={handoffEl} r={0.9} className="fill-base-900" style={{ opacity: 0 }} />}
@@ -262,7 +277,7 @@ export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
               style={{ clipPath: `url(#${clip})` }}
             >
               <Image src={post.images[0]} alt="" fill sizes="(min-width: 1024px) 200px, 26vw" className="object-cover" draggable={false} />
-              {selected && !still && <span key={`${step}-${held}`} aria-hidden="true" className="vision-scan absolute inset-x-0 h-1/4" />}
+              {selected && moving && <span key={run} aria-hidden="true" className="vision-scan absolute inset-x-0 h-1/4" />}
             </div>
             <Readout
               index={i}
@@ -270,13 +285,25 @@ export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
               carousel={slides > 1}
               slides={slides}
               selected={selected}
-              run={`${step}-${held}`}
-              still={still}
+              run={run}
+              still={!moving}
               left={NODES[i].left}
             />
           </div>
         );
       })}
+    </div>
+    {!still && (
+      <button
+        type="button"
+        onClick={() => setPaused((value) => !value)}
+        aria-pressed={paused}
+        aria-label={paused ? "Play the animation" : "Pause the animation"}
+        className="absolute right-0 bottom-0 flex size-11 items-center justify-center rounded-full text-base-500 ring-1 ring-base-200 transition-[color,background-color] duration-150 hover:bg-base-100 hover:text-base-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-500"
+      >
+        {paused ? <Play className="size-4" /> : <Pause className="size-4" />}
+      </button>
+    )}
     </div>
   );
 }
@@ -322,10 +349,12 @@ function Readout({
     <div
       aria-hidden="true"
       className={cx(
-        "absolute top-[-8%] font-mono text-[clamp(7px,0.85vw,10px)] leading-tight whitespace-nowrap tabular-nums transition-[color] duration-500",
+        // Sized from the graph's own width, never under 9px; below 40rem only the selected one shows
+        "absolute top-[-8%] font-mono text-[clamp(9px,1.05cqw,11px)] leading-tight whitespace-nowrap tabular-nums transition-[color,opacity] duration-500 @max-[40rem]:not-data-[on]:opacity-0",
         left ? "right-[86%] text-right" : "left-[86%]",
         selected ? "text-base-900" : "text-base-400",
       )}
+      data-on={selected || undefined}
     >
       <p>
         &lt;.0{index + 1} {category}.&gt;

@@ -1,8 +1,9 @@
 "use client";
 
 // The dashboard's search, after Cosmos: a pill in the header that, when focused, opens a panel
-// under it over a dimmed page, with your recent searches, the library's categories and what
-// you saved last. Anything picked there becomes the query. Press / anywhere to focus it. A
+// under it over a dimmed page, with your recent searches, the library's brands (newest to the
+// library first, narrowed to the ones that match as you type, each with its mark; picking one
+// shows that brand alone), its categories and what you saved last. Anything picked there becomes the query. Press / anywhere to focus it. A
 // BorderBeam (border-beam, from Libraries.dev) runs a colourful glow around the pill's edge, which
 // moves to the panel while it's open; it holds still under reduced motion.
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
@@ -16,6 +17,7 @@ import { categories } from "@/components/home/demo";
 import { cx } from "@/lib/cx";
 import { useBoards } from "./boards";
 import { CATEGORY_ICONS } from "./categoryIcons";
+import { compact } from "./search";
 
 const RECENT_KEY = "curatit-recent-searches";
 const RECENT_MAX = 8;
@@ -121,6 +123,12 @@ export default function SearchBox({
     name: list.find((post) => post.category.slug === category.category)?.category.name ?? category.name,
   }));
 
+  // Every brand once, in the feed's order (newest to the library first); while typing, the ones
+  // whose name or slug holds what's typed
+  const allBrands = [...new Map(list.map((post) => [post.brand.slug, post.brand])).values()];
+  const typed = compact(query);
+  const brands = typed ? allBrands.filter((brand) => compact(brand.name).includes(typed) || compact(brand.slug).includes(typed)) : allBrands;
+
   // The posts saved most recently, on any board, without repeats
   const saved = [...new Set(boards.flatMap((board) => board.items).toSorted((a, b) => b.addedAt.localeCompare(a.addedAt)).map((item) => item.post))]
     .slice(0, 6)
@@ -151,7 +159,7 @@ export default function SearchBox({
                 value={query}
                 onChange={(event) => onQuery(event.target.value)}
                 onFocus={() => setOpen(true)}
-                placeholder="Try ‘launch carousel that shows the product’"
+                placeholder="Search brands, categories or ideas"
                 autoComplete="off"
                 className="h-full w-full rounded-full border-0 bg-transparent pr-12 pl-12 text-body pointer-coarse:text-[16px] text-base-900 placeholder-base-500 focus:ring-0 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
               />
@@ -188,6 +196,20 @@ export default function SearchBox({
                         <Chip key={item} onClick={() => pick(item)}>
                           <Search className="size-4 shrink-0 text-base-500" />
                           {item}
+                        </Chip>
+                      ))}
+                    </Row>
+                  </Section>
+                )}
+                {brands.length > 0 && (
+                  <Section title="Brands">
+                    <Row>
+                      {brands.map((brand) => (
+                        <Chip key={brand.slug} onClick={() => pick(brand.name)}>
+                          <span className="relative size-6 shrink-0 overflow-hidden rounded-full bg-base-100 outline-1 -outline-offset-1 outline-edge">
+                            {brand.logo && <Image src={brand.logo} alt="" fill sizes="24px" className="object-cover" />}
+                          </span>
+                          {brand.name}
                         </Chip>
                       ))}
                     </Row>

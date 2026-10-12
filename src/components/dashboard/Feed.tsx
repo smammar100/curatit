@@ -19,14 +19,8 @@ import SavedArt from "./SavedArt";
 import Grid from "./Grid";
 import Header, { VIEWS, type View } from "./Header";
 import { GridSkeleton } from "./Skeleton";
+import { brandNamed, matches } from "./search";
 import type { DashPost } from "./types";
-
-// Every word of the query appears in the post's hook, brand, category or format
-export function matches(post: DashPost, query: string) {
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-  const text = `${post.hook} ${post.brand.name} ${post.category.name} ${post.format}`.toLowerCase();
-  return words.every((word) => text.includes(word));
-}
 
 export const feedHref = (view: View, query = "", category: string | null = null) => {
   const params = new URLSearchParams();
@@ -82,8 +76,9 @@ export default function Feed() {
   );
   const shown = useMemo(() => {
     const source = view === "Saved" ? saved : view === "Discover" && category ? list.filter((post) => post.category.slug === category) : list;
-    const filtered = query ? source.filter((post) => matches(post, query)) : source;
-    return view === "For you" ? rank(filtered, profile, list) : filtered;
+    const brand = brandNamed(list, query);
+    const filtered = !query ? source : brand ? source.filter((post) => post.brand.slug === brand.slug) : source.filter((post) => matches(post, query));
+    return view === "For you" ? rank(filtered, profile, list, { fresh: true }) : filtered;
   }, [list, saved, query, view, category, profile]);
   // For you waits for the answers it ranks on, so it never shows one order and then another, and
   // keeps waiting while a first visit is on its way to the welcome flow

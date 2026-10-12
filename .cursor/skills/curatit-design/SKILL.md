@@ -33,7 +33,8 @@ loaded with `next/font/google` in `src/app/layout.tsx`:
 - `--font-display`: **Hedvig Letters Serif** (Google Fonts, optical size
   12..24) - used via the `font-display` class, for display headings only.
 
-Never introduce another font.
+Never introduce another font. (One exception: the Vision graph's small selection readouts,
+`<.03 FINT.>`, use the system monospace stack as an instrument-panel detail.)
 
 Always use the `Text` component (`@/components/fundations/elements/Text`)
 instead of raw tags with ad-hoc sizes. Variants: `display6XL` down to
@@ -89,7 +90,9 @@ Usage rules:
 - There are no tinted color panels and no hue rotation - the page stays
   monochrome warm gray; the screenshots inside cards provide the color.
 - Dark surfaces are rare and purposeful: the site footer's inset panel and the Vision page's
-  "Night" panel (`.vision-night`, the dark tokens scoped to one inset panel), the default Button (`bg-base-800`)
+  "Night" panel (`.vision-night`, the dark tokens scoped to one inset panel, inverting to paper
+  on the dark site like the footer; both panels round at `rounded-[1.5rem]`/`[2rem]`, a named
+  exception to the radius rules), the default Button (`bg-base-800`)
   and the search modal backdrop (`bg-black/50`).
 - **Dark theme** (`data-theme="dark"` on `<html>`, set before paint by
   `global/ThemeScript` from localStorage or the system, switched by
