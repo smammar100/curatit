@@ -41,7 +41,9 @@ instead of raw tags with ad-hoc sizes. Variants: `display6XL` down to
 `displayXS`, then `textXL`, `textLG`, `textBase`, `textSM`, `textXS`.
 
 - Page hero title: `tag="h1" variant="displayLG"` +
-  `text-base-900 font-display font-light`, centered inside a
+  `text-base-900 font-display font-light`, on every page (the homepage,
+  Vision, Roadmap, 404 and the share page included; one size site-wide since
+  2026-10-12, so no page's title is bigger than another's), centered inside a
   `text-balance max-w-3xl mx-auto text-center` div; multi-line heroes stack
   `<span className="block">` lines.
 - Section heading: `tag="h2" variant="displaySM"` +
@@ -113,9 +115,17 @@ Usage rules:
 
 ## Layout and spacing
 
+- The page gutter is 16px on phones and 32px from `sm` up (the Wrapper's
+  `px-4 sm:px-8`). Everything on a phone sits 16px from the screen edges,
+  inset panels included (the footer and Vision panels are `px-4` from the
+  window); a narrow column inside a standard Wrapper is a plain
+  `mx-auto max-w-xl sm:px-8` div, never a second Wrapper, or the phone gutter
+  doubles. A sideways-scrolling row bleeds with `-mx-4 px-4` so its first item
+  still starts on the gutter.
+
 - Every section is `<section>` wrapping a `Wrapper`
   (`@/components/fundations/containers/Wrapper`): `variant="standard"`
-  (`max-w-7xl 2xl:max-w-[110rem] px-8`) for pages, `variant="narrow"`
+  (`max-w-7xl 2xl:max-w-[110rem] px-4 sm:px-8`) for pages, `variant="narrow"`
   (`max-w-xl`) for forms/auth, `variant="prose"` for markdown bodies (the
   prose preset styles links/blockquotes in accent and code blocks
   `rounded-2xl`).

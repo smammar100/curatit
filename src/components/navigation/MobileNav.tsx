@@ -14,9 +14,9 @@ import Burger from "@/components/fundations/icons/Burger";
 
 // Same links as the desktop nav
 const links = [
-  { href: "/#how-it-works", text: "How it works" },
   { href: "/pricing", text: "Pricing" },
   { href: "/vision", text: "Vision" },
+  { href: "/roadmap", text: "Roadmap" },
 ];
 
 export default function MobileNav() {

@@ -570,7 +570,8 @@
    along an arc, set from the right edge so the last cover is always half outside the panel; the
    light falls off downward through an eased mask */
 .footer-fan {
-  --w: 4.25rem;
+  /* 3.75rem on phones leaves room for the logo beside the fan */
+  --w: 3.75rem;
   --top: 2.5rem;
   --from: 45%;
   --to: 95%;
@@ -1086,4 +1087,52 @@
   .vision-reticle {
     animation: none;
   }
+}
+
+/* Lifeline (components/lifeline, vendored from github.com/evilrabbit/lifeline, MIT): its intro
+   keyframes and classes, verbatim from the registry item, then Curatit's overrides from outside:
+   Inter instead of Geist, and in the dark theme its pure-black surfaces (the sticky label column)
+   take the page's warm dark canvas so they don't show as a black slab */
+@keyframes lifeline-rail-draw {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes lifeline-marker-in {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes lifeline-labels-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.lifeline-rail-intro {
+  transform: scaleX(var(--lifeline-intro-progress, 0));
+  transform-origin: left center;
+}
+.lifeline-rail-intro-vertical {
+  transform: scaleY(var(--lifeline-intro-progress, 0));
+  transform-origin: top center;
+}
+.lifeline-marker-intro {
+  opacity: 0;
+  animation: lifeline-marker-in var(--lifeline-marker-fade-ms, 420ms) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.lifeline-labels-intro {
+  opacity: 0;
+  animation: lifeline-labels-in var(--lifeline-labels-ms, 600ms) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.lifeline-labels.is-pinned {
+  z-index: 20;
+}
+.lifeline-typeset {
+  --lifeline-font: var(--font-sans);
+  font-family: var(--lifeline-font);
+}
+/* The lifeline is written for white = light and black = dark in both themes, but the dark theme
+   redefines --color-white as its canvas, so its `dark:text-white` hover text went dark on dark.
+   Inside it, white is the light ink again and black is the dark canvas (the dark --color-white
+   above; change them together). */
+:root[data-theme="dark"] .lifeline-typeset {
+  --color-white: var(--color-base-950);
+  --color-black: oklch(0.175 0.004 80);
 }

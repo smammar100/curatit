@@ -24,7 +24,7 @@ export default function BlogLayout({
         <Wrapper variant="standard" className="py-24 lg:pt-48">
           <div className="text-balance">
             <div className="text-center max-w-3xl mx-auto text-balance">
-              <Text tag="h1" variant="displayLG" className="text-base-900 font-display font-thin">
+              <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
                 {frontmatter.title}
               </Text>
               <Text tag="p" variant="textBase" className="text-base-600 mt-4">
@@ -59,9 +59,9 @@ export default function BlogLayout({
               className="size-full aspect-8/5 object-top rounded shadow object-cover"
             />
           </div>
-          <Wrapper variant="narrow" className="mt-12">
+          <div className="mx-auto mt-12 max-w-xl sm:px-8">
             <Wrapper variant="prose" dangerouslySetInnerHTML={{ __html: html }} />
-          </Wrapper>
+          </div>
         </Wrapper>
       </section>
       <section>

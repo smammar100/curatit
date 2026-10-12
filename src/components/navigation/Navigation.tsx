@@ -9,9 +9,9 @@ import ThemeToggle from "@/components/global/ThemeToggle";
 import MobileNav from "./MobileNav";
 // Quick access links
 const links = [
-  { href: "/#how-it-works", text: "How it works" },
   { href: "/pricing", text: "Pricing" },
   { href: "/vision", text: "Vision" },
+  { href: "/roadmap", text: "Roadmap" },
 ];
 
 export default function Navigation() {

@@ -33,7 +33,7 @@ export default function AdvertisePage() {
     <section>
       <Wrapper variant="standard" className="py-24 lg:pt-48">
         <div className="text-center max-w-3xl mx-auto text-balance">
-          <Text tag="h1" variant="displayLG" className="text-base-900 font-display font-thin text-center">
+          <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 text-center">
             Put your launch in front of the Curatit crowd
           </Text>
           <Text tag="p" variant="textBase" className="text-base-600 mt-4">

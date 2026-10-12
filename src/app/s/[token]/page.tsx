@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import Lockup from "@/components/assets/Lockup";
 // Fundations
 import Button from "@/components/fundations/elements/Button";
+import Text from "@/components/fundations/elements/Text";
 import BaseLayout from "@/layouts/BaseLayout";
 import { getSharedBoard } from "@/lib/boards";
 
@@ -40,7 +41,9 @@ export default async function SharedBoardPage({ params }: Props) {
         <main className="px-4 pb-24 sm:px-6">
           <div className="mx-auto max-w-3xl pt-6 pb-12 text-center">
             <p className="text-sm text-base-500">Shared board · Read-only</p>
-            <h1 className="mt-3 font-display text-4xl leading-[1.1] font-light text-balance text-base-900 sm:text-5xl">{board.name}</h1>
+            <Text tag="h1" variant="displayLG" className="mt-3 font-display font-light text-base-900 text-balance">
+              {board.name}
+            </Text>
             {board.description && <p className="mx-auto mt-4 max-w-xl text-pretty whitespace-pre-line text-base-600">{board.description}</p>}
             <p className="mt-3 text-sm text-base-500 tabular-nums">
               {count} {count === 1 ? "reference" : "references"}

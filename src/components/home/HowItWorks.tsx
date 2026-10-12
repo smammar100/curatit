@@ -45,7 +45,7 @@ export default function HowItWorks() {
           {steps.map((step) => (
             <li
               key={step.title}
-              className="relative flex aspect-[343/429] min-h-110 flex-col overflow-clip rounded-xl bg-base-50 md:aspect-[421/560]"
+              className="relative flex min-h-110 min-w-0 flex-col overflow-clip rounded-xl bg-base-50 md:aspect-[421/560]"
             >
               <div className="relative z-10 flex items-start justify-between gap-3 px-6 py-7 lg:px-8">
                 {/* The muted half always starts the second line, so no card ends on a stray word */}
