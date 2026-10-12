@@ -20,7 +20,7 @@ Set on Vercel (Project → Settings → Environment Variables) or in `.env.local
 
 Vercel, from `main`, like the rest of the site. Routes under `/mcp` and `/api/v1` are dynamic (`force-dynamic`), `maxDuration` 60 s. No extra infrastructure: no Redis, no separate process. Rollback is Vercel's "promote previous deployment"; the routes are additive.
 
-Database: `npx supabase db push` applies `20261012165035_mcp_access_tokens.sql` (tested in a rolled-back transaction with `scratchpad/mcp_migration_test.sql` before applying). Rollback SQL is in `docs/current-state.md` §8. After applying, regenerate `src/lib/database.types.ts` with `npx supabase gen types typescript --linked > src/lib/database.types.ts` (the hand-written `api_tokens` entry matches what it generates).
+Database: `npx supabase db push` applies `20261012165035_mcp_access_tokens.sql` and `20261012180633_mcp_rate_limits_grant_service_role.sql` (both applied on 12 Oct 2026; `20261012174923_mcp_rate_limits_grants.sql` is an empty file that was recorded as applied by mistake and is kept so the migration history matches the database) (tested in a rolled-back transaction with `scratchpad/mcp_migration_test.sql` before applying). Rollback SQL is in `docs/current-state.md` §8. After applying, regenerate `src/lib/database.types.ts` with `npx supabase gen types typescript --linked > src/lib/database.types.ts` (the hand-written `api_tokens` entry matches what it generates).
 
 ## Health
 
