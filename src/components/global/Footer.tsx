@@ -12,7 +12,7 @@ import { SUPPORT_MAILTO } from "@/lib/site";
 import FooterNewsletter from "./FooterNewsletter";
 
 // The site footer, "Night" (chosen from a five-way prototype on 2026-10-11): the page's paper
-// carries on, and the footer is an inset dark panel, the one deliberately dark surface on the
+// carries on, and the footer is an inset dark panel, one of two deliberately dark surfaces (with Vision's panel) on the
 // marketing site, like a gallery after hours. A short statement and the email field, the newest
 // covers fanned in from the right edge, then the links.
 // A server component, so it costs the page no script beyond the email field; the motion is CSS

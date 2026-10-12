@@ -22,11 +22,17 @@ export const revalidate = 3600;
 export default async function DashboardLayout({ children, modal }: { children: ReactNode; modal: ReactNode }) {
   const all = await getPublishedPosts();
 
-  // Brands interleaved so the feed doesn't open on a run of posts from one brand
-  const byBrand = [...Map.groupBy(all, (post) => post.brand.slug).values()];
-  const longest = Math.max(0, ...byBrand.map((list) => list.length));
-  const posts: DashPost[] = Array.from({ length: longest }, (_, i) => byBrand.flatMap((list) => list[i] ?? []))
-    .flat()
+  // The feed's own order: what joined the library most recently first (by import day, newest day
+  // first), and within each day the brands interleaved, so a new import leads the feed without
+  // opening on a run of posts from one brand. `all` is newest-posted first, which each brand keeps
+  const days = [...Map.groupBy(all, (post) => post.addedAt.slice(0, 10)).entries()].sort(([a], [b]) => b.localeCompare(a)).map(([, list]) => list);
+  const interleave = (list: typeof all) => {
+    const byBrand = [...Map.groupBy(list, (post) => post.brand.slug).values()];
+    const longest = Math.max(0, ...byBrand.map((brand) => brand.length));
+    return Array.from({ length: longest }, (_, i) => byBrand.flatMap((brand) => brand[i] ?? [])).flat();
+  };
+  const posts: DashPost[] = days
+    .flatMap(interleave)
     .map((post) => ({
       id: post.id,
       shortCode: post.shortCode,
@@ -37,6 +43,7 @@ export default async function DashboardLayout({ children, modal }: { children: R
       width: post.width,
       height: post.height,
       postedAt: post.postedAt,
+      addedAt: post.addedAt,
       cover: post.images[0],
     }));
 

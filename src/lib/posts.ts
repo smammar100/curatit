@@ -11,6 +11,8 @@ export type LibraryPost = {
   // First sentence of the caption, for card titles
   hook: string;
   postedAt: string;
+  // When it joined the library (instagram_posts.created_at): the feed leads with the newest imports
+  addedAt: string;
   width: number | null;
   height: number | null;
   // logo is the URL of the brand's mark in the `library` bucket (via /lib), if it has one
@@ -27,6 +29,7 @@ type Row = {
   format: LibraryPost["format"];
   caption: string | null;
   posted_at: string;
+  created_at: string;
   dimensions_width: number | null;
   dimensions_height: number | null;
   brands: { name: string; slug: string; logo_path: string | null; categories: { name: string; slug: string } | null } | null;
@@ -45,7 +48,7 @@ export const getPublishedPosts = cache(async (): Promise<LibraryPost[]> => {
   const { data, error } = await supabase
     .from("instagram_posts")
     .select(
-      "id, short_code, url, format, caption, posted_at, dimensions_width, dimensions_height, brands(name, slug, logo_path, categories(name, slug)), post_images(position, path)"
+      "id, short_code, url, format, caption, posted_at, created_at, dimensions_width, dimensions_height, brands(name, slug, logo_path, categories(name, slug)), post_images(position, path)"
     )
     .eq("is_published", true)
     .order("posted_at", { ascending: false })
@@ -63,6 +66,7 @@ export const getPublishedPosts = cache(async (): Promise<LibraryPost[]> => {
       format: row.format,
       hook: hookFrom(row.caption),
       postedAt: row.posted_at,
+      addedAt: row.created_at,
       width: row.dimensions_width,
       height: row.dimensions_height,
       brand: {
@@ -106,7 +110,7 @@ export const getPostDetail = cache(async (shortCode: string): Promise<PostDetail
   const { data, error } = await supabase
     .from("instagram_posts")
     .select(
-      "id, short_code, url, format, caption, posted_at, dimensions_width, dimensions_height, likes_count, comments_count, owner_username, owner:instagram_accounts!instagram_posts_owner_id_fkey(is_verified), brands(name, slug, logo_path, categories(name, slug)), post_images(position, path), instagram_post_media!instagram_post_media_post_id_fkey(position, type)"
+      "id, short_code, url, format, caption, posted_at, created_at, dimensions_width, dimensions_height, likes_count, comments_count, owner_username, owner:instagram_accounts!instagram_posts_owner_id_fkey(is_verified), brands(name, slug, logo_path, categories(name, slug)), post_images(position, path), instagram_post_media!instagram_post_media_post_id_fkey(position, type)"
     )
     .eq("is_published", true)
     .eq("short_code", shortCode)
@@ -129,6 +133,7 @@ export const getPostDetail = cache(async (shortCode: string): Promise<PostDetail
     hook: hookFrom(data.caption),
     caption: (data.caption ?? "").trim(),
     postedAt: data.posted_at,
+    addedAt: data.created_at,
     width: data.dimensions_width,
     height: data.dimensions_height,
     likes: count(data.likes_count),

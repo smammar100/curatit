@@ -178,7 +178,8 @@
   --fs-micro-compact: 10px;
   --lh-micro-compact: 12px;
 }
-/* Dark theme: the warm neutral scale reversed (paper becomes a warm near-black, cards sit a
+/* (These dark values are mirrored in .vision-night, the Vision page's panel; change both.)
+   Dark theme: the warm neutral scale reversed (paper becomes a warm near-black, cards sit a
    step lighter than the canvas, headings a step short of white), and the terracotta accent
    with a quarter less chroma so it doesn't vibrate on a dark ground */
 :root[data-theme="dark"] {
@@ -1002,7 +1003,8 @@
     transform: translateY(500%);
   }
 }
-/* Vision page "Night" panel (2026-10-12): it inverts the page, like the footer. On the light
+/* Vision page "Night" panel (2026-10-12): it inverts the page, like the footer. Its two
+   palettes are copies of the light :root tokens and the dark ones below; change them together. On the light
    site it takes the dark tokens, on the dark site the light ones, scoped to the one inset panel,
    so everything inside (the graph, the type, the signature) flips with them. The second
    deliberately dark surface after the footer */
@@ -1068,6 +1070,9 @@
    with the centring translate) */
 .vision-reticle {
   animation: vision-turn 16s linear infinite;
+}
+[data-paused] .vision-reticle {
+  animation-play-state: paused;
 }
 @keyframes vision-turn {
   to {

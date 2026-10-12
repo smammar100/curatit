@@ -9,7 +9,7 @@ import Signature from "@/components/vision/Signature";
 import { getPublishedPosts, type LibraryPost } from "@/lib/posts";
 
 export const metadata: Metadata = {
-  title: "Vision",
+  title: "Vision | Curatit",
   description: "Taste you can learn from: why Curatit keeps real brand posts and names the decisions behind them.",
 };
 
@@ -41,7 +41,8 @@ function byCategory(posts: LibraryPost[], count: number) {
 // footer), holding the statement, the founder's note in his own voice with his signature, and
 // the animated post graph; then the library's counts and the ways in, back on the page itself
 export default async function VisionPage() {
-  const posts = await getPublishedPosts().catch(() => []);
+  // Like the homepage, a failed fetch throws, so a failed revalidation keeps the last good page
+  const posts = await getPublishedPosts();
   const brands = new Set(posts.map((post) => post.brand.slug)).size;
   const graph = byCategory(posts, 5);
 
@@ -73,13 +74,13 @@ export default async function VisionPage() {
             </div>
 
             {/* The founder's sign-off: signature written out once, then who wrote this */}
-            <figure className="mx-auto mt-14 flex max-w-md flex-col items-center text-center">
+            <div className="mx-auto mt-14 flex max-w-md flex-col items-center text-center">
               <Signature className="w-64 text-base-900 sm:w-80" />
-              <figcaption className="mt-8 flex items-center gap-3 text-left">
+              <div className="mt-8 flex items-center gap-3 text-left">
                 <FounderPhoto src={FOUNDER.photo} initials={FOUNDER.initials} className="size-12" />
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-base-900">{FOUNDER.name}</p>
-                  <p className="text-sm text-base-500">{FOUNDER.title}</p>
+                  <p className="text-sm text-base-600">{FOUNDER.title}</p>
                 </div>
                 <a
                   href={FOUNDER.linkedin}
@@ -90,8 +91,8 @@ export default async function VisionPage() {
                 >
                   <LinkedinLogo className="size-4" />
                 </a>
-              </figcaption>
-            </figure>
+              </div>
+            </div>
 
             {graph.length >= 3 && (
               <div className="mx-auto mt-20 max-w-5xl">
