@@ -1,6 +1,6 @@
 // A portable MCP Apps search gallery. The same resource works in ChatGPT and other MCP Apps hosts.
 export const SEARCH_WIDGET_URI = "ui://curatit/search-results";
-export const SEARCH_WIDGET_HTML = `<!doctype html>
+export const SEARCH_WIDGET_HTML = String.raw`<!doctype html>
 <html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
 <style>
 :root{color-scheme:light dark;font:14px system-ui,-apple-system,sans-serif}*{box-sizing:border-box}
