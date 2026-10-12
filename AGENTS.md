@@ -113,7 +113,7 @@ Dynamic routes use `generateStaticParams` + `dynamicParams = false`, so unknown 
 
 - **Site URL / domain:** `SITE_URL` in `src/lib/site.ts` (currently `https://yourdomain.com`). SEO placeholders (title, Open Graph, Twitter, canonical) live in `metadata` in `src/app/layout.tsx`.
 - **Brand colors / typography:** `src/styles/global.css` — `@theme` (`--color-accent-*`, `--color-base-*`); font families are wired in `src/app/layout.tsx` and mapped to `--font-sans` / `--font-display`.
-- **Navigation / footer:** `src/components/navigation/Navigation.tsx`, `MobileNav.tsx`, `src/components/global/Footer.tsx`. Since 2026-10-12 both navigations link How it works, Pricing, Vision and Roadmap only (Library and Blog were taken out of the nav; their pages stay), and the footer's Company column links Vision (in place of About) and Roadmap.
+- **Navigation / footer:** `src/components/navigation/Navigation.tsx`, `MobileNav.tsx`, `src/components/global/Footer.tsx`. Since 2026-10-12 both navigations link Pricing, Vision and Roadmap only (Library, Blog and then How it works were taken out of the nav; their pages and the homepage section stay, and the footer still links How it works), and the footer's Company column links Vision (in place of About) and Roadmap.
 - **Wordmark:** `src/components/assets/Logo.tsx` (outlined "Curatit" in Hedvig Letters Serif), the mark is `Symbol.tsx`, and `Lockup.tsx` sets the two side by side (the full logo, used in both navigations and the sign-in card); favicon is `src/app/icon.svg`.
 
 ## Commands
