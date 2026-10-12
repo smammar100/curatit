@@ -31,8 +31,10 @@ export async function loadPost(repo: CatalogRepository, idOrShortCode: string): 
   return post;
 }
 
-export const hasAnalysis = (creative: RawPost["creative"]): creative is Exclude<RawPost["creative"], Record<string, never>> =>
-  typeof (creative as { analysis_version?: unknown }).analysis_version === "string";
+// A post with no published analysis carries null (the catalog function finds no row) or an
+// empty object; either way, no analysis
+export const hasAnalysis = (creative: RawPost["creative"]): creative is Exclude<RawPost["creative"], Record<string, never> | null> =>
+  creative !== null && typeof (creative as { analysis_version?: unknown }).analysis_version === "string";
 
 export function classification(analysis: RawCompactAnalysis | null | undefined): Classification | null {
   if (!analysis) return null;
