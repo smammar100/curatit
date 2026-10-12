@@ -7,6 +7,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Skip static files, images and metadata routes
-  matcher: ["/((?!_next/static|_next/image|images/|icon.svg|favicon.ico|rss.xml|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  // Skip static files, images and metadata routes, and the MCP / research API surfaces, which
+  // carry their own bearer credentials and never use the cookie session
+  matcher: ["/((?!_next/static|_next/image|images/|icon.svg|favicon.ico|rss.xml|sitemap.xml|mcp$|api/v1/|\\.well-known/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };

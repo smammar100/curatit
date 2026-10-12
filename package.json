@@ -12,9 +12,15 @@
     "test:watch": "vitest",
     "creative": "tsx scripts/creative.ts",
     "creative:test-db": "tsx scripts/creative-db-test.ts",
-    "creative:compare": "tsx scripts/creative-compare.ts"
+    "creative:compare": "tsx scripts/creative-compare.ts",
+    "mcp:bridge:build": "npm run build --workspace @curatit/mcp-bridge",
+    "mcp:adapter:build": "npm run build --workspace @curatit/model-adapter",
+    "test:mcp:live": "vitest run tests/mcp",
+    "mcp:smoke": "tsx scripts/mcp-smoke.ts"
   },
   "dependencies": {
+    "@modelcontextprotocol/client": "2.3.1",
+    "@modelcontextprotocol/server": "2.3.1",
     "@shikijs/rehype": "^4.5.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
@@ -24,6 +30,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^14.0.0",
     "fuse.js": "^7.5.0",
+    "jose": "6.2.12",
     "next": "^16.4.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
@@ -51,5 +58,11 @@
     "tsx": "4.23.15",
     "typescript": "~6.0.3",
     "vitest": "5.0.1"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.19"
   }
 }
