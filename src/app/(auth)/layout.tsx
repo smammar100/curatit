@@ -23,7 +23,7 @@ export default async function AuthLayout({ children }: { children: ReactNode }) 
     <BaseLayout hideNavigation hideFooter>
       <div className="relative min-h-dvh overflow-clip bg-white">
         <PostWall covers={covers} />
-        <div className="relative flex min-h-dvh items-center justify-center px-6 py-8">
+        <div className="relative flex min-h-dvh items-center justify-center px-4 py-8">
           {/* The one shadowed card on the site: it floats over imagery, and a ring would read
               as a stroke against the covers. A shadow cannot be seen in dark mode, so there a
               hairline ring takes over */}

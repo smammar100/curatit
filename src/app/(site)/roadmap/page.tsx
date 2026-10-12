@@ -1,0 +1,146 @@
+import type { Metadata } from "next";
+import Wrapper from "@/components/fundations/containers/Wrapper";
+import Text from "@/components/fundations/elements/Text";
+import { Lifeline, type LifelineEvent, type LifelineMarker } from "@/components/lifeline";
+import { CHANGELOG, EARLIER, ROADMAP, type RoadmapStage } from "@/content/roadmap";
+import { getPublishedPosts } from "@/lib/posts";
+
+export const metadata: Metadata = {
+  title: "Roadmap | Curatit",
+  description: "What Curatit has shipped, what's being built now and what's next, with a changelog of every update.",
+};
+
+export const revalidate = 3600;
+
+const REPO = "https://github.com/smammar100/curatit/commit/";
+
+const STAGES: { stage: RoadmapStage; when: string; note: string }[] = [
+  { stage: "Now", when: "In progress", note: "Being built or rolled out" },
+  { stage: "Next", when: "Up next", note: "Up after that" },
+  { stage: "Later", when: "On the list", note: "On the list" },
+];
+
+// Real library covers on the updates they belong to, shown by the lifeline as a hover image that
+// follows the cursor: the first real posts and a newly added brand. (The lifeline's floating photo cards need empty track after a day's text, and these days
+// sit side by side, so the cards covered the next day's updates.)
+const PICTURED: Record<string, string> = {
+  "Real posts from thirty brands across seven categories": "DdNIWqQPrFM",
+  "Bolt and Public join the library": "DeMn8pplKb2",
+};
+
+const shortDate = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+// "9–11 Oct", or "30 Sep – 2 Oct" across a month
+const dateRange = (from: string, to: string) =>
+  from === to ? shortDate(from) : from.slice(0, 7) === to.slice(0, 7) ? `${Number(from.slice(8))}–${shortDate(to)}` : `${shortDate(from)} – ${shortDate(to)}`;
+
+// The Roadmap (2026-10-12). The lifeline (vendored from evilrabbit/lifeline, components/lifeline)
+// carries the whole story on one rail: the days before the newest in a few lines, then each day
+// since in full, every update linked to the commit behind it, then Now, Next and Later. Below it, what's
+// coming in detail. Both come from src/content/roadmap.ts, written from this repo's history (npm
+// run changelog:draft lists the commits since the newest day)
+export default async function RoadmapPage() {
+  const posts = await getPublishedPosts();
+  const updates = CHANGELOG.reduce((n, day) => n + day.entries.length, 0);
+  const days = [...CHANGELOG].sort((a, b) => a.date.localeCompare(b.date));
+  const earlier = days.filter((day) => day.date <= EARLIER.through);
+  const since = days.filter((day) => day.date > EARLIER.through);
+
+  // One update on the rail: its title linked to the commit behind it, with a real post on hover
+  // when it has one; an update with no commit yet (this page) sets off the lifeline's fireworks
+  const update = (title: string, commit?: string): LifelineEvent => {
+    if (!commit) return { text: `${title} 🎆`, effect: "fireworks" };
+    const text = [{ type: "link" as const, value: title, href: `${REPO}${commit}` }];
+    const post = posts.find((candidate) => candidate.shortCode === PICTURED[title]);
+    return post ? { text, image: { src: post.images[0], alt: `${post.brand.name} on Instagram` } } : text;
+  };
+
+  const markers: LifelineMarker[] = [
+    ...(earlier.length
+      ? [
+          {
+            id: "earlier",
+            year: 0,
+            age: earlier.length > 1 ? `Days 1–${earlier.length}` : "Day 1",
+            label: dateRange(earlier[0].date, earlier[earlier.length - 1].date),
+            events: EARLIER.items.map(({ title, commit }) => update(title, commit)),
+          },
+        ]
+      : []),
+    ...since.map(
+      (day, i): LifelineMarker => ({
+        id: day.date,
+        year: i + 1,
+        age: `Day ${earlier.length + i + 1}`,
+        label: shortDate(day.date),
+        events: day.entries.map((entry) => update(entry.title, entry.commits[0])),
+      }),
+    ),
+    ...STAGES.map(
+      ({ stage, when }, i): LifelineMarker => ({
+        id: `stage-${stage}`,
+        year: since.length + 1 + i,
+        age: stage,
+        label: when,
+        events: ROADMAP.filter((item) => item.stage === stage).map((item) => item.title),
+      }),
+    ),
+  ];
+
+  return (
+    <>
+      <section>
+        <Wrapper variant="standard" className="pt-28 lg:pt-40">
+          <div className="max-w-2xl">
+            <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 text-balance">
+              Roadmap
+            </Text>
+            <Text className="mt-6 text-pretty text-base-600">
+              What&apos;s been built, what&apos;s being built and what&apos;s next, on one line. Curatit is built in the open: every update links to the
+              change that made it.
+            </Text>
+            <Text variant="textSM" className="mt-4 text-base-500">
+              {updates} updates across {days.length} days of building. Scroll over the line to travel along it.
+            </Text>
+          </div>
+        </Wrapper>
+      </section>
+
+      <section aria-label="Curatit's lifeline">
+        <Wrapper variant="standard" className="pt-14">
+          <div className="h-[580px] w-full overflow-hidden">
+            <Lifeline mode="embed" markers={markers} birthYear={0} title="Curatit's lifeline" labels={{ age: "Stage", year: "When" }} className="h-full" />
+          </div>
+        </Wrapper>
+      </section>
+
+      <section aria-labelledby="coming">
+        <Wrapper variant="standard" className="pt-24 pb-32">
+          <Text tag="h2" id="coming" variant="displaySM" className="font-display font-thin text-base-900">
+            What&apos;s coming
+          </Text>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {STAGES.map(({ stage, note }) => (
+              <section key={stage} aria-labelledby={`stage-${stage}`} className="rounded-2xl bg-base-50 p-5 lg:p-6">
+                <div className="flex items-baseline justify-between gap-3">
+                  <h3 id={`stage-${stage}`} className="text-base font-medium text-base-900">
+                    {stage}
+                  </h3>
+                  <p className="text-xs text-base-500">{note}</p>
+                </div>
+                <ul className="mt-5 space-y-3">
+                  {ROADMAP.filter((item) => item.stage === stage).map((item) => (
+                    <li key={item.title} className="rounded-xl bg-white p-4 shadow-xs ring-1 ring-edge">
+                      <p className="text-xs font-medium tracking-wide text-base-500 uppercase">{item.area}</p>
+                      <p className="mt-1 text-sm font-medium text-base-900">{item.title}</p>
+                      <p className="mt-1 text-sm text-pretty text-base-600">{item.detail}</p>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </Wrapper>
+      </section>
+    </>
+  );
+}

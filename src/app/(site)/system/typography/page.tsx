@@ -25,7 +25,7 @@ export default function TypographyPage() {
   return (
     <section>
       <Wrapper variant="standard" className="py-24 lg:pt-48">
-        <Text tag="h1" variant="displayLG" className="text-base-900 font-display font-thin">
+        <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
           Typography: Inter &amp; Hedvig Letters Serif
         </Text>
 

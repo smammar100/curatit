@@ -71,7 +71,7 @@ export default function Categories({ posts }: { posts: LibraryPost[] }) {
         <div
           role="tablist"
           aria-label="Category"
-          className="scrollbar-hide -mx-8 mt-12 flex gap-1 overflow-x-auto px-8 py-0.5 sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0"
+          className="scrollbar-hide -mx-4 mt-12 flex gap-1 overflow-x-auto px-4 py-0.5 sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0"
         >
           {categories.map((category) => {
             const selected = category.category === active;
