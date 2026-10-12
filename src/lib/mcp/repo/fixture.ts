@@ -145,7 +145,7 @@ export function createFixtureCatalog(): CatalogRepository & { calls: string[] } 
         if (request.category && post.categories[0]?.slug !== request.category) return false;
         if (request.brand && post.brand.slug !== request.brand) return false;
         if (request.format && post.format !== request.format) return false;
-        if (request.analysed_only && !("analysis_version" in post.creative)) return false;
+        if (request.analysed_only && !(post.creative && "analysis_version" in post.creative)) return false;
         const c = compact(post);
         for (const [dim, values] of filterDims) {
           const wanted = Array.isArray(values) ? values : [String(values)];
