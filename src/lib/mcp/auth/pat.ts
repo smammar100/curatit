@@ -18,16 +18,21 @@ export function isPersonalAccessToken(token: string) {
   return token.startsWith(PAT_PREFIX);
 }
 
+// These run in the browser (the tokens page makes the token) as well as on the server, so they
+// use Web Crypto and their own encoders: there is no Buffer in a browser
+const base64url = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+
 // A new token: the secret for the owner, the hash and display prefix for the table
 export async function mintToken() {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
-  const secret = PAT_PREFIX + Buffer.from(bytes).toString("base64url");
+  const secret = PAT_PREFIX + base64url(bytes);
   return { secret, hash: await hashToken(secret), prefix: secret.slice(0, PAT_PREFIX.length + 8) };
 }
 
 export async function hashToken(secret: string) {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(secret));
-  return Buffer.from(digest).toString("hex");
+  return hex(new Uint8Array(digest));
 }
 
 export function parseScopes(values: string[]): Scope[] {
