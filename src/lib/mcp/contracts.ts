@@ -205,7 +205,12 @@ export const SearchHitSchema = z.object({
   format: FormatSchema,
   posted_at: z.string().nullable(),
   caption_excerpt: z.string().describe("The first 240 characters of the caption."),
-  thumbnail: z.object({ available: z.boolean(), media_id: MediaIdSchema.nullable() }),
+  thumbnail: z.object({
+    available: z.boolean(),
+    media_id: MediaIdSchema.nullable(),
+    // A public Curatit-owned cover preview that MCP Apps clients can render without another call.
+    url: z.string().url().nullable(),
+  }),
   classification: ClassificationSchema.nullable(),
   analysis_available: z.boolean(),
   match_reasons: z.array(z.string()).describe("Why it matched: the fields the query hit and the labels the filters hit, with the slides they were seen on."),
