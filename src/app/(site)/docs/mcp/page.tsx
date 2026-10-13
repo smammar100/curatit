@@ -11,6 +11,7 @@ import TerminalWindow from "@/components/fundations/icons/TerminalWindow";
 import SealCheck from "@/components/fundations/icons/SealCheck";
 // Components
 import CopyBlock from "@/components/mcp/CopyBlock";
+import { MCP_URL, TOOLS } from "@/components/mcp/tools";
 
 export const metadata: Metadata = {
   title: "Connect your AI tools | Curatit",
@@ -23,7 +24,6 @@ export const metadata: Metadata = {
 // ready to copy, then what the tools do. Every snippet puts the token in the environment, never
 // in the file. Server rendered; CopyBlock is the only script.
 
-const MCP_URL = "https://curatit.vercel.app/mcp";
 const TOKEN = "paste-your-token-here";
 
 const CLIENTS: { name: string; status: "remote" | "bridge" | "soon"; how: string; code: string; note?: string }[] = [
@@ -86,14 +86,6 @@ const CLIENTS: { name: string; status: "remote" | "bridge" | "soon"; how: string
   },
 ];
 
-const TOOLS = [
-  { name: "curatit_get_taxonomy", does: "The values every filter accepts: industries, brands, formats, goals, creative approaches and the visual dimensions." },
-  { name: "curatit_search_posts", does: "Find real posts by words and filters, with why each one matched. Nothing is relaxed behind your back." },
-  { name: "curatit_get_post", does: "One post in full: caption, counts as collected, every slide, and its editor-approved analysis." },
-  { name: "curatit_get_carousel", does: "A carousel's slides in order, a page at a time, each with its analysis record." },
-  { name: "curatit_get_media", does: "A slide's image, as a link or inline for tools that can look at pictures." },
-  { name: "curatit_create_brief", does: "An original creative brief grounded in one to eight posts: observed, inferred and recommended, kept apart." },
-];
 
 const STATUS: Record<(typeof CLIENTS)[number]["status"], string> = { remote: "Connects directly", bridge: "Through the bridge", soon: "Coming" };
 
