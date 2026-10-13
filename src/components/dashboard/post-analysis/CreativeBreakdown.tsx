@@ -9,10 +9,10 @@
 // - Visual DNA: composition, typography, colour (the post's colours with their jobs, copyable),
 //   imagery, visual devices, and branding & consistency, each one insight, a few attributes and
 //   the slides that show them; on a carousel, what stays the same and the sequence as a bar.
-// Beside the tabs, Copy creative brief puts the brief on the clipboard as a Markdown prompt to
-// paste into any LLM (2026-10-13, at the person's request: it replaced the Apply tab, whose formula
-// chips and lists now live inside the brief). The tabs are a segmented control (a track with two
-// equal segments, the open one filled), and the bar stays in view while the panel scrolls, and switching tabs brings the new tab's
+// Beside the tabs, Copy brief puts the brief on the clipboard as a Markdown prompt to paste into
+// any LLM (2026-10-13, at the person's request: it replaced the Apply tab, whose formula chips and
+// lists now live inside the brief). Both are the panel's own pieces: the tabs as they always were,
+// the button the same as the Instagram link above it. The bar stays in view while the panel scrolls, and switching tabs brings the new tab's
 // start into view. One slide index in PostView drives the stage, ← / →, the bar and every slide
 // link, so they never disagree; a single image has no slide links at all (it's always on screen).
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
@@ -116,9 +116,8 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
     <div>
       <div ref={top} aria-hidden="true" />
       {/* Sticky over the panel's own padding (px-6 in PostView), so content slides under it */}
-      <div className="sticky top-0 z-10 -mx-6 flex items-center gap-2 bg-white px-6 py-2">
-        {/* A segmented control: equal segments on a visible track, so the views read as tabs */}
-        <div role="tablist" aria-label="Creative breakdown" onKeyDown={onTabKey} className="grid min-w-0 flex-1 auto-cols-fr grid-flow-col gap-1 rounded-full bg-base-100 p-1 ring-1 ring-base-200 ring-inset">
+      <div className="sticky top-0 z-10 -mx-6 flex items-center justify-between gap-2 bg-white px-6 py-1.5">
+        <div role="tablist" aria-label="Creative breakdown" onKeyDown={onTabKey} className="-mx-1 flex min-w-0 scrollbar-hide gap-1 overflow-x-auto px-1 py-1">
           {views.map((v) => (
             <button
               key={v.id}
@@ -132,10 +131,7 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
               aria-controls="breakdown-panel"
               tabIndex={view === v.id ? 0 : -1}
               onClick={() => choose(v.id)}
-              className={cx(
-                "relative inline-flex h-9 min-w-0 items-center justify-center rounded-full px-3 text-subtitle font-medium whitespace-nowrap transition-[background-color,color,box-shadow] duration-150 before:absolute before:inset-x-0 before:-inset-y-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400",
-                view === v.id ? "bg-base-900 text-white shadow-sm" : "text-base-700 hover:bg-white hover:text-base-900",
-              )}
+              className="relative inline-flex h-9 shrink-0 items-center rounded-full px-3.5 text-body font-medium whitespace-nowrap text-base-600 transition-[background-color,color] duration-150 before:absolute before:inset-x-0 before:-inset-y-1 hover:bg-base-50 hover:text-base-900 aria-selected:bg-base-900 aria-selected:text-white"
             >
               {v.label}
             </button>
@@ -525,10 +521,11 @@ function mostCommon(roles: (string | null)[]) {
   return n > 1 ? role : null;
 }
 
-// ---- Copy creative brief ----
+// ---- Copy brief ----
 
 // Puts the brief on the clipboard as Markdown (briefMarkdown: a prompt any LLM can act on), and
-// says so: the label turns to Copied for a moment, and a status line tells screen readers
+// says so: the label turns to Copied for a moment, and a status line tells screen readers. Styled
+// as PostView's Instagram link: a quiet grey pill, the icon after the words
 function CopyBrief({ analysis, source }: { analysis: PublicAnalysis; source: BriefSource }) {
   const brief = useMemo(() => briefMarkdown(analysis, source), [analysis, source]);
   const [state, setState] = useState<"copied" | "failed" | null>(null);
@@ -543,10 +540,10 @@ function CopyBrief({ analysis, source }: { analysis: PublicAnalysis; source: Bri
         type="button"
         onClick={() => navigator.clipboard.writeText(brief).then(() => setState("copied"), () => setState("failed"))}
         title="Copy a creative brief, in Markdown, to paste into ChatGPT, Claude or any AI tool"
-        className="relative inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-subtitle font-medium whitespace-nowrap text-base-900 ring-1 ring-base-200 transition-[background-color,scale] duration-150 ring-inset hover:bg-base-50 active:scale-[0.96]"
+        className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-base-50 pr-3 pl-3.5 text-body font-medium whitespace-nowrap text-base-900 transition-[background-color,scale] duration-150 hover:bg-base-100 active:scale-[0.96]"
       >
-        {state === "copied" ? <Check className="size-4" /> : <Copy className="size-4" />}
-        {state === "copied" ? "Copied" : state === "failed" ? "Couldn't copy" : "Copy creative brief"}
+        {state === "copied" ? "Copied" : state === "failed" ? "Couldn't copy" : "Copy brief"}
+        {state === "copied" ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
       </button>
       <span role="status" className="sr-only">
         {state === "copied" ? "Creative brief copied. Paste it into your AI tool." : state === "failed" ? "Couldn't copy the brief here." : ""}
