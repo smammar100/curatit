@@ -1,6 +1,6 @@
 // Product analytics through PostHog, kept off the critical path. posthog-js is about 55 KB
-// gzipped, so it's fetched only when something asks for it: the browser's first idle moment
-// after load (src/instrumentation-client.ts) or the first event, whichever comes sooner. Every
+// gzipped, so it's fetched only when something asks for it: the page settling after load
+// (src/instrumentation-client.ts) or the first event, whichever comes sooner. Every
 // call waits for the same load, in the order it was made, so an identify made while PostHog
 // is still loading isn't lost and still lands before the events that follow it. With no
 // project token configured (a fork, a preview without the variables), everything here does

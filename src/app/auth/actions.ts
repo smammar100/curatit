@@ -6,7 +6,9 @@
 // exchanges the ?code= for a session (PKCE: it has to be the browser that started the flow).
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { isAuthWeakPasswordError, type AuthError } from "@supabase/supabase-js";
+import { captureServerEvent } from "@/lib/analytics-server";
 import { authMessage, emailProblem, passwordProblem, safeNext } from "@/lib/auth";
 import { SITE_URL } from "@/lib/site";
 import { createClient } from "@/utils/supabase/server";
@@ -15,7 +17,9 @@ import { createClient } from "@/utils/supabase/server";
 // fields (shown under them, like the form's own checks), the address an email went to, and the
 // email typed (React clears a form after its action, so it comes back as the field's default)
 export type AuthFields = Partial<Record<"email" | "password", string>>;
-export type AuthState = { error?: string; fields?: AuthFields; sent?: string; email?: string };
+// userId comes back only from a sign-up that created a new account, so the browser can identify
+// with it at once (the person who just made the account is the one holding this browser)
+export type AuthState = { error?: string; fields?: AuthFields; sent?: string; email?: string; userId?: string };
 
 // The fields that have a problem, or null when none do
 function invalid(fields: Record<keyof AuthFields, string | null | undefined>): AuthFields | null {
@@ -79,9 +83,14 @@ export async function signUp(_: AuthState, form: FormData): Promise<AuthState> {
   // instead (chosen 2026-10-11: being clear beats hiding who has an account). An existing account
   // that was never confirmed comes back with its identity, and Supabase sends the link again.
   if (data.user && !data.user.identities?.length) return taken;
+  // Analytics: a new account, as opposed to Supabase resending an unconfirmed one's link (that
+  // account was made earlier). It's the onboarding funnel's second step, after the sign-up page.
+  const user = data.user;
+  const created = user && Date.now() - new Date(user.created_at).getTime() < 2 * 60_000 ? user : null;
+  if (created) after(() => captureServerEvent(created.id, "signed_up", { confirmation_required: !data.session }));
   // With confirmation off there's a session already; otherwise the link finishes it
   if (data.session) redirect(next);
-  return { sent: email };
+  return { sent: email, userId: created?.id };
 }
 
 export async function resendConfirmation(_: AuthState, form: FormData): Promise<AuthState> {

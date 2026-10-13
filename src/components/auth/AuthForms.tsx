@@ -18,6 +18,7 @@ import {
   type AuthFields,
   type AuthState,
 } from "@/app/auth/actions";
+import { identify } from "@/lib/analytics";
 import { authMessage, emailProblem, passwordProblem, SIGNUP_EMAIL_KEY } from "@/lib/auth";
 import { SUPPORT_MAILTO } from "@/lib/site";
 import { AuthField, AuthNotice } from "./AuthParts";
@@ -175,6 +176,11 @@ export function SignUpForm() {
     const field = document.getElementById("email") as HTMLInputElement | null;
     if (email && field && !field.value) field.value = email;
   }, []);
+  // Analytics: tie this browser's visit to the new account now, not only once the email is
+  // confirmed, so a sign-up that stops at the email still counts in the funnel
+  useEffect(() => {
+    if (state.userId) identify(state.userId, { email: state.sent });
+  }, [state.userId, state.sent]);
   if (state.sent) return <CheckEmail email={state.sent} />;
   const error = check.any ? null : state.error;
   return (

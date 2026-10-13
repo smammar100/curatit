@@ -23,6 +23,8 @@ import { BrandGrid, Collage, Done, Heading, LearnedChips, NameRole, Progress, Ri
 
 const TASTE = 3;
 const TASTE_TILES = 16;
+// The steps' names in analytics (onboarding_step_completed's `step`), in order
+const STEP_NAMES = ["name", "industries", "brands", "taste"] as const;
 const STEPS = [
   { title: "What should we call you?", sub: "First name is fine." },
   { title: "Which industries do you work in?", sub: "Pick at least one. Their posts come first." },
@@ -46,6 +48,7 @@ export default function Welcome() {
   const [failed, setFailed] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const mounted = useRef(false);
+  const started = useRef(false);
 
   // Start from what's on the profile already (empty the first time, the old answers on a redo)
   useEffect(() => {
@@ -54,6 +57,13 @@ export default function Welcome() {
     const picks = profile.taste.filter((code) => known.has(code));
     setDraft({ name: profile.name, occupation: profile.occupation, industries: profile.industries, brands: profile.brands, taste: picks });
     setStart({ redo: !!profile.onboardedAt, picks });
+    // Analytics: the onboarding funnel's welcome step. `redo` marks a visit from the account
+    // menu's Personalise your feed, which the funnel leaves out. The ref keeps it to once, even
+    // when development runs effects twice.
+    if (!started.current) {
+      started.current = true;
+      track("onboarding_started", { redo: !!profile.onboardedAt });
+    }
   }, [status, profile, draft, posts]);
 
   // Each step (and the end) takes focus to its question, so keyboard and screen-reader users
@@ -97,16 +107,23 @@ export default function Welcome() {
   const ready = [true, draft.industries.length > 0, true, draft.taste.length >= TASTE][step] ?? true;
   const full = draft.taste.length >= TASTE;
 
+  // Analytics: one event per step finished, with how many things were picked on it (never what)
+  const stepDone = (selections: number) =>
+    track("onboarding_step_completed", { step: STEP_NAMES[step], step_number: step + 1, selection_count: selections, redo: start.redo });
+  const selections = () => [draft.name.trim() ? 1 : 0, draft.industries.length, draft.brands.length, draft.taste.length][step] ?? 0;
+
   const finish = async () => {
     setSaving("finish");
     setFailed(false);
     const ok = await save({ ...draft, onboardedAt: new Date().toISOString() });
     setSaving(null);
     if (ok) {
+      stepDone(draft.taste.length);
       track("onboarding_completed", {
         brand_count: draft.brands.length,
         industry_count: draft.industries.length,
         taste_selection_count: draft.taste.length,
+        redo: start.redo,
       });
       setStep(STEPS.length);
     } else setFailed(true);
@@ -119,7 +136,7 @@ export default function Welcome() {
     setFailed(false);
     const ok = await save({ ...draft, onboardedAt: new Date().toISOString() });
     if (ok) {
-      track("onboarding_skipped", { completed_step_count: step });
+      track("onboarding_skipped", { completed_step_count: step, step: STEP_NAMES[step] ?? "done" });
       return router.replace("/dashboard");
     }
     setSaving(null);
@@ -173,8 +190,9 @@ export default function Welcome() {
               onSubmit={(e) => {
                 e.preventDefault();
                 if (!ready || saving) return;
-                if (step === STEPS.length - 1) finish();
-                else setStep((s) => s + 1);
+                if (step === STEPS.length - 1) return finish();
+                stepDone(selections());
+                setStep((s) => s + 1);
               }}
             >
               <Progress step={step} total={STEPS.length} className="mb-8" />
@@ -211,6 +229,7 @@ export default function Welcome() {
                     type="button"
                     onClick={() => {
                       patch({ brands: [] });
+                      stepDone(0);
                       setStep((s) => s + 1);
                     }}
                     className={textButton}
