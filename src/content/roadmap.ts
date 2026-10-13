@@ -12,7 +12,9 @@
 // a new day is added, fold the previous one into the summary and move `through` on.
 
 export type RoadmapStage = "Now" | "Next" | "Later";
-export type RoadmapItem = { stage: RoadmapStage; area: string; title: string; detail: string };
+// `celebrate` sets off the lifeline's fireworks when the item is clicked on the rail, like the
+// roadmap's own changelog entry; `brands` shows the marks of the three newest brands under it on the rail
+export type RoadmapItem = { stage: RoadmapStage; area: string; title: string; detail: string; celebrate?: boolean; brands?: boolean };
 export type ChangelogEntry = { area: string; title: string; detail: string; commits: string[] };
 export type ChangelogDay = { date: string; headline: string; entries: ChangelogEntry[] };
 export type SummaryItem = { title: string; commit: string };
@@ -20,12 +22,13 @@ export type SummaryItem = { title: string; commit: string };
 export const ROADMAP: RoadmapItem[] = [
   { stage: "Now", area: "AI agents", title: "Curatit MCP in development", detail: "Connect Curatit to Claude, Cursor, VS Code and other AI tools, so they can search the library and pull a post's breakdown from inside the tool. The server is built; the connection isn't released yet." },
   { stage: "Now", area: "Creative Intelligence", title: "Breakdowns across the whole library", detail: "Breakdowns are drafted by AI and appear only once an editor approves them. Every post in the library has one now, and new posts get theirs as they join." },
-  { stage: "Now", area: "Library", title: "More brands", detail: "New brands join a few at a time, each with a handful of recent posts. Bolt and Public are the latest, and newly added posts now show near the top of your feed." },
+  { stage: "Now", area: "Library", title: "More brands", detail: "New brands join a few at a time, each with a handful of recent posts. Bolt and Public are the latest, and newly added posts now show near the top of your feed.", brands: true },
   { stage: "Next", area: "AI agents", title: "Testing Curatit MCP", detail: "Trying the connection in Claude, Cursor, VS Code, Gemini and ChatGPT before it's released, and fixing what breaks." },
   { stage: "Later", area: "Updates", title: "Drafting email templates", detail: "The emails Curatit sends, from confirming your address to telling you when new posts land." },
   { stage: "Later", area: "Library", title: "More and more posts", detail: "More brands and more of their recent posts, added a few at a time." },
   { stage: "Later", area: "Search", title: "Improving search", detail: "Better matching for briefs, categories and creative labels, so the right references come up first." },
   { stage: "Later", area: "Site", title: "Design system updates", detail: "Tidying the components and styles the site and the dashboard share, so every page looks and behaves the same." },
+  { stage: "Later", area: "Launch", title: "Launching closed beta", detail: "Opening Curatit to a first group of people to use it every day and tell us what to fix.", celebrate: true },
 ];
 
 // Everything up to and including `through`, in a few lines (the full entries are in CHANGELOG)

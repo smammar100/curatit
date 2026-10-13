@@ -55,6 +55,9 @@ export interface LifelineEventObject {
   text: string | LifelineEventSegment[]
   image?: LifelineEventImage
   effect?: LifelineEventEffect
+  /** Curatit: small round images under the text, overlapping like a cluster (the Roadmap's "More
+   * brands" shows the newest brands' marks), with an optional `more` counted after them */
+  gallery?: { images: { src: string; alt: string }[]; more?: number; label: string }
 }
 
 export type LifelineEvent =
