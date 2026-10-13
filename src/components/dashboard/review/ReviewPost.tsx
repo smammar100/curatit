@@ -70,6 +70,9 @@ export function PostReviewView({ data, onRefresh }: { data: PostReview; onRefres
   const compare = data.versions.find((v) => v.id === compareId && v.id !== version?.id) ?? null;
   const slides = useMemo(() => new Map(data.slides.filter((s) => s.version_id === version?.id).map((row) => [row.position, row.observation])), [data, version]);
   const isCurrent = version && analysis?.current_version_id === version.id;
+  // An undecided version older than the current one was passed over, not waiting
+  const currentNo = data.versions.find((v) => v.id === analysis?.current_version_id)?.version_no ?? null;
+  const olderDraft = (v: { version_no: number; review_decision: string | null }) => !v.review_decision && currentNo !== null && v.version_no < currentNo;
   const dna = version?.creative_dna;
 
   // The post's page in the dashboard shows the published analysis; rebuild it now, not within the hour
@@ -127,7 +130,7 @@ export function PostReviewView({ data, onRefresh }: { data: PostReview; onRefres
 
           {version && (
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
-              {isCurrent && analysis ? <StatusPill status={analysis.review_status} /> : <Pill>{version.review_decision === "rejected" ? "Rejected" : version.review_decision === "approved" ? "Approved earlier" : "Proposal"}</Pill>}
+              {isCurrent && analysis ? <StatusPill status={analysis.review_status} /> : <Pill>{version.review_decision === "rejected" ? "Rejected" : version.review_decision === "approved" ? "Approved earlier" : olderDraft(version) ? "Older draft" : "Proposal"}</Pill>}
               <Pill>{sourceLabel(version.source)}</Pill>
               {isCurrent && analysis?.published_at ? <Pill tone="strong">Public</Pill> : <Pill>Not public</Pill>}
               <Pill tone={version.image_analysis_complete ? "plain" : "danger"} title="Slides the model was shown and recorded">
@@ -229,7 +232,7 @@ export function PostReviewView({ data, onRefresh }: { data: PostReview; onRefres
                   >
                     v{v.version_no} · {v.source === "ai" ? "AI" : v.source === "mixed" ? "edited" : "editor"}
                     {analysis?.current_version_id === v.id && " · current"}
-                    {v.review_decision && ` · ${v.review_decision}`}
+                    {v.review_decision ? ` · ${v.review_decision}` : olderDraft(v) && " · older draft"}
                   </button>
                 ))}
               </div>

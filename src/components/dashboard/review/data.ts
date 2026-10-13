@@ -157,21 +157,24 @@ export async function loadQueue(): Promise<Queue> {
   const [{ data: analyses }, { data: proposals }, { data: failedJobs }, { data: runs }, { data: oldest }] = await Promise.all([
     supabase
       .from("post_analyses")
-      .select("post_id, current_version_id, review_status, analysis_source, published_at, reviewed_at, updated_at, creative_dna, summary")
+      .select("post_id, current_version_id, review_status, analysis_source, published_at, reviewed_at, updated_at, creative_dna, summary, current:post_analysis_versions!post_analyses_current_version_fkey(version_no)")
       .order("updated_at", { ascending: false })
       .limit(300),
     // Newer analyses waiting beside a reviewed one
-    supabase.from("post_analysis_versions").select("id, post_id").is("review_decision", null).order("created_at", { ascending: false }).limit(300),
+    supabase.from("post_analysis_versions").select("id, post_id, version_no").is("review_decision", null).order("created_at", { ascending: false }).limit(300),
     supabase.from("classification_jobs").select("*").eq("state", "failed").order("updated_at", { ascending: false }).limit(50),
     supabase.from("creative_analysis_runs").select("*").order("started_at", { ascending: false }).limit(30),
     supabase.from("classification_jobs").select("created_at").eq("state", "pending").order("created_at").limit(1),
   ]);
 
-  type AnalysisRow = Analysis & { post_id: string; creative_dna: CreativeDna | null; summary: string };
-  const byPost = new Map<string, AnalysisRow>(((analyses ?? []) as AnalysisRow[]).map((row) => [row.post_id, row]));
+  type AnalysisRow = Analysis & { post_id: string; creative_dna: CreativeDna | null; summary: string; current: { version_no: number } | null };
+  const byPost = new Map<string, AnalysisRow>(((analyses ?? []) as unknown as AnalysisRow[]).map((row) => [row.post_id, row]));
   const proposalCount = new Map<string, number>();
-  for (const row of (proposals ?? []) as { id: string; post_id: string }[]) {
-    if (byPost.get(row.post_id)?.current_version_id === row.id) continue;
+  for (const row of (proposals ?? []) as { id: string; post_id: string; version_no: number }[]) {
+    const current = byPost.get(row.post_id);
+    if (current?.current_version_id === row.id) continue;
+    // Only a version newer than the current one is waiting; an older one left undecided is history
+    if (current?.current && row.version_no <= current.current.version_no) continue;
     proposalCount.set(row.post_id, (proposalCount.get(row.post_id) ?? 0) + 1);
   }
   const jobByPost = new Map<string, Job>(((failedJobs ?? []) as Job[]).map((job) => [job.post_id, job]));
