@@ -91,6 +91,9 @@ Usage rules:
   Never use accent for headings, body copy, or section backgrounds.
 - There are no tinted color panels and no hue rotation - the page stays
   monochrome warm gray; the screenshots inside cards provide the color.
+  One named exception: the MCP landing page's install panel (`.mcp-gradient`
+  on `/agents`, after ElevenLabs' MCP page), a soft, low-chroma sage, sky and
+  sand wash behind the install card. Don't reuse it elsewhere.
 - Dark surfaces are rare and purposeful: the site footer's inset panel and the Vision page's
   "Night" panel (`.vision-night`, the dark tokens scoped to one inset panel, inverting to paper
   on the dark site like the footer; both panels round at `rounded-[1.5rem]`/`[2rem]`, a named
