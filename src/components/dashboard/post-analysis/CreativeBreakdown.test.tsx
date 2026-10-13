@@ -212,13 +212,13 @@ describe("CreativeBreakdown: Visual DNA", () => {
   });
 });
 
-describe("CreativeBreakdown: Copy creative brief", () => {
+describe("CreativeBreakdown: Copy brief", () => {
   it("sits beside the tabs in place of an Apply tab and copies the brief as a Markdown prompt", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
     render(<Harness analysis={galleryAnalysis()} />);
     expect(tabNames()).not.toContain("Apply");
-    await act(async () => button(container, /^Copy creative brief$/)!.click());
+    await act(async () => button(container, /^Copy brief$/)!.click());
     const brief = writeText.mock.calls[0][0] as string;
     expect(brief.startsWith("# Creative brief: ")).toBe(true);
     expect(brief).toContain("You are a senior creative director.");
