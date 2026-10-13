@@ -7,11 +7,12 @@ import Wrapper from "@/components/fundations/containers/Wrapper";
 // Components
 import ThemeToggle from "@/components/global/ThemeToggle";
 import MobileNav from "./MobileNav";
-// Quick access links
+// Quick access links; `soon` adds a small Soon chip after the label
 const links = [
   { href: "/pricing", text: "Pricing" },
   { href: "/vision", text: "Vision" },
   { href: "/roadmap", text: "Roadmap" },
+  { href: "/agents", text: "MCP", soon: true },
 ];
 
 export default function Navigation() {
@@ -29,10 +30,13 @@ export default function Navigation() {
               {links.map((link) => (
                 <Link
                   key={link.href}
-                  className="text-base-600 hover:text-base-900 text-xs whitespace-nowrap"
+                  className="inline-flex items-center gap-1.5 text-base-600 hover:text-base-900 text-xs whitespace-nowrap"
                   href={link.href}
                 >
                   {link.text}
+                  {link.soon && (
+                    <span className="rounded px-1 py-0.5 text-[10px]/none font-medium text-base-600 ring-1 ring-base-200">Soon</span>
+                  )}
                 </Link>
               ))}
             </div>
