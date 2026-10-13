@@ -70,6 +70,8 @@ export interface LifelineMarker {
   age?: number | string
   /** Shown in place of the raw year — e.g. "Jun 16" on a day-based timeline. */
   label?: string
+  /** Curatit: drawn as if hovered all the time (the Roadmap's "Now" column, what's in progress) */
+  current?: boolean
   events: LifelineEvent[]
   /** Small emblems (team shields etc.) rendered above the events. */
   badges?: { src: string; alt: string }[]
