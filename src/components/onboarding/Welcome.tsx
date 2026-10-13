@@ -17,6 +17,7 @@ import { useBoards } from "@/components/dashboard/boards";
 import { rank } from "@/components/dashboard/forYou";
 import { useProfile } from "@/components/dashboard/profile";
 import { cx } from "@/lib/cx";
+import { track } from "@/lib/analytics";
 import { FolderTiles } from "./Folders";
 import { BrandGrid, Collage, Done, Heading, LearnedChips, NameRole, Progress, Ring, TasteGrid, brandsOf, categoriesOf, type Draft } from "./parts";
 
@@ -101,8 +102,14 @@ export default function Welcome() {
     setFailed(false);
     const ok = await save({ ...draft, onboardedAt: new Date().toISOString() });
     setSaving(null);
-    if (ok) setStep(STEPS.length);
-    else setFailed(true);
+    if (ok) {
+      track("onboarding_completed", {
+        brand_count: draft.brands.length,
+        industry_count: draft.industries.length,
+        taste_selection_count: draft.taste.length,
+      });
+      setStep(STEPS.length);
+    } else setFailed(true);
   };
   // Skip keeps what's been answered so far and notes you've been here, so it doesn't ask again.
   // If that can't be saved, the feed would only send you back, so stay and say so.
@@ -111,7 +118,10 @@ export default function Welcome() {
     setSaving("skip");
     setFailed(false);
     const ok = await save({ ...draft, onboardedAt: new Date().toISOString() });
-    if (ok) return router.replace("/dashboard");
+    if (ok) {
+      track("onboarding_skipped", { completed_step_count: step });
+      return router.replace("/dashboard");
+    }
     setSaving(null);
     setFailed(true);
   };

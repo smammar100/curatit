@@ -27,6 +27,7 @@ import { createClient } from "@/utils/supabase/client";
 import { cx } from "@/lib/cx";
 import { hashToken, mintToken, PAT_DEFAULT_DAYS, PAT_MAX_DAYS } from "@/lib/mcp/auth/pat";
 import { SCOPES, type Scope } from "@/lib/mcp/config";
+import { track } from "@/lib/analytics";
 import { feedHref } from "./Feed";
 import Header from "./Header";
 
@@ -74,6 +75,7 @@ export default function ApiTokens() {
     const expires = new Date(Date.now() + days * DAY).toISOString();
     const { error } = await createClient().from("api_tokens").insert({ name, prefix: token.prefix, token_hash: await hashToken(token.secret), scopes, expires_at: expires });
     if (error) throw error;
+    track("api_token_created", { expiry_days: days, scope_count: scopes.length });
     setFresh({ secret: token.secret, name });
     setOpen(false);
     await load();
@@ -83,7 +85,10 @@ export default function ApiTokens() {
     if (!confirm(`Revoke "${token.name}"? Anything using it stops working at once.`)) return;
     const { error } = await createClient().from("api_tokens").update({ revoked_at: new Date().toISOString() }).eq("id", token.id);
     if (error) setLoadError("The token couldn't be revoked. Try again.");
-    else await load();
+    else {
+      track("api_token_revoked", { scope_count: token.scopes.length });
+      await load();
+    }
   };
 
   const live = tokens?.filter((token) => !isDead(statusOf(token))).length ?? 0;

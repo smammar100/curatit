@@ -6,6 +6,7 @@
 import { createContext, use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { User as AuthUser } from "@supabase/supabase-js";
+import { identify, resetAnalytics } from "@/lib/analytics";
 import { cx } from "@/lib/cx";
 import { createClient } from "@/utils/supabase/client";
 
@@ -31,7 +32,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const { data } = createClient().auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_OUT") return router.replace("/signin");
+      if (event === "SIGNED_OUT") {
+        resetAnalytics();
+        setUser(null);
+        return router.replace("/signin");
+      }
+
+      if (session?.user && (event === "INITIAL_SESSION" || event === "SIGNED_IN")) {
+        const currentUser = fromAuth(session.user);
+        identify(session.user.id, {
+          name: currentUser.name,
+          ...(session.user.email ? { email: session.user.email } : {}),
+        });
+        setUser(currentUser);
+        return;
+      }
+
       setUser(session?.user ? fromAuth(session.user) : null);
     });
     return () => data.subscription.unsubscribe();
