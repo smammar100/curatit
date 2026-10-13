@@ -18,7 +18,7 @@ Base `https://curatit.vercel.app/api/v1`, `Authorization: Bearer <token>`, JSON 
 Query strings: `filters.layouts=framed-card,list-stack`; repeated keys make arrays; `true`, `false` and integers are typed.
 
 ```bash
-curl -s https://curatit.vercel.app/api/v1/posts/search -H "Authorization: Bearer $CURATIT_ACCESS_TOKEN" -H "Content-Type: application/json" -d '{"filters":{"industries":["fintech"],"formats":["carousel"]},"limit":3}'
+curl -s https://curatit.vercel.app/api/v1/posts/search -H "Authorization: Bearer $CURATIT_ACCESS_TOKEN" -H "Content-Type: application/json" -d '{"filters":{"industries":["finance"],"formats":["carousel"]},"limit":3}'
 ```
 
 ## The model adapter

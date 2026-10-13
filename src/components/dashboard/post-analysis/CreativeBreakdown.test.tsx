@@ -85,7 +85,7 @@ const cards = () => [...panel().querySelectorAll<HTMLButtonElement>("ol > li > b
 describe("CreativeBreakdown: Breakdown", () => {
   it("opens on the strategy, its traits and the key decisions, the first open on its explanation", () => {
     render(<Harness analysis={galleryAnalysis()} />);
-    expect(tabNames()).toEqual(["Breakdown", "Visual DNA", "Apply"]);
+    expect(tabNames()).toEqual(["Breakdown", "Visual DNA"]);
     expect(tab("Breakdown")!.getAttribute("aria-selected")).toBe("true");
     expect(panel().textContent).toContain("Six named faces carry the emotion before one logo signs off");
     expect(panel().textContent).toContain("A fixed name label turns six close portraits into one lineup");
@@ -170,10 +170,10 @@ describe("CreativeBreakdown: Breakdown", () => {
     vi.spyOn(pane, "getBoundingClientRect").mockReturnValue({ top: 100 } as DOMRect);
     const at = vi.spyOn(marker, "getBoundingClientRect").mockReturnValue({ top: -20 } as DOMRect);
     act(() => void (pane.scrollTop = 300));
-    click(tab("Apply"));
+    click(tab("Visual DNA"));
     expect(pane.scrollTop).toBe(180);
     at.mockReturnValue({ top: 140 } as DOMRect);
-    click(tab("Visual DNA"));
+    click(tab("Breakdown"));
     expect(pane.scrollTop).toBe(180);
   });
 });
@@ -212,25 +212,24 @@ describe("CreativeBreakdown: Visual DNA", () => {
   });
 });
 
-describe("CreativeBreakdown: Apply", () => {
-  it("leads with the formula and the steps, says when to use it, and copies a creative brief", async () => {
+describe("CreativeBreakdown: Copy brief", () => {
+  it("sits beside the tabs in place of an Apply tab and copies the brief as a Markdown prompt", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
     render(<Harness analysis={galleryAnalysis()} />);
-    click(tab("Apply"));
-    const text = panel().textContent!;
-    expect([...panel().querySelectorAll("h3")].map((h) => h.textContent)).toEqual(["Formula", "How to execute", "When to use", "When not to use", "Adapt it elsewhere"]);
-    expect([...panel().querySelectorAll("ol")[0].querySelectorAll("li")].map((li) => li.textContent!.replace("→", ""))).toEqual(["Hook portrait", "Repeated portraits", "Product reveal"]);
-    expect(text).toContain("A set of portraits or products shown one per slide.");
-    await act(async () => button(panel(), /^Copy creative brief$/)!.click());
+    expect(tabNames()).not.toContain("Apply");
+    await act(async () => button(container, /^Copy brief$/)!.click());
     const brief = writeText.mock.calls[0][0] as string;
-    expect(brief).toContain("OBJECTIVE");
-    expect(brief).toContain("ATTRIBUTION AND SOURCE");
+    expect(brief.startsWith("# Creative brief: ")).toBe(true);
+    expect(brief).toContain("You are a senior creative director.");
+    expect(brief).toContain("## Creative formula");
+    expect(brief).toContain("## What to give me");
     expect(brief).toContain("https://www.instagram.com/p/EXAMPLE/");
-    expect(panel().querySelector('[role="status"]')!.textContent).toContain("Paste it");
+    expect(button(container, /^Copied$/)).toBeTruthy();
+    expect(container.textContent).toContain("Creative brief copied. Paste it into your AI tool.");
     writeText.mockRejectedValueOnce(new Error("denied"));
-    await act(async () => button(panel(), /^Cop/)!.click());
-    expect(panel().querySelector('[role="status"]')!.textContent).toContain("Couldn't copy");
+    await act(async () => button(container, /^Cop/)!.click());
+    expect(container.textContent).toContain("Couldn't copy the brief here.");
   });
 });
 
@@ -244,7 +243,7 @@ describe("CreativeBreakdown: thin and single records", () => {
     render(<Harness analysis={analysis} />);
     click(button(panel(), /^Show the reasoning$/));
     click(button(panel(), /cannot verify/));
-    for (const name of ["Breakdown", "Visual DNA", "Apply"]) {
+    for (const name of ["Breakdown", "Visual DNA"]) {
       click(tab(name));
       expect(panel().textContent).not.toMatch(/\bSlides? \d/);
     }
@@ -274,7 +273,7 @@ describe("CreativeBreakdown: thin and single records", () => {
       pane.dispatchEvent(new Event("scroll"));
     });
     expect(stage()).toBe("image 4");
-    for (const name of ["Breakdown", "Visual DNA", "Apply"]) {
+    for (const name of ["Breakdown", "Visual DNA"]) {
       click(tab(name));
       for (const card of panel().querySelectorAll("button[aria-expanded='false']")) click(card);
       for (const fold of panel().querySelectorAll("details")) act(() => fold.querySelector("summary")!.click());

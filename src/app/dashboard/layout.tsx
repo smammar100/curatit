@@ -39,6 +39,7 @@ export default async function DashboardLayout({ children, modal }: { children: R
       hook: post.hook,
       brand: post.brand,
       category: post.category,
+      categories: post.categories,
       format: post.format,
       width: post.width,
       height: post.height,

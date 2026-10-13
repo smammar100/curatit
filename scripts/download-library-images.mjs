@@ -1,7 +1,7 @@
 // Downloads every library image from the Instagram CDN into data/storage/originals/
 // and writes a compressed copy into data/storage/library/, laid out exactly like
 // the `library` storage bucket. Then prints the commands that upload it (one per
-// category folder: `cp -r` keeps the folder's name, so copying
+// top-level folder, a brand's `folder` in library-sources.mjs: `cp -r` keeps the folder's name, so copying
 // data/storage/library itself would nest a second library/ folder).
 //
 //   node scripts/download-library-images.mjs
@@ -74,8 +74,8 @@ console.log(`Downloaded ${downloaded} and compressed ${compressed} images into $
 if (failed) process.exitCode = 1;
 
 console.log("\nUpload (npx.cmd in PowerShell):");
-for (const category of new Set(sources.map((source) => source.category.slug))) {
+for (const folder of new Set(sources.map((source) => source.folder))) {
   console.log(
-    `npx supabase storage cp -r data/storage/library/${category} ss:///library --linked --experimental --content-type image/webp --cache-control "max-age=604800"`
+    `npx supabase storage cp -r data/storage/library/${folder} ss:///library --linked --experimental --content-type image/webp --cache-control "max-age=604800"`
   );
 }

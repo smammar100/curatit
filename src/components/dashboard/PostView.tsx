@@ -164,9 +164,15 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
               </p>
               <p className="mt-0.5 truncate text-body text-base-500">
                 {post.handle && <>@{post.handle} · </>}
-                <Link href={feedHref("For you", post.category.name)} className="hover:text-base-900">
-                  {post.category.name}
-                </Link>
+                {/* The main category, then any extra ones; each opens Discover on it */}
+                {post.categories.map((category, i) => (
+                  <span key={category.slug}>
+                    {i > 0 && " · "}
+                    <Link href={feedHref("Discover", "", category.slug)} className="hover:text-base-900">
+                      {category.name}
+                    </Link>
+                  </span>
+                ))}
               </p>
             </div>
             <a
@@ -184,9 +190,16 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
             <h1 id="post-title" className="font-display text-display font-light text-pretty text-base-900">
               {caption.title}
             </h1>
-            <p className="mt-2 text-body text-base-500">Posted {day.format(new Date(post.postedAt))}</p>
+            {/* The rest of the caption reads on from the title (2026-10-13, at the person's request;
+                it was a Caption section further down) */}
+            {caption.body.length > 0 && (
+              <div className="mt-3">
+                <Caption paragraphs={caption.body} />
+              </div>
+            )}
+            <p className="mt-3 text-body text-base-500">Posted {day.format(new Date(post.postedAt))}</p>
             <Section title="Observed engagement">
-              <ObservedEngagement likes={post.likes} comments={post.comments} />
+              <ObservedEngagement likes={post.likes} comments={post.comments} category={post.category} />
             </Section>
             {analysis ? (
               <>
@@ -198,19 +211,9 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
                     <SlideBreakdown analysis={analysis} index={index} onSlide={go} images={post.images} videos={post.videos} />
                   </Section>
                 )}
-                {caption.body.length > 0 && (
-                  <Section title="Caption">
-                    <Caption paragraphs={caption.body} />
-                  </Section>
-                )}
               </>
             ) : (
               <>
-                {caption.body.length > 0 && (
-                  <Section title="Caption">
-                    <Caption paragraphs={caption.body} />
-                  </Section>
-                )}
                 <Section title="Creative breakdown">
                   <p className="text-body text-pretty text-base-500">Not available for this post yet.</p>
                 </Section>
@@ -270,7 +273,9 @@ function SlideButton({ side, disabled, onClick }: { side: "left" | "right"; disa
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="mt-6 border-t border-base-100 pt-5">
+    // No rule between sections (2026-10-13, at the person's request): the space and the small
+    // grey heading set each one apart
+    <section className="mt-8">
       <h2 className="mb-3 text-caption font-medium text-base-500">{title}</h2>
       {children}
     </section>
@@ -302,8 +307,8 @@ function splitCaption(post: PostDetail) {
   return { title: post.hook || `${post.brand.name} on Instagram`, body: paragraphs(post.caption) };
 }
 
-// The rest of the caption after the title, with @mentions and #hashtags as links, clamped until
-// "Show more"
+// The rest of the caption after the title, with @mentions and #hashtags as links, clamped to three
+// lines under the title until "Show more"
 function Caption({ paragraphs }: { paragraphs: string[] }) {
   const ref = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -322,7 +327,7 @@ function Caption({ paragraphs }: { paragraphs: string[] }) {
   if (!paragraphs.length) return null;
   return (
     <div>
-      <div ref={ref} className={cx("space-y-3 text-subtitle text-pretty text-base-700", !open && "line-clamp-6")}>
+      <div ref={ref} className={cx("space-y-3 text-subtitle text-pretty text-base-700", !open && "line-clamp-3")}>
         {paragraphs.map((paragraph, i) => (
           <p key={i} className="whitespace-pre-line">
             {linkify(paragraph)}

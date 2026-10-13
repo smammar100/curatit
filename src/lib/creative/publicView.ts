@@ -156,27 +156,52 @@ function slideRange(from: number, to: number) {
   return from === to ? `Slide ${from + 1}` : `Slides ${from + 1}–${to + 1}`;
 }
 
-// A creative brief a designer can start from, built from what the page shows (3.0): objective,
-// core idea, formula, visual structure, copywriting approach, production steps, constraints, and
-// the source with a credit. It points at the original post; it never copies its words, images,
-// marks or colour codes
-export function briefText(analysis: PublicAnalysis, source: BriefSource) {
+// The creative brief as a Markdown prompt (2026-10-13): what Apply shows and copies, written to be
+// pasted into any LLM (ChatGPT, Claude, Gemini…) with the person's own brand filled in. It tells the
+// model its job, gives it the brief built from what the page shows (the idea, formula, visual
+// structure, copywriting, steps, when it fits and when it doesn't, what to watch out for) and says
+// what to hand back. It points at the original post and credits it; it never copies the post's
+// words, images, marks or colour codes, and asks the model not to either.
+export function briefMarkdown(analysis: PublicAnalysis, source: BriefSource) {
   const label = (name: string) => analysis.labels.find((l) => l.label === name)?.value ?? null;
   const lead = analysis.creativeDecisions[0];
-  const lines: string[] = [`CREATIVE BRIEF`, `Built from a reference: ${source.brand} on Instagram`, ""];
+  const carousel = source.slides > 1;
+  const piece = carousel ? `Instagram carousel of about ${source.slides} slides` : "single-image Instagram post";
+  const out: string[] = [];
   const section = (title: string, body: string[]) => {
     if (!body.length) return;
-    lines.push(title.toUpperCase(), ...body, "");
+    out.push(`## ${title}`, "", ...body, "");
   };
+  const bullets = (items: string[]) => items.map((item) => `- ${item}`);
+
+  out.push(
+    `# Creative brief: ${analysis.headline}`,
+    "",
+    `You are a senior creative director. Using the brief below, create an original ${piece} for my brand. If anything in [brackets] is still unfilled, ask me for it before you start. Borrow the principle, not the post: don't reuse the reference's words, images, logo or colours.`,
+    ""
+  );
 
   const goal = label("Inferred goal");
-  section("Objective", ["[What this piece has to do for your brand and audience.]", ...(goal ? [`The reference's inferred goal: ${goal.toLowerCase()}.`] : [])]);
-  section("Core idea", [
-    "[Your idea, in one sentence.]",
-    `Built on: ${lead?.principle ?? analysis.concept}`,
-    ...(analysis.adaptations[0] ? [`For example: ${analysis.adaptations[0]}`] : []),
+  section("My brand", [
+    "- Brand: [your brand]",
+    "- Audience: [who it's for]",
+    `- What this post has to do: [the goal]${goal ? ` (the reference's inferred goal: ${goal.toLowerCase()})` : ""}`,
+    "- Message or offer: [what you're saying]",
   ]);
-  section("Creative formula", analysis.formula ? [analysis.formula] : analysis.sequence.formula ? [analysis.sequence.formula] : []);
+
+  section("The reference", [
+    `${source.brand} on Instagram: ${source.url}`,
+    "",
+    analysis.summary ? `${analysis.concept} ${analysis.summary}` : analysis.concept,
+  ]);
+
+  section("Core idea to borrow", [
+    lead?.principle ?? analysis.concept,
+    ...(analysis.adaptations[0] ? ["", `For example: ${analysis.adaptations[0]}`] : []),
+  ]);
+
+  const formula = analysis.formula ?? analysis.sequence.formula;
+  section("Creative formula", formula ? [formula] : []);
 
   const format = label("Format");
   const roles = analysis.sequence.roles;
@@ -184,28 +209,43 @@ export function briefText(analysis: PublicAnalysis, source: BriefSource) {
   for (let i = 0; i < roles.length; ) {
     let j = i;
     while (j + 1 < roles.length && roles[j + 1] === roles[i]) j++;
-    structure.push(`- ${slideRange(i, j)}: ${roles[i] ?? "Slide"}`);
+    structure.push(`${slideRange(i, j)}: ${roles[i] ?? "Slide"}`);
     i = j + 1;
   }
   const colourRoles = analysis.colours.filter((colour) => colour.role).map((colour) => colour.role!.replace(/:.*$/, "").toLowerCase());
-  section("Recommended visual structure", [
-    `- Format: ${source.slides > 1 ? `Instagram carousel, about ${source.slides} slides${format ? ` (${format.toLowerCase()})` : ""}` : "Instagram single image"}`,
-    ...structure,
-    ...analysis.visual
-      .filter((part) => part.insight && part.key !== "branding")
-      .map((part) => `- ${part.title}: ${part.insight}`),
-    ...(colourRoles.length ? [`- Colour jobs: ${[...new Set(colourRoles)].join(", ")}, in your own palette`] : []),
+  section(
+    "Visual structure",
+    bullets([
+      `Format: ${carousel ? `Instagram carousel, about ${source.slides} slides${format ? ` (${format.toLowerCase()})` : ""}` : "Instagram single image"}`,
+      ...structure,
+      ...analysis.visual.filter((part) => part.insight && part.key !== "branding").map((part) => `${part.title}: ${part.insight}`),
+      ...(colourRoles.length ? [`Colour jobs: ${[...new Set(colourRoles)].join(", ")}, in my own palette`] : []),
+    ])
+  );
+
+  section("Copywriting", analysis.copywriting ? [analysis.copywriting, "", "Write new words; don't reuse the reference's."] : []);
+  section("How to execute", analysis.takeaways.map((step, i) => `${i + 1}. ${step}`));
+  section("When it fits", bullets(analysis.application.whenToUse));
+  section("When not to use it", bullets(analysis.application.whenNotToUse));
+  section(
+    "Watch out for",
+    bullets([
+      ...new Set([
+        ...analysis.creativeDecisions.flatMap((decision) => (decision.watchOut ? [decision.watchOut] : [])),
+        ...analysis.integrity.filter((note) => note.status === "concern").map((note) => `${note.aspect}: ${note.note}`),
+        "Keep it original (my own imagery, words, layout and colours), and keep any data, sources and disclosures accurate and legible.",
+      ]),
+    ])
+  );
+  section("What to give me", [
+    "1. The concept in one line.",
+    carousel
+      ? "2. Slide by slide: what's on the slide, its on-image copy, and why it's there."
+      : "2. The image: what's in it, its on-image copy, and why.",
+    "3. A caption and a call to action.",
+    "4. Notes for the designer: layout, type, and the colour jobs in my palette.",
   ]);
-  section("Copywriting approach", analysis.copywriting ? [analysis.copywriting, "Write your own words; don't reuse the reference's."] : []);
-  section("Production steps", analysis.takeaways.map((step, i) => `${i + 1}. ${step}`));
-  section("Important constraints", [
-    ...[...new Set([...analysis.creativeDecisions.flatMap((decision) => (decision.watchOut ? [decision.watchOut] : [])), ...analysis.application.whenNotToUse])].map((line) => `- ${line}`),
-    ...analysis.integrity.filter((note) => note.status === "concern").map((note) => `- ${note.aspect}: ${note.note}`),
-    `- Make it original: your own imagery, words, layout and colours. Keep data, sources and disclosures accurate and legible.`,
-  ]);
-  section("Attribution and source", [
-    `Reference: ${source.brand}, ${source.url}`,
-    `Used for its principle only; its words, images and marks are ${source.brand}'s. Analysis by Curatit (AI-written, editor-checked).`,
-  ]);
-  return lines.join("\n").trim();
+
+  out.push("---", "", `Reference analysis by Curatit (AI-written, editor-checked). ${source.brand}'s words, images and marks are ${source.brand}'s; use the post for its principle only.`);
+  return `${out.join("\n").trim()}\n`;
 }

@@ -11,6 +11,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { postImages, sources } from "./library-sources.mjs";
 
+// The category slugs, read from src/lib/categories.ts (plain data, so a match is enough)
+const CATEGORY_SLUGS = new Set(
+  [...fs.readFileSync(path.join("src", "lib", "categories.ts"), "utf8").matchAll(/\{ slug: "([a-z0-9-]+)", name: /g)].map((m) => m[1])
+);
+if (CATEGORY_SLUGS.size !== 28) throw new Error(`Expected 28 categories in src/lib/categories.ts, found ${CATEGORY_SLUGS.size}`);
+
 // Dollar-quoted literal with a tag that can't appear in the data
 const literal = (value) => {
   const text = typeof value === "string" ? value : JSON.stringify(value);
@@ -28,22 +34,23 @@ const pipeline = `${versions.taxonomy}+${versions.prompt}`;
 const queueAnalyses = process.env.CREATIVE_ANALYSIS_ENABLED !== "false";
 
 for (const source of sources) {
-  const { file, category, brand, brandAccounts } = source;
+  const { file, folder, categories, brand, brandAccounts } = source;
   const data = JSON.parse(fs.readFileSync(file, "utf8"));
-  const categoryId = `(select id from public.categories where slug = ${q(category.slug)})`;
+  // The 28 categories come from a migration (…_app_categories) and src/lib/categories.ts
+  for (const slug of categories) {
+    if (!CATEGORY_SLUGS.has(slug)) throw new Error(`${brand.name}: "${slug}" isn't a category (src/lib/categories.ts)`);
+  }
+  const categoryId = (slug) => `(select id from public.categories where slug = ${q(slug)})`;
   const brandId = `(select id from public.brands where slug = ${q(brand.slug)})`;
   const runId = `(select id from public.scrape_runs where run_id = ${q(data.runId)})`;
 
   out.push(
     `-- ${brand.name}: ${data.items.length} posts from Apify run ${data.runId}`,
     "",
-    `insert into public.categories (name, slug) values (${q(category.name)}, ${q(category.slug)})`,
-    "on conflict (slug) do update set name = excluded.name;",
-    "",
     // logos/<slug>.webp comes from scripts/download-brand-logos.mjs
-    "insert into public.brands (name, slug, website_url, category_id, logo_path)",
-    `values (${q(brand.name)}, ${q(brand.slug)}, ${q(brand.websiteUrl)}, ${categoryId}, ${q(`logos/${brand.slug}.webp`)})`,
-    "on conflict (slug) do update set name = excluded.name, website_url = excluded.website_url, category_id = excluded.category_id, logo_path = excluded.logo_path;",
+    "insert into public.brands (name, slug, website_url, category_id, storage_folder, logo_path)",
+    `values (${q(brand.name)}, ${q(brand.slug)}, ${q(brand.websiteUrl)}, ${categoryId(categories[0])}, ${q(folder)}, ${q(`logos/${brand.slug}.webp`)})`,
+    "on conflict (slug) do update set name = excluded.name, website_url = excluded.website_url, category_id = excluded.category_id, storage_folder = excluded.storage_folder, logo_path = excluded.logo_path;",
     "",
     "insert into public.scrape_runs (actor, run_id, dataset_id, data_detail_level, target_url, item_count, scraped_at, notes)",
     `values (${q(data.actor)}, ${q(data.runId)}, ${q(data.datasetId)}, ${q(data.dataDetailLevel)}, ${q(data.source)}, ${data.items.length}, ${q(data.scrapedAt)}, ${q(data.note)})`,
@@ -61,6 +68,17 @@ for (const source of sources) {
       images.map((image, position) => `  (${q(item.id)}, ${position}, ${q(image.path)})`).join(",\n"),
       "on conflict (post_id, position) do update set path = excluded.path;",
       `delete from public.post_images where post_id = ${q(item.id)} and position >= ${images.length};`,
+      // The brand's extra categories, on the post: the list in library-sources.mjs replaces
+      // whatever tags the post had
+      `delete from public.post_categories where post_id = ${q(item.id)};`,
+      ...(categories.length > 1
+        ? [
+            `insert into public.post_categories (post_id, category_id) values ${categories
+              .slice(1)
+              .map((slug) => `(${q(item.id)}, ${categoryId(slug)})`)
+              .join(", ")} on conflict do nothing;`,
+          ]
+        : []),
       ""
     );
   }
