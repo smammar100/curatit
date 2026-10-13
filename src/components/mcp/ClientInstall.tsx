@@ -11,7 +11,7 @@
 
 import { useEffect, useRef, useState, type HTMLAttributes, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
-import ClientMark, { MARKS } from "@/components/assets/ClientMarks";
+import ClientMark, { MARK_COLORS, MARKS } from "@/components/assets/ClientMarks";
 import Symbol from "@/components/assets/Symbol";
 import Button from "@/components/fundations/elements/Button";
 import TerminalWindow from "@/components/fundations/icons/TerminalWindow";
@@ -320,6 +320,7 @@ function Connection({ current }: { current: number | null }) {
           <ClientMark
             key={client.id}
             path={MARKS[client.mark]}
+            style={{ color: MARK_COLORS[client.mark] }}
             className={cx("size-6 transition-[opacity,scale] duration-200 ease-out [grid-area:1/1]", i === current ? "opacity-100" : "scale-90 opacity-0")}
           />
         ))}
@@ -401,7 +402,7 @@ export default function ClientInstall() {
                     i === current ? "bg-white text-base-900 ring-1 ring-base-200" : "text-base-500 hover:text-base-900",
                   )}
                 >
-                  <ClientMark path={MARKS[client.mark]} className="size-4 shrink-0" aria-hidden="true" />
+                  <ClientMark path={MARKS[client.mark]} style={{ color: MARK_COLORS[client.mark] }} className="size-4 shrink-0" aria-hidden="true" />
                   {client.name}
                 </button>
               ))}

@@ -18,7 +18,7 @@ import { getPublishedPosts } from "@/lib/posts";
 import { SUPPORT_MAILTO } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Curatit MCP (beta)",
+  title: "Curatit MCP (coming soon)",
   description:
     "Use Curatit's library of real brand posts from Claude, Cursor, VS Code and ChatGPT: search it, read a post slide by slide and draft a brief, with every answer linked to its source.",
 };
@@ -30,7 +30,7 @@ export const revalidate = 3600;
 // on the left and what it does on the right, then a tab per client over one gradient panel whose
 // white card holds that client's steps (ClientInstall, the page's only script), then why it helps,
 // shown as the same question asked with and without Curatit (BeforeAfter, real posts), the six
-// tools as a quiet grid under a left label, what a token can and can't do, the beta note and a
+// tools as a quiet grid under a left label, what a token can and can't do, the Soon note and a
 // closing call. Earlier Mobbin references (Higgsfield, Neon, Midday, Bloom) shaped the tabs and the
 // before/after.
 
@@ -70,7 +70,7 @@ export default async function AgentsPage() {
             <div className="lg:col-span-7">
               <p className="flex items-center gap-2 text-sm text-base-600">
                 Curatit MCP
-                <span className="rounded-md bg-base-50 px-2 py-0.5 text-xs font-medium text-base-900 ring-1 ring-base-200">Beta</span>
+                <span className="rounded-md bg-base-50 px-2 py-0.5 text-xs font-medium text-base-900 ring-1 ring-base-200">Soon</span>
               </p>
               <Text tag="h1" variant="displayLG" className="mt-4 font-display font-light text-balance text-base-900">
                 Bring Curatit to your AI assistant
@@ -139,7 +139,7 @@ export default async function AgentsPage() {
         </Wrapper>
       </section>
 
-      {/* What a token can and can't do, then the beta note */}
+      {/* What a token can and can't do, then the Soon note */}
       <section aria-label="What your tool can and can't do">
         <Wrapper variant="standard" className="pt-24">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -181,7 +181,7 @@ export default async function AgentsPage() {
           </div>
 
           <div className="mt-4 flex flex-col gap-3 rounded-2xl bg-base-50 p-5 sm:flex-row sm:items-center lg:p-6">
-            <span className="w-fit shrink-0 rounded-md bg-white px-2 py-0.5 text-xs font-medium text-base-900 ring-1 ring-base-200">Beta</span>
+            <span className="w-fit shrink-0 rounded-md bg-white px-2 py-0.5 text-xs font-medium text-base-900 ring-1 ring-base-200">Soon</span>
             <p className="text-sm text-pretty text-base-600">
               Things may change while we test it, and the ChatGPT connector is still being tried out.{" "}
               <a href={SUPPORT_MAILTO} className={linkClass}>
