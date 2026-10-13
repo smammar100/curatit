@@ -17,6 +17,7 @@ import Check from "@/components/fundations/icons/Check";
 import { cx } from "@/lib/cx";
 import type { CreativeDna, SlideObservation } from "@/lib/creative/schema";
 import { refreshPostPage } from "@/app/dashboard/review/actions";
+import { track } from "@/lib/analytics";
 import { loadPostReview, reprocess, review, useIsEditor, type PostReview, type Version } from "./data";
 import DnaEditor from "./DnaEditor";
 import { ago, EvidenceChip, Frame, label, money, Notice, Pill, quietButton, reviewHref, Section, seconds, solidButton, sourceLabel, StatusPill, useBusy } from "./parts";
@@ -97,6 +98,7 @@ export function PostReviewView({ data, onRefresh }: { data: PostReview; onRefres
     run(action + (publish ? "-publish" : ""), () => review(version.id, action, { publish, note })).then((ok) => {
       if (!ok) return;
       setNote("");
+      track("review_decision_recorded", { action, published: publish });
       setDone({ versionId: version.id, text: DONE[action](publish) });
       republish();
       refresh(version.id);
@@ -181,6 +183,7 @@ export function PostReviewView({ data, onRefresh }: { data: PostReview; onRefres
                     setDone(null);
                     run("reprocess", () => reprocess(post.id)).then((ok) => {
                       if (!ok) return;
+                      track("analysis_reprocess_requested");
                       if (version) setDone({ versionId: version.id, text: "Queued a fresh analysis. It lands as a proposal next to this one." });
                       refresh();
                     });

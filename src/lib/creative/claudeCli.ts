@@ -13,6 +13,7 @@
 // slide it never opened can't be passed off as analysed.
 import { spawn } from "node:child_process";
 import { basename } from "node:path";
+import { captureClaudeGeneration } from "./aiObservability";
 import { ModelError, NO_USAGE, type GenerateRequest, type GenerateResult, type ModelAdapter, type Usage } from "./model";
 import type { FailureKind } from "./states";
 
@@ -171,10 +172,34 @@ export class ClaudeCliAdapter implements ModelAdapter {
   async generate(request: GenerateRequest): Promise<GenerateResult> {
     const started = Date.now();
     const { stdout, stderr, code, timedOut } = await this.exec(this.args(request), request.prompt, this.timeoutMs, request.workdir);
-    if (timedOut) throw new ModelError("timeout", `claude didn't finish within ${Math.round(this.timeoutMs / 1000)}s`);
-    const result = interpret(stdout, stderr, code, request);
-    if (!result.usage.durationMs) result.usage.durationMs = Date.now() - started;
-    return result;
+    const stream = parseStream(stdout);
+    try {
+      if (timedOut) throw new ModelError("timeout", `claude didn't finish within ${Math.round(this.timeoutMs / 1000)}s`);
+      const result = interpret(stdout, stderr, code, request);
+      if (!result.usage.durationMs) result.usage.durationMs = Date.now() - started;
+      await captureClaudeGeneration({
+        model: this.model,
+        system: request.system,
+        prompt: request.prompt,
+        output: result.output,
+        usage: result.usage,
+        readFiles: [...stream.read],
+      });
+      return result;
+    } catch (error) {
+      const usage = error instanceof ModelError && error.usage.calls ? error.usage : usageOf(stream.result);
+      if (!usage.durationMs) usage.durationMs = Date.now() - started;
+      await captureClaudeGeneration({
+        model: this.model,
+        system: request.system,
+        prompt: request.prompt,
+        output: stream.result?.structured_output ?? stream.result?.result,
+        usage,
+        readFiles: [...stream.read],
+        error: String((error as Error).message ?? error),
+      });
+      throw error;
+    }
   }
 
   private exec(args: string[], input: string, timeoutMs: number, cwd?: string) {

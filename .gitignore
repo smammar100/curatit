@@ -57,3 +57,6 @@ data/creative-eval/
 
 # Workspace package builds
 packages/*/dist
+
+# The PostHog wizard's working files
+.posthog-wizard-cache/
