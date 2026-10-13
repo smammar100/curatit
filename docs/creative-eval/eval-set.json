@@ -1,5 +1,5 @@
 {
-  "about": "Creative Intelligence 2.1 evaluation set: 24 published posts across all seven categories, carousels and single images, photography-, illustration-, type- and data-led, with four from finance (data and claims). Run with npm run creative:compare -- --set docs/creative-eval/eval-set.json and rate with rubric.md.",
+  "about": "Creative Intelligence 2.1 evaluation set: 24 published posts across the original seven categories (renamed on 2026-10-13: see src/lib/categories.ts), carousels and single images, photography-, illustration-, type- and data-led, with four from finance (data and claims). Run with npm run creative:compare -- --set docs/creative-eval/eval-set.json and rate with rubric.md.",
   "posts": [
     {
       "id": "4004271406676625358",

@@ -33,6 +33,8 @@ export type Manifest = {
   posted_at: string | null;
   brand: { name: string | null; slug: string | null };
   category: { name: string | null; slug: string | null };
+  // Top-level folder of the post's files (brands.storage_folder); absent from older manifests
+  storage_folder?: string | null;
   scrape_run_id: string | null;
   media: { expected: number; image_rows: number; image_files: number; complete: boolean };
   content_fingerprint: string;

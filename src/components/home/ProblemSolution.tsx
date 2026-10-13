@@ -20,13 +20,14 @@ import { cx } from "@/lib/cx";
 
 const states = {
   problem: {
-    title: "Saved everywhere, found nowhere.",
+    // Each heading is two lines, set as two blocks, so both states read the same at every width
+    title: ["Saved everywhere,", "found nowhere."],
     body: "This is what finding one reference for a brief looks like.",
     // Narrow enough to set the short line as two balanced lines, like the solution's
     bodyWidth: "max-w-sm",
   },
   solution: {
-    title: "One library. One search.",
+    title: ["One library.", "One search."],
     body: "Curatit keeps the posts worth studying in one place. Search the brief, see why each result works, save it to a board.",
     bodyWidth: "max-w-xl",
   },
@@ -65,7 +66,11 @@ export default function ProblemSolution() {
                   aria-hidden={key !== active}
                 >
                   <Text tag="h2" variant="displayLG" className="text-base-900 font-display font-thin">
-                    {states[key].title}
+                    {states[key].title.map((line) => (
+                      <span key={line} className="block">
+                        {line}
+                      </span>
+                    ))}
                   </Text>
                   <Text tag="p" variant="textBase" className={cx("text-base-600 mt-4 mx-auto", states[key].bodyWidth)}>
                     {states[key].body}

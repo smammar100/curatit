@@ -61,7 +61,9 @@ export function inputFingerprint(manifest: Manifest, model: string) {
     postId: manifest.id,
     caption: manifest.caption,
     brand: manifest.brand.slug ?? "",
-    category: manifest.category.slug ?? "",
+    // The brand's storage folder (the category it was filed under at upload), not its current
+    // category: a brand moving category doesn't change what was analysed (2026-10-13)
+    category: manifest.storage_folder ?? manifest.category.slug ?? "",
     images: manifest.images.map((image) => ({ position: image.position, path: `${image.bucket}/${image.path}`, tag: image.etag ?? `${image.size}` })),
     model,
     promptVersion: PROMPT_VERSION,

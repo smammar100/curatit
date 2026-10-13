@@ -46,7 +46,7 @@ live("live catalog", () => {
   it("searches, pages and resolves aliases", async () => {
     const page1 = await searchPosts(repo, { filters: { industries: ["Finance"], formats: ["carousel"] }, limit: 3 }, ctx);
     expect(TOOLS.curatit_search_posts.output.parse(page1.data)).toBeTruthy();
-    expect(page1.data.applied.filters).toEqual({ industries: ["fintech"], formats: ["carousel"] });
+    expect(page1.data.applied.filters).toEqual({ industries: ["finance"], formats: ["carousel"] });
     expect(page1.data.posts.length).toBe(3);
     expect(page1.data.next_cursor).toBeTruthy();
     const page2 = await searchPosts(repo, { filters: { industries: ["Finance"], formats: ["carousel"] }, limit: 3, cursor: page1.data.next_cursor! }, ctx);

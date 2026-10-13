@@ -9,12 +9,13 @@
 // - Visual DNA: composition, typography, colour (the post's colours with their jobs, copyable),
 //   imagery, visual devices, and branding & consistency, each one insight, a few attributes and
 //   the slides that show them; on a carousel, what stays the same and the sequence as a bar.
-// - Apply: the formula, how to execute it, when to use it and when not, adaptations, and a
-//   creative brief to copy.
-// The tab bar stays in view while the panel scrolls, and switching tabs brings the new tab's
+// Beside the tabs, Copy brief puts the brief on the clipboard as a Markdown prompt to paste into
+// any LLM (2026-10-13, at the person's request: it replaced the Apply tab, whose formula chips and
+// lists now live inside the brief). Both are the panel's own pieces: the tabs as they always were,
+// the button the same as the Instagram link above it. The bar stays in view while the panel scrolls, and switching tabs brings the new tab's
 // start into view. One slide index in PostView drives the stage, ← / →, the bar and every slide
 // link, so they never disagree; a single image has no slide links at all (it's always on screen).
-import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import Check from "@/components/fundations/icons/Check";
 import Copy from "@/components/fundations/icons/Copy";
 import Eye from "@/components/fundations/icons/Eye";
@@ -22,7 +23,7 @@ import Question from "@/components/fundations/icons/Question";
 import SealCheck from "@/components/fundations/icons/SealCheck";
 import WarningCircle from "@/components/fundations/icons/WarningCircle";
 import {
-  briefText,
+  briefMarkdown,
   evidenceGroups,
   integritySummary,
   STATUS_LABEL,
@@ -45,7 +46,7 @@ type Props = {
   source: BriefSource;
 };
 
-type View = "breakdown" | "visual" | "apply";
+type View = "breakdown" | "visual";
 
 // What every part below needs to point at slides
 type Stage = { index: number; onSlide: (index: number) => void; carousel: boolean };
@@ -79,7 +80,6 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
   const views: { id: View; label: string }[] = [
     { id: "breakdown", label: "Breakdown" },
     ...(analysis.visual.length || stage.carousel ? [{ id: "visual" as const, label: "Visual DNA" }] : []),
-    ...(analysis.takeaways.length || analysis.adaptations.length || analysis.creativeDecisions.length ? [{ id: "apply" as const, label: "Apply" }] : []),
   ];
 
   const choose = (next: View) => {
@@ -116,8 +116,8 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
     <div>
       <div ref={top} aria-hidden="true" />
       {/* Sticky over the panel's own padding (px-6 in PostView), so content slides under it */}
-      <div className="sticky top-0 z-10 -mx-6 bg-white px-6 py-1.5">
-        <div role="tablist" aria-label="Creative breakdown" onKeyDown={onTabKey} className="-mx-1 flex scrollbar-hide gap-1 overflow-x-auto px-1 py-1">
+      <div className="sticky top-0 z-10 -mx-6 flex items-center justify-between gap-2 bg-white px-6 py-1.5">
+        <div role="tablist" aria-label="Creative breakdown" onKeyDown={onTabKey} className="-mx-1 flex min-w-0 scrollbar-hide gap-1 overflow-x-auto px-1 py-1">
           {views.map((v) => (
             <button
               key={v.id}
@@ -137,12 +137,12 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
             </button>
           ))}
         </div>
+        <CopyBrief analysis={analysis} source={source} />
       </div>
 
       <div id="breakdown-panel" role="tabpanel" aria-labelledby={`breakdown-tab-${view}`} className="mt-3">
         {view === "breakdown" && <Breakdown analysis={analysis} stage={stage} />}
         {view === "visual" && <VisualDna analysis={analysis} stage={stage} videos={videos} />}
-        {view === "apply" && <Apply analysis={analysis} source={source} />}
       </div>
 
       <p className="mt-5 text-micro text-pretty text-base-400">
@@ -521,88 +521,34 @@ function mostCommon(roles: (string | null)[]) {
   return n > 1 ? role : null;
 }
 
-// ---- Apply ----
+// ---- Copy brief ----
 
-function Apply({ analysis, source }: { analysis: PublicAnalysis; source: BriefSource }) {
-  const formula = analysis.formula ?? analysis.sequence.formula;
-  const steps = formula ? formula.split(/\s*→\s*/).filter(Boolean) : [];
-  const { whenToUse, whenNotToUse } = analysis.application;
-  return (
-    <div>
-      {steps.length > 1 ? (
-        <>
-          <Subhead>Formula</Subhead>
-          <ol className="mt-2 flex flex-wrap items-center gap-x-1 gap-y-1.5">
-            {steps.map((step, i) => (
-              <li key={i} className="flex min-w-0 items-center gap-1">
-                {i > 0 && (
-                  <span aria-hidden="true" className="text-caption text-base-400">
-                    →
-                  </span>
-                )}
-                <span className="inline-block rounded-full bg-base-50 px-2.5 py-1 text-caption font-medium text-base-900 first-letter:uppercase">{step}</span>
-              </li>
-            ))}
-          </ol>
-        </>
-      ) : (
-        formula && (
-          <>
-            <Subhead>Formula</Subhead>
-            <p className="mt-1.5 text-subtitle font-medium text-pretty text-base-900">{formula}</p>
-          </>
-        )
-      )}
-      {analysis.takeaways.length > 0 && (
-        <>
-          <Subhead>How to execute</Subhead>
-          <List items={analysis.takeaways} numbered />
-        </>
-      )}
-      {whenToUse.length > 0 && (
-        <>
-          <Subhead>When to use</Subhead>
-          <List items={whenToUse} />
-        </>
-      )}
-      {whenNotToUse.length > 0 && (
-        <>
-          <Subhead>When not to use</Subhead>
-          <List items={whenNotToUse} className="text-base-600" />
-        </>
-      )}
-      {analysis.adaptations.length > 0 && (
-        <>
-          <Subhead>Adapt it elsewhere</Subhead>
-          <List items={analysis.adaptations.slice(0, 2)} />
-        </>
-      )}
-      <CopyBrief analysis={analysis} source={source} />
-    </div>
-  );
-}
-
-// Puts a creative brief built from this analysis on the clipboard, and says so
+// Puts the brief on the clipboard as Markdown (briefMarkdown: a prompt any LLM can act on), and
+// says so: the label turns to Copied for a moment, and a status line tells screen readers. Styled
+// as PostView's Instagram link: a quiet grey pill, the icon after the words
 function CopyBrief({ analysis, source }: { analysis: PublicAnalysis; source: BriefSource }) {
-  const [state, setState] = useState<"done" | "failed" | null>(null);
+  const brief = useMemo(() => briefMarkdown(analysis, source), [analysis, source]);
+  const [state, setState] = useState<"copied" | "failed" | null>(null);
   useEffect(() => {
-    if (state !== "done") return;
-    const timer = setTimeout(() => setState(null), 1800);
+    if (!state) return;
+    const timer = setTimeout(() => setState(null), state === "copied" ? 1800 : 3200);
     return () => clearTimeout(timer);
   }, [state]);
   return (
-    <div className="mt-6 flex items-center gap-3">
+    <>
       <button
         type="button"
-        onClick={() => navigator.clipboard.writeText(briefText(analysis, source)).then(() => setState("done"), () => setState("failed"))}
-        className="flex h-11 items-center rounded-full bg-base-900 px-5 text-body font-medium text-white transition-[background-color,scale] duration-150 hover:bg-base-800 active:scale-[0.96]"
+        onClick={() => navigator.clipboard.writeText(brief).then(() => setState("copied"), () => setState("failed"))}
+        title="Copy a creative brief, in Markdown, to paste into ChatGPT, Claude or any AI tool"
+        className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-base-50 pr-3 pl-3.5 text-body font-medium whitespace-nowrap text-base-900 transition-[background-color,scale] duration-150 hover:bg-base-100 active:scale-[0.96]"
       >
-        {state === "done" ? "Copied" : "Copy creative brief"}
+        {state === "copied" ? "Copied" : state === "failed" ? "Couldn't copy" : "Copy brief"}
+        {state === "copied" ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
       </button>
-      <p role="status" className="text-caption text-pretty text-base-500">
-        {state === "done" ? "Paste it into your brief and fill in the idea." : state === "failed" ? "Couldn't copy here." : ""}
-      </p>
-    </div>
+      <span role="status" className="sr-only">
+        {state === "copied" ? "Creative brief copied. Paste it into your AI tool." : state === "failed" ? "Couldn't copy the brief here." : ""}
+      </span>
+    </>
   );
 }
 
