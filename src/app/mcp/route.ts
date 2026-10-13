@@ -8,4 +8,14 @@ export const maxDuration = 60;
 
 const handle = (request: Request) => getRuntime().http.mcp(request);
 
-export { handle as GET, handle as POST, handle as DELETE, handle as OPTIONS };
+// A person who opens /mcp in a browser gets the landing page (/agents) instead of a 401: a GET
+// that asks for HTML and not for an event stream. Every other request goes to the server as before.
+function get(request: Request) {
+  const accept = request.headers.get("accept") ?? "";
+  if (accept.includes("text/html") && !accept.includes("text/event-stream")) {
+    return Response.redirect(new URL("/agents", request.url), 307);
+  }
+  return handle(request);
+}
+
+export { get as GET, handle as POST, handle as DELETE, handle as OPTIONS };

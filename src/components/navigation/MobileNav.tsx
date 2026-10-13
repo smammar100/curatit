@@ -17,6 +17,7 @@ const links = [
   { href: "/pricing", text: "Pricing" },
   { href: "/vision", text: "Vision" },
   { href: "/roadmap", text: "Roadmap" },
+  { href: "/agents", text: "MCP", beta: true },
 ];
 
 export default function MobileNav() {
@@ -72,10 +73,13 @@ export default function MobileNav() {
             {links.map((link) => (
               <Link
                 key={link.href}
-                className="text-base-900 text-lg font-medium py-1 border-b border-base-100 last:border-b-0"
+                className="flex items-center gap-2 text-base-900 text-lg font-medium py-1 border-b border-base-100 last:border-b-0"
                 href={link.href}
               >
                 {link.text}
+                {link.beta && (
+                  <span className="rounded px-1.5 py-0.5 text-[11px]/none font-medium text-base-600 ring-1 ring-base-200">Beta</span>
+                )}
               </Link>
             ))}
           </div>
