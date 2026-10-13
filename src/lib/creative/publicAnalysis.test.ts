@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { clone, FIXTURE_DNA, FIXTURE_PERCEPTION, galleryFixture, legacy21 } from "./fixtures";
-import { alignSlides, evidenceGroups, integritySummary, numberingOf, oneBased, parseEvidence, briefText, sentences, toPublicAnalysis, type AnalysisRecord, type SlideRecord } from "./publicAnalysis";
+import { alignSlides, evidenceGroups, integritySummary, numberingOf, oneBased, parseEvidence, briefMarkdown, sentences, toPublicAnalysis, type AnalysisRecord, type SlideRecord } from "./publicAnalysis";
 import type { CreativeDna, SlideObservation } from "./schema";
 import { term } from "./taxonomy";
 
@@ -181,27 +181,53 @@ describe("toPublicAnalysis", () => {
   });
 });
 
-describe("briefText", () => {
-  it("builds a usable brief from what's on screen, with the reference and a credit", () => {
+describe("briefMarkdown", () => {
+  const source = { brand: "Example Sports", url: "https://www.instagram.com/p/EXAMPLE/", format: "carousel" as const, slides: 7 };
+
+  it("writes a Markdown prompt for any LLM: the job, the brief, and what to hand back", () => {
     const { dna, slides } = galleryFixture();
     const analysis = toPublicAnalysis(record(dna, 7), rows(slides), 7)!;
-    const brief = briefText(analysis, { brand: "Example Sports", url: "https://www.instagram.com/p/EXAMPLE/", format: "carousel", slides: 7 });
-    const headings = ["OBJECTIVE", "CORE IDEA", "CREATIVE FORMULA", "RECOMMENDED VISUAL STRUCTURE", "COPYWRITING APPROACH", "PRODUCTION STEPS", "IMPORTANT CONSTRAINTS", "ATTRIBUTION AND SOURCE"];
-    expect(brief.split("\n").filter((line) => headings.includes(line))).toEqual(headings);
-    expect(brief).toContain("Built on: Fix one type treatment and position across a series so the images do the varying.");
+    const brief = briefMarkdown(analysis, source);
+    expect(brief.startsWith(`# Creative brief: ${analysis.headline}`)).toBe(true);
+    expect(brief).toContain("You are a senior creative director.");
+    expect(brief).toContain("Instagram carousel of about 7 slides");
+    const headings = brief.split("\n").filter((line) => line.startsWith("## "));
+    expect(headings).toEqual([
+      "## My brand",
+      "## The reference",
+      "## Core idea to borrow",
+      "## Creative formula",
+      "## Visual structure",
+      "## Copywriting",
+      "## How to execute",
+      "## When it fits",
+      "## When not to use it",
+      "## Watch out for",
+      "## What to give me",
+    ]);
+    expect(brief).toContain("- Brand: [your brand]");
+    expect(brief).toContain("Fix one type treatment and position across a series so the images do the varying.");
     expect(brief).toContain("Hook portrait → Repeated portraits → Product reveal");
     expect(brief).toContain("- Format: Instagram carousel, about 7 slides");
     expect(brief).toMatch(/- Slides 2–6: /);
     expect(brief).toContain("- Typography: Spaced condensed capitals, white, one line, the only text on each portrait.");
-    expect(brief).toContain("- Colour jobs: background, player names, accent, in your own palette");
-    expect(brief).toContain("Names only on the slides; the caption carries the context.");
+    expect(brief).toContain("- Colour jobs: background, player names, accent, in my own palette");
     expect(brief).toContain("1. Fix one name style and position across a portrait set.");
     expect(brief).toContain("- People who stop swiping early never see the brand.");
-    expect(brief).toContain("- The product is the news, or people may stop before the last slide.");
-    expect(brief).toContain("Reference: Example Sports, https://www.instagram.com/p/EXAMPLE/");
-    expect(brief).toContain("Used for its principle only");
+    expect(brief).toContain("2. Slide by slide:");
+    expect(brief).toContain("Example Sports on Instagram: https://www.instagram.com/p/EXAMPLE/");
+    expect(brief).toContain("use the post for its principle only");
+    expect(brief.endsWith("\n")).toBe(true);
     // Never the brand's words or colour codes
     expect(brief).not.toMatch(/ALEX RIVERA|#0b0a10|#5fb81e/i);
+  });
+
+  it("asks for the single image when there's one", () => {
+    const { dna, slides } = galleryFixture();
+    const analysis = toPublicAnalysis(record(dna, 7), rows(slides), 7)!;
+    const single = briefMarkdown(analysis, { ...source, format: "static", slides: 1 });
+    expect(single).toContain("single-image Instagram post");
+    expect(single).toContain("2. The image:");
   });
 });
 
