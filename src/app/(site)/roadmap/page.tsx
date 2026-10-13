@@ -47,6 +47,13 @@ export default async function RoadmapPage() {
 
   // One update on the rail: its title linked to the commit behind it, with a real post on hover
   // when it has one; an update with no commit yet (this page) sets off the lifeline's fireworks
+  // The three brands added to the library most recently, as a small cluster of their marks
+  const brands = [...new Map(posts.toSorted((a, b) => b.addedAt.localeCompare(a.addedAt)).filter((post) => post.brand.logo).map((post) => [post.brand.slug, post.brand])).values()];
+  const shown = brands.slice(0, 3);
+  const brandGallery = shown.length
+    ? { images: shown.map((brand) => ({ src: brand.logo!, alt: brand.name })), label: `The newest brands in the library: ${shown.map((brand) => brand.name).join(", ")}` }
+    : null;
+
   const update = (title: string, commit?: string): LifelineEvent => {
     if (!commit) return { text: `${title} 🎆`, effect: "fireworks" };
     const text = [{ type: "link" as const, value: title, href: `${REPO}${commit}` }];
@@ -83,7 +90,11 @@ export default async function RoadmapPage() {
         label: when,
         // What's in progress reads bright, as if hovered; Next and Later stay quiet until pointed at
         current: stage === "Now",
-        events: ROADMAP.filter((item) => item.stage === stage).map((item) => item.title),
+        // An item to celebrate (the closed beta launch) sets off the fireworks, like this page's own
+        // entry; More brands shows the library's brand marks under it
+        events: ROADMAP.filter((item) => item.stage === stage).map((item): LifelineEvent =>
+          item.celebrate ? { text: `${item.title} 🎆`, effect: "fireworks" } : item.brands && brandGallery ? { text: item.title, gallery: brandGallery } : item.title,
+        ),
       }),
     ),
   ];

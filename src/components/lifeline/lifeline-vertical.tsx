@@ -15,6 +15,8 @@ import ImageIcon from "@/components/fundations/icons/Picture"
 import { cn } from "@/lib/utils"
 import { CompanyIcon } from "./company-icon"
 import {
+  getLifelineEventGallery,
+  LifelineEventGallery,
   getLifelineEventEffect,
   getLifelineEventImage,
   getLifelineEventKey,
@@ -62,6 +64,7 @@ function LifelineVerticalEvent({ event }: { event: LifelineEvent }) {
   const fireworks = useLifelineFireworks()
   const image = getLifelineEventImage(event)
   const effect = getLifelineEventEffect(event)
+  const gallery = getLifelineEventGallery(event)
   const textRef = useRef<HTMLParagraphElement>(null)
   const aspectRef = useRef(3 / 4)
   const [lightboxStart, setLightboxStart] =
@@ -138,6 +141,8 @@ function LifelineVerticalEvent({ event }: { event: LifelineEvent }) {
           </span>
         )}
       </p>
+      {/* Curatit: a gallery under the text */}
+      {gallery && <LifelineEventGallery gallery={gallery} />}
       {lightboxStart && image && (
         <LifelineLightbox
           photo={image}

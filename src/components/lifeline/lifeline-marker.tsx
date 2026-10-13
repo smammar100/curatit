@@ -5,6 +5,8 @@ import ImageIcon from "@/components/fundations/icons/Picture"
 import { cn } from "@/lib/utils"
 import { CompanyIcon } from "./company-icon"
 import {
+  getLifelineEventGallery,
+  LifelineEventGallery,
   getLifelineEventEffect,
   getLifelineEventImage,
   getLifelineEventKey,
@@ -124,10 +126,11 @@ export const LifelineMarkerColumn = forwardRef<
                 {marker.events.map((event, index) => {
                   const image = getLifelineEventImage(event)
                   const effect = getLifelineEventEffect(event)
+                  const gallery = getLifelineEventGallery(event)
 
                   return (
+                    <div key={getLifelineEventKey(event, index)}>
                     <p
-                      key={getLifelineEventKey(event, index)}
                       className={cn(
                         "max-w-[18rem] text-left text-[14px] leading-[1.55] tracking-[-0.01em]",
                         effect && "cursor-pointer",
@@ -167,6 +170,9 @@ export const LifelineMarkerColumn = forwardRef<
                         </span>
                       )}
                     </p>
+                    {/* Curatit: a gallery under the text */}
+                    {gallery && <LifelineEventGallery gallery={gallery} />}
+                    </div>
                   )
                 })}
               </div>

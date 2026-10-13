@@ -42,6 +42,8 @@ export function getMarkerHeight(marker: LifelineMarker, nextYear?: number) {
 
   if (marker.companies?.length) height += 28
   height += marker.events.length * 44
+  // Curatit: an event's gallery adds a row of images under it
+  height += marker.events.filter((event) => typeof event === "object" && !Array.isArray(event) && "gallery" in event && event.gallery).length * 44
 
   if (peopleOnly) height += 88
   else if (hasPeople) height += 108
