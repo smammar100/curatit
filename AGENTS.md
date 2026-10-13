@@ -172,3 +172,28 @@ Run at repo root:
 - Changelog (theme): https://lexingtonthemes.com/changelog/carbon  
 - Support: https://lexingtonthemes.com/legal/support/  
 - Bundle: https://lexingtonthemes.com  
+
+## Paddle integration
+
+- Read `docs/paddle.md` before modifying billing. This is a sandbox checkout and
+  webhook-logging scaffold, not a production entitlement system.
+- Check current Paddle documentation through `paddle-docs` before suggesting code.
+  If that connection is unavailable, say so and consult the official Paddle docs
+  directly; do not claim an MCP call succeeded. The initial scaffold used that fallback.
+- Use `@paddle/paddle-node-sdk` on the Node.js server and `@paddle/paddle-js` in
+  client checkout components. Keep their pinned versions and lockfile in sync.
+- All development uses sandbox. Reject API keys without `pdl_sdbx_` and client
+  tokens without `test_`. The runtime intentionally has no production switch yet.
+- Verify the raw webhook request with `paddle.webhooks.unmarshal()` before
+  inspecting or acting on the event. Never parse and reserialize before verification.
+- Before destructive account changes (including price updates, archiving products
+  and subscription cancellation), obtain explicit confirmation.
+- Use `paddle-sandbox` by default. Only use `paddle-live` for an explicitly requested
+  live/production/real-customer task. Its project connection is disabled by default.
+- Keep API keys and webhook secrets in environment variables, never in source,
+  client bundles, logs, MCP configuration or chat. The sandbox client token is public.
+- Price/quantity and the authenticated account ID come from the server. Never grant
+  access from checkout callbacks, caller-supplied custom data or a success URL.
+- Run the Paddle tests, typecheck and build. Account-dependent end-to-end testing
+  requires actual sandbox credentials and a reachable webhook destination; report
+  it as unverified until a test transaction and its webhook delivery are observed.

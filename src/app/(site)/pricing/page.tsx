@@ -4,6 +4,10 @@ import Button from "@/components/fundations/elements/Button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 // Components
 import Faq from "@/components/global/Faq";
+import PaddleCheckoutButton from "@/components/billing/PaddleCheckoutButton";
+import { isPaddleConfigured } from "@/lib/paddle/config";
+
+export const dynamic = "force-dynamic";
 
 type Plan = {
   name: string;
@@ -32,7 +36,6 @@ const plans: Plan[] = [
     name: "Team",
     description: "Get limited access to everything.",
     priceMonthly: "$9",
-    priceAnnual: "$6",
     buttonVariant: "accent",
     features: [
       { label: "Bookmarks & collections", value: "Unlimited for teams" },
@@ -100,9 +103,13 @@ export default function PricingPage() {
                     </ul>
                   )}
                 </div>
-                <Button size="base" variant="default" className="w-fit mt-8">
-                  Get started
-                </Button>
+                {plan.priceStatic ? (
+                  <Button isLink href="/signup" size="base" variant="default" className="w-fit mt-8">
+                    Get started
+                  </Button>
+                ) : (
+                  <PaddleCheckoutButton enabled={isPaddleConfigured()} />
+                )}
               </div>
             ))}
           </div>
