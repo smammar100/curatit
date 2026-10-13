@@ -78,7 +78,7 @@
 
 | URL pattern | Source |
 |-------------|--------|
-| `/` | `src/app/(site)/page.tsx` — Curatit homepage built from `src/components/home/` (corridor hero, pinned problem → solution scroll section, how-it-works cards, category folders, the MCP section (`McpSection`: a monochrome Beta chip, present-tense copy and Connect your AI tool → `/agents`, beside the `McpDemo` chat), FAQ) |
+| `/` | `src/app/(site)/page.tsx` — Curatit homepage built from `src/components/home/` (corridor hero, pinned problem → solution scroll section, how-it-works cards, category folders, the MCP section (`McpSection`: a monochrome Beta chip, present-tense copy and Learn more → `/agents`, beside the `McpDemo` chat), FAQ) |
 | `/dashboard` | `src/app/dashboard/page.tsx` — the signed-in home (no site nav or footer, not indexed): the library as a feed after Cosmos, built from `src/components/dashboard/`. Real posts and the signed-in person's own boards (`public.boards` / `board_posts`, loaded in the browser); signed-out visitors are sent to `/signin?next=…` by the proxy |
 | `/dashboard/welcome` | `src/app/dashboard/welcome/page.tsx` — the welcome flow after sign-up (`components/onboarding/Welcome`): name and what you do, industries, brands, a taste test, saved to `public.profiles`; the feed sends anyone whose profile has no `onboarded_at` here, and the account menu's Personalise your feed opens it again |
 | `/dashboard/b/[id]` | `src/app/dashboard/b/[id]/page.tsx` — a board's page (`BoardView`). Boards are per person and load in the browser, so it's one shell for every id, built on first visit and cached |

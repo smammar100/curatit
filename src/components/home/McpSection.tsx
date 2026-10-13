@@ -26,7 +26,7 @@ export default function McpSection() {
             </Text>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Button isLink size="base" variant="default" href="/agents">
-                Connect your AI tool
+                Learn more
               </Button>
               <Text tag="p" variant="textSM" className="text-base-500">
                 Works with any MCP client
