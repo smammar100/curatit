@@ -9,6 +9,7 @@ import { cx } from "@/lib/cx";
 import { CreativeDna, type SlideObservation } from "@/lib/creative/schema";
 import { DIMENSIONS, TAXONOMY_VERSION, type Dimension } from "@/lib/creative/taxonomy";
 import { validateDna, type Issue } from "@/lib/creative/validate";
+import { track } from "@/lib/analytics";
 import { saveEdit, type Version } from "./data";
 import { quietButton, Section, solidButton, useBusy } from "./parts";
 
@@ -131,7 +132,10 @@ export default function DnaEditor({
         { approve, publish },
       );
     });
-    if (ok && saved) onSaved((saved as { version_id: string }).version_id);
+    if (ok && saved) {
+      track("creative_dna_saved", { approved: approve, published: publish });
+      onSaved((saved as { version_id: string }).version_id);
+    }
   }
 
   const secondary = dna.secondary_archetypes;

@@ -15,6 +15,7 @@ import Plus from "@/components/fundations/icons/Plus";
 import WarningCircle from "@/components/fundations/icons/WarningCircle";
 import { cx } from "@/lib/cx";
 import { createClient } from "@/utils/supabase/client";
+import { track } from "@/lib/analytics";
 import type { Board, DashPost } from "./types";
 
 type BoardsValue = {
@@ -120,9 +121,13 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
   // Runs a write once the board exists; undoes the change if either fails. A post that's
   // already on the board (saved from another tab) counts as saved.
   const write = async (boardId: string, run: () => PromiseLike<{ error: { code?: string } | null }>, undo: () => void) => {
-    if (!(await (creating.current.get(boardId) ?? true))) return;
+    if (!(await (creating.current.get(boardId) ?? true))) return false;
     const { error } = await run();
-    if (error && error.code !== "23505") undo();
+    if (error && error.code !== "23505") {
+      undo();
+      return false;
+    }
+    return true;
   };
 
   const save = (code: string, boardId: string) => {
@@ -133,14 +138,16 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
     const now = new Date().toISOString();
     change(boardId, (b) => ({ ...b, updatedAt: now, items: [{ post: code, addedAt: now }, ...b.items] }));
     notify(`Saved to ${board.name}`);
-    write(
+    void write(
       boardId,
       () => supabase.from("board_posts").insert({ board_id: boardId, post_id: post.id }),
       () => {
         change(boardId, (b) => ({ ...b, items: b.items.filter((item) => item.post !== code) }));
         notify(`Couldn’t save to ${board.name}. Try again.`, "error");
       },
-    );
+    ).then((saved) => {
+      if (saved) track("post_saved_to_board", { board_post_count: board.items.length + 1 });
+    });
   };
 
   const remove = (code: string, boardId: string) => {
@@ -150,14 +157,16 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
     if (!board || !post || !item) return;
     change(boardId, (b) => ({ ...b, updatedAt: new Date().toISOString(), items: b.items.filter((i) => i.post !== code) }));
     notify(`Removed from ${board.name}`);
-    write(
+    void write(
       boardId,
       () => supabase.from("board_posts").delete().eq("board_id", boardId).eq("post_id", post.id),
       () => {
         change(boardId, (b) => ({ ...b, items: [item, ...b.items].sort(newestFirst) }));
         notify(`Couldn’t remove it from ${board.name}. Try again.`, "error");
       },
-    );
+    ).then((removed) => {
+      if (removed) track("post_removed_from_board", { board_post_count: board.items.length - 1 });
+    });
   };
 
   const createBoard = (name: string, { description, shared, firstPost }: { description?: string; shared?: boolean; firstPost?: string } = {}) => {
@@ -173,7 +182,14 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
     creating.current.set(id, created);
     created.then((ok) => {
       creating.current.delete(id);
-      if (ok) return;
+      if (ok) {
+        track("board_created", {
+          has_description: Boolean(about),
+          initial_post_requested: Boolean(post),
+          shared: Boolean(shared),
+        });
+        return;
+      }
       setBoards((list) => list.filter((b) => b.id !== id));
       notify(`Couldn’t create ${name}. Try again.`, "error");
     });
@@ -211,14 +227,16 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
     if (!board) return;
     setBoards((list) => list.filter((b) => b.id !== id));
     notify(`Deleted ${board.name}`);
-    write(
+    void write(
       id,
       () => supabase.from("boards").delete().eq("id", id),
       () => {
         setBoards((list) => [board, ...list]);
         notify(`Couldn’t delete ${board.name}. Try again.`, "error");
       },
-    );
+    ).then((deleted) => {
+      if (deleted) track("board_deleted", { board_post_count: board.items.length });
+    });
   };
 
   const setNote = (code: string, boardId: string, note: string) => {
@@ -244,14 +262,16 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
     const token = on ? crypto.randomUUID() : null;
     change(id, (b) => ({ ...b, shareToken: token }));
     if (!on) notify(`${board.name} is private again`);
-    write(
+    void write(
       id,
       () => supabase.from("boards").update({ share_token: token }).eq("id", id),
       () => {
         change(id, (b) => ({ ...b, shareToken: board.shareToken }));
         notify(on ? "Couldn’t make a link. Try again." : "Couldn’t turn the link off. Try again.", "error");
       },
-    );
+    ).then((updated) => {
+      if (updated) track("board_sharing_changed", { shared: on });
+    });
   };
 
   const sorted = useMemo(() => boards.toSorted((a, b) => b.updatedAt.localeCompare(a.updatedAt)), [boards]);

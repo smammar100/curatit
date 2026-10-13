@@ -5,15 +5,16 @@
 // returns the sanitized result, and stops at a budget of iterations, time and calls. Credentials
 // never enter a prompt; tool results are data, never instructions.
 
+import type { AiObserver } from "./ai-observability.js";
 import type { FunctionSpec } from "./schema-adapters.js";
 
 export type ToolCall = { id: string; name: string; arguments: unknown };
-export type ModelTurn = { text: string | null; toolCalls: ToolCall[]; stop: boolean };
+export type ModelTurn = { text: string | null; toolCalls: ToolCall[]; stop: boolean; generationSpanId?: string };
 export type ToolResultMessage = { id: string; name: string; result: string; isError: boolean };
 
 export type ModelProvider = {
   // One round: the conversation so far and the tools; returns the model's text and/or tool calls
-  turn(input: { system: string; messages: Message[]; functions: FunctionSpec[]; signal: AbortSignal }): Promise<ModelTurn>;
+  turn(input: { system: string; messages: Message[]; functions: FunctionSpec[]; signal: AbortSignal; observability?: AiObserver; traceId?: string }): Promise<ModelTurn>;
 };
 
 export type Message = { role: "user"; content: string } | { role: "assistant"; content: string | null; toolCalls: ToolCall[] } | { role: "tool"; results: ToolResultMessage[] };
@@ -31,6 +32,7 @@ export type LoopOptions = {
   // Which functions the model may call; defaults to all of them
   allow?: string[];
   onEvent?: (event: { kind: "model" | "tool" | "refused" | "done"; detail: string }) => void;
+  observability?: AiObserver;
 };
 
 export const SYSTEM_PROMPT =
@@ -72,9 +74,10 @@ export async function runToolLoop(provider: ModelProvider, api: CuratitApi, func
   const messages: Message[] = [{ role: "user", content: userRequest }];
   let toolCalls = 0;
   const trace: { name: string; status: number | "refused" }[] = [];
+  const traceId = options.observability?.createTraceId();
   try {
     for (let i = 0; i < maxIterations; i++) {
-      const turn = await provider.turn({ system: SYSTEM_PROMPT, messages, functions: functions.filter((f) => allowed.has(f.name)), signal: controller.signal });
+      const turn = await provider.turn({ system: SYSTEM_PROMPT, messages, functions: functions.filter((f) => allowed.has(f.name)), signal: controller.signal, observability: options.observability, traceId });
       options.onEvent?.({ kind: "model", detail: turn.text ? turn.text.slice(0, 120) : `${turn.toolCalls.length} tool call(s)` });
       messages.push({ role: "assistant", content: turn.text, toolCalls: turn.toolCalls });
       if (turn.stop || !turn.toolCalls.length) return { answer: turn.text ?? "", messages, trace };
@@ -94,11 +97,24 @@ export async function runToolLoop(provider: ModelProvider, api: CuratitApi, func
         const args = call.arguments && typeof call.arguments === "object" && !Array.isArray(call.arguments) ? (call.arguments as Record<string, unknown>) : {};
         let status: number;
         let body: unknown;
+        const started = Date.now();
         try {
           ({ status, body } = await callCuratit(api, fn, args, controller.signal));
         } catch (error) {
           status = 0;
           body = { error: { code: "UPSTREAM_UNAVAILABLE", message: String((error as Error).message ?? error) } };
+        }
+        if (options.observability && traceId) {
+          options.observability.captureSpan({
+            traceId,
+            spanId: options.observability.createSpanId(),
+            parentId: turn.generationSpanId,
+            name: call.name,
+            input: args,
+            output: body,
+            latencySeconds: (Date.now() - started) / 1000,
+            isError: status >= 400 || status === 0,
+          });
         }
         trace.push({ name: call.name, status });
         options.onEvent?.({ kind: "tool", detail: `${call.name} → ${status}` });
