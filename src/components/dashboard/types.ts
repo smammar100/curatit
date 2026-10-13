@@ -1,7 +1,7 @@
 import type { LibraryPost } from "@/lib/posts";
 
 // What the dashboard needs of a post, so the page sends the browser no more than that
-export type DashPost = Pick<LibraryPost, "id" | "shortCode" | "hook" | "brand" | "category" | "format" | "width" | "height" | "postedAt" | "addedAt"> & {
+export type DashPost = Pick<LibraryPost, "id" | "shortCode" | "hook" | "brand" | "category" | "categories" | "format" | "width" | "height" | "postedAt" | "addedAt"> & {
   cover: string;
 };
 

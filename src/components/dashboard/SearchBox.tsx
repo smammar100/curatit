@@ -13,7 +13,7 @@ import { BorderBeam } from "border-beam";
 import Close from "@/components/fundations/icons/Close";
 import Search from "@/components/fundations/icons/Search";
 import { useDarkTheme } from "@/components/global/theme";
-import { categories } from "@/components/home/demo";
+import { categoriesWithPosts } from "@/lib/categories";
 import { cx } from "@/lib/cx";
 import { useBoards } from "./boards";
 import { CATEGORY_ICONS } from "./categoryIcons";
@@ -116,12 +116,8 @@ export default function SearchBox({
     };
   }, [open]);
 
-  // The homepage's category tabs, but named as the library names them ("Fintech", not the
-  // tab's "Finance"), since that's what the search matches against
-  const chips = categories.map((category) => ({
-    ...category,
-    name: list.find((post) => post.category.slug === category.category)?.category.name ?? category.name,
-  }));
+  // The categories that have posts, by the names the search matches against (lib/categories)
+  const chips = categoriesWithPosts(list);
 
   // Every brand once, in the feed's order (newest to the library first); while typing, the ones
   // whose name or slug holds what's typed
@@ -218,9 +214,9 @@ export default function SearchBox({
                 <Section title="Categories">
                   <Row>
                     {chips.map((category) => (
-                      <Chip key={category.category} onClick={() => pick(category.name)}>
+                      <Chip key={category.slug} onClick={() => pick(category.name)}>
                         {/* The category's swatch, as a tile with its icon (Discover's icons) */}
-                        <CategorySwatch slug={category.category} hue={category.hue} />
+                        <CategorySwatch slug={category.slug} hue={category.hue} />
                         {category.name}
                       </Chip>
                     ))}

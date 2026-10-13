@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { categoryBySlug } from "@/lib/categories";
 import { resolve, type Dimension } from "./taxonomy";
 
 // The designer queries for Precision@5 use only fields and terms curatit_mcp_search_v2 accepts
@@ -18,6 +19,8 @@ describe("docs/creative-eval/queries.example.json", () => {
     it(query, () => {
       for (const [key, value] of Object.entries(request)) {
         expect([...DIMENSIONS, ...OTHER], key).toContain(key);
+        // search_v2 matches a category by its slug exactly and says nothing when there's none
+        if (key === "category") expect(categoryBySlug(value as string), `category: ${value}`).not.toBeNull();
         if (DIMENSIONS.includes(key as Dimension)) {
           for (const term of [value].flat() as string[]) expect(resolve(key as Dimension, term), `${key}: ${term}`).not.toBeNull();
         }

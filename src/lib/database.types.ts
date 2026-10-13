@@ -155,6 +155,7 @@ export type Database = {
           logo_path: string | null
           name: string
           slug: string
+          storage_folder: string | null
           updated_at: string
           website_url: string | null
         }
@@ -165,6 +166,7 @@ export type Database = {
           logo_path?: string | null
           name: string
           slug: string
+          storage_folder?: string | null
           updated_at?: string
           website_url?: string | null
         }
@@ -175,6 +177,7 @@ export type Database = {
           logo_path?: string | null
           name?: string
           slug?: string
+          storage_folder?: string | null
           updated_at?: string
           website_url?: string | null
         }

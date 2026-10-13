@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { CATEGORIES, categoryBySlug, inCategory, OLD_SLUGS } from "@/lib/categories";
 import { createPublicClient } from "@/utils/supabase/public";
 
 // A published library post as the site shows it, read from Supabase
@@ -17,7 +18,10 @@ export type LibraryPost = {
   height: number | null;
   // logo is the URL of the brand's mark in the `library` bucket (via /lib), if it has one
   brand: { name: string; slug: string; logo: string | null };
+  // The brand's main category
   category: { name: string; slug: string };
+  // Every category the post is in: the main one first, then its extra tags (post_categories)
+  categories: { name: string; slug: string }[];
   // URLs of the post's files in the `library` bucket (via /lib), cover first, then each carousel slide
   images: string[];
 };
@@ -34,7 +38,22 @@ type Row = {
   dimensions_height: number | null;
   brands: { name: string; slug: string; logo_path: string | null; categories: { name: string; slug: string } | null } | null;
   post_images: { position: number; path: string }[];
+  post_categories: { categories: { name: string; slug: string } | null }[];
 };
+
+// The main category, then the extra tags in the categories' own order. Slugs from before the
+// 2026-10-13 categories read as today's, so the site shows the right ones whichever of the
+// migration and the deploy lands first
+const ORDER = new Map(CATEGORIES.map((category, index) => [category.slug, index]));
+function current(category: { name: string; slug: string }) {
+  const slug = OLD_SLUGS[category.slug] ?? category.slug;
+  return { slug, name: categoryBySlug(slug)?.name ?? category.name };
+}
+function allCategories(main: { name: string; slug: string }, tags: Row["post_categories"]) {
+  const first = current(main);
+  const extra = tags.flatMap((tag) => (tag.categories ? [current(tag.categories)] : [])).filter((tag) => tag.slug !== first.slug);
+  return [first, ...[...new Map(extra.map((tag) => [tag.slug, tag])).values()].toSorted((a, b) => (ORDER.get(a.slug) ?? 99) - (ORDER.get(b.slug) ?? 99))];
+}
 
 function hookFrom(caption: string | null) {
   const text = (caption ?? "").replace(/\s+/g, " ").trim();
@@ -48,7 +67,7 @@ export const getPublishedPosts = cache(async (): Promise<LibraryPost[]> => {
   const { data, error } = await supabase
     .from("instagram_posts")
     .select(
-      "id, short_code, url, format, caption, posted_at, created_at, dimensions_width, dimensions_height, brands(name, slug, logo_path, categories(name, slug)), post_images(position, path)"
+      "id, short_code, url, format, caption, posted_at, created_at, dimensions_width, dimensions_height, brands(name, slug, logo_path, categories(name, slug)), post_images(position, path), post_categories(categories(name, slug))"
     )
     .eq("is_published", true)
     .order("posted_at", { ascending: false })
@@ -74,7 +93,8 @@ export const getPublishedPosts = cache(async (): Promise<LibraryPost[]> => {
         slug: row.brands!.slug,
         logo: row.brands!.logo_path ? libraryUrl(row.brands!.logo_path) : null,
       },
-      category: row.brands!.categories!,
+      category: current(row.brands!.categories!),
+      categories: allCategories(row.brands!.categories!, row.post_categories ?? []),
       images: row.post_images
         .toSorted((a, b) => a.position - b.position)
         .map((image) => libraryUrl(image.path)),
@@ -110,7 +130,7 @@ export const getPostDetail = cache(async (shortCode: string): Promise<PostDetail
   const { data, error } = await supabase
     .from("instagram_posts")
     .select(
-      "id, short_code, url, format, caption, posted_at, created_at, dimensions_width, dimensions_height, likes_count, comments_count, owner_username, owner:instagram_accounts!instagram_posts_owner_id_fkey(is_verified), brands(name, slug, logo_path, categories(name, slug)), post_images(position, path), instagram_post_media!instagram_post_media_post_id_fkey(position, type)"
+      "id, short_code, url, format, caption, posted_at, created_at, dimensions_width, dimensions_height, likes_count, comments_count, owner_username, owner:instagram_accounts!instagram_posts_owner_id_fkey(is_verified), brands(name, slug, logo_path, categories(name, slug)), post_images(position, path), post_categories(categories(name, slug)), instagram_post_media!instagram_post_media_post_id_fkey(position, type)"
     )
     .eq("is_published", true)
     .eq("short_code", shortCode)
@@ -119,7 +139,7 @@ export const getPostDetail = cache(async (shortCode: string): Promise<PostDetail
   if (error) throw new Error(`Could not load post ${shortCode} from Supabase: ${error.message}`);
   if (!data?.brands?.categories || !data.post_images.length) return null;
 
-  const category = data.brands.categories;
+  const category = current(data.brands.categories);
   const libraryUrl = (path: string) => `/lib/${path}`;
   const count = (value: number | null) => (value == null || value < 0 ? null : value);
   const images = data.post_images.toSorted((a, b) => a.position - b.position);
@@ -146,6 +166,7 @@ export const getPostDetail = cache(async (shortCode: string): Promise<PostDetail
       logo: data.brands.logo_path ? libraryUrl(data.brands.logo_path) : null,
     },
     category,
+    categories: allCategories(data.brands.categories, data.post_categories ?? []),
     images: images.map((image) => libraryUrl(image.path)),
     videos: images.map((image) => (data.format === "video" ? image.position === 0 : media.get(image.position) === "video")),
   };
@@ -156,10 +177,11 @@ export function optimizedImage(src: string, width = 640, quality = 75) {
   return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=${quality}`;
 }
 
-// The newest posts in a category, taking one brand at a time so a set isn't all one brand
+// The newest posts in a category (main or extra), taking one brand at a time so a set isn't all
+// one brand
 export function categoryPosts(posts: LibraryPost[], category: string, count: number) {
   const queues = Map.groupBy(
-    posts.filter((post) => post.category.slug === category),
+    posts.filter((post) => inCategory(post, category)),
     (post) => post.brand.slug
   );
   const picked: LibraryPost[] = [];

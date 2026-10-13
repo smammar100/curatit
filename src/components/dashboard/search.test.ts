@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { rank } from "./forYou";
-import { brandNamed, compact, matches, normalise } from "./search";
+import { brandNamed, categoryNamed, compact, matches, normalise } from "./search";
 import type { DashPost } from "./types";
 
 const post = (shortCode: string, brand: string, slug: string, hook: string, category = "fintech", addedAt = "2026-10-10T09:00:00Z"): DashPost => ({
@@ -9,6 +9,7 @@ const post = (shortCode: string, brand: string, slug: string, hook: string, cate
   hook,
   brand: { name: brand, slug, logo: null },
   category: { name: category, slug: category },
+  categories: [{ name: category, slug: category }],
   format: "static",
   width: null,
   height: null,
@@ -60,5 +61,49 @@ describe("For you and the newest import", () => {
   it("leaves the welcome flow's ranking alone", () => {
     expect(rank(library, answers, library)[0].shortCode).toBe("c1");
     expect(rank(library, answers, library).map((p) => p.shortCode).indexOf("a1")).toBeGreaterThan(0);
+  });
+});
+
+describe("extra categories (2026-10-13)", () => {
+  // Nike's main category is Sports; it also carries Shopping
+  const nike: DashPost = { ...post("N1", "Nike", "nike", "Just do it", "sports"), categories: [{ name: "Sports", slug: "sports" }, { name: "Shopping", slug: "shopping" }] };
+  const wise = post("W1", "Wise", "wise", "Send money abroad", "finance");
+
+  it("search finds a post by an extra category's name", () => {
+    expect(matches(nike, "shopping")).toBe(true);
+    expect(matches(wise, "shopping")).toBe(false);
+  });
+
+  it("For you counts an industry picked through an extra tag", () => {
+    const ranked = rank([wise, nike], { industries: ["shopping"], brands: [], taste: [] });
+    expect(ranked[0].shortCode).toBe("N1");
+  });
+});
+
+describe("category words and names (review, 2026-10-13)", () => {
+  const claude: DashPost = { ...post("C1", "Claude", "claude", "Meet the new model", "ai"), categories: [{ name: "AI", slug: "ai" }, { name: "Productivity", slug: "productivity" }] };
+  const airbnb: DashPost = { ...post("A1", "Airbnb", "airbnb", "Stay again in Paris", "travel-transportation"), categories: [{ name: "Travel & Transportation", slug: "travel-transportation" }, { name: "Lifestyle", slug: "lifestyle" }] };
+  const revolut: DashPost = { ...post("R1", "Revolut", "revolut", "Spend abroad", "finance"), categories: [{ name: "Finance", slug: "finance" }] };
+
+  it("matches a category's words whole: \"life\" isn't Lifestyle, though hooks and brands still match in part", () => {
+    expect(matches(airbnb, "lifestyle")).toBe(true);
+    expect(matches(airbnb, "life")).toBe(false);
+    expect(matches(claude, "ai")).toBe(true);
+    // The AI chip doesn't search words at all: the feed sees the query names a category (categoryNamed)
+    // and keeps that category's posts, so Airbnb's name and hook can't pull it in
+    expect(categoryNamed("AI")?.slug).toBe("ai");
+  });
+
+  it("still finds posts by the old category names", () => {
+    expect(matches(revolut, "fintech")).toBe(true);
+    expect(matches(claude, "technology")).toBe(true);
+    expect(matches(airbnb, "fintech")).toBe(false);
+  });
+
+  it("knows a query that names a category exactly", () => {
+    expect(categoryNamed("AI")?.slug).toBe("ai");
+    expect(categoryNamed("travel transportation")?.slug).toBe("travel-transportation");
+    expect(categoryNamed("Food & Drink")?.slug).toBe("food-drink");
+    expect(categoryNamed("launch")).toBeNull();
   });
 });
