@@ -21,6 +21,7 @@ import { getThemeMode, setThemeMode, type ThemeMode } from "@/components/global/
 import { SUPPORT_MAILTO } from "@/lib/site";
 import { cx } from "@/lib/cx";
 import { signOut } from "@/app/auth/actions";
+import { resetAnalytics } from "@/lib/analytics";
 import { Avatar, useUser } from "./user";
 import { useGridSize } from "./prefs";
 import { useProfile } from "./profile";
@@ -119,7 +120,7 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
             Contact us
             <ChatDots className="size-5" />
           </a>
-          <form action={signOut}>
+          <form action={signOut} onSubmit={resetAnalytics}>
             <button type="submit" role="menuitem" className={item}>
               Log out
               <SignOut className="size-5" />
