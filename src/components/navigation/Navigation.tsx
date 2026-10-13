@@ -7,12 +7,12 @@ import Wrapper from "@/components/fundations/containers/Wrapper";
 // Components
 import ThemeToggle from "@/components/global/ThemeToggle";
 import MobileNav from "./MobileNav";
-// Quick access links; `beta` adds a small Beta chip after the label
+// Quick access links; `soon` adds a small Soon chip after the label
 const links = [
   { href: "/pricing", text: "Pricing" },
   { href: "/vision", text: "Vision" },
   { href: "/roadmap", text: "Roadmap" },
-  { href: "/agents", text: "MCP", beta: true },
+  { href: "/agents", text: "MCP", soon: true },
 ];
 
 export default function Navigation() {
@@ -34,8 +34,8 @@ export default function Navigation() {
                   href={link.href}
                 >
                   {link.text}
-                  {link.beta && (
-                    <span className="rounded px-1 py-0.5 text-[10px]/none font-medium text-base-600 ring-1 ring-base-200">Beta</span>
+                  {link.soon && (
+                    <span className="rounded px-1 py-0.5 text-[10px]/none font-medium text-base-600 ring-1 ring-base-200">Soon</span>
                   )}
                 </Link>
               ))}
