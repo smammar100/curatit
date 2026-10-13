@@ -8,7 +8,7 @@ One server, three ways in:
 
 **Get a token:** sign in, open the account menu → API tokens (`/dashboard/settings/tokens`), create one with the scopes you need (`curatit:read` for research, `curatit:brief` for briefs). It's shown once. Revoke it from the same page.
 
-**Smoke-test prompt** for any host: *Find three finance carousel posts and show their sources.* The host should call `curatit_get_taxonomy` or go straight to `curatit_search_posts` with `filters.industries: ["fintech"]`, `filters.formats: ["carousel"]`, `limit: 3`, and answer with three Instagram URLs.
+**Smoke-test prompt** for any host: *Find three finance carousel posts and show their sources.* The host should call `curatit_get_taxonomy` or go straight to `curatit_search_posts` with `filters.industries: ["finance"]`, `filters.formats: ["carousel"]`, `limit: 3`, and answer with three Instagram URLs.
 
 **Keep the token out of files you commit, screenshots and prompts.** The guides below put it in the environment.
 
