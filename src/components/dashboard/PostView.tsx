@@ -164,9 +164,15 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
               </p>
               <p className="mt-0.5 truncate text-body text-base-500">
                 {post.handle && <>@{post.handle} · </>}
-                <Link href={feedHref("For you", post.category.name)} className="hover:text-base-900">
-                  {post.category.name}
-                </Link>
+                {/* The main category, then any extra ones; each opens Discover on it */}
+                {post.categories.map((category, i) => (
+                  <span key={category.slug}>
+                    {i > 0 && " · "}
+                    <Link href={feedHref("Discover", "", category.slug)} className="hover:text-base-900">
+                      {category.name}
+                    </Link>
+                  </span>
+                ))}
               </p>
             </div>
             <a
@@ -186,7 +192,7 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
             </h1>
             <p className="mt-2 text-body text-base-500">Posted {day.format(new Date(post.postedAt))}</p>
             <Section title="Observed engagement">
-              <ObservedEngagement likes={post.likes} comments={post.comments} />
+              <ObservedEngagement likes={post.likes} comments={post.comments} category={post.category} />
             </Section>
             {analysis ? (
               <>
@@ -270,7 +276,9 @@ function SlideButton({ side, disabled, onClick }: { side: "left" | "right"; disa
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="mt-6 border-t border-base-100 pt-5">
+    // No rule between sections (2026-10-13, at the person's request): the space and the small
+    // grey heading set each one apart
+    <section className="mt-8">
       <h2 className="mb-3 text-caption font-medium text-base-500">{title}</h2>
       {children}
     </section>

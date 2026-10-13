@@ -7,6 +7,7 @@
 // once and is undone if the write fails. The name is also written to the auth account's
 // metadata, which is where the account menu reads it.
 import { createContext, use, useEffect, useRef, useState, type ReactNode } from "react";
+import { currentSlugs } from "@/lib/categories";
 import { createClient } from "@/utils/supabase/client";
 
 export type Profile = {
@@ -60,7 +61,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         setProfile({
           name: data.full_name ?? "",
           occupation: data.occupation,
-          industries: data.industries ?? [],
+          // An answer saved before the 2026-10-13 categories reads (and saves back) in today's slugs
+          industries: currentSlugs(data.industries ?? []),
           brands: data.brands ?? [],
           taste: data.taste_posts ?? [],
           onboardedAt: data.onboarded_at,

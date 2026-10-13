@@ -11,7 +11,7 @@ import { ratio } from "@/components/dashboard/Grid";
 import { learnedChips, rank } from "@/components/dashboard/forYou";
 import type { Profile } from "@/components/dashboard/profile";
 import type { DashPost } from "@/components/dashboard/types";
-import { categories } from "@/components/home/demo";
+import { categoriesWithPosts, inCategory } from "@/lib/categories";
 import { cx } from "@/lib/cx";
 
 // The answers while they're being made: the profile without the time it was finished
@@ -27,13 +27,11 @@ export function brandsOf(posts: DashPost[]): Brand[] {
   return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
-// The library's categories, in the homepage's order, each with its hue and posts
+// The categories that have posts (lib/categories), each with its hue and posts: a post counts in
+// its brand's main category and in its extra tags
 export type Category = { slug: string; name: string; hue: number; posts: DashPost[] };
 export function categoriesOf(posts: DashPost[]): Category[] {
-  return categories.flatMap((c) => {
-    const inIt = posts.filter((p) => p.category.slug === c.category);
-    return inIt.length ? [{ slug: c.category, name: inIt[0].category.name, hue: c.hue, posts: inIt }] : [];
-  });
+  return categoriesWithPosts(posts).map((c) => ({ ...c, posts: posts.filter((p) => inCategory(p, c.slug)) }));
 }
 
 // The step's question. It takes focus when the step changes (tabIndex -1: a target, not a stop),
