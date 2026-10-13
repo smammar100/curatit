@@ -1,7 +1,7 @@
 [
   {
     "query": "Fintech educational carousels with bold sans-serif type, diagram-led explanations and question hooks",
-    "request": { "category": "fintech", "format": "carousel", "archetype_family": "education", "typography": "sans-serif", "layout": "diagram", "hook_technique": "question" },
+    "request": { "category": "finance", "format": "carousel", "archetype_family": "education", "typography": "sans-serif", "layout": "diagram", "hook_technique": "question" },
     "relevant": []
   },
   {
@@ -11,12 +11,12 @@
   },
   {
     "query": "Travel carousels that read as a step-by-step itinerary",
-    "request": { "category": "travel", "narrative_pattern": "step-by-step", "archetype": "utility-content" },
+    "request": { "category": "travel-transportation", "narrative_pattern": "step-by-step", "archetype": "utility-content" },
     "relevant": []
   },
   {
     "query": "Sportswear posts led by an athlete",
-    "request": { "category": "sportswear", "archetype": "creator-feature" },
+    "request": { "category": "sports", "archetype": "creator-feature" },
     "relevant": []
   },
   {
@@ -26,7 +26,7 @@
   },
   {
     "query": "Memes and relatable humour from tech brands",
-    "request": { "category": "technology", "archetype_family": "entertainment" },
+    "request": { "category": "ai", "archetype_family": "entertainment" },
     "relevant": []
   },
   {
@@ -41,7 +41,7 @@
   },
   {
     "query": "Food posts where the product fills the frame",
-    "request": { "category": "food-delivery", "imagery": "product-photography", "layout": "full-bleed" },
+    "request": { "category": "food-drink", "imagery": "product-photography", "layout": "full-bleed" },
     "relevant": []
   },
   {

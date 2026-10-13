@@ -97,14 +97,4 @@ export const featuredPosts = [
   ]),
 ];
 
-// The category tabs, each mapped to a library category (Categories.tsx).
-// `hue` is the OKLCH hue of the tab's colour; lightness and chroma are shared.
-export const categories = [
-  { name: "Food & Drink", category: "food-delivery", hue: 35 },
-  { name: "Sports", category: "sportswear", hue: 135 },
-  { name: "Technology", category: "technology", hue: 300 },
-  { name: "Fashion", category: "fashion", hue: 80 },
-  { name: "Finance", category: "fintech", hue: 175 },
-  { name: "Travel & Transportation", category: "travel", hue: 240 },
-  { name: "E-commerce", category: "ecommerce", hue: 330 },
-];
+// The category tabs' names, slugs and hues are the library's own: src/lib/categories.ts

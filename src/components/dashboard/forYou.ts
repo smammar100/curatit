@@ -5,7 +5,7 @@ import type { DashPost } from "./types";
 
 export type Taste = { industries: string[]; brands: string[]; taste: string[] };
 
-// An industry they picked counts most, then a brand they follow, then what the posts they tapped
+// An industry they picked counts most (a post is in its brand's main category and its extra tags), then a brand they follow, then what the posts they tapped
 // have in common (brand, industry, format). Ties keep the feed's own order (newest imports first),
 // so nothing shuffles for no reason, and with no answers the order is unchanged. `library` is
 // where the tapped posts are looked up: the whole library, even when `posts` is a search's
@@ -19,11 +19,13 @@ export function rank<P extends DashPost>(posts: P[], a: Taste, library: DashPost
   const likedBrands = new Set(liked.map((p) => p.brand.slug));
   const likedCategories = new Set(liked.map((p) => p.category.slug));
   const likedFormats = new Set(liked.map((p) => p.format));
+  const inAny = (p: DashPost, slugs: { has: (slug: string) => boolean }) => p.categories.some((category) => slugs.has(category.slug));
+  const picked = new Set(a.industries);
   const score = (p: DashPost) =>
-    (a.industries.includes(p.category.slug) ? 3 : 0) +
+    (inAny(p, picked) ? 3 : 0) +
     (a.brands.includes(p.brand.slug) ? 2 : 0) +
     (likedBrands.has(p.brand.slug) ? 2 : 0) +
-    (likedCategories.has(p.category.slug) ? 1 : 0) +
+    (inAny(p, likedCategories) ? 1 : 0) +
     (likedFormats.has(p.format) ? 1 : 0) +
     (newestDay && p.addedAt.startsWith(newestDay) ? 3 : 0);
   return posts

@@ -7,9 +7,10 @@ import { HomePostsProvider } from "@/components/home/HomePosts";
 import HowItWorks from "@/components/home/HowItWorks";
 import HydrateOnView from "@/components/home/HydrateOnView";
 import McpSection from "@/components/home/McpSection";
-import { categories, detail, featuredPosts } from "@/components/home/demo";
+import { detail, featuredPosts } from "@/components/home/demo";
 import { Categories, ProblemSolution } from "@/components/home/islands";
 import { faqs } from "@/components/home/faqs";
+import { categoriesWithPosts } from "@/lib/categories";
 import { categoryPosts, getPublishedPosts, withCoverOnly } from "@/lib/posts";
 
 export const metadata: Metadata = {
@@ -28,7 +29,9 @@ export default async function HomePage() {
   const featured = posts
     .filter((post) => featuredPosts.includes(post.shortCode))
     .map((post) => (post.shortCode === detail.post ? post : withCoverOnly(post)));
-  const gallery = categories.flatMap((category) => categoryPosts(posts, category.category, 10)).map(withCoverOnly);
+  // The tabs: the brands' main categories that can fill the ten-slot gallery
+  const tabs = categoriesWithPosts(posts, { main: true, min: 10 });
+  const gallery = [...new Map(tabs.flatMap((category) => categoryPosts(posts, category.slug, 10)).map((post) => [post.id, withCoverOnly(post)])).values()];
 
   // Below the hero, each section keeps its server HTML and only comes alive as it scrolls
   // into view, so a phone's first seconds go to the hero alone (see HydrateOnView). The FAQ
@@ -43,7 +46,7 @@ export default async function HomePage() {
         <HowItWorks />
       </HydrateOnView>
       <HydrateOnView>
-        <Categories posts={gallery} />
+        <Categories categories={tabs} posts={gallery} />
       </HydrateOnView>
       <HydrateOnView>
         <McpSection />

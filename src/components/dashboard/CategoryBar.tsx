@@ -4,12 +4,12 @@
 // library's categories as an icon and its name in the tab size, quiet grey, with only the one
 // that's on sitting in a soft pill, tinted with its category's hue (the swatch hue the homepage
 // and the search panel use; All stays grey). The icons are the homepage category tabs'
-// (Categories); the names are the library's own ("Fintech", not the homepage tab's "Finance"). When the row is
-// wider than the window it scrolls sideways, and the edge with more beyond it fades out, only
+// (Categories). Only categories with posts are listed, and a post counts in its brand's main
+// category and in its extra tags (lib/categories). When the row is wider than the window it scrolls sideways, and the edge with more beyond it fades out, only
 // while there is more, so the last category is never left faded.
 import { useEffect, useMemo, useRef, useState } from "react";
 import SquaresFour from "@/components/fundations/icons/SquaresFour";
-import { categories } from "@/components/home/demo";
+import { categoriesWithPosts } from "@/lib/categories";
 import { cx } from "@/lib/cx";
 import { CATEGORY_ICONS } from "./categoryIcons";
 import type { DashPost } from "./types";
@@ -20,14 +20,7 @@ export default function CategoryBar({ posts, value, onChange }: { posts: DashPos
   const ref = useRef<HTMLDivElement>(null);
   const [more, setMore] = useState({ left: false, right: false });
 
-  const options = useMemo(
-    () =>
-      categories.flatMap((category) => {
-        const inIt = posts.find((post) => post.category.slug === category.category);
-        return inIt ? [{ slug: category.category, name: inIt.category.name, hue: category.hue }] : [];
-      }),
-    [posts],
-  );
+  const options = useMemo(() => categoriesWithPosts(posts), [posts]);
 
   // Which edges have more to scroll to
   useEffect(() => {
@@ -62,7 +55,9 @@ export default function CategoryBar({ posts, value, onChange }: { posts: DashPos
       ref={ref}
       role="group"
       aria-label="Categories"
-      className="scrollbar-hide -mx-4 mb-8 flex gap-1 overflow-x-auto px-4 sm:-mx-6 sm:px-6"
+      // Spread evenly from the page's left gutter to its right one while the tabs fit (the gaps
+      // grow, the tabs keep their size); once they don't, space-between packs them and the row scrolls
+      className="scrollbar-hide -mx-4 mb-8 flex justify-between gap-1 overflow-x-auto px-4 sm:-mx-6 sm:px-6"
       style={{ maskImage: mask, WebkitMaskImage: mask }}
     >
       <button type="button" aria-pressed={value === null} onClick={() => onChange(null)} className={item(value === null)}>
