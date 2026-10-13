@@ -62,20 +62,24 @@ export const LifelineMarkerColumn = forwardRef<
         }}
       >
         <span
-          className="absolute left-0 top-[var(--lifeline-rail)] z-10 h-[10px] w-px -translate-y-1/2 bg-zinc-400 transition-colors duration-300 group-hover:bg-zinc-600 dark:bg-zinc-700 dark:group-hover:bg-zinc-400"
+          className={cn(
+            "absolute left-0 top-[var(--lifeline-rail)] z-10 h-[10px] w-px -translate-y-1/2 bg-zinc-400 transition-colors duration-300 group-hover:bg-zinc-600 dark:bg-zinc-700 dark:group-hover:bg-zinc-400",
+            // Curatit: a current column keeps its hover colours
+            marker.current && "bg-zinc-600 dark:bg-zinc-400"
+          )}
           aria-hidden="true"
         />
 
         <div className="flex w-full flex-col items-start text-left">
-          <p className="mb-5 h-4 text-[11px] font-medium leading-4 tabular-nums text-zinc-500 transition-colors duration-300 group-hover:text-black dark:text-zinc-600 dark:group-hover:text-zinc-400">
+          <p className={cn("mb-5 h-4 text-[11px] font-medium leading-4 tabular-nums text-zinc-500 transition-colors duration-300 group-hover:text-black dark:text-zinc-600 dark:group-hover:text-zinc-400", marker.current && "text-black dark:text-zinc-400")}>
             {age}
           </p>
 
-          <p className="mb-6 h-5 whitespace-nowrap text-[15px] font-medium leading-5 tabular-nums text-zinc-500 transition-colors duration-300 group-hover:text-black dark:group-hover:text-white">
+          <p className={cn("mb-6 h-5 whitespace-nowrap text-[15px] font-medium leading-5 tabular-nums text-zinc-500 transition-colors duration-300 group-hover:text-black dark:group-hover:text-white", marker.current && "text-black dark:text-white")}>
             {marker.label ?? marker.year}
           </p>
 
-          <div className="relative w-full pb-10 text-zinc-500 transition-colors duration-300 group-hover:text-black dark:group-hover:text-zinc-300">
+          <div className={cn("relative w-full pb-10 text-zinc-500 transition-colors duration-300 group-hover:text-black dark:group-hover:text-zinc-300", marker.current && "text-black dark:text-zinc-300")}>
             {/* When this column carries people, the content block reserves
                 the band's height as a floor: short and average columns put
                 their portraits on the same line as every other column, and

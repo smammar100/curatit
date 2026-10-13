@@ -81,6 +81,8 @@ export default async function RoadmapPage() {
         year: since.length + 1 + i,
         age: stage,
         label: when,
+        // What's in progress reads bright, as if hovered; Next and Later stay quiet until pointed at
+        current: stage === "Now",
         events: ROADMAP.filter((item) => item.stage === stage).map((item) => item.title),
       }),
     ),
