@@ -21,11 +21,9 @@ export const ROADMAP: RoadmapItem[] = [
   { stage: "Now", area: "AI agents", title: "Curatit inside your AI tools", detail: "Your AI tools will be able to search the library by brief and pull a post's breakdown. The search behind it is built; the connection itself isn't released yet." },
   { stage: "Now", area: "Creative Intelligence", title: "Breakdowns across the whole library", detail: "Breakdowns are drafted by AI and appear only once an editor approves them. A first round of posts has been analysed; the rest of the library will follow in batches." },
   { stage: "Now", area: "Library", title: "More brands", detail: "New brands join a few at a time, each with a handful of recent posts. Bolt and Public are the latest, and newly added posts now show near the top of your feed." },
-  { stage: "Next", area: "Accounts", title: "Sign in with Google", detail: "Sign in with Google was built, then taken out until the Google setup is done. Email and password work today." },
-  { stage: "Next", area: "Creative Intelligence", title: "Testing breakdowns against a plain critique", detail: "People will rate our breakdowns blind against a plain AI critique of the same images, across 24 posts from all seven categories. A model never marks its own work." },
-  { stage: "Later", area: "Creative Intelligence", title: "Breakdowns for video posts", detail: "Breakdowns cover image posts and carousels. Video posts aren't analysed yet, since the library keeps only a video's cover frame." },
-  { stage: "Later", area: "AI agents", title: "Search by meaning", detail: "Search for AI tools matches words and the labels in each breakdown. Searching by meaning comes after, and only if tests show it finds better references." },
-  { stage: "Later", area: "Updates", title: "Email updates when new posts land", detail: "There's no mailing list yet, so the footer's email field is hidden until there is one." },
+  { stage: "Next", area: "AI agents", title: "Curatit MCP in development", detail: "Connect Curatit to Claude, Cursor, VS Code and other AI tools, so they can search the library and pull a post's breakdown from inside the tool. It's built and being tested before release." },
+  { stage: "Later", area: "Library", title: "More posts coming soon", detail: "More brands and more of their recent posts, added a few at a time." },
+  { stage: "Later", area: "Search", title: "Improving Curatit search", detail: "Better matching for briefs, categories and creative labels, so the right references come up first." },
 ];
 
 // Everything up to and including `through`, in a few lines (the full entries are in CHANGELOG)
