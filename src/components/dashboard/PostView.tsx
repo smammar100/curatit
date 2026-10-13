@@ -190,7 +190,14 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
             <h1 id="post-title" className="font-display text-display font-light text-pretty text-base-900">
               {caption.title}
             </h1>
-            <p className="mt-2 text-body text-base-500">Posted {day.format(new Date(post.postedAt))}</p>
+            {/* The rest of the caption reads on from the title (2026-10-13, at the person's request;
+                it was a Caption section further down) */}
+            {caption.body.length > 0 && (
+              <div className="mt-3">
+                <Caption paragraphs={caption.body} />
+              </div>
+            )}
+            <p className="mt-3 text-body text-base-500">Posted {day.format(new Date(post.postedAt))}</p>
             <Section title="Observed engagement">
               <ObservedEngagement likes={post.likes} comments={post.comments} category={post.category} />
             </Section>
@@ -204,19 +211,9 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
                     <SlideBreakdown analysis={analysis} index={index} onSlide={go} images={post.images} videos={post.videos} />
                   </Section>
                 )}
-                {caption.body.length > 0 && (
-                  <Section title="Caption">
-                    <Caption paragraphs={caption.body} />
-                  </Section>
-                )}
               </>
             ) : (
               <>
-                {caption.body.length > 0 && (
-                  <Section title="Caption">
-                    <Caption paragraphs={caption.body} />
-                  </Section>
-                )}
                 <Section title="Creative breakdown">
                   <p className="text-body text-pretty text-base-500">Not available for this post yet.</p>
                 </Section>
@@ -310,8 +307,8 @@ function splitCaption(post: PostDetail) {
   return { title: post.hook || `${post.brand.name} on Instagram`, body: paragraphs(post.caption) };
 }
 
-// The rest of the caption after the title, with @mentions and #hashtags as links, clamped until
-// "Show more"
+// The rest of the caption after the title, with @mentions and #hashtags as links, clamped to three
+// lines under the title until "Show more"
 function Caption({ paragraphs }: { paragraphs: string[] }) {
   const ref = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -330,7 +327,7 @@ function Caption({ paragraphs }: { paragraphs: string[] }) {
   if (!paragraphs.length) return null;
   return (
     <div>
-      <div ref={ref} className={cx("space-y-3 text-subtitle text-pretty text-base-700", !open && "line-clamp-6")}>
+      <div ref={ref} className={cx("space-y-3 text-subtitle text-pretty text-base-700", !open && "line-clamp-3")}>
         {paragraphs.map((paragraph, i) => (
           <p key={i} className="whitespace-pre-line">
             {linkify(paragraph)}
