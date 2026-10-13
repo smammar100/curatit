@@ -212,7 +212,7 @@ const LifelineVerticalEntry = forwardRef<
         }}
       >
         <div className={`${GRID_CLASS} items-center`}>
-          <p className="text-right text-[11px] font-medium leading-4 tabular-nums text-zinc-500 transition-colors duration-300 dark:text-zinc-600">
+          <p className={cn("text-right text-[11px] font-medium leading-4 tabular-nums text-zinc-500 transition-colors duration-300 dark:text-zinc-600", marker.current && "text-black dark:text-zinc-400")}>
             {age}
           </p>
 
@@ -220,7 +220,7 @@ const LifelineVerticalEntry = forwardRef<
             <RailTick />
           </div>
 
-          <p className="whitespace-nowrap text-[15px] font-medium leading-5 tabular-nums text-zinc-500 transition-colors duration-300 dark:text-zinc-400">
+          <p className={cn("whitespace-nowrap text-[15px] font-medium leading-5 tabular-nums text-zinc-500 transition-colors duration-300 dark:text-zinc-400", marker.current && "text-black dark:text-white")}>
             {marker.label ?? marker.year}
           </p>
         </div>
@@ -229,7 +229,7 @@ const LifelineVerticalEntry = forwardRef<
           <div className={`${GRID_CLASS} mt-6`}>
             <div aria-hidden="true" />
             <div aria-hidden="true" />
-            <div className="min-w-0 text-zinc-500 transition-colors duration-300 dark:text-zinc-400">
+            <div className={cn("min-w-0 text-zinc-500 transition-colors duration-300 dark:text-zinc-400", marker.current && "text-black dark:text-zinc-300")}>
               {marker.badges && marker.badges.length > 0 && (
                 <div className="mb-3 flex items-center justify-start gap-2">
                   {marker.badges.map((badge) => (
