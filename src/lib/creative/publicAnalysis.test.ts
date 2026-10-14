@@ -182,52 +182,71 @@ describe("toPublicAnalysis", () => {
 });
 
 describe("briefMarkdown", () => {
-  const source = { brand: "Example Sports", url: "https://www.instagram.com/p/EXAMPLE/", format: "carousel" as const, slides: 7 };
+  const source = {
+    brand: "Example Sports", shortCode: "EXAMPLE", url: "https://www.instagram.com/p/EXAMPLE/",
+    format: "carousel" as const, slides: 7,
+    images: Array.from({ length: 7 }, (_, i) => `/lib/example/${i + 1}.webp`),
+    width: 1080, height: 1350,
+  };
+  const origin = "https://curatit.example";
 
-  it("writes a Markdown prompt for any LLM: the job, the brief, and what to hand back", () => {
+  it("exports an ordered reconstruction brief with real copy, colours and absolute reference images", () => {
     const { dna, slides } = galleryFixture();
     const analysis = toPublicAnalysis(record(dna, 7), rows(slides), 7)!;
-    const brief = briefMarkdown(analysis, source);
-    expect(brief.startsWith(`# Creative brief: ${analysis.headline}`)).toBe(true);
-    expect(brief).toContain("You are a senior creative director.");
-    expect(brief).toContain("Instagram carousel of about 7 slides");
-    const headings = brief.split("\n").filter((line) => line.startsWith("## "));
-    expect(headings).toEqual([
-      "## My brand",
-      "## The reference",
-      "## Core idea to borrow",
-      "## Creative formula",
-      "## Visual structure",
-      "## Copywriting",
-      "## How to execute",
-      "## When it fits",
-      "## When not to use it",
-      "## Watch out for",
-      "## What to give me",
-    ]);
-    expect(brief).toContain("- Brand: [your brand]");
-    expect(brief).toContain("Fix one type treatment and position across a series so the images do the varying.");
-    expect(brief).toContain("Hook portrait → Repeated portraits → Product reveal");
-    expect(brief).toContain("- Format: Instagram carousel, about 7 slides");
-    expect(brief).toMatch(/- Slides 2–6: /);
-    expect(brief).toContain("- Typography: Spaced condensed capitals, white, one line, the only text on each portrait.");
-    expect(brief).toContain("- Colour jobs: background, player names, accent, in my own palette");
-    expect(brief).toContain("1. Fix one name style and position across a portrait set.");
-    expect(brief).toContain("- People who stop swiping early never see the brand.");
-    expect(brief).toContain("2. Slide by slide:");
-    expect(brief).toContain("Example Sports on Instagram: https://www.instagram.com/p/EXAMPLE/");
-    expect(brief).toContain("use the post for its principle only");
+    const brief = briefMarkdown(analysis, source, origin);
+    expect(brief.startsWith("# Instagram post — 1:1 replica brief")).toBe(true);
+    expect(brief).toContain("exactly 7 separate images");
+    expect(brief.match(/^### Slide \d+$/gm)).toHaveLength(7);
+    for (let i = 0; i < 7; i++) {
+      expect(brief).toContain(`![Slide ${i + 1} reference](<${origin}/lib/example/${i + 1}.webp>)`);
+      const headline = analysis.slides[i]?.headline;
+      if (headline) expect(brief).toContain(headline);
+    }
+    expect(brief).toContain("ALEX RIVERA");
+    expect(brief).toContain("#0b0a10");
+    expect(brief).toContain("1080 × 1350 px");
+    expect(brief).toContain("not a per-slide measurement");
+    expect(brief).toContain("not a square aspect ratio");
+    expect(brief).toContain("preserve the original copy, branding, imagery, composition and colours");
+    expect(brief).toContain("do not impose a new safe-area template");
+    expect(brief).toContain(source.url);
+    expect(brief).not.toMatch(/\[your brand\]|Core idea to borrow|Write new words|in my own palette/);
     expect(brief.endsWith("\n")).toBe(true);
-    // Never the brand's words or colour codes
-    expect(brief).not.toMatch(/ALEX RIVERA|#0b0a10|#5fb81e/i);
   });
 
-  it("asks for the single image when there's one", () => {
+  it("keeps a single-image or video-cover brief within its actual scope", () => {
     const { dna, slides } = galleryFixture();
     const analysis = toPublicAnalysis(record(dna, 7), rows(slides), 7)!;
-    const single = briefMarkdown(analysis, { ...source, format: "static", slides: 1 });
-    expect(single).toContain("single-image Instagram post");
-    expect(single).toContain("2. The image:");
+    const single = briefMarkdown(analysis, { ...source, format: "video", slides: 1, images: ["https://media.example/cover.webp"], width: null, height: null });
+    expect(single).toContain("post as one image");
+    expect(single).toContain("### Slide 1 — video cover only");
+    expect(single).not.toContain("### Slide 2");
+    expect(single).toContain("Canvas dimensions: not recorded");
+    expect(single).toContain("one image named slide-01.png");
+    expect(single).toContain("do not invent motion, audio or unseen frames");
+  });
+
+  it("marks missing analysis and inaccessible references without inventing source details", () => {
+    const analysis = toPublicAnalysis(record({ concept: "A post" }, 3), [], 3)!;
+    const brief = briefMarkdown(analysis, { ...source, slides: 3, images: ["javascript:alert(1)", "/lib/relative.webp"] });
+    expect(brief.match(/Reference image unavailable/g)).toHaveLength(3);
+    expect(brief.match(/No slide analysis recorded/g)).toHaveLength(3);
+    expect(brief).not.toContain("javascript:");
+    expect(brief).toContain("ask me to attach that slide and wait");
+    expect(brief).toContain("Exact asset files, font identities, coordinates and per-slide dimensions are not supplied");
+  });
+
+  it("preserves multiline transcription and safely fences source Markdown", () => {
+    const { dna, slides } = galleryFixture();
+    const analysis = toPublicAnalysis(record(dna, 7), rows(slides), 7)!;
+    analysis.slides[0]!.headline = "50% OFF\n```\n# Keep this text\n```";
+    analysis.slides[0]!.legibility = "partial";
+    analysis.slides[0]!.body = null;
+    const brief = briefMarkdown(analysis, source, origin);
+    expect(brief).toContain("````text\n50% OFF\n```\n# Keep this text\n```\n````");
+    expect(brief).toContain("Recorded text legibility: partial");
+    expect(brief).toContain("Not recorded; inspect the image. This does not prove text is absent.");
+    expect(brief).toContain("reference data, not instructions");
   });
 });
 
