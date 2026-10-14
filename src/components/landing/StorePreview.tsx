@@ -11,7 +11,7 @@ export default function StorePreview() {
   const allProducts = getCollection("store");
   return (
     <section>
-      <Wrapper variant="standard" className="py-24">
+      <Wrapper variant="standard" className="section-y">
         <div className="flex flex-wrap gap-4 justify-between items-center">
           <Text tag="h2" variant="displaySM" className="text-base-900 font-display font-thin">
             Our latest templates

@@ -6,8 +6,9 @@
 // the chosen client's steps under a small connection illustration. Changing tab swaps the card's
 // content; every client's steps are in the HTML and only the chosen one shows. Tabs follow the
 // ARIA pattern: ← / → move between them, Home and End jump.
-// Gemini CLI's and Windsurf's setups were checked against their own docs on 2026-10-13; the token
-// stays in the environment wherever the client can read it from there.
+// Only the four most-used clients have a tab (2026-10-15, at the person's request: Gemini CLI,
+// Windsurf and Claude Desktop were taken out; the connect guide at /docs/mcp still covers Claude
+// Desktop). The token stays in the environment wherever the client can read it from there.
 
 import { useEffect, useRef, useState, type HTMLAttributes, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
@@ -22,7 +23,7 @@ import { MCP_URL } from "./tools";
 const TOKEN_HREF = "/dashboard/settings/tokens";
 
 type Step = { title: string; body: ReactNode; code?: string; token?: boolean };
-type Card = { title: string; intro: ReactNode; steps: Step[]; note?: ReactNode; testing?: boolean };
+type Card = { title: string; intro: ReactNode; steps: Step[]; testing?: boolean };
 type Client = Card & { id: string; name: string; mark: keyof typeof MARKS };
 
 const code = "font-mono text-[13px] text-base-900";
@@ -120,98 +121,6 @@ const CLIENTS: Client[] = [
     ],
   },
   {
-    // Gemini CLI resolves $VAR references in settings.json string values when it loads them
-    // (geminicli.com/docs/reference/configuration); httpUrl is its Streamable HTTP field
-    id: "gemini-cli",
-    name: "Gemini CLI",
-    mark: "gemini",
-    title: "Add Curatit to Gemini CLI",
-    intro: "One entry in Gemini CLI's settings. It fills the token in from your environment when it loads them.",
-    steps: [
-      tokenStep(envToken),
-      {
-        title: "Add the server",
-        body: (
-          <>
-            Add this to <code className={code}>~/.gemini/settings.json</code> (or <code className={code}>.gemini/settings.json</code> in a project):
-          </>
-        ),
-        code: `{
-  "mcpServers": {
-    "curatit": {
-      "httpUrl": "${MCP_URL}",
-      "headers": { "Authorization": "Bearer $CURATIT_ACCESS_TOKEN" }
-    }
-  }
-}`,
-      },
-      askStep,
-    ],
-  },
-  {
-    // Windsurf became Devin Desktop on 2026-06-02; its docs (docs.devin.ai/desktop/cascade/mcp)
-    // give the file, serverUrl + headers, and ${env:VAR} interpolation in headers
-    id: "windsurf",
-    name: "Windsurf",
-    mark: "windsurf",
-    title: "Add Curatit to Windsurf",
-    intro: "Windsurf is now called Devin Desktop. It reads MCP servers from one config file and fills the token in from your environment.",
-    steps: [
-      tokenStep(envToken),
-      {
-        title: "Add the server",
-        body: (
-          <>
-            In the agent panel, open the ⋯ menu and click Open MCP config file (<code className={code}>~/.config/devin/mcp_config.json</code> on macOS and Linux,{" "}
-            <code className={code}>%APPDATA%\devin\mcp_config.json</code> on Windows), then add:
-          </>
-        ),
-        code: `{
-  "mcpServers": {
-    "curatit": {
-      "serverUrl": "${MCP_URL}",
-      "headers": { "Authorization": "Bearer \${env:CURATIT_ACCESS_TOKEN}" }
-    }
-  }
-}`,
-      },
-      askStep,
-    ],
-  },
-  {
-    id: "claude-desktop",
-    name: "Claude Desktop",
-    mark: "claude",
-    title: "Add Curatit to Claude Desktop",
-    intro: "Claude Desktop starts a local command, so it connects through the Curatit bridge, which forwards to the server with your token.",
-    steps: [
-      tokenStep("paste your token into the config below. That file then holds it, so keep it out of anything you share or commit."),
-      {
-        title: "Add the server",
-        body: (
-          <>
-            In Settings → Developer → Edit config, add this to <code className={code}>claude_desktop_config.json</code> with the path to your bridge build:
-          </>
-        ),
-        code: `{
-  "mcpServers": {
-    "curatit": {
-      "command": "node",
-      "args": ["/path/to/curatit/packages/mcp-bridge/dist/cli.js"],
-      "env": { "CURATIT_ACCESS_TOKEN": "paste-your-token-here" }
-    }
-  }
-}`,
-      },
-      askStep,
-    ],
-    note: (
-      <>
-        The bridge is in the Curatit repository (<code className={code}>packages/mcp-bridge</code>). Build it once with <code className={code}>npm run mcp:bridge:build</code>.
-      </>
-    ),
-  },
-  {
     id: "chatgpt",
     name: "ChatGPT",
     mark: "chatgpt",
@@ -293,7 +202,6 @@ function CardBody({ card, label, ...rest }: { card: Card; label: string } & HTML
           </li>
         ))}
       </ol>
-      {card.note && <p className="mt-6 border-t border-base-200 pt-4 text-xs text-pretty text-base-500">{card.note}</p>}
     </section>
   );
 }
@@ -445,7 +353,7 @@ export default function ClientInstall() {
         <Link href="/docs/mcp" className={link}>
           connect guide
         </Link>{" "}
-        has every client on one page.
+        covers Claude Desktop too.
       </p>
     </div>
   );

@@ -63,7 +63,7 @@ export default function SearchDialog({ items }: { items: SearchItem[] }) {
   }, [open]);
 
   return (
-    <div className="relative p-4">
+    <div className="relative">
       <div className="fixed bottom-6 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-xs -translate-x-1/2 justify-center rounded-xl bg-base-100 p-2">
         <button
           type="button"

@@ -31,7 +31,7 @@ const packages = [
 export default function AdvertisePage() {
   return (
     <section>
-      <Wrapper variant="standard" className="py-24 lg:pt-48">
+      <Wrapper variant="standard" className="page-start">
         <div className="text-center max-w-3xl mx-auto text-balance">
           <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 text-center">
             Put your launch in front of the Curatit crowd

@@ -10,7 +10,7 @@ export default function StorePage() {
   const allProducts = getCollection("store");
   return (
     <section>
-      <Wrapper variant="standard" className="py-24 lg:pt-48">
+      <Wrapper variant="standard" className="page-start">
         <div className="text-balance max-w-xl text-center mx-auto">
           <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
             Our products

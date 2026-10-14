@@ -232,41 +232,12 @@ describe("CreativeBreakdown: Copy brief", () => {
     expect(container.textContent).toContain("Couldn't copy the brief here.");
   });
 
-  it("downloads the same Markdown as the clipboard with a post-specific filename", async () => {
-    vi.useFakeTimers();
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
-    const createURL = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:replica");
-    const revokeURL = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
-    let filename = "";
-    let href = "";
-    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
-      filename = this.download;
-      href = this.href;
-    });
-    try {
-      render(<Harness analysis={galleryAnalysis()} />);
-      await act(async () => button(container, /^Copy brief$/)!.click());
-      click(button(container, /^Download \.md$/));
-      const blob = createURL.mock.calls[0][0] as Blob;
-      expect(await blob.text()).toBe(writeText.mock.calls[0][0]);
-      expect(blob.type).toBe("text/markdown;charset=utf-8");
-      expect(filename).toBe("curatit-EXAMPLE-replica.md");
-      expect(href).toBe("blob:replica");
-      expect(document.querySelector('a[download]')).toBeNull();
-      expect(container.textContent).toContain("Replica brief download started.");
-      act(() => vi.advanceTimersByTime(1000));
-      expect(revokeURL).toHaveBeenCalledWith("blob:replica");
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it("offers the file when clipboard access is unavailable", async () => {
+  it("says so when clipboard access is unavailable", async () => {
     Object.defineProperty(navigator, "clipboard", { value: undefined, configurable: true });
     render(<Harness analysis={galleryAnalysis()} />);
     await act(async () => button(container, /^Copy brief$/)!.click());
-    expect(container.textContent).toContain("Couldn't copy the brief here. Use Download .md instead.");
+    expect(container.textContent).toContain("Couldn't copy the brief here.");
+    expect(button(container, /Download/)).toBeFalsy();
   });
 
 });

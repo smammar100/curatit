@@ -13,7 +13,7 @@ export default function LegalLayout({
 }) {
   return (
     <section>
-      <Wrapper variant="standard" className="py-24 lg:pt-48">
+      <Wrapper variant="standard" className="page-start">
         <div className="flex flex-col gap-12 lg:flex-row">
           <div className="text-balance lg:w-1/3">
             <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">

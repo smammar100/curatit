@@ -45,9 +45,9 @@ export default async function VisionPage() {
 
   return (
     <>
-      <section className="px-4 pt-20">
+      <section className="px-4 pt-16 lg:pt-20">
         <div className="vision-night overflow-clip rounded-[1.5rem] sm:rounded-[2rem]">
-          <Wrapper variant="standard" className="pt-24 pb-20 lg:pt-32 lg:pb-28">
+          <Wrapper variant="standard" className="pt-12 pb-20 lg:pt-20 lg:pb-28">
             <div className="mx-auto max-w-2xl text-center">
               <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 text-balance">
                 Taste you can learn from.
@@ -100,7 +100,7 @@ export default async function VisionPage() {
       </section>
 
       <section>
-        <Wrapper variant="standard" className="pt-24 pb-32">
+        <Wrapper variant="standard" className="section-y">
           <div className="mx-auto max-w-2xl text-center">
             {posts.length > 0 && (
               <Text tag="h2" variant="displaySM" className="font-display font-thin text-balance text-base-900">

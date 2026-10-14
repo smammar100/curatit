@@ -42,7 +42,7 @@ export default function ColorsPage() {
   return (
     <>
       <section className="relative overflow-hidden">
-        <Wrapper variant="standard" className="pb-32 lg:pb-48 pt-12">
+        <Wrapper variant="standard" className="page-start">
           <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 lg:w-1/3">
             Colors
           </Text>

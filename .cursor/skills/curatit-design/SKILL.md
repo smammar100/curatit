@@ -132,8 +132,15 @@ Usage rules:
   (`max-w-xl`) for forms/auth, `variant="prose"` for markdown bodies (the
   prose preset styles links/blockquotes in accent and code blocks
   `rounded-2xl`).
-- Section vertical padding is `py-24` on the Wrapper; heroes add large top
-  padding: `pt-24 lg:pt-48` (or `py-24 lg:pt-48`).
+- Page rhythm (2026-10-15): two utilities in `global.css`, never ad-hoc
+  `py-*` / `pt-*` on a section's Wrapper. A page's first section is
+  `className="page-start"`: its first line of content starts 112px from the
+  top of the window on phones and 160px from `lg`, on every page (the
+  homepage hero and the Vision panel are tuned by hand to land on the same
+  line). Every section after it is `className="section-y"` (48px above and
+  below, 64px from `lg`), so neighbours always sit 96px / 128px apart, and the
+  footer's own `mt-12 lg:mt-16` keeps the last section the same distance from
+  it. Spacing inside a section stays as below.
 - Rhythm inside a section: `mt-12` between major blocks, `mt-8` between a
   section header row and its grid, `mt-2`-`mt-4` between a title and its
   supporting text, `gap-8` in card grids.

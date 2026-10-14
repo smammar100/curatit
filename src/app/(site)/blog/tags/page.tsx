@@ -11,7 +11,7 @@ export default function BlogTagsPage() {
   const tags = [...new Set(allPosts.map((post) => post.data.tags).flat())];
   return (
     <section>
-      <Wrapper variant="narrow" className="py-24 lg:pt-48">
+      <Wrapper variant="narrow" className="page-start">
         <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 text-center">
           Explore all tags
         </Text>

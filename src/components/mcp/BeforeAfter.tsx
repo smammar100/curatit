@@ -1,17 +1,24 @@
-import type { ReactNode } from "react";
 // Assets
 import Symbol from "@/components/assets/Symbol";
 // Icons
+import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
 import Question from "@/components/fundations/icons/Question";
 // Components
 import BrandName from "@/components/home/BrandName";
 import PostCover from "@/components/home/PostCover";
 import type { LibraryPost } from "@/lib/posts";
 
-// The MCP landing page's illustration (2026-10-13): the same question asked of an assistant twice.
-// Without Curatit it answers from memory, ideas with nothing behind them (dashed frames, "No
-// source"); with Curatit it searches the library and answers with real posts, each with what it
-// matched on and the link it came from. A server component: no script, no motion.
+// The MCP landing page's illustration (2026-10-13, redrawn 2026-10-15 when the person asked to
+// improve it): one question, asked once and centred over both answers (no tail, so it reads as
+// asked of each), answered two ways side by side at 2:3. Without Curatit the answer is words on
+// paper: a hairline card (the page's token cards) of guessed ideas beside small empty dashed frames,
+// none of it a link. With Curatit it's the library's real posts, large and shadowed on the mat, each
+// tile a link to the post on Instagram with the terms it matched on. Pictures against words, filled
+// against empty, so the difference shows before anything is read. Below sm the posts turn into rows
+// (a 96px cover beside its caption), so a real cover is on the first screen. Small text that carries
+// meaning is base-600: base-500 is under 4.5:1 on paper and on the mat. With none of the posts to
+// show (the library can't be reached) it renders nothing, rather than an answer that looks emptier
+// than the one it beats. A server component: no script, no motion.
 
 export const QUESTION = "Find fintech carousels that launch a feature.";
 
@@ -25,93 +32,117 @@ export const PICKS = [
 ];
 
 // What an assistant with no library tends to offer instead: plausible, and impossible to check
-const GUESSES = ["A bold headline slide, then one feature per slide", "A before-and-after of the old way and the new", "A countdown teaser in the week before launch"];
+const GUESSES = ["A bold headline slide, then one feature per slide", "The old way and the new, side by side", "A countdown teaser in the week before launch"];
 
-function Panel({ label, aside, footer, children }: { label: string; aside: ReactNode; footer: string; children: ReactNode }) {
-  return (
-    <div className="flex flex-col rounded-2xl bg-base-50 p-4 sm:p-6">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-medium tracking-wide text-base-900 uppercase">{label}</p>
-        <div className="min-w-0 text-xs text-base-500">{aside}</div>
-      </div>
-      <p className="mt-5 ml-auto max-w-[17rem] rounded-2xl rounded-br-sm bg-base-100 px-4 py-3 text-sm text-base-900">{QUESTION}</p>
-      <div className="mt-5 flex-1">{children}</div>
-      <p className="mt-5 text-xs text-pretty text-base-500">{footer}</p>
-    </div>
-  );
-}
+// For the figcaption: PICKS and GUESSES are three each
+const NUMBERS = ["zero", "one", "two", "three"];
 
-const row = "flex items-center gap-3 rounded-xl bg-white p-2.5 ring-1 ring-edge sm:gap-4";
-const frame = "w-12 shrink-0 sm:w-14";
+// Each answer's label: the card meta line (uppercase, medium), dark only on the side that wins
+const label = "text-xs font-medium tracking-wide uppercase";
 
-export default function BeforeAfter({ posts }: { posts: LibraryPost[] }) {
+export default function BeforeAfter({ posts, className }: { posts: LibraryPost[]; className?: string }) {
   const results = PICKS.flatMap(({ shortCode, matched }) => {
     const post = posts.find((candidate) => candidate.shortCode === shortCode);
     return post ? [{ post, matched }] : [];
   });
+  // Without its posts the comparison would argue the wrong way; the benefits below still make the case
+  if (!results.length) return null;
+  const brands = new Intl.ListFormat("en", { type: "conjunction" }).format(results.map(({ post }) => post.brand.name));
 
   return (
-    <figure>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Panel label="Without Curatit" aside="From memory" footer="It sounds right, but there's nothing to open, check or show a client.">
-          <p className="text-sm text-base-600">Here are a few ideas you could try:</p>
-          <ul className="mt-3 space-y-2">
+    <figure className={className}>
+      {/* Asked once, centred over both answers (McpDemo's bubble without its tail) */}
+      <p className="mx-auto w-fit max-w-full rounded-2xl bg-base-100 px-5 py-4 text-center text-sm leading-relaxed text-balance text-base-900 sm:text-base">
+        <span className="sr-only">Question: </span>
+        {QUESTION}
+      </p>
+
+      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-5">
+        {/* Without: words on paper beside frames with nothing in them. Nothing here opens. */}
+        <div className="flex flex-col rounded-2xl bg-white p-4 ring-1 ring-edge sm:p-6 lg:col-span-2">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+            <p className={`${label} text-base-600`}>Without Curatit</p>
+            <p className="text-xs text-base-600">From memory</p>
+          </div>
+          {/* mt-2 plus the row's py-3 sets the first frame level with the covers (mt-5) */}
+          <ul aria-label="Ideas from memory" className="mt-2 divide-y divide-base-200">
             {GUESSES.map((guess) => (
-              <li key={guess} className={row}>
-                <div className={`${frame} flex aspect-4/5 items-center justify-center rounded border border-dashed border-base-300`} aria-hidden="true">
-                  <Question className="size-4 text-base-300" />
+              <li key={guess} className="flex items-center gap-3 py-3">
+                <div
+                  aria-hidden="true"
+                  className="flex aspect-4/5 w-10 shrink-0 items-center justify-center rounded border border-dashed border-base-300"
+                >
+                  <Question className="size-3.5 text-base-400" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm text-pretty text-base-900">{guess}</p>
-                  <p className="mt-1 text-xs text-base-500">No source</p>
-                </div>
+                <p className="text-sm text-pretty text-base-600">
+                  {guess}
+                  <span className="sr-only"> (no source)</span>
+                </p>
               </li>
             ))}
           </ul>
-        </Panel>
+          {/* Pinned to the card's foot from lg, level with the posts' captions */}
+          <p className="mt-auto pt-5 text-xs text-pretty text-base-600">It sounds right, but there&apos;s nothing to open, check or show a client.</p>
+        </div>
 
-        <Panel
-          label="With Curatit"
-          aside={
-            <span className="flex min-w-0 items-center gap-1.5">
+        {/* With: the library's real posts, large, on the mat */}
+        <div className="rounded-2xl bg-base-50 p-4 sm:p-6 lg:col-span-3">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+            <p className={`${label} text-base-900`}>With Curatit</p>
+            <p className="flex min-w-0 items-center gap-1.5 text-base-600">
               <Symbol className="size-3 shrink-0 text-base-900" aria-hidden="true" />
-              <span className="truncate font-mono text-[11px]">curatit_search_posts</span>
-            </span>
-          }
-          footer="Real posts from the library, each with what it matched on and the link it came from."
-        >
-          <p className="text-sm text-base-600">Three from Curatit&apos;s library:</p>
-          <ul className="mt-3 space-y-2">
+              <span className="font-mono text-[11px]">curatit_search_posts</span>
+            </p>
+          </div>
+          {/* Rows on phones (the cover beside its caption), three across from sm */}
+          <ul aria-label="Posts from Curatit's library" className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
             {results.map(({ post, matched }) => (
-              <li key={post.shortCode} className={row}>
-                <PostCover post={post} sizes="56px" className={`${frame} rounded shadow`} />
-                <div className="min-w-0">
-                  <BrandName brand={post.brand} />
-                  <ul className="mt-1.5 flex flex-wrap gap-1" aria-label="Matched on">
-                    {matched.map((term) => (
-                      <li key={term} className="rounded-md bg-base-50 px-1.5 py-0.5 text-[11px]/4 text-base-700 ring-1 ring-base-200">
+              <li key={post.shortCode} className="group/post relative flex items-center gap-3 sm:block">
+                <PostCover
+                  post={post}
+                  // 96px rows on phones, under 30vw while the answers stack, 160 to 215px beside the
+                  // other answer, and at most about 310px once the Wrapper caps at 110rem
+                  sizes="(min-width: 1536px) 320px, (min-width: 1024px) 216px, (min-width: 640px) 30vw, 96px"
+                  className="w-24 shrink-0 rounded shadow sm:w-auto"
+                />
+                <div className="min-w-0 sm:mt-3">
+                  <div className="flex items-center gap-1">
+                    <BrandName brand={post.brand} className="transition-colors duration-150 group-hover/post:text-accent-600 group-has-[:focus-visible]/post:text-accent-600" />
+                    <ArrowUpRight
+                      aria-hidden="true"
+                      className="size-3 shrink-0 text-base-500 transition-colors duration-150 group-hover/post:text-accent-600 group-has-[:focus-visible]/post:text-accent-600"
+                    />
+                  </div>
+                  {/* The card meta's middot, kept from screen readers; each term wraps only whole */}
+                  <ul aria-label="Matched on" className="mt-1 flex flex-wrap gap-x-1 text-xs text-base-600">
+                    {matched.map((term, i) => (
+                      <li key={term}>
                         {term}
+                        {i < matched.length - 1 && <span aria-hidden="true"> ·</span>}
                       </li>
                     ))}
                   </ul>
-                  <a
-                    href={post.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-1.5 block truncate font-mono text-[11px] text-base-500 underline decoration-base-300 underline-offset-2 transition-colors duration-150 hover:text-accent-600"
-                  >
-                    instagram.com/p/{post.shortCode}
-                    <span className="sr-only"> (opens Instagram)</span>
-                  </a>
                 </div>
+                {/* Stretched link to the post on Instagram, as on LibraryCard: the whole tile opens it. No focus
+                    outline (2026-10-15, at the person's request); keyboard focus turns the name accent, like hover */}
+                <a
+                  href={post.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute inset-0 outline-none"
+                >
+                  <span className="sr-only">Open this {post.brand.name} post on Instagram (opens in a new tab)</span>
+                </a>
               </li>
             ))}
           </ul>
-        </Panel>
+        </div>
       </div>
+
       <figcaption className="sr-only">
-        The same question asked of an assistant twice. Without Curatit it offers ideas with no sources. With Curatit it searches the library and answers with real fintech
-        carousels, each linked to the post on Instagram.
+        One question, answered two ways. Without Curatit, an assistant offers {NUMBERS[GUESSES.length]} ideas from memory, none with a source. With Curatit, it
+        searches the library and answers with {NUMBERS[results.length]} real fintech {results.length === 1 ? "carousel" : "carousels"}, from {brands}, each linked to
+        the post on Instagram.
       </figcaption>
     </figure>
   );

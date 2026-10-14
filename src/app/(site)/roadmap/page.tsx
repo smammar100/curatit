@@ -102,7 +102,7 @@ export default async function RoadmapPage() {
   return (
     <>
       <section>
-        <Wrapper variant="standard" className="pt-28 lg:pt-40">
+        <Wrapper variant="standard" className="page-start">
           <div className="max-w-2xl">
             <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 text-balance">
               Roadmap
@@ -119,7 +119,7 @@ export default async function RoadmapPage() {
       </section>
 
       <section aria-label="Curatit's lifeline">
-        <Wrapper variant="standard" className="pt-14">
+        <Wrapper variant="standard" className="section-y">
           <div className="h-[580px] w-full overflow-hidden">
             <Lifeline mode="embed" markers={markers} birthYear={0} title="Curatit's lifeline" labels={{ age: "Stage", year: "When" }} className="h-full" />
           </div>
@@ -127,7 +127,7 @@ export default async function RoadmapPage() {
       </section>
 
       <section aria-labelledby="coming">
-        <Wrapper variant="standard" className="pt-24 pb-32">
+        <Wrapper variant="standard" className="section-y">
           <Text tag="h2" id="coming" variant="displaySM" className="font-display font-thin text-base-900">
             What&apos;s coming
           </Text>

@@ -20,7 +20,7 @@ export default function StoreLayout({
   return (
     <>
       <section>
-        <Wrapper variant="standard" className="py-24 lg:pt-48">
+        <Wrapper variant="standard" className="page-start">
           <div>
             <div className="flex flex-wrap justify-between gap-4">
               <div className="max-w-xl text-balance">
@@ -110,7 +110,7 @@ export default function StoreLayout({
         </Wrapper>
       </section>
       <section>
-        <Wrapper variant="standard" className="py-24">
+        <Wrapper variant="standard" className="section-y">
           <div className="flex flex-wrap gap-4 justify-between items-center">
             <Text tag="h2" variant="displaySM" className="text-base-900 font-display font-thin">
               More products

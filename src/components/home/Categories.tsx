@@ -38,7 +38,7 @@ export default function Categories({ categories, posts }: { categories: Category
 
   return (
     <section>
-      <Wrapper variant="standard" className="py-20">
+      <Wrapper variant="standard" className="section-y">
         <div className="text-balance max-w-3xl mx-auto text-center">
           <Text tag="h2" variant="displaySM" className="text-base-900 font-display font-thin">
             Every category, studied closely

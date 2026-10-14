@@ -48,7 +48,7 @@ export default function ProblemSolution() {
   const active = solved ? "solution" : "problem";
 
   return (
-    <section ref={sectionRef} className="relative mb-20 h-[min(200vh,1600px)] md:h-[min(300vh,2800px)]">
+    <section ref={sectionRef} className="relative mb-12 h-[min(200vh,1600px)] lg:mb-16 md:h-[min(300vh,2800px)]">
       {/* mb-20 plus the next section's pt-20 keeps the usual 80px on each side */}
       <div
         className="sticky top-0 flex h-dvh items-center justify-center pt-16"

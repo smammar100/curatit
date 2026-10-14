@@ -48,7 +48,7 @@ export default function PricingPage() {
   return (
     <>
       <section>
-        <Wrapper variant="standard" className="py-24 lg:pt-48">
+        <Wrapper variant="standard" className="page-start">
           <div className="text-balance max-w-3xl mx-auto text-center">
             <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
               <span className="block">Access the full library.</span>

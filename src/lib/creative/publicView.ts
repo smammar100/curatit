@@ -179,14 +179,9 @@ function imageLink(path: string | undefined, origin?: string) {
   }
 }
 
-export function briefFilename(source: BriefSource) {
-  const code = source.shortCode.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 100) || "post";
-  return `curatit-${code}-replica.md`;
-}
-
 // A reconstruction prompt, not an adaptation brief. The original images are the authority;
 // the published analysis supplies observations and partial transcription, never invented specs.
-// Pure and model-independent: copy and download both use these exact Markdown bytes.
+// Pure and model-independent: Copy brief puts these exact Markdown bytes on the clipboard.
 export function briefMarkdown(analysis: PublicAnalysis, source: BriefSource, origin?: string) {
   const out: string[] = [];
   const section = (title: string, body: string[]) => out.push(`## ${title}`, "", ...body, "");

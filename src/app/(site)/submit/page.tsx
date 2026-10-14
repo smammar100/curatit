@@ -7,7 +7,7 @@ import Button from "@/components/fundations/elements/Button";
 export default function SubmitPage() {
   return (
     <section>
-      <Wrapper variant="standard" className="py-24 lg:pt-48">
+      <Wrapper variant="standard" className="page-start">
         <div className="mx-auto max-w-xl sm:px-8">
           <div className="text-balance">
             <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">

@@ -51,6 +51,25 @@
   --lh-display: var(--lh-display);
   --fs-display: var(--fs-display);
 }
+/* Page rhythm (2026-10-15): every marketing page's first line of content starts at the same
+   height (page-start: 112px on phones, 160px from lg, measured from the top of the window, under
+   the fixed navigation), and every section after it is one section-y, so two neighbours sit
+   96px apart on phones and 128px from lg (half of it on each side). The footer adds the same half
+   above itself, so the last section ends the same distance from it. */
+@utility page-start {
+  padding-top: 7rem;
+  padding-bottom: 3rem;
+  @media (width >= 64rem) {
+    padding-top: 10rem;
+    padding-bottom: 4rem;
+  }
+}
+@utility section-y {
+  padding-block: 3rem;
+  @media (width >= 64rem) {
+    padding-block: 4rem;
+  }
+}
 /*  Define your custom theme variables */
 @theme {
   --color-white: oklch(0.986 0.002 67.8);

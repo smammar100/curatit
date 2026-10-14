@@ -32,7 +32,7 @@ const steps: { title: string; muted: string; demoLabel: string; demo: ReactNode 
 export default function HowItWorks() {
   return (
     <section id="how-it-works">
-      <Wrapper variant="standard" className="py-20">
+      <Wrapper variant="standard" className="section-y">
         <div className="text-balance max-w-2xl mx-auto text-center">
           <Text tag="h2" variant="displayMD" className="text-base-900 font-display font-thin">
             How it works

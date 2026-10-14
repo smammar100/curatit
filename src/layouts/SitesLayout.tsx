@@ -22,7 +22,7 @@ export default function SitesLayout({
     <>
       <Search />
       <section>
-        <Wrapper variant="standard" className="py-24">
+        <Wrapper variant="standard" className="page-start">
           <div className="flex flex-wrap justify-between gap-4">
             <div className="max-w-xl text-balance">
               <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 capitalize">
@@ -73,7 +73,7 @@ export default function SitesLayout({
         </Wrapper>
       </section>
       <section>
-        <Wrapper variant="standard" className="py-24">
+        <Wrapper variant="standard" className="section-y">
           <div className="flex flex-wrap gap-4 justify-between items-center">
             <Text tag="h2" variant="displaySM" className="text-base-900 font-display font-thin">
               Latest additions

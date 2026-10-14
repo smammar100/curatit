@@ -9,8 +9,8 @@
 // - Visual DNA: composition, typography, colour (the post's colours with their jobs, copyable),
 //   imagery, visual devices, and branding & consistency, each one insight, a few attributes and
 //   the slides that show them; on a carousel, what stays the same and the sequence as a bar.
-// Beside the tabs, Copy brief and Download .md export the same reference-led reconstruction
-// prompt (2026-10-14). Both are the panel's own pieces: the tabs as they always were,
+// Beside the tabs, Copy brief puts the reference-led reconstruction prompt on the clipboard
+// (2026-10-14; the Download .md button beside it was taken out on 2026-10-15). Both are the panel's own pieces: the tabs as they always were,
 // the button the same as the Instagram link above it. The bar stays in view while the panel scrolls, and switching tabs brings the new tab's
 // start into view. One slide index in PostView drives the stage, ← / →, the bar and every slide
 // link, so they never disagree; a single image has no slide links at all (it's always on screen).
@@ -23,7 +23,6 @@ import SealCheck from "@/components/fundations/icons/SealCheck";
 import WarningCircle from "@/components/fundations/icons/WarningCircle";
 import {
   briefMarkdown,
-  briefFilename,
   evidenceGroups,
   integritySummary,
   STATUS_LABEL,
@@ -523,38 +522,16 @@ function mostCommon(roles: (string | null)[]) {
 
 // ---- Copy brief ----
 
-// Clipboard and file contain identical Markdown. Resolve /lib links at the time of the click,
-// so exports have absolute image references without reading window during server rendering.
+// Resolve /lib links at the time of the click, so the copied brief has absolute image references
+// without reading window during server rendering.
 function CopyBrief({ analysis, source }: { analysis: PublicAnalysis; source: BriefSource }) {
-  const [state, setState] = useState<"copied" | "failed" | "downloaded" | "download-failed" | null>(null);
-  const markdown = () => briefMarkdown(analysis, source, window.location.origin);
+  const [state, setState] = useState<"copied" | "failed" | null>(null);
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(markdown());
+      await navigator.clipboard.writeText(briefMarkdown(analysis, source, window.location.origin));
       setState("copied");
     } catch {
       setState("failed");
-    }
-  };
-  const download = () => {
-    let url: string | undefined;
-    const link = document.createElement("a");
-    try {
-      url = URL.createObjectURL(new Blob([markdown()], { type: "text/markdown;charset=utf-8" }));
-      link.href = url;
-      link.download = briefFilename(source);
-      document.body.appendChild(link);
-      link.click();
-      setState("downloaded");
-    } catch {
-      setState("download-failed");
-    } finally {
-      link.remove();
-      // Allow the browser to start reading the file before releasing it.
-      if (url) {
-        const downloadUrl = url;
-        setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
-      }
     }
   };
   useEffect(() => {
@@ -563,7 +540,7 @@ function CopyBrief({ analysis, source }: { analysis: PublicAnalysis; source: Bri
     return () => clearTimeout(timer);
   }, [state]);
   return (
-    <div className="flex flex-wrap items-center gap-1">
+    <>
       <button
         type="button"
         onClick={copy}
@@ -573,18 +550,10 @@ function CopyBrief({ analysis, source }: { analysis: PublicAnalysis; source: Bri
         {state === "copied" ? "Copied" : state === "failed" ? "Couldn't copy" : "Copy brief"}
         {state === "copied" ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
       </button>
-      <button
-        type="button"
-        onClick={download}
-        title="Download the same replica brief as a Markdown file"
-        className="flex h-9 shrink-0 items-center rounded-full bg-base-50 px-3.5 text-body font-medium whitespace-nowrap text-base-900 transition-[background-color,scale] duration-150 hover:bg-base-100 active:scale-[0.96]"
-      >
-        Download .md
-      </button>
       <span role="status" className="sr-only">
-        {state === "copied" ? "Replica brief copied. Paste it into your AI tool." : state === "failed" ? "Couldn't copy the brief here. Use Download .md instead." : state === "downloaded" ? "Replica brief download started." : state === "download-failed" ? "Couldn't download the brief here. Use Copy brief instead." : ""}
+        {state === "copied" ? "Replica brief copied. Paste it into your AI tool." : state === "failed" ? "Couldn't copy the brief here." : ""}
       </span>
-    </div>
+    </>
   );
 }
 

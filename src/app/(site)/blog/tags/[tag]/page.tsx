@@ -18,7 +18,7 @@ export default async function BlogTagPage({ params }: { params: Promise<{ tag: s
   const posts = getCollection("posts").filter((post) => post.data.tags.includes(tag));
   return (
     <section className="relative overflow-hidden">
-      <Wrapper variant="standard" className="py-24 lg:pt-48">
+      <Wrapper variant="standard" className="page-start">
         <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
           All blog posts about {tag}
         </Text>

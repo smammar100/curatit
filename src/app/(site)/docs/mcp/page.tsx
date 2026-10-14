@@ -93,7 +93,7 @@ export default function ConnectPage() {
   return (
     <>
       <section>
-        <Wrapper variant="standard" className="pt-28 lg:pt-40">
+        <Wrapper variant="standard" className="page-start">
           <div className="max-w-2xl">
             <Text tag="h1" variant="displayLG" className="font-display font-light text-balance text-base-900">
               Use Curatit from your AI tools
@@ -107,7 +107,7 @@ export default function ConnectPage() {
 
       {/* Three steps, read across on wide screens */}
       <section aria-labelledby="steps">
-        <Wrapper variant="standard" className="pt-14">
+        <Wrapper variant="standard" className="section-y">
           <h2 id="steps" className="sr-only">
             Three steps
           </h2>
@@ -133,7 +133,7 @@ export default function ConnectPage() {
 
       {/* One card per client: the words on the left, the configuration on the right */}
       <section aria-labelledby="clients">
-        <Wrapper variant="standard" className="pt-20">
+        <Wrapper variant="standard" className="section-y">
           <Text tag="h2" id="clients" variant="displaySM" className="font-display font-thin text-base-900">
             Your client
           </Text>
@@ -170,7 +170,7 @@ export default function ConnectPage() {
 
       {/* What the tools do */}
       <section aria-labelledby="tools">
-        <Wrapper variant="standard" className="pt-20 pb-32">
+        <Wrapper variant="standard" className="section-y">
           <Text tag="h2" id="tools" variant="displaySM" className="font-display font-thin text-base-900">
             Six tools, all read-only
           </Text>

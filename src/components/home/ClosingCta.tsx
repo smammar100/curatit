@@ -20,7 +20,7 @@ export default function ClosingCta({ posts }: { posts: LibraryPost[] }) {
 
   return (
     <section className="overflow-hidden bg-white">
-      <Wrapper variant="standard" className="py-20">
+      <Wrapper variant="standard" className="section-y">
         <div className="flex flex-col items-center gap-12 lg:flex-row lg:justify-center lg:gap-16 xl:gap-24">
           <LogoReel items={left} orientation="horizontal" near="end" className="lg:hidden" />
           <LogoReel items={left} orientation="vertical" near="end" className="hidden lg:block" />

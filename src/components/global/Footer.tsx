@@ -26,7 +26,7 @@ const LINKS = [
       { label: "Library", href: "/library" },
       { label: "Pricing", href: "/pricing" },
       { label: "How it works", href: "/#how-it-works" },
-      { label: "MCP (soon)", href: "/agents" },
+      { label: "MCP (beta)", href: "/agents" },
       { label: "Submit a brand to the library", href: "/submit" },
     ],
   },
@@ -92,7 +92,7 @@ export default async function Footer() {
   const covers = pickCovers(posts);
 
   return (
-    <footer className="bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <footer className="mt-12 bg-white px-4 lg:mt-16 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="footer-panel relative isolate overflow-clip rounded-[1.5rem] sm:rounded-[2rem]">
         {/* The logo and the statement, with the covers on the right */}
         <div className="relative">

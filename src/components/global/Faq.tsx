@@ -59,7 +59,7 @@ const defaultFaqs = [
 export default function Faq({ faqs = defaultFaqs }: { faqs?: { question: string; answer: string }[] }) {
   return (
     <section>
-      <Wrapper variant="standard" className="py-20">
+      <Wrapper variant="standard" className="section-y">
         <div className="text-center">
           <Text tag="h2" variant="displayLG" className="text-base-900 font-display font-thin">
             Frequently Asked Questions

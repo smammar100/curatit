@@ -17,7 +17,7 @@ const links = [
   { href: "/pricing", text: "Pricing" },
   { href: "/vision", text: "Vision" },
   { href: "/roadmap", text: "Roadmap" },
-  { href: "/agents", text: "MCP", soon: true },
+  { href: "/agents", text: "MCP", beta: true },
 ];
 
 export default function MobileNav() {
@@ -77,8 +77,8 @@ export default function MobileNav() {
                 href={link.href}
               >
                 {link.text}
-                {link.soon && (
-                  <span className="rounded px-1.5 py-0.5 text-[11px]/none font-medium text-base-600 ring-1 ring-base-200">Soon</span>
+                {link.beta && (
+                  <span className="rounded px-1.5 py-0.5 text-[11px]/none font-medium text-base-600 ring-1 ring-base-200">Beta</span>
                 )}
               </Link>
             ))}

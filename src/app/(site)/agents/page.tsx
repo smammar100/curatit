@@ -18,7 +18,7 @@ import { getPublishedPosts } from "@/lib/posts";
 import { SUPPORT_MAILTO } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Curatit MCP (coming soon)",
+  title: "Curatit MCP (beta)",
   description:
     "Use Curatit's library of real brand posts from Claude, Cursor, VS Code and ChatGPT: search it, read a post slide by slide and draft a brief, with every answer linked to its source.",
 };
@@ -29,8 +29,8 @@ export const revalidate = 3600;
 // opens /mcp is sent here). Laid out after ElevenLabs' MCP page, at the person's request: the title
 // on the left and what it does on the right, then a tab per client over one gradient panel whose
 // white card holds that client's steps (ClientInstall, the page's only script), then why it helps,
-// shown as the same question asked with and without Curatit (BeforeAfter, real posts), the six
-// tools as a quiet grid under a left label, what a token can and can't do, the Soon note and a
+// shown as one question answered without and with Curatit (BeforeAfter: guesses beside empty frames against the real posts, large), the six
+// tools as a quiet grid under a left label, what a token can and can't do, the Beta note and a
 // closing call. Earlier Mobbin references (Higgsfield, Neon, Midday, Bloom) shaped the tabs and the
 // before/after.
 
@@ -39,7 +39,7 @@ const TOKEN_HREF = "/dashboard/settings/tokens";
 const linkClass = "underline decoration-base-300 underline-offset-2 transition-colors duration-150 hover:text-accent-600";
 
 export default async function AgentsPage() {
-  // If the library can't be reached, the illustration shows the question without its posts
+  // If the library can't be reached, the illustration is left out (BeforeAfter renders nothing without its posts)
   const posts = await getPublishedPosts().catch(() => []);
   const count = posts.length ? `${posts.length} ` : "";
 
@@ -65,12 +65,12 @@ export default async function AgentsPage() {
     <>
       {/* Header: the title on the left, what it does on the right; then the install block */}
       <section>
-        <Wrapper variant="standard" className="pt-28 lg:pt-40">
+        <Wrapper variant="standard" className="page-start">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-end lg:gap-8">
             <div className="lg:col-span-7">
               <p className="flex items-center gap-2 text-sm text-base-600">
                 Curatit MCP
-                <span className="rounded-md bg-base-50 px-2 py-0.5 text-xs font-medium text-base-900 ring-1 ring-base-200">Soon</span>
+                <span className="rounded-md bg-base-50 px-2 py-0.5 text-xs font-medium text-base-900 ring-1 ring-base-200">Beta</span>
               </p>
               <Text tag="h1" variant="displayLG" className="mt-4 font-display font-light text-balance text-base-900">
                 Bring Curatit to your AI assistant
@@ -89,7 +89,7 @@ export default async function AgentsPage() {
 
       {/* Why: the same question with and without Curatit, then the three benefits */}
       <section aria-labelledby="why">
-        <Wrapper variant="standard" className="pt-24 lg:pt-32">
+        <Wrapper variant="standard" className="section-y">
           <div className="max-w-2xl">
             <Text tag="h2" id="why" variant="displaySM" className="font-display font-thin text-balance text-base-900">
               Ask for references. Get real ones.
@@ -99,9 +99,7 @@ export default async function AgentsPage() {
               ones instead.
             </Text>
           </div>
-          <div className="mt-12">
-            <BeforeAfter posts={posts} />
-          </div>
+          <BeforeAfter posts={posts} className="mt-12" />
           <ul className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
             {benefits.map((benefit) => (
               <li key={benefit.title}>
@@ -116,7 +114,7 @@ export default async function AgentsPage() {
 
       {/* The six tools: a label on the left, a quiet grid on the right */}
       <section aria-labelledby="tools">
-        <Wrapper variant="standard" className="pt-24 lg:pt-32">
+        <Wrapper variant="standard" className="section-y">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
             <div className="lg:col-span-4">
               <Text tag="h2" id="tools" variant="displaySM" className="font-display font-thin text-balance text-base-900">
@@ -139,9 +137,9 @@ export default async function AgentsPage() {
         </Wrapper>
       </section>
 
-      {/* What a token can and can't do, then the Soon note */}
+      {/* What a token can and can't do, then the Beta note */}
       <section aria-label="What your tool can and can't do">
-        <Wrapper variant="standard" className="pt-24">
+        <Wrapper variant="standard" className="section-y">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-2xl bg-white p-5 ring-1 ring-edge lg:p-6">
               <h3 className="text-base font-medium text-base-900">What your tool can do</h3>
@@ -181,7 +179,7 @@ export default async function AgentsPage() {
           </div>
 
           <div className="mt-4 flex flex-col gap-3 rounded-2xl bg-base-50 p-5 sm:flex-row sm:items-center lg:p-6">
-            <span className="w-fit shrink-0 rounded-md bg-white px-2 py-0.5 text-xs font-medium text-base-900 ring-1 ring-base-200">Soon</span>
+            <span className="w-fit shrink-0 rounded-md bg-white px-2 py-0.5 text-xs font-medium text-base-900 ring-1 ring-base-200">Beta</span>
             <p className="text-sm text-pretty text-base-600">
               Things may change while we test it, and the ChatGPT connector is still being tried out.{" "}
               <a href={SUPPORT_MAILTO} className={linkClass}>
@@ -195,7 +193,7 @@ export default async function AgentsPage() {
 
       {/* Closing call to action */}
       <section aria-labelledby="start">
-        <Wrapper variant="standard" className="pt-24 pb-32 lg:pt-32">
+        <Wrapper variant="standard" className="section-y">
           <div className="mx-auto max-w-2xl text-center text-balance">
             <Text tag="h2" id="start" variant="displayMD" className="font-display font-thin">
               <span className="block text-base-500">Your next brief starts in a chat.</span>

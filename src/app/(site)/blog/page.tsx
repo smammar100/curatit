@@ -15,7 +15,7 @@ export default function BlogPage() {
   const sortedTags = allTags.sort((a, b) => a.localeCompare(b));
   return (
     <section>
-      <Wrapper variant="standard" className="py-24 lg:pt-48">
+      <Wrapper variant="standard" className="page-start">
         <div className="text-balance max-w-xl">
           <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
             Magazine

@@ -21,7 +21,7 @@ export default function BlogLayout({
   return (
     <>
       <section>
-        <Wrapper variant="standard" className="py-24 lg:pt-48">
+        <Wrapper variant="standard" className="page-start">
           <div className="text-balance">
             <div className="text-center max-w-3xl mx-auto text-balance">
               <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
@@ -65,7 +65,7 @@ export default function BlogLayout({
         </Wrapper>
       </section>
       <section>
-        <Wrapper variant="standard" className="py-12">
+        <Wrapper variant="standard" className="section-y">
           <div className="flex flex-wrap gap-4 justify-between items-center">
             <Text tag="h2" variant="displaySM" className="text-base-900 font-display font-thin">
               Latest posts

@@ -31,7 +31,7 @@ export default function HomeHero({ posts }: { posts: LibraryPost[] }) {
       <ImageStreamHero images={images} className="h-svh min-h-[40rem] w-full bg-white">
         <Wrapper
           variant="standard"
-          className="relative z-10 flex h-full flex-col items-center justify-between pt-28 pb-20 text-center lg:pt-32"
+          className="relative z-10 flex h-full flex-col items-center justify-between pt-28 pb-20 text-center lg:pt-40"
         >
           <div className="text-balance max-w-3xl">
             <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
