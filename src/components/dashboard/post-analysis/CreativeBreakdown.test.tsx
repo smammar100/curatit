@@ -10,7 +10,7 @@ import SlideBreakdown from "./SlideBreakdown";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const SOURCE = { brand: "Example Sports", url: "https://www.instagram.com/p/EXAMPLE/", format: "carousel" as const, slides: 7 };
+const SOURCE = { brand: "Example Sports", shortCode: "EXAMPLE", images: Array.from({ length: 7 }, (_, i) => `/lib/example/${i + 1}.webp`), url: "https://www.instagram.com/p/EXAMPLE/", format: "carousel" as const, slides: 7 };
 
 type Gallery = ReturnType<typeof galleryFixture>;
 function galleryAnalysis(edit?: (dna: Gallery["dna"], slides: Gallery["slides"]) => void): PublicAnalysis {
@@ -220,17 +220,55 @@ describe("CreativeBreakdown: Copy brief", () => {
     expect(tabNames()).not.toContain("Apply");
     await act(async () => button(container, /^Copy brief$/)!.click());
     const brief = writeText.mock.calls[0][0] as string;
-    expect(brief.startsWith("# Creative brief: ")).toBe(true);
-    expect(brief).toContain("You are a senior creative director.");
-    expect(brief).toContain("## Creative formula");
-    expect(brief).toContain("## What to give me");
+    expect(brief.startsWith("# Instagram post — 1:1 replica brief")).toBe(true);
+    expect(brief).toContain("closest possible visual fidelity");
+    expect(brief).toContain("## Reconstruction requirements");
+    expect(brief).toContain("## Execution and deliverables");
     expect(brief).toContain("https://www.instagram.com/p/EXAMPLE/");
     expect(button(container, /^Copied$/)).toBeTruthy();
-    expect(container.textContent).toContain("Creative brief copied. Paste it into your AI tool.");
+    expect(container.textContent).toContain("Replica brief copied. Paste it into your AI tool.");
     writeText.mockRejectedValueOnce(new Error("denied"));
     await act(async () => button(container, /^Cop/)!.click());
     expect(container.textContent).toContain("Couldn't copy the brief here.");
   });
+
+  it("downloads the same Markdown as the clipboard with a post-specific filename", async () => {
+    vi.useFakeTimers();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    const createURL = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:replica");
+    const revokeURL = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+    let filename = "";
+    let href = "";
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
+      filename = this.download;
+      href = this.href;
+    });
+    try {
+      render(<Harness analysis={galleryAnalysis()} />);
+      await act(async () => button(container, /^Copy brief$/)!.click());
+      click(button(container, /^Download \.md$/));
+      const blob = createURL.mock.calls[0][0] as Blob;
+      expect(await blob.text()).toBe(writeText.mock.calls[0][0]);
+      expect(blob.type).toBe("text/markdown;charset=utf-8");
+      expect(filename).toBe("curatit-EXAMPLE-replica.md");
+      expect(href).toBe("blob:replica");
+      expect(document.querySelector('a[download]')).toBeNull();
+      expect(container.textContent).toContain("Replica brief download started.");
+      act(() => vi.advanceTimersByTime(1000));
+      expect(revokeURL).toHaveBeenCalledWith("blob:replica");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("offers the file when clipboard access is unavailable", async () => {
+    Object.defineProperty(navigator, "clipboard", { value: undefined, configurable: true });
+    render(<Harness analysis={galleryAnalysis()} />);
+    await act(async () => button(container, /^Copy brief$/)!.click());
+    expect(container.textContent).toContain("Couldn't copy the brief here. Use Download .md instead.");
+  });
+
 });
 
 describe("CreativeBreakdown: thin and single records", () => {
