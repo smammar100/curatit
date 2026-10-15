@@ -21,9 +21,7 @@ const LINKS = [
   {
     title: "Product",
     links: [
-      { label: "Library", href: "/library" },
       { label: "Pricing", href: "/pricing" },
-      { label: "How it works", href: "/#how-it-works" },
       { label: "MCP (beta)", href: "/agents" },
       { label: "Submit a brand to the library", href: "/submit" },
     ],
