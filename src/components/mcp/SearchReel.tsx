@@ -11,7 +11,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import Search from "@/components/fundations/icons/Search";
+import SearchSparkle from "@/components/fundations/icons/SearchSparkle";
 import { cx } from "@/lib/cx";
 import type { ExampleSearch } from "./searchExamples";
 
@@ -71,7 +71,7 @@ export default function SearchReel({ searches }: { searches: ExampleSearch[] }) 
     <div ref={ref} onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
       {/* The query, typed */}
       <p className="flex min-h-12 items-center gap-3 text-2xl font-medium tracking-tight text-base-900 sm:text-3xl lg:text-4xl" aria-live="off">
-        <Search className="size-6 shrink-0 text-base-900 lg:size-8" aria-hidden="true" />
+        <SearchSparkle className="size-7 shrink-0 text-base-900 lg:size-9" aria-hidden="true" />
         <span className="sr-only">Search: </span>
         <span>{search.query.slice(0, typed)}</span>
         <span aria-hidden="true" className={cx("-ml-2 h-[1em] w-0.5 bg-base-900", done && "search-reel-caret")} />
