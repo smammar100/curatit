@@ -70,11 +70,11 @@ export default function SearchReel({ searches }: { searches: ExampleSearch[] }) 
   return (
     <div ref={ref} onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
       {/* The query, typed */}
-      <p className="flex min-h-12 items-center gap-3 text-2xl font-medium tracking-tight text-base-900 sm:text-3xl lg:text-4xl" aria-live="off">
-        <SearchSparkle className="size-7 shrink-0 text-base-900 lg:size-9" aria-hidden="true" />
+      <p className="flex min-h-12 items-center gap-3 font-display text-2xl font-light text-base-900 md:text-3xl lg:text-4xl" aria-live="off">
+        <SearchSparkle className="size-6 shrink-0 text-base-900 lg:size-7" aria-hidden="true" />
         <span className="sr-only">Search: </span>
         <span>{search.query.slice(0, typed)}</span>
-        <span aria-hidden="true" className={cx("-ml-2 h-[1em] w-0.5 bg-base-900", done && "search-reel-caret")} />
+        <span aria-hidden="true" className={cx("-ml-2 h-[0.9em] w-px bg-base-900", done && "search-reel-caret")} />
       </p>
 
       {/* The results: a row that runs off the right edge (the section clips it) */}

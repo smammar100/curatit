@@ -97,7 +97,7 @@ export default async function AgentsPage() {
               <span className="block">Finding references took hours.</span>
               <span className="block">Now it&apos;s one question.</span>
             </Text>
-            <Text tag="p" variant="textXL" className="mt-8 text-pretty text-base-500">
+            <Text tag="p" variant="textBase" className="mt-4 max-w-xl text-pretty text-base-600">
               Ask in plain words and get real brand posts back, not descriptions of ones that don&apos;t exist.
             </Text>
           </div>
