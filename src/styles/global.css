@@ -1157,3 +1157,33 @@
     translate: calc(var(--flow) / 2) 0;
   }
 }
+
+/* The MCP landing page's search reel (mcp/SearchReel): each search's tiles arrive one after another
+   from the right, and the caret blinks once the query is typed. Still under reduced motion */
+.search-reel-tile {
+  animation: search-reel-in 420ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+
+@keyframes search-reel-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+.search-reel-caret {
+  animation: search-reel-blink 1s steps(1) infinite;
+}
+
+@keyframes search-reel-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-reel-tile,
+  .search-reel-caret {
+    animation: none;
+  }
+}

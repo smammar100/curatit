@@ -11,7 +11,8 @@ import Close from "@/components/fundations/icons/Close";
 import Picture from "@/components/fundations/icons/Picture";
 import Plugs from "@/components/fundations/icons/Plugs";
 // Components
-import BeforeAfter from "@/components/mcp/BeforeAfter";
+import SearchReel from "@/components/mcp/SearchReel";
+import { runExampleSearches } from "@/components/mcp/searchExamples";
 import ClientInstall from "@/components/mcp/ClientInstall";
 import { TOOLS } from "@/components/mcp/tools";
 import { getPublishedPosts } from "@/lib/posts";
@@ -29,7 +30,7 @@ export const revalidate = 3600;
 // opens /mcp is sent here). Laid out after ElevenLabs' MCP page, at the person's request: the title
 // on the left and what it does on the right, then a tab per client over one gradient panel whose
 // white card holds that client's steps (ClientInstall, the page's only script), then why it helps,
-// shown as one question answered without and with Curatit (BeforeAfter: guesses beside empty frames against the real posts, large), the six
+// shown as example searches typed out over rows of their real results (SearchReel, after Mobbin's "one search" section), the six
 // tools as a quiet grid under a left label, what a token can and can't do, the Beta note and a
 // closing call. Earlier Mobbin references (Higgsfield, Neon, Midday, Bloom) shaped the tabs and the
 // before/after.
@@ -39,8 +40,9 @@ const TOKEN_HREF = "/dashboard/settings/tokens";
 const linkClass = "underline decoration-base-300 underline-offset-2 transition-colors duration-150 hover:text-accent-600";
 
 export default async function AgentsPage() {
-  // If the library can't be reached, the illustration is left out (BeforeAfter renders nothing without its posts)
+  // If the library can't be reached, the example searches are left out (SearchReel renders nothing without them)
   const posts = await getPublishedPosts().catch(() => []);
+  const searches = posts.length ? await runExampleSearches(posts).catch(() => []) : [];
   const count = posts.length ? `${posts.length} ` : "";
 
   const benefits = [
@@ -87,19 +89,23 @@ export default async function AgentsPage() {
         </Wrapper>
       </section>
 
-      {/* Why: the same question with and without Curatit, then the three benefits */}
-      <section aria-labelledby="why">
+      {/* Why: a left-set statement, then example searches typed out over their real results, then the three benefits */}
+      <section aria-labelledby="why" className="overflow-x-clip">
         <Wrapper variant="standard" className="section-y">
-          <div className="max-w-2xl">
-            <Text tag="h2" id="why" variant="displaySM" className="font-display font-thin text-balance text-base-900">
-              Ask for references. Get real ones.
+          <div className="max-w-3xl">
+            <Text tag="h2" id="why" variant="displayLG" className="font-display font-light text-balance text-base-900">
+              <span className="block">Finding references took hours.</span>
+              <span className="block">Now it&apos;s one question.</span>
             </Text>
-            <Text className="mt-4 text-pretty text-base-600">
-              MCP is how AI tools plug into other services. Connected to Curatit, your assistant stops describing posts it has never seen and searches a library of real
-              ones instead.
+            <Text tag="p" variant="textXL" className="mt-8 text-pretty text-base-500">
+              Ask in plain words and get real brand posts back, not descriptions of ones that don&apos;t exist.
             </Text>
           </div>
-          <BeforeAfter posts={posts} className="mt-12" />
+          {searches.length > 0 && (
+            <div className="mt-14">
+              <SearchReel searches={searches} />
+            </div>
+          )}
           <ul className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
             {benefits.map((benefit) => (
               <li key={benefit.title}>
