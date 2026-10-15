@@ -9,7 +9,7 @@ import { getLibrary } from "@/lib/library";
 
 export const metadata: Metadata = {
   title: { absolute: "Library · Curatit" },
-  description: "Organic brand posts worth studying, newest first. Static posts and carousels.",
+  description: "A preview of the library: real brand posts, newest first. Create an account to search it and read the breakdowns.",
 };
 
 export default function LibraryPage() {
@@ -22,8 +22,8 @@ export default function LibraryPage() {
             The library
           </Text>
           <Text tag="p" variant="textBase" className="text-base-600 mt-4 max-w-xl mx-auto">
-            Organic brand posts worth studying, newest first. Static posts and carousels; each one links
-            back to the original.
+            A preview of the library: real brand posts, newest first, each linking back to the original.
+            Create an account to search the whole library and read the breakdowns.
           </Text>
         </div>
         <ul className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 mt-12">

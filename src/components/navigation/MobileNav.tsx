@@ -14,10 +14,9 @@ import Burger from "@/components/fundations/icons/Burger";
 
 // Same links as the desktop nav
 const links = [
+  { href: "/#how-it-works", text: "How it works" },
   { href: "/pricing", text: "Pricing" },
-  { href: "/vision", text: "Vision" },
-  { href: "/roadmap", text: "Roadmap" },
-  { href: "/agents", text: "MCP", beta: true },
+  { href: "/agents", text: "AI integration", beta: true },
 ];
 
 export default function MobileNav() {
@@ -78,7 +77,9 @@ export default function MobileNav() {
               >
                 {link.text}
                 {link.beta && (
-                  <span className="rounded px-1.5 py-0.5 text-[11px]/none font-medium text-base-600 ring-1 ring-base-200">Beta</span>
+                  <span className="rounded px-1.5 py-0.5 text-[11px]/none font-medium text-base-600 ring-1 ring-base-200">
+                    Beta
+                  </span>
                 )}
               </Link>
             ))}
@@ -100,7 +101,7 @@ export default function MobileNav() {
               href="/signup"
               className="shrink-0"
             >
-              Sign up
+              Create account
             </Button>
           </div>
         </Wrapper>

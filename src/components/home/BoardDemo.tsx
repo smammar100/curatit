@@ -18,7 +18,9 @@ import { cx } from "@/lib/cx";
 // Fills its box (HowItWorks gives every illustration the same one).
 export default function BoardDemo() {
   const [copied, setCopied] = useState(false);
-  const { ref, playing, stop } = useLoop<HTMLDivElement>(5000, () => setCopied(true));
+  const { ref, playing, stop } = useLoop<HTMLDivElement>(5000, () =>
+    setCopied(true),
+  );
   const posts = usePosts(board.references.map((reference) => reference.post));
   const intro = useIntro();
 
@@ -34,11 +36,13 @@ export default function BoardDemo() {
         <input
           readOnly
           value="curatit.com/s/k7Qm2xVbR4"
-          aria-label="Share link"
+          aria-label="Example share link"
           onFocus={(event) => event.currentTarget.select()}
           className={cx(
             "block h-9 min-w-0 flex-1 rounded-md border border-transparent px-3 text-xs shadow-sm ring-1 transition-colors duration-150 focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none",
-            copied ? "bg-accent-50 text-base-900 ring-accent-200" : "bg-white text-base-600 ring-base-200"
+            copied
+              ? "bg-accent-50 text-base-900 ring-accent-200"
+              : "bg-white text-base-600 ring-base-200",
           )}
         />
         <Button
@@ -49,33 +53,54 @@ export default function BoardDemo() {
             stop();
             setCopied(true);
           }}
-          className="w-18 shrink-0"
+          className="shrink-0"
         >
-          {copied ? "Copied" : "Copy"}
+          {copied ? "Copied" : "Copy example link"}
         </Button>
       </m.div>
       <m.div variants={introItem} className="mt-5">
-        <p className="font-display text-xl leading-tight font-light text-base-900">{board.name}</p>
-        <p className="mt-0.5 text-xs text-base-500">Read-only · {posts.length} references</p>
+        <p className="font-display text-xl leading-tight font-light text-base-900">
+          {board.name}
+        </p>
+        <p className="mt-0.5 text-xs text-base-500">
+          Read-only · {posts.length} references
+        </p>
       </m.div>
       {/* Bleeds into the card's right padding so the last cover is cut by the edge. A size
           container, so each item can take its width from the strip's height (cqh). */}
-      <m.div variants={introFromRight} className="-mr-6 mt-3 min-h-0 flex-1 overflow-hidden [container-type:size] lg:-mr-8">
+      <m.div
+        variants={introFromRight}
+        className="-mr-6 mt-3 min-h-0 flex-1 overflow-hidden [container-type:size] lg:-mr-8"
+      >
         <m.ul
           className="flex h-full gap-3"
           animate={playing ? { x: [0, -32] } : { x: 0 }}
           transition={
             playing
-              ? { duration: 6, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" }
+              ? {
+                  duration: 6,
+                  ease: "easeInOut",
+                  repeat: Infinity,
+                  repeatType: "mirror",
+                }
               : { duration: 0.4, ease: "easeOut" }
           }
         >
           {posts.map((post) => {
-            const { note } = board.references.find((reference) => reference.post === post.shortCode)!;
+            const { note } = board.references.find(
+              (reference) => reference.post === post.shortCode,
+            )!;
             return (
               // Cover height is the strip minus the two caption lines (2.5rem); width follows at 4:5
-              <li key={post.shortCode} className="w-[calc((100cqh-2.5rem)*0.8)] shrink-0">
-                <PostCover post={post} sizes="180px" className="w-full rounded shadow-sm" />
+              <li
+                key={post.shortCode}
+                className="w-[calc((100cqh-2.5rem)*0.8)] shrink-0"
+              >
+                <PostCover
+                  post={post}
+                  sizes="180px"
+                  className="w-full rounded shadow-sm"
+                />
                 <BrandName brand={post.brand} className="mt-2" />
                 <p className="truncate text-xs text-base-500">{note}</p>
               </li>

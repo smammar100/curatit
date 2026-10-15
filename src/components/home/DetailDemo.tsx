@@ -16,14 +16,20 @@ export default function DetailDemo() {
   const [slide, setSlide] = useState(0);
   const post = usePost(detail.post);
   const count = post?.images.length ?? 1;
-  const { ref, playing, stop } = useLoop<HTMLDivElement>(2200, () => setSlide((i) => (i + 1) % count));
+  const { ref, playing, stop } = useLoop<HTMLDivElement>(2200, () =>
+    setSlide((i) => (i + 1) % count),
+  );
   const ringId = useId();
   const reduceMotion = useReducedMotion();
   const intro = useIntro();
   if (!post) return null;
 
   return (
-    <m.div ref={ref} {...intro} className="flex h-full flex-col items-center pb-10">
+    <m.div
+      ref={ref}
+      {...intro}
+      className="flex h-full flex-col items-center pb-10"
+    >
       <ol className="grid w-full grid-cols-5 gap-1.5">
         {post.images.map((_, i) => (
           <m.li key={i} variants={introItem}>
@@ -37,17 +43,26 @@ export default function DetailDemo() {
               }}
               className={cx(
                 "relative block w-full rounded transition-opacity duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400",
-                i === slide ? "opacity-100" : "opacity-60 hover:opacity-100"
+                i === slide ? "opacity-100" : "opacity-60 hover:opacity-100",
               )}
             >
-              <PostCover post={post} slide={i} sizes="56px" className="rounded" />
+              <PostCover
+                post={post}
+                slide={i}
+                sizes="56px"
+                className="rounded"
+              />
               {/* One ring that glides to the selected slide */}
               {i === slide && (
                 <m.span
                   layoutId={ringId}
                   aria-hidden="true"
                   className="absolute -inset-1 rounded-md ring-2 ring-base-800"
-                  transition={reduceMotion ? { duration: 0 } : { type: "spring", duration: 0.4, bounce: 0 }}
+                  transition={
+                    reduceMotion
+                      ? { duration: 0 }
+                      : { type: "spring", duration: 0.4, bounce: 0 }
+                  }
                 />
               )}
             </button>
@@ -55,17 +70,29 @@ export default function DetailDemo() {
         ))}
       </ol>
       {/* The slide fills the card's width, cropped from the top so the headline stays in frame */}
-      <m.div variants={introScale} className="relative mt-3 min-h-0 w-full flex-1">
+      <m.div
+        variants={introScale}
+        className="relative mt-3 min-h-0 w-full flex-1"
+      >
         <AnimatePresence initial={false}>
           <m.div
             key={slide}
             className="absolute inset-0"
             initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={reduceMotion ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0, transition: { duration: 0.2 } }}
+            exit={
+              reduceMotion
+                ? { opacity: 0, transition: { duration: 0 } }
+                : { opacity: 0, transition: { duration: 0.2 } }
+            }
             transition={{ duration: 0.3, ease: easeOut }}
           >
-            <PostCover post={post} slide={slide} sizes="260px" className="h-full w-full rounded shadow [&_img]:object-top" />
+            <PostCover
+              post={post}
+              slide={slide}
+              sizes="260px"
+              className="h-full w-full rounded shadow [&_img]:object-top"
+            />
           </m.div>
         </AnimatePresence>
         {/* The slide's role and count, a pill resting on the image's bottom edge */}
@@ -74,7 +101,10 @@ export default function DetailDemo() {
           className="absolute inset-x-0 bottom-3 z-10 mx-auto w-fit rounded-md bg-white/90 px-2.5 py-1 text-xs text-base-600 shadow-sm backdrop-blur-sm"
           aria-live={playing ? "off" : "polite"}
         >
-          <span className="font-medium text-base-900">{detail.sequence[slide]}</span> · {slide + 1} / {count}
+          <span className="font-medium text-base-900">
+            {detail.sequence[slide]}
+          </span>{" "}
+          · {slide + 1} / {count}
         </m.p>
       </m.div>
     </m.div>

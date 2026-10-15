@@ -23,11 +23,28 @@ const SCENE = { w: 1400, h: 1000 };
 
 function Cover({ id, className }: { id: string; className?: string }) {
   const post = usePost(id);
-  return post ? <PostCover post={post} sizes="120px" className={className} /> : null;
+  return post ? (
+    <PostCover post={post} sizes="120px" className={className} />
+  ) : null;
 }
 
-function Card({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cx("rounded-md bg-white shadow ring-1 ring-base-200", className)}>{children}</div>;
+function Card({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={cx(
+        "rounded-md bg-white shadow ring-1 ring-base-200",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
 }
 
 function Phone({ id, name }: { id: string; name: string }) {
@@ -57,7 +74,15 @@ const sheetRows = [
   ["", "drive.google.com/file/d…", ""],
 ];
 
-type Scrap = { key: string; x: number; y: number; w: number; rotate?: number; delay: number; node: ReactNode };
+type Scrap = {
+  key: string;
+  x: number;
+  y: number;
+  w: number;
+  rotate?: number;
+  delay: number;
+  node: ReactNode;
+};
 
 const scraps: Scrap[] = [
   {
@@ -77,12 +102,30 @@ const scraps: Scrap[] = [
             <Cover key={id} id={id} className="rounded-sm" />
           ))}
         </div>
-        <p className="mt-2 text-[11px] text-base-500">2,318 posts · no folders</p>
+        <p className="mt-2 text-[11px] text-base-500">
+          2,318 posts · no folders
+        </p>
       </Card>
     ),
   },
-  { key: "shot-a", x: 350, y: 70, w: 150, rotate: -5, delay: 0.2, node: <Phone id={scattered.screenshots[0]} name="IMG_4821.PNG" /> },
-  { key: "shot-b", x: 440, y: 125, w: 150, rotate: 4, delay: 0.3, node: <Phone id={scattered.screenshots[1]} name="IMG_4830.PNG" /> },
+  {
+    key: "shot-a",
+    x: 350,
+    y: 70,
+    w: 150,
+    rotate: -5,
+    delay: 0.2,
+    node: <Phone id={scattered.screenshots[0]} name="IMG_4821.PNG" />,
+  },
+  {
+    key: "shot-b",
+    x: 440,
+    y: 125,
+    w: 150,
+    rotate: 4,
+    delay: 0.3,
+    node: <Phone id={scattered.screenshots[1]} name="IMG_4830.PNG" />,
+  },
   {
     key: "chat",
     x: 640,
@@ -91,13 +134,20 @@ const scraps: Scrap[] = [
     delay: 0.4,
     node: (
       <Card className="flex gap-3 p-3">
-        <Image src="/images/avatar.jpeg" alt="" width={36} height={36} className="size-9 shrink-0 rounded-full object-cover" />
+        <Image
+          src="/images/avatar.jpeg"
+          alt=""
+          width={36}
+          height={36}
+          className="size-9 shrink-0 rounded-full object-cover"
+        />
         <div className="min-w-0">
           <p className="text-[12px] text-base-500">
             <span className="font-medium text-base-900">Priya</span> · 10:42
           </p>
           <p className="mt-0.5 text-[14px] leading-snug text-base-900">
-            do you have that carousel from the money app? the one with the phone on every slide
+            do you have that carousel from the money app? the one with the phone
+            on every slide
           </p>
         </div>
         <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-accent-600 text-[11px] font-semibold text-paper">
@@ -114,7 +164,9 @@ const scraps: Scrap[] = [
     delay: 0.5,
     node: (
       <Card className="overflow-hidden">
-        <p className="border-b border-base-100 px-3 py-1.5 text-[12px] font-medium text-base-900">links_FINAL_v3.xlsx</p>
+        <p className="border-b border-base-100 px-3 py-1.5 text-[12px] font-medium text-base-900">
+          links_FINAL_v3.xlsx
+        </p>
         <table className="w-full text-[11px]">
           <thead>
             <tr className="bg-base-50 text-left text-base-500">
@@ -127,7 +179,14 @@ const scraps: Scrap[] = [
             {sheetRows.map((row, i) => (
               <tr key={i} className="border-t border-base-100">
                 {row.map((cell, j) => (
-                  <td key={j} className={cx("px-3 py-1", j === 0 ? "text-base-900" : "text-base-600", j === 2 && "italic")}>
+                  <td
+                    key={j}
+                    className={cx(
+                      "px-3 py-1",
+                      j === 0 ? "text-base-900" : "text-base-600",
+                      j === 2 && "italic",
+                    )}
+                  >
                     {cell}
                   </td>
                 ))}
@@ -146,13 +205,17 @@ const scraps: Scrap[] = [
     delay: 0.65,
     node: (
       <Card className="p-4">
-        <p className="text-[15px] font-semibold text-base-900">References — Payments launch</p>
+        <p className="text-[15px] font-semibold text-base-900">
+          References — Payments launch
+        </p>
         <ul className="mt-2 space-y-1 text-[12px] text-base-600">
           <li>• instagram.com/p/DeJsl6… (green one?)</li>
           <li>• the Coinbase card-pack post → ask Jo</li>
           <li>• pinterest board → link dead</li>
           <li>• see slack thread from March</li>
-          <li className="text-base-400">• TODO: find the carousel with the phone</li>
+          <li className="text-base-400">
+            • TODO: find the carousel with the phone
+          </li>
         </ul>
       </Card>
     ),
@@ -166,14 +229,28 @@ const scraps: Scrap[] = [
     node: (
       <Card className="overflow-hidden">
         <p className="border-b border-base-100 px-3 py-1.5 text-[12px] text-base-600">
-          <span className="font-medium text-base-900">moodboard-spring-v2</span> · Design file
+          <span className="font-medium text-base-900">moodboard-spring-v2</span>{" "}
+          · Design file
         </p>
         <div className="relative h-48 bg-base-50">
-          <Cover id={scattered.canvas[0]} className="absolute top-4 left-5 w-16 rotate-[-6deg] rounded-sm shadow-sm" />
-          <Cover id={scattered.canvas[1]} className="absolute top-10 left-28 w-20 rotate-[3deg] rounded-sm shadow-sm" />
-          <Cover id={scattered.canvas[2]} className="absolute top-3 right-6 w-16 rotate-[8deg] rounded-sm shadow-sm" />
-          <span className="absolute top-28 left-44 rounded-sm bg-base-900 px-1.5 py-0.5 text-[10px] text-white">Sam</span>
-          <span className="absolute top-36 right-14 rounded-sm bg-accent-600 px-1.5 py-0.5 text-[10px] text-paper">Jo</span>
+          <Cover
+            id={scattered.canvas[0]}
+            className="absolute top-4 left-5 w-16 rotate-[-6deg] rounded-sm shadow-sm"
+          />
+          <Cover
+            id={scattered.canvas[1]}
+            className="absolute top-10 left-28 w-20 rotate-[3deg] rounded-sm shadow-sm"
+          />
+          <Cover
+            id={scattered.canvas[2]}
+            className="absolute top-3 right-6 w-16 rotate-[8deg] rounded-sm shadow-sm"
+          />
+          <span className="absolute top-28 left-44 rounded-sm bg-base-900 px-1.5 py-0.5 text-[10px] text-white">
+            Sam
+          </span>
+          <span className="absolute top-36 right-14 rounded-sm bg-accent-600 px-1.5 py-0.5 text-[10px] text-paper">
+            Jo
+          </span>
         </div>
       </Card>
     ),
@@ -191,8 +268,12 @@ const scraps: Scrap[] = [
           <div className="absolute inset-x-0 top-4 bottom-0 rounded-tr-md rounded-b-md bg-base-200" />
           <div className="absolute inset-x-1 top-6 bottom-1 rounded-md bg-base-300" />
         </div>
-        <p className="mt-2 text-[12px] font-medium text-base-900">Inspo_final_v3</p>
-        <p className="text-[11px] text-base-500">47 items · modified 3 months ago</p>
+        <p className="mt-2 text-[12px] font-medium text-base-900">
+          Inspo_final_v3
+        </p>
+        <p className="text-[11px] text-base-500">
+          47 items · modified 3 months ago
+        </p>
       </div>
     ),
   },
@@ -204,13 +285,20 @@ const scraps: Scrap[] = [
     delay: 0.7,
     node: (
       <Card className="p-3">
-        <p className="text-[13px] font-medium text-base-900">Re: Re: Re: refs for the deck</p>
+        <p className="text-[13px] font-medium text-base-900">
+          Re: Re: Re: refs for the deck
+        </p>
         <p className="mt-0.5 text-[12px] text-base-600">
-          <span className="text-base-900">Marcus</span> · Attached 12 screenshots. Not sure which brand the second one was.
+          <span className="text-base-900">Marcus</span> · Attached 12
+          screenshots. Not sure which brand the second one was.
         </p>
         <div className="mt-2 flex gap-1 text-[10px] text-base-600">
-          <span className="rounded-sm bg-base-50 px-1.5 py-0.5">IMG_4821.PNG</span>
-          <span className="rounded-sm bg-base-50 px-1.5 py-0.5">IMG_4830.PNG</span>
+          <span className="rounded-sm bg-base-50 px-1.5 py-0.5">
+            IMG_4821.PNG
+          </span>
+          <span className="rounded-sm bg-base-50 px-1.5 py-0.5">
+            IMG_4830.PNG
+          </span>
           <span className="rounded-sm bg-base-50 px-1.5 py-0.5">+10</span>
         </div>
       </Card>
@@ -225,9 +313,17 @@ const scraps: Scrap[] = [
     node: (
       <Card className="flex items-center gap-1 px-2 py-1.5">
         {Array.from({ length: 16 }, (_, i) => (
-          <span key={i} className={cx("h-6 flex-1 rounded-sm", i % 3 === 0 ? "bg-base-200" : "bg-base-100")} />
+          <span
+            key={i}
+            className={cx(
+              "h-6 flex-1 rounded-sm",
+              i % 3 === 0 ? "bg-base-200" : "bg-base-100",
+            )}
+          />
         ))}
-        <span className="shrink-0 px-1 text-[11px] text-base-500">+38 tabs</span>
+        <span className="shrink-0 px-1 text-[11px] text-base-500">
+          +38 tabs
+        </span>
       </Card>
     ),
   },
@@ -240,7 +336,9 @@ const scraps: Scrap[] = [
     delay: 1,
     node: (
       <Card className="p-3">
-        <p className="text-[11px] font-medium text-base-900">moodboard_v7.pdf</p>
+        <p className="text-[11px] font-medium text-base-900">
+          moodboard_v7.pdf
+        </p>
         <div className="mt-2 grid grid-cols-3 gap-1">
           {scattered.pdf.map((id) => (
             <Cover key={id} id={id} className="rounded-sm" />
@@ -280,7 +378,9 @@ const variants = {
 };
 
 export default function Scattered({ className }: { className?: string }) {
-  const { ref, intro } = useIntroOnce<HTMLDivElement>("curatit:scattered-intro");
+  const { ref, intro } = useIntroOnce<HTMLDivElement>(
+    "curatit:scattered-intro",
+  );
 
   // Scale the scene to cover its container
   const [scale, setScale] = useState(0.6);
@@ -302,29 +402,57 @@ export default function Scattered({ className }: { className?: string }) {
       ref={ref}
       role="img"
       aria-label="References for one brief scattered across saved posts, phone screenshots, chat messages, a spreadsheet of links, a notes page, a design file, a folder, an email thread, open browser tabs and a PDF"
-      className={cx("pointer-events-none select-none overflow-hidden", className)}
+      className={cx(
+        "pointer-events-none select-none overflow-hidden",
+        className,
+      )}
     >
       <div
         className="absolute top-[42%] left-1/2"
-        style={{ width: SCENE.w, height: SCENE.h, transform: `translate(-50%, -42%) scale(${scale})` }}
+        style={{
+          width: SCENE.w,
+          height: SCENE.h,
+          transform: `translate(-50%, -42%) scale(${scale})`,
+        }}
       >
-        <svg className="absolute inset-0 size-full" viewBox={`0 0 ${SCENE.w} ${SCENE.h}`} fill="none" aria-hidden="true">
+        <svg
+          className="absolute inset-0 size-full"
+          viewBox={`0 0 ${SCENE.w} ${SCENE.h}`}
+          fill="none"
+          aria-hidden="true"
+        >
           {connectors.map((d) => (
-            <path key={d} d={d} className="stroke-base-300" strokeWidth="1.5" strokeDasharray="6 6" />
+            <path
+              key={d}
+              d={d}
+              className="stroke-base-300"
+              strokeWidth="1.5"
+              strokeDasharray="6 6"
+            />
           ))}
         </svg>
         {scraps.map((scrap) => (
           <m.div
             key={scrap.key}
             className="absolute"
-            style={{ left: scrap.x, top: scrap.y, width: scrap.w, rotate: scrap.rotate ?? 0 }}
+            style={{
+              left: scrap.x,
+              top: scrap.y,
+              width: scrap.w,
+              rotate: scrap.rotate ?? 0,
+            }}
             variants={variants}
             initial={false}
             animate={hidden ? "hidden" : "shown"}
             transition={
               hidden
                 ? { duration: 0 }
-                : { type: "spring", stiffness: 320, damping: 26, delay: intro === "play" ? scrap.delay : 0 }
+                : {
+                    type: "spring",
+                    stiffness: 320,
+                    damping: 26,
+                    delay: intro === "play" ? scrap.delay : 0,
+                  }
             }
           >
             {scrap.node}

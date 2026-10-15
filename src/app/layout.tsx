@@ -11,36 +11,28 @@ import { SITE_URL } from "@/lib/site";
 // difference, and the axis doubles the font file
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 // Hedvig Letters Serif: https://fonts.google.com
-const hedvig = Hedvig_Letters_Serif({ subsets: ["latin"], axes: ["opsz"], variable: "--font-hedvig" });
+const hedvig = Hedvig_Letters_Serif({
+  subsets: ["latin"],
+  axes: ["opsz"],
+  variable: "--font-hedvig",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Your Page Title",
-  description: "A detailed description of your page content.",
-  keywords: ["keyword1", "keyword2", "keyword3"],
-  authors: [{ name: "Your Name or Company Name" }],
-  alternates: { canonical: "https://yoursite.com/current-page" },
+  title: { default: "Curatit", template: "%s | Curatit" },
+  description:
+    "A searchable library of real brand social media posts, reviewed by editors, with breakdowns of their copy and design. Find examples, save them to boards, share them with your team.",
+  authors: [{ name: "Curatit" }],
   openGraph: {
-    url: "https://yoursite.com/current-page",
-    title: "Your Page Title",
-    description: "A detailed description of your page content.",
-    images: [
-      {
-        url: "https://yoursite.com/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Open Graph Image Alt",
-        type: "image/jpeg",
-      },
-    ],
-    siteName: "Your Site Name",
+    title: "Curatit",
+    description:
+      "A searchable library of real brand social media posts, reviewed by editors. Find examples, save them to boards, share them with your team.",
+    siteName: "Curatit",
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    creator: "@yourhandle",
-    site: "@yoursite",
   },
   robots: {
     index: true,

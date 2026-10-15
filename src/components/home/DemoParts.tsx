@@ -41,7 +41,10 @@ export function useIntro() {
 
 // Calls onTick every `interval` ms while the illustration is on screen. Stops for good
 // once the visitor takes over (call stop()), and never runs with reduced motion.
-export function useLoop<T extends HTMLElement>(interval: number, onTick: () => void) {
+export function useLoop<T extends HTMLElement>(
+  interval: number,
+  onTick: () => void,
+) {
   const ref = useRef<T>(null);
   const inView = useInView(ref, { amount: 0.4 });
   const reduceMotion = useReducedMotion();
@@ -97,7 +100,11 @@ export function BriefTabs({
   className?: string;
 }) {
   return (
-    <div role="group" aria-label="Try a brief" className={cx("flex gap-0.5 rounded-lg bg-base-100 p-0.5", className)}>
+    <div
+      role="group"
+      aria-label="Try a brief"
+      className={cx("flex gap-0.5 rounded-lg bg-base-100 p-0.5", className)}
+    >
       {briefs.map((option, i) => (
         <button
           key={option.label}
@@ -106,7 +113,9 @@ export function BriefTabs({
           onClick={() => onChange(i)}
           className={cx(
             "h-7 flex-1 truncate rounded-md px-2 text-xs font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400",
-            i === active ? "bg-base-800 text-white" : "text-base-600 hover:text-base-900"
+            i === active
+              ? "bg-base-800 text-white"
+              : "text-base-600 hover:text-base-900",
           )}
         >
           {option.label}
@@ -117,17 +126,50 @@ export function BriefTabs({
 }
 
 // The search field with a brief in it. While `typing`, a caret follows the text.
-export function QueryField({ query, typing = false, className }: { query: string; typing?: boolean; className?: string }) {
+export function QueryField({
+  query,
+  typing = false,
+  className,
+}: {
+  query: string;
+  typing?: boolean;
+  className?: string;
+}) {
   return (
-    <div className={cx("flex h-9 items-center gap-2 rounded-md bg-white px-3 text-xs ring-1 ring-base-200 shadow-sm", className)}>
+    <div
+      className={cx(
+        "flex h-9 items-center gap-2 rounded-md bg-white px-3 text-xs ring-1 ring-base-200 shadow-sm",
+        className,
+      )}
+    >
       <Search className="size-3.5 shrink-0 text-base-400" />
       <span className="sr-only">Brief:</span>
       <span className="truncate text-base-900">{query}</span>
-      {typing && <span aria-hidden="true" className="-ml-1.5 h-3.5 w-px shrink-0 bg-base-900" />}
+      {typing && (
+        <span
+          aria-hidden="true"
+          className="-ml-1.5 h-3.5 w-px shrink-0 bg-base-900"
+        />
+      )}
     </div>
   );
 }
 
-export function Tag({ children, className }: { children: string; className?: string }) {
-  return <span className={cx("rounded-md bg-white px-2 py-1 text-xs text-base-900 ring-1 ring-base-200", className)}>{children}</span>;
+export function Tag({
+  children,
+  className,
+}: {
+  children: string;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cx(
+        "rounded-md bg-white px-2 py-1 text-xs text-base-900 ring-1 ring-base-200",
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
 }

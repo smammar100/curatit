@@ -38,7 +38,9 @@ function slotStyle(virtual: number, orientation: Orientation, near: Near) {
   const index = Math.min(Math.max(virtual, 0), SLOTS - 1);
   let [cx, cy] = CENTRES[index];
   if (virtual < 0) cy = CENTRES[0][1] - (CENTRES[1][1] - CENTRES[0][1]);
-  if (virtual >= SLOTS) cy = CENTRES[SLOTS - 1][1] + (CENTRES[SLOTS - 1][1] - CENTRES[SLOTS - 2][1]);
+  if (virtual >= SLOTS)
+    cy =
+      CENTRES[SLOTS - 1][1] + (CENTRES[SLOTS - 1][1] - CENTRES[SLOTS - 2][1]);
   const hidden = virtual < 0 || virtual >= SLOTS;
   const scale = hidden ? 0.6 : SCALES[index];
   const blur = hidden ? BLURS[0] : BLURS[index];
@@ -74,7 +76,10 @@ export default function LogoReel({
   const [offset, setOffset] = useState(0);
 
   // Pad short lists so there is always something waiting beyond the ends
-  const pool = items.length >= MIN_POOL ? items : Array.from({ length: MIN_POOL }, (_, i) => items[i % items.length]);
+  const pool =
+    items.length >= MIN_POOL
+      ? items
+      : Array.from({ length: MIN_POOL }, (_, i) => items[i % items.length]);
 
   useEffect(() => {
     if (!inView || reduceMotion) return;
@@ -94,7 +99,12 @@ export default function LogoReel({
   const height = orientation === "vertical" ? BOX.long : BOX.short;
 
   return (
-    <div ref={ref} aria-hidden="true" className={cx("relative shrink-0 select-none", className)} style={{ width, height }}>
+    <div
+      ref={ref}
+      aria-hidden="true"
+      className={cx("relative shrink-0 select-none", className)}
+      style={{ width, height }}
+    >
       {pool.map((item, i) => {
         // Tiles advance from the last slot to the first; -1 and 5 are the hidden entry and exit positions
         let virtual = (((i - offset) % n) + n) % n;

@@ -35,20 +35,39 @@ export default function ProblemSolution() {
   const place = (event: PointerEvent) => {
     const rect = stage.current?.getBoundingClientRect();
     if (!rect) return;
-    setX(Math.round(Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100))));
+    setX(
+      Math.round(
+        Math.min(
+          100,
+          Math.max(0, ((event.clientX - rect.left) / rect.width) * 100),
+        ),
+      ),
+    );
   };
 
   return (
     <section className="section-y">
       <Wrapper variant="standard">
         <div className="text-balance max-w-3xl mx-auto text-center">
-          <Text tag="h2" variant="displayLG" className="text-base-900 font-display font-thin">
-            <span className="block text-base-500">You saved it. Somewhere.</span>
-            <span className="block">Now it&apos;s one search away.</span>
+          <Text
+            tag="h2"
+            variant="displayLG"
+            className="text-base-900 font-display font-thin"
+          >
+            <span className="block text-base-500">
+              Stop hunting for examples.
+            </span>
+            <span className="block">Start with Curatit&apos;s collection.</span>
           </Text>
-          <Text tag="p" variant="textBase" className="text-base-600 mt-4 max-w-xl mx-auto">
-            Every brief starts in the same mess: the camera roll, a Slack thread, a spreadsheet of links. Drag the line to see the same brief in
-            Curatit.
+          <Text
+            tag="p"
+            variant="textBase"
+            className="text-base-600 mt-4 max-w-xl mx-auto"
+          >
+            Finding the right reference can mean digging through saved posts,
+            screenshots and old links. Search for the kind of post you need,
+            explore the breakdown, and save useful examples for your project.
+            Drag the line to compare.
           </Text>
         </div>
         {/* The two sides named above the stage, so nothing sits on the scene itself */}
@@ -59,7 +78,9 @@ export default function ProblemSolution() {
             aria-label="Show the mess only"
             className="min-h-11 rounded-md px-2 text-base-600 transition-colors duration-150 hover:text-base-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400"
           >
-            <span className="rounded-md bg-base-100 px-2 py-1">Your Tuesday</span>
+            <span className="rounded-md bg-base-100 px-2 py-1">
+              Saved posts and screenshots
+            </span>
           </button>
           <button
             type="button"
@@ -67,7 +88,9 @@ export default function ProblemSolution() {
             aria-label="Show Curatit only"
             className="min-h-11 rounded-md px-2 transition-transform duration-150 active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400"
           >
-            <span className="rounded-md bg-accent-600 px-2 py-1 text-paper">Curatit</span>
+            <span className="rounded-md bg-accent-600 px-2 py-1 text-paper">
+              Curatit
+            </span>
           </button>
         </div>
         <div
@@ -91,13 +114,23 @@ export default function ProblemSolution() {
           <Scattered className="absolute inset-0" />
           {/* The library, on the same mat, clipped to the right of the divider */}
           <div
-            className={cx("absolute inset-0 bg-base-50", gliding && "transition-[clip-path] duration-450 ease-out")}
+            className={cx(
+              "absolute inset-0 bg-base-50",
+              gliding && "transition-[clip-path] duration-450 ease-out",
+            )}
             style={{ clipPath: "inset(0 0 0 var(--x))" }}
             aria-hidden={x === 100}
           >
             <LibraryWindow className="absolute inset-x-4 top-4 -bottom-4 sm:inset-x-8 sm:top-8 sm:-bottom-8" />
           </div>
-          <div className={cx("absolute inset-y-0 w-px bg-accent-600", gliding && "transition-[left] duration-450 ease-out")} style={{ left: "var(--x)" }} aria-hidden="true" />
+          <div
+            className={cx(
+              "absolute inset-y-0 w-px bg-accent-600",
+              gliding && "transition-[left] duration-450 ease-out",
+            )}
+            style={{ left: "var(--x)" }}
+            aria-hidden="true"
+          />
           {/* The divider's handle: a slider for the keyboard, a grip for the pointer */}
           <button
             type="button"
@@ -108,18 +141,31 @@ export default function ProblemSolution() {
             aria-valuenow={x}
             aria-valuetext={`${100 - x}% Curatit`}
             onKeyDown={(e) => {
-              if (e.key === "ArrowRight" || e.key === "ArrowUp") setX((v) => Math.min(100, v + 5));
-              if (e.key === "ArrowLeft" || e.key === "ArrowDown") setX((v) => Math.max(0, v - 5));
+              if (e.key === "ArrowRight" || e.key === "ArrowUp")
+                setX((v) => Math.min(100, v + 5));
+              if (e.key === "ArrowLeft" || e.key === "ArrowDown")
+                setX((v) => Math.max(0, v - 5));
               if (e.key === "Home") setX(0);
               if (e.key === "End") setX(100);
             }}
             className={cx(
               "absolute top-1/2 flex size-11 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-full bg-accent-600 text-paper shadow active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400",
-              gliding ? "transition-[left,transform] duration-450 ease-out" : "transition-transform duration-150"
+              gliding
+                ? "transition-[left,transform] duration-450 ease-out"
+                : "transition-transform duration-150",
             )}
             style={{ left: "var(--x)" }}
           >
-            <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              className="size-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
               <path d="m9 7-5 5 5 5M15 7l5 5-5 5" />
             </svg>
           </button>

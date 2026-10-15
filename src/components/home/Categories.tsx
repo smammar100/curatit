@@ -66,7 +66,7 @@ export default function Categories({
       observer.disconnect();
     };
   }, [categories]);
-  const FADE = "3rem";
+  const FADE = "5rem";
   const mask = `linear-gradient(to right, ${more.left ? "transparent" : "black"}, black ${FADE}, black calc(100% - ${FADE}), ${more.right ? "transparent" : "black"})`;
   const nudge = (dir: 1 | -1) =>
     row.current?.scrollBy({
@@ -82,15 +82,14 @@ export default function Categories({
         <div className="text-balance max-w-3xl mx-auto text-center">
           <Text
             tag="h2"
-            variant="displaySM"
+            variant="displayLG"
             className="text-base-900 font-display font-thin"
           >
-            Every category, studied closely
+            Explore posts by industry.
           </Text>
           <Text tag="p" variant="textBase" className="text-base-600 mt-4">
-            Every post is tagged from one vocabulary of 36 terms for objective,
-            format, structure and visual style, so “listicle” means the same
-            thing in every category. Pick a category to look inside.
+            Browse examples from finance, food, travel and more. Choose an
+            industry to see what brands are posting.
           </Text>
         </div>
         {/* One scrolling row, bleeding to the page gutter.

@@ -56,16 +56,21 @@ const defaultFaqs = [
   },
 ];
 
-export default function Faq({ faqs = defaultFaqs }: { faqs?: { question: string; answer: string }[] }) {
+export default function Faq({
+  faqs = defaultFaqs,
+}: {
+  faqs?: { question: string; answer: string }[];
+}) {
   return (
     <section>
       <Wrapper variant="standard" className="section-y">
         <div className="text-center">
-          <Text tag="h2" variant="displayLG" className="text-base-900 font-display font-thin">
+          <Text
+            tag="h2"
+            variant="displayLG"
+            className="text-base-900 font-display font-thin"
+          >
             Frequently Asked Questions
-          </Text>
-          <Text tag="p" variant="textBase" className="text-base-600 mt-4">
-            Everything you need to know about our platform.
           </Text>
         </div>
         <div className="mx-auto mt-12 max-w-xl sm:px-8">
@@ -77,7 +82,11 @@ export default function Faq({ faqs = defaultFaqs }: { faqs?: { question: string;
                   <Plus className="size-4 duration-300 ease-out transform group-open:-rotate-45" />
                 </summary>
                 <div className="py-4 sm:px-8">
-                  <Text tag="p" variant="textSM" className="text-base-600 text-balance">
+                  <Text
+                    tag="p"
+                    variant="textSM"
+                    className="text-base-600 text-balance"
+                  >
                     {faq.answer}
                   </Text>
                 </div>

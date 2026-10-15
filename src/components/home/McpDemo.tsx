@@ -56,7 +56,8 @@ export default function McpDemo() {
     const timers: ReturnType<typeof setTimeout>[] = [];
     const run = (offset: number) => {
       for (const [at, next] of SCRIPT) {
-        if (at >= offset) timers.push(setTimeout(() => setStep(next), at - offset));
+        if (at >= offset)
+          timers.push(setTimeout(() => setStep(next), at - offset));
       }
       timers.push(setTimeout(() => run(0), CYCLE - offset));
     };
@@ -79,11 +80,19 @@ export default function McpDemo() {
           <m.p
             className="max-w-sm origin-bottom-right rounded-2xl rounded-br-sm bg-base-100 px-5 py-4 text-sm leading-relaxed text-base-900 sm:text-base"
             initial={false}
-            animate={step >= 1 ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 12, scale: 0.96 }}
-            transition={step >= 1 ? { type: "spring", stiffness: 300, damping: 26 } : { duration: 0.3 }}
+            animate={
+              step >= 1
+                ? { opacity: 1, y: 0, scale: 1 }
+                : { opacity: 0, y: 12, scale: 0.96 }
+            }
+            transition={
+              step >= 1
+                ? { type: "spring", stiffness: 300, damping: 26 }
+                : { duration: 0.3 }
+            }
           >
-            Show me <strong className="font-medium">launch carousels</strong> that{" "}
-            <strong className="font-medium">show the product</strong>
+            Show me <strong className="font-medium">launch carousels</strong>{" "}
+            that <strong className="font-medium">show the product</strong>
           </m.p>
         </div>
         {/* The agent's line and the results share one cell: the trace unfolds into the space the
@@ -122,7 +131,10 @@ export default function McpDemo() {
             animate={step === 4 ? { x: -24, opacity: 1 } : { x: 0, opacity: 0 }}
             transition={
               step === 4
-                ? { x: { duration: 4, ease: "easeOut" }, opacity: { duration: 0.2, delay: 0.15 } }
+                ? {
+                    x: { duration: 4, ease: "easeOut" },
+                    opacity: { duration: 0.2, delay: 0.15 },
+                  }
                 : { x: { duration: 0 }, opacity: { duration: 0.3 } }
             }
           >
@@ -134,12 +146,25 @@ export default function McpDemo() {
                   initial={false}
                   animate={step === 4 ? { x: 0 } : { x: 48 }}
                   transition={
-                    step === 4 ? { type: "spring", stiffness: 260, damping: 28, delay: 0.15 + i * 0.08 } : { duration: 0 }
+                    step === 4
+                      ? {
+                          type: "spring",
+                          stiffness: 260,
+                          damping: 28,
+                          delay: 0.15 + i * 0.08,
+                        }
+                      : { duration: 0 }
                   }
                 >
-                  <PostCover post={post} sizes="160px" className="rounded shadow" />
+                  <PostCover
+                    post={post}
+                    sizes="160px"
+                    className="rounded shadow"
+                  />
                   <BrandName brand={post.brand} className="mt-2" />
-                  <p className="mt-0.5 line-clamp-1 text-xs text-base-600">{post.hook}</p>
+                  <p className="mt-0.5 line-clamp-1 text-xs text-base-600">
+                    {post.hook}
+                  </p>
                 </m.li>
               );
             })}

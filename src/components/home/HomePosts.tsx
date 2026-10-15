@@ -8,9 +8,21 @@ import type { LibraryPost } from "@/lib/posts";
 // client demos can look them up without fetching.
 const HomePostsContext = createContext<Record<string, LibraryPost>>({});
 
-export function HomePostsProvider({ posts, children }: { posts: LibraryPost[]; children: ReactNode }) {
-  const byShortCode = Object.fromEntries(posts.map((post) => [post.shortCode, post]));
-  return <HomePostsContext.Provider value={byShortCode}>{children}</HomePostsContext.Provider>;
+export function HomePostsProvider({
+  posts,
+  children,
+}: {
+  posts: LibraryPost[];
+  children: ReactNode;
+}) {
+  const byShortCode = Object.fromEntries(
+    posts.map((post) => [post.shortCode, post]),
+  );
+  return (
+    <HomePostsContext.Provider value={byShortCode}>
+      {children}
+    </HomePostsContext.Provider>
+  );
 }
 
 // The posts for these short codes, in order, skipping any that aren't published

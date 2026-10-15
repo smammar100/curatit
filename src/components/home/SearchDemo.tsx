@@ -5,7 +5,16 @@ import { m } from "framer-motion";
 // Components
 import BrandName from "./BrandName";
 import PostCover from "./PostCover";
-import { BriefTabs, QueryField, Tag, easeOut, introItem, useIntro, useLoop, useTyped } from "./DemoParts";
+import {
+  BriefTabs,
+  QueryField,
+  Tag,
+  easeOut,
+  introItem,
+  useIntro,
+  useLoop,
+  useTyped,
+} from "./DemoParts";
 import { briefs } from "./demo";
 import { usePosts } from "./HomePosts";
 
@@ -15,7 +24,9 @@ import { usePosts } from "./HomePosts";
 // Fills its box (HowItWorks gives every illustration the same one).
 export default function SearchDemo() {
   const [active, setActive] = useState(0);
-  const { ref, playing, stop } = useLoop<HTMLDivElement>(4500, () => setActive((i) => (i + 1) % briefs.length));
+  const { ref, playing, stop } = useLoop<HTMLDivElement>(4500, () =>
+    setActive((i) => (i + 1) % briefs.length),
+  );
   const brief = briefs[active];
   const posts = usePosts(brief.results.map((result) => result.post));
   const { typed, done } = useTyped(brief.query, playing);
@@ -41,16 +52,26 @@ export default function SearchDemo() {
         aria-live={playing ? "off" : "polite"}
       >
         {posts.map((post, i) => {
-          const { matched } = brief.results.find((result) => result.post === post.shortCode)!;
+          const { matched } = brief.results.find(
+            (result) => result.post === post.shortCode,
+          )!;
           return (
             <m.li
               key={post.shortCode}
               className="flex items-center gap-3 py-3"
               initial={false}
               animate={done ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
-              transition={done ? { duration: 0.3, ease: easeOut, delay: i * 0.08 } : { duration: 0 }}
+              transition={
+                done
+                  ? { duration: 0.3, ease: easeOut, delay: i * 0.08 }
+                  : { duration: 0 }
+              }
             >
-              <PostCover post={post} sizes="48px" className="w-12 shrink-0 rounded shadow-sm" />
+              <PostCover
+                post={post}
+                sizes="48px"
+                className="w-12 shrink-0 rounded shadow-sm"
+              />
               <div className="min-w-0">
                 <BrandName brand={post.brand} />
                 <div className="mt-1.5 flex gap-1 overflow-hidden">

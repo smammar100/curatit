@@ -29,7 +29,8 @@ import {
 // while skipped (the real one takes over once rendered), so the page's scroll length is sane.
 
 const FOCUSABLE = "a[href], button, input, select, textarea, [tabindex]";
-const SKIPPABLE = "[content-visibility:auto] [contain-intrinsic-size:auto_100vh]";
+const SKIPPABLE =
+  "[content-visibility:auto] [contain-intrinsic-size:auto_100vh]";
 const subscribe = () => () => {};
 
 export default function HydrateOnView({ children }: { children: ReactNode }) {
@@ -74,7 +75,9 @@ export default function HydrateOnView({ children }: { children: ReactNode }) {
     // Tabbing into a section still showing server HTML: render it now, and remember where
     // focus is so it can move to the same control in the new markup
     const onFocusIn = (event: FocusEvent) => {
-      focusIndex.current = [...element.querySelectorAll(FOCUSABLE)].indexOf(event.target as Element);
+      focusIndex.current = [...element.querySelectorAll(FOCUSABLE)].indexOf(
+        event.target as Element,
+      );
       reveal();
     };
     element.addEventListener("focusin", onFocusIn);
@@ -97,7 +100,14 @@ export default function HydrateOnView({ children }: { children: ReactNode }) {
       const target = id ? document.getElementById(id) : null;
       if (!target) return;
       const inside = element.contains(target);
-      if (!inside && !(element.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING)) return;
+      if (
+        !inside &&
+        !(
+          element.compareDocumentPosition(target) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+        )
+      )
+        return;
       if (inside) scrollTarget.current = id;
       setPinned((n) => n + 1);
     };
@@ -109,7 +119,9 @@ export default function HydrateOnView({ children }: { children: ReactNode }) {
   // Runs before paint, so keyboard users never see focus drop to the page
   useLayoutEffect(() => {
     if (!show || focusIndex.current < 0) return;
-    ref.current?.querySelectorAll<HTMLElement>(FOCUSABLE)[focusIndex.current]?.focus();
+    ref.current
+      ?.querySelectorAll<HTMLElement>(FOCUSABLE)
+      [focusIndex.current]?.focus();
     focusIndex.current = -1;
   }, [show]);
 
@@ -152,5 +164,12 @@ export default function HydrateOnView({ children }: { children: ReactNode }) {
       </div>
     );
   }
-  return <div ref={ref} className={className} dangerouslySetInnerHTML={{ __html: "" }} suppressHydrationWarning />;
+  return (
+    <div
+      ref={ref}
+      className={className}
+      dangerouslySetInnerHTML={{ __html: "" }}
+      suppressHydrationWarning
+    />
+  );
 }

@@ -12,9 +12,12 @@ import { lazy, type ComponentType } from "react";
 // exports as client components, which React already loads through a lazy of its own, and
 // React rejects a lazy that resolves to another lazy. The animation provider loads with the
 // section rather than here, so none of framer-motion is in the page's first chunks.
-function island<P extends object>(load: () => Promise<{ default: ComponentType<P> }>) {
+function island<P extends object>(
+  load: () => Promise<{ default: ComponentType<P> }>,
+) {
   const Lazy = lazy(async () => {
-    const [{ default: Component }, { default: MotionProvider }] = await Promise.all([load(), import("./MotionProvider")]);
+    const [{ default: Component }, { default: MotionProvider }] =
+      await Promise.all([load(), import("./MotionProvider")]);
     return {
       default: (props: P) => (
         <MotionProvider>

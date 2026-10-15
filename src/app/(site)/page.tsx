@@ -14,7 +14,7 @@ import { categoriesWithPosts } from "@/lib/categories";
 import { categoryPosts, getPublishedPosts, withCoverOnly } from "@/lib/posts";
 
 export const metadata: Metadata = {
-  title: { absolute: "Curatit: find the brand posts worth studying" },
+  title: { absolute: "Curatit: find ideas for your next social media post" },
   description:
     "Real organic brand posts, reviewed by editors. Search by brief, save the best references to private boards, and share them with your client.",
 };
