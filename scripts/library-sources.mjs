@@ -242,6 +242,52 @@ export const sources = [
     brand: { name: "DoorDash", slug: "doordash", websiteUrl: "https://www.doordash.com" },
     brandAccounts: ["doordash"],
   },
+  {
+    // A second Deliveroo export (2026-10-15): only the posts the first one didn't have
+    file: "data/instagram/deliveroo-2026-10-15.json",
+    folder: "food-delivery",
+    categories: ["food-drink"],
+    brand: { name: "Deliveroo", slug: "deliveroo", websiteUrl: "https://deliveroo.co.uk" },
+    brandAccounts: ["deliveroo"],
+  },
+  {
+    file: "data/instagram/duolingo.json",
+    folder: "education",
+    categories: ["education", "entertainment"],
+    brand: { name: "Duolingo", slug: "duolingo", websiteUrl: "https://www.duolingo.com" },
+    brandAccounts: ["duolingo", "duolingoespanol"],
+  },
+  {
+    file: "data/instagram/headspace.json",
+    folder: "health-fitness",
+    categories: ["health-fitness", "lifestyle"],
+    brand: { name: "Headspace", slug: "headspace", websiteUrl: "https://www.headspace.com" },
+    brandAccounts: ["headspace"],
+  },
+  {
+    file: "data/instagram/puma.json",
+    folder: "sportswear",
+    categories: ["sports", "shopping"],
+    brand: { name: "PUMA", slug: "puma", websiteUrl: "https://www.puma.com" },
+    // Sport and regional accounts post with @puma as co-author; athletes are not filed here
+    brandAccounts: ["puma", "pumarunning", "pumafootball", "pumatraining", "pumamotorsport", "puma.uk", "puma.usa", "pumaspain"],
+  },
+  {
+    file: "data/instagram/on.json",
+    folder: "sportswear",
+    categories: ["sports", "shopping"],
+    brand: { name: "On", slug: "on", websiteUrl: "https://www.on.com" },
+    // @loewe posts the LOEWE x On collection with @on as co-author; Loewe is a partner, so it isn't filed here
+    brandAccounts: ["on", "on.football"],
+  },
+  {
+    file: "data/instagram/canva.json",
+    folder: "graphics-design",
+    categories: ["graphics-design", "productivity"],
+    brand: { name: "Canva", slug: "canva", websiteUrl: "https://www.canva.com" },
+    // Affinity belongs to Canva and co-posts with it
+    brandAccounts: ["canva", "affinity"],
+  },
 ];
 
 // Mirrors the generated instagram_posts.format column
