@@ -461,11 +461,7 @@
    it's dark (from the dark end of the scale); on the dark site it's paper (the scale is reversed
    there, so the same roles read from the other end), with dark type and a dark email field. Keyed
    off data-theme like everything else, not light-dark(), which follows color-scheme. Text roles
-   keep 5.8:1 or more on the panel in both themes. The mark turns once every three minutes. The newest covers fan in from the right edge on an arc and warm up from the dark
-   as the panel scrolls into view (a scroll-driven animation, so no script; where that isn't
-   supported, or under reduced motion, they simply rest in place), and lift under the pointer.
-   The panel and the fan clip with overflow: clip, not hidden, so they don't become scroll
-   containers and the covers' view() timeline follows the page */
+   keep 5.8:1 or more on the panel in both themes. The mark turns once every three minutes; the newest covers drift along a filmstrip (.footer-strip) */
 .footer-panel {
   --f-bg: var(--color-base-950);
   --f-raise: var(--color-base-800);
@@ -508,19 +504,6 @@
   --f-danger-ring: color-mix(in oklab, var(--color-danger-500) 75%, black);
   --f-edge: color-mix(in oklab, black 10%, transparent);
   box-shadow: none;
-}
-
-/* On paper the covers show at full light, and fade in rather than warm up from the dark */
-:root[data-theme="dark"] .footer-cover {
-  filter: none;
-  animation-name: footer-cover-in-paper;
-}
-
-@keyframes footer-cover-in-paper {
-  from {
-    opacity: 0;
-    transform: rotate(calc(var(--a) * 0.3)) translateY(24px);
-  }
 }
 
 .footer-mark {
@@ -585,107 +568,23 @@
   }
 }
 
-/* The fan: the covers share one spot and swing round a pivot far below them, so the hand spreads
-   along an arc, set from the right edge so the last cover is always half outside the panel; the
-   light falls off downward through an eased mask */
-.footer-fan {
-  /* 3.75rem on phones leaves room for the logo beside the fan */
-  --w: 3.75rem;
-  --top: 2.5rem;
-  --from: 45%;
-  --to: 95%;
-  --cx: calc(100% - var(--w) * 1.3);
-  --mask: linear-gradient(
-    to bottom,
-    #000 var(--from),
-    rgb(0 0 0 / 0.86) calc(var(--from) + (var(--to) - var(--from)) * 0.2),
-    rgb(0 0 0 / 0.6) calc(var(--from) + (var(--to) - var(--from)) * 0.4),
-    rgb(0 0 0 / 0.3) calc(var(--from) + (var(--to) - var(--from)) * 0.6),
-    rgb(0 0 0 / 0.1) calc(var(--from) + (var(--to) - var(--from)) * 0.8),
-    transparent var(--to)
-  );
-  -webkit-mask-image: var(--mask);
-  mask-image: var(--mask);
+/* The filmstrip: the newest covers, repeated so the track is wider than any window, drifting
+   left by half its width and looping (the second half is the first again, so the seam is
+   invisible). Still under reduced motion */
+.footer-strip-track {
+  animation: footer-drift 60s linear infinite;
 }
 
-@media (width >= 40rem) {
-  .footer-fan {
-    --w: 5.25rem;
-    --top: 3rem;
-  }
-}
-
-@media (width >= 64rem) {
-  .footer-fan {
-    --w: 10rem;
-    --top: 5rem;
-    --from: 40%;
-    --to: 80%;
-  }
-}
-
-@media (width >= 80rem) {
-  .footer-fan {
-    --w: 11rem;
-  }
-}
-
-@media (width >= 96rem) {
-  .footer-fan {
-    --w: 12rem;
-  }
-}
-
-.footer-cover {
-  position: absolute;
-  top: var(--top);
-  left: calc(var(--cx) - var(--w) / 2);
-  width: var(--w);
-  aspect-ratio: 4 / 5;
-  transform-origin: 50% 260%;
-  transform: rotate(var(--a));
-  /* After hours: the covers rest a little dim */
-  filter: brightness(0.8);
-  pointer-events: auto;
-  transition: transform 240ms cubic-bezier(0.23, 1, 0.32, 1), filter 240ms ease-out;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .footer-cover:hover {
-    transform: rotate(var(--a)) translateY(-12px);
-    filter: brightness(1);
-  }
-}
-
-/* Lights on, left to right, as the panel comes up the screen (backwards fill, so once the range
-   is past the cover is back on its own styles and hover works) */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .footer-cover {
-      animation: footer-cover-in linear backwards;
-      animation-timeline: view();
-      animation-range: entry calc(10% + var(--i) * 6%) cover calc(28% + var(--i) * 6%);
-    }
-  }
-}
-
-@keyframes footer-cover-in {
-  from {
-    opacity: 0;
-    filter: brightness(0.3);
-    transform: rotate(calc(var(--a) * 0.3)) translateY(24px);
+@keyframes footer-drift {
+  to {
+    transform: translateX(-50%);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .footer-mark {
+  .footer-mark,
+  .footer-strip-track {
     animation: none;
-  }
-  .footer-cover {
-    transition: filter 150ms ease-out;
-  }
-  .footer-cover:hover {
-    transform: rotate(var(--a));
   }
 }
 

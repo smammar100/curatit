@@ -54,10 +54,8 @@ export default function DetailDemo() {
           </m.li>
         ))}
       </ol>
-      <m.p variants={introItem} className="mt-3 text-center text-xs text-base-600" aria-live={playing ? "off" : "polite"}>
-        <span className="font-medium text-base-900">{detail.sequence[slide]}</span> · {slide + 1} / {count}
-      </m.p>
-      <m.div variants={introScale} className="relative mt-3 aspect-4/5 min-h-0 flex-1">
+      {/* The slide fills the card's width, cropped from the top so the headline stays in frame */}
+      <m.div variants={introScale} className="relative mt-3 min-h-0 w-full flex-1">
         <AnimatePresence initial={false}>
           <m.div
             key={slide}
@@ -67,9 +65,17 @@ export default function DetailDemo() {
             exit={reduceMotion ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0, transition: { duration: 0.2 } }}
             transition={{ duration: 0.3, ease: easeOut }}
           >
-            <PostCover post={post} slide={slide} sizes="260px" className="h-full rounded shadow" />
+            <PostCover post={post} slide={slide} sizes="260px" className="h-full w-full rounded shadow [&_img]:object-top" />
           </m.div>
         </AnimatePresence>
+        {/* The slide's role and count, a pill resting on the image's bottom edge */}
+        <m.p
+          variants={introItem}
+          className="absolute inset-x-0 bottom-3 z-10 mx-auto w-fit rounded-md bg-white/90 px-2.5 py-1 text-xs text-base-600 shadow-sm backdrop-blur-sm"
+          aria-live={playing ? "off" : "polite"}
+        >
+          <span className="font-medium text-base-900">{detail.sequence[slide]}</span> · {slide + 1} / {count}
+        </m.p>
       </m.div>
     </m.div>
   );
