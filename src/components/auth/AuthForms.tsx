@@ -55,14 +55,10 @@ function Next() {
 function Heading({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="text-center text-balance">
-      <Text
-        tag="h1"
-        variant="displaySM"
-        className="font-display font-light text-base-900"
-      >
+      <Text tag="h1" variant="h5" className="text-primary-foreground">
         {title}
       </Text>
-      <Text tag="p" variant="textSM" className="mt-2 text-base-600">
+      <Text tag="p" variant="bodySM" className="mt-2 text-secondary-foreground">
         {children}
       </Text>
     </div>
@@ -209,7 +205,7 @@ export function SignInForm() {
           aside={
             <Link
               href="/forgot-password"
-              className="text-xs font-medium text-base-500 hover:text-accent-600"
+              className="text-caption-lg font-medium text-secondary-foreground hover:text-brand-foreground"
             >
               Forgot password?
             </Link>

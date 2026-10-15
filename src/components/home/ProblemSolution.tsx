@@ -49,11 +49,7 @@ export default function ProblemSolution() {
     <section className="section-y">
       <Wrapper variant="standard">
         <div className="text-balance max-w-3xl mx-auto text-center">
-          <Text
-            tag="h2"
-            variant="displayLG"
-            className="text-base-900 font-display font-thin"
-          >
+          <Text tag="h2" variant="displayLG" className="text-base-900">
             <span className="block text-base-500">
               Stop hunting for examples.
             </span>
@@ -76,7 +72,7 @@ export default function ProblemSolution() {
             aria-label="Show the mess only"
             className="min-h-11 rounded-md px-2 text-base-600 transition-colors duration-150 hover:text-base-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400"
           >
-            <span className="rounded-md bg-base-100 px-2 py-1">
+            <span className="inline-flex h-5 items-center rounded-sm bg-component px-1.5 text-caption-lg">
               Saved posts and screenshots
             </span>
           </button>
@@ -86,14 +82,14 @@ export default function ProblemSolution() {
             aria-label="Show Curatit only"
             className="min-h-11 rounded-md px-2 transition-transform duration-150 active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400"
           >
-            <span className="rounded-md bg-accent-600 px-2 py-1 text-paper">
+            <span className="inline-flex h-5 items-center rounded-sm bg-brand-solid px-1.5 text-caption-lg text-on-brand-solid-foreground">
               Curatit
             </span>
           </button>
         </div>
         <div
           ref={stage}
-          className="relative mt-3 aspect-4/5 overflow-hidden rounded-lg bg-base-50 select-none sm:aspect-7/5 [touch-action:none]"
+          className="relative mt-3 aspect-4/5 overflow-hidden rounded-2xl bg-base-50 select-none sm:aspect-7/5 [touch-action:none]"
           style={{ "--x": `${x}%` } as CSSProperties}
           onPointerDown={(e) => {
             dragging.current = true;

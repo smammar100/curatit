@@ -33,13 +33,21 @@ export default function PostWall({ covers }: { covers: string[] }) {
           )}
           // Neighbouring columns run at different speeds and start at different offsets, so
           // the wall never reads as one sheet sliding
-          style={{ animationDuration: `${70 + (c % 3) * 12}s`, marginTop: c % 2 ? -120 : -40 }}
+          style={{
+            animationDuration: `${70 + (c % 3) * 12}s`,
+            marginTop: c % 2 ? -120 : -40,
+          }}
         >
           {[...column, ...column].map((cover, i) => (
-            <div key={i} className="relative aspect-4/5 overflow-hidden rounded bg-base-100">
+            <div
+              key={i}
+              className="relative aspect-4/5 overflow-hidden rounded bg-base-100"
+            >
               <img
                 src={optimizedImage(cover, 256, 60)}
-                srcSet={WIDTHS.map((width) => `${optimizedImage(cover, width, 60)} ${width}w`).join(", ")}
+                srcSet={WIDTHS.map(
+                  (width) => `${optimizedImage(cover, width, 60)} ${width}w`,
+                ).join(", ")}
                 sizes="(max-width: 1024px) 33vw, 16vw"
                 alt=""
                 loading="lazy"

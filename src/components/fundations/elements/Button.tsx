@@ -1,34 +1,59 @@
 import Link from "next/link";
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
+import type {
+  AnchorHTMLAttributes,
+  ButtonHTMLAttributes,
+  ReactNode,
+} from "react";
 import { cx } from "@/lib/cx";
 
+// The button, Interfere's since 2026-10-15 (design.interfere.com/button): 13px medium text at
+// every size, heights 24 / 28 / 32 / 40, radius 6 up to the medium size and 8 from large, no
+// borders (the secondary one carries the default shadow instead), hover and active a step each.
+// Variants keep the older names where the role matched (default = primary, muted = tertiary,
+// accent = brand) and add Interfere's others.
 const variantClasses = {
-  default: "text-white bg-base-800 hover:bg-base-700 focus:outline-base-700",
-  accent: "text-paper bg-accent-600 hover:bg-accent-500 focus:outline-accent-500",
-  muted: "text-base-900 bg-base-50 hover:bg-base-100 focus:outline-base-300",
+  // Primary: solid near-black (near-white on the dark site)
+  default:
+    "bg-inverted-solid text-on-inverted-foreground hover:bg-inverted-solid-hover active:bg-inverted-solid-active",
+  // Secondary: a white surface lifted by the default shadow
+  secondary:
+    "bg-component-on-container-subtle text-primary-foreground shadow-sm hover:bg-component-on-container-subtle-hover",
+  // Tertiary: a tint of the ground
+  muted:
+    "bg-component text-secondary-foreground hover:bg-component-hover hover:text-primary-foreground active:bg-component-active",
+  // Brand: Curatit's terracotta
+  accent:
+    "bg-brand-solid text-on-brand-solid-foreground hover:bg-brand-solid-hover active:bg-brand-solid-active",
+  danger:
+    "bg-danger-solid text-on-danger-solid-foreground hover:bg-danger-solid-hover active:bg-danger-solid-active",
+  dangerSubtle:
+    "bg-danger-subtle text-danger-foreground hover:bg-danger-subtle-hover",
+  transparent:
+    "bg-transparent text-secondary-foreground hover:bg-transparent-hover hover:text-primary-foreground active:bg-transparent-active",
   none: "",
 };
-// Size
+// Sizes: Interfere's small, medium, large and extra large. The older keys map onto them
+// (xxs → small, xs → medium, sm → large, base and up → extra large)
 const sizes = {
-  xxs: "h-7.5 px-4 py-2 text-xs rounded-lg",
-  xs: "h-8 px-4 py-3 text-xs rounded-lg",
-  sm: "h-9 px-4 py-3 text-sm rounded-lg",
-  base: "h-10 px-5 py-4 text-sm rounded-lg",
-  md: "h-11 px-5 py-4 text-base rounded-lg",
-  lg: "h-12 px-5 py-4 text-lg rounded-lg",
-  xl: "h-13 px-5 py-4 text-lg rounded-xl",
+  xxs: "h-6 px-2 gap-1 rounded-md",
+  xs: "h-7 px-2.5 gap-1.5 rounded-md",
+  sm: "h-8 px-3 gap-1.5 rounded-lg",
+  base: "h-10 px-3.5 gap-2 rounded-lg",
+  md: "h-10 px-3.5 gap-2 rounded-lg",
+  lg: "h-10 px-3.5 gap-2 rounded-lg",
+  xl: "h-10 px-3.5 gap-2 rounded-lg",
 };
-// Icon size
+// Icon-only: a square of the same height
 const iconSizes = {
-  xxs: "size-7.5 py-2 text-xs rounded-lg",
-  xs: "size-8 text-xs rounded-lg",
-  sm: "size-9 text-sm rounded-lg",
-  base: "size-10 text-sm rounded-lg",
-  md: "size-11 text-base rounded-lg",
-  lg: "size-12 text-lg rounded-lg",
-  xl: "size-13 text-lg rounded-xl",
+  xxs: "size-6 rounded-md",
+  xs: "size-7 rounded-md",
+  sm: "size-8 rounded-lg",
+  base: "size-10 rounded-lg",
+  md: "size-10 rounded-lg",
+  lg: "size-10 rounded-lg",
+  xl: "size-10 rounded-lg",
 };
-// Gaps
+// Gaps between the icon slots and the label, when a wider one is wanted
 const gaps = {
   xs: "gap-2",
   sm: "gap-4",
@@ -37,11 +62,13 @@ const gaps = {
   lg: "gap-12",
 };
 const baseClass =
-  "flex justify-center text-center font-medium items-center duration-500 ease-in-out transition-colors focus:outline-2 focus:outline-inset";
+  "inline-flex shrink-0 cursor-pointer items-center justify-center text-center text-body-sm font-medium whitespace-nowrap transition-colors duration-150 ease-out select-none touch-manipulation focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus disabled:pointer-events-none disabled:bg-disabled disabled:text-disabled-foreground disabled:shadow-none";
 
 type CommonProps = {
   variant?: keyof typeof variantClasses;
   size?: keyof typeof sizes;
+  /** `pill` rounds the ends fully */
+  shape?: "rounded" | "pill";
   iconOnly?: boolean;
   gap?: keyof typeof gaps;
   leftIcon?: ReactNode;
@@ -66,6 +93,7 @@ export type ButtonProps = ButtonAsLink | ButtonAsButton;
 export default function Button({
   variant,
   size,
+  shape,
   iconOnly = false,
   gap,
   leftIcon,
@@ -78,8 +106,9 @@ export default function Button({
     baseClass,
     variant && variantClasses[variant],
     size && (iconOnly ? iconSizes[size] : sizes[size]),
+    shape === "pill" && "rounded-full",
     !iconOnly && gap && gaps[gap],
-    className
+    className,
   );
   const content = iconOnly ? (
     children

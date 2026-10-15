@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 // Assets
 import Lockup from "@/components/assets/Lockup";
 // Fundations
+import Badge from "@/components/fundations/elements/Badge";
 import Button from "@/components/fundations/elements/Button";
 import ThemeToggle from "@/components/global/ThemeToggle";
 import Wrapper from "@/components/fundations/containers/Wrapper";
@@ -72,15 +73,11 @@ export default function MobileNav() {
             {links.map((link) => (
               <Link
                 key={link.href}
-                className="flex items-center gap-2 text-base-900 text-lg font-medium py-1 border-b border-base-100 last:border-b-0"
+                className="flex min-h-11 items-center gap-2 border-b border-border-default text-body-lg font-medium text-primary-foreground last:border-b-0"
                 href={link.href}
               >
                 {link.text}
-                {link.beta && (
-                  <span className="rounded px-1.5 py-0.5 text-[11px]/none font-medium text-base-600 ring-1 ring-base-200">
-                    Beta
-                  </span>
-                )}
+                {link.beta && <Badge size="sm">Beta</Badge>}
               </Link>
             ))}
           </div>
@@ -88,7 +85,7 @@ export default function MobileNav() {
             <Button
               isLink
               size="xs"
-              variant="muted"
+              variant="transparent"
               href="/signin"
               className="shrink-0"
             >

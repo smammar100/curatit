@@ -43,7 +43,7 @@ export default function ColorsPage() {
     <>
       <section className="relative overflow-hidden">
         <Wrapper variant="standard" className="page-start">
-          <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 lg:w-1/3">
+          <Text tag="h1" variant="displayLG" className="text-base-900 lg:w-1/3">
             Colors
           </Text>
         </Wrapper>

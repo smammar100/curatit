@@ -95,7 +95,7 @@ export default function ConnectPage() {
       <section>
         <Wrapper variant="standard" className="page-start">
           <div className="max-w-2xl">
-            <Text tag="h1" variant="displayLG" className="font-display font-light text-balance text-base-900">
+            <Text tag="h1" variant="displayLG" className="text-balance text-base-900">
               Use Curatit from your AI tools
             </Text>
             <Text className="mt-6 text-pretty text-base-600">
@@ -134,7 +134,7 @@ export default function ConnectPage() {
       {/* One card per client: the words on the left, the configuration on the right */}
       <section aria-labelledby="clients">
         <Wrapper variant="standard" className="section-y">
-          <Text tag="h2" id="clients" variant="displaySM" className="font-display font-thin text-base-900">
+          <Text tag="h2" id="clients" variant="displaySM" className="text-base-900">
             Your client
           </Text>
           <ul className="mt-8 space-y-4">
@@ -171,7 +171,7 @@ export default function ConnectPage() {
       {/* What the tools do */}
       <section aria-labelledby="tools">
         <Wrapper variant="standard" className="section-y">
-          <Text tag="h2" id="tools" variant="displaySM" className="font-display font-thin text-base-900">
+          <Text tag="h2" id="tools" variant="displaySM" className="text-base-900">
             Six tools, all read-only
           </Text>
           <ul className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">

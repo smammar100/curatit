@@ -7,7 +7,7 @@ export default function LinksPage() {
   return (
     <section>
       <Wrapper variant="standard" className="page-start">
-        <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
+        <Text tag="h1" variant="displayLG" className="text-base-900">
           Links
         </Text>
         <ButtonShowcase asLinks labelClassName="font-medium uppercase text-base-600" />

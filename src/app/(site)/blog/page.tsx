@@ -17,7 +17,7 @@ export default function BlogPage() {
     <section>
       <Wrapper variant="standard" className="page-start">
         <div className="text-balance max-w-xl">
-          <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
+          <Text tag="h1" variant="displayLG" className="text-base-900">
             Magazine
           </Text>
           <Text tag="p" variant="textBase" className="text-base-600 mt-4">

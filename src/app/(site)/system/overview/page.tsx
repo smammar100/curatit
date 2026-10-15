@@ -97,13 +97,13 @@ export default function OverviewPage() {
   return (
     <section>
       <Wrapper variant="standard" className="page-start">
-        <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
+        <Text tag="h1" variant="displayLG" className="text-base-900">
           Overview
         </Text>
         <div className="space-y-12 mt-12">
           {pages.map((section) => (
             <div key={section.title}>
-              <Text tag="p" variant="displayMD" className="text-base-900  text-balance font-display font-thin">
+              <Text tag="p" variant="displayMD" className="text-base-900 text-balance">
                 {section.title}
               </Text>
               <div className="mt-8  grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-8 gap-y-4">

@@ -64,11 +64,7 @@ export default function PricingPage() {
       <section>
         <Wrapper variant="standard" className="page-start">
           <div className="text-balance max-w-3xl mx-auto text-center">
-            <Text
-              tag="h1"
-              variant="displayLG"
-              className="font-display font-light text-base-900"
-            >
+            <Text tag="h1" variant="displayLG" className="text-base-900">
               Free while we&apos;re in beta.
             </Text>
             <Text
@@ -81,12 +77,12 @@ export default function PricingPage() {
             </Text>
           </div>
           <div className="mx-auto mt-12 max-w-xl">
-            <div className="flex flex-col rounded-lg bg-base-50 p-8">
+            <div className="flex flex-col rounded-2xl bg-container p-6 shadow-xs sm:p-8">
               <div className="space-y-3">
                 <Text
                   tag="p"
                   variant="displaySM"
-                  className="text-base-900 text-balance font-display font-light"
+                  className="text-base-900 text-balance"
                 >
                   Free
                 </Text>
@@ -95,11 +91,7 @@ export default function PricingPage() {
                   Curatit, for one person.
                 </Text>
               </div>
-              <Text
-                tag="p"
-                variant="displayLG"
-                className="text-base-900 font-display font-light mt-8"
-              >
+              <Text tag="p" variant="displayLG" className="text-base-900 mt-8">
                 $0
               </Text>
               <ul className="divide-y divide-base-200 mt-4">

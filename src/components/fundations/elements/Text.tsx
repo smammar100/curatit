@@ -16,30 +16,55 @@ type TextTag =
   | "h5"
   | "h6";
 
-// Define text styles for each variant
+// The type scale, Interfere's since 2026-10-15 (design.interfere.com/heading, /text, /caption):
+// six heading sizes with -0.01em tracking (56/56, 44/56, 36/44, 28/36, 24/32, 20/24), three body
+// sizes (18/24, 15/24, 13/20) and four captions (12, 11, 10 on a 16 leading, 8/12). The sizes,
+// leadings and tracking come from the `--text-*` tokens in global.css. Headings keep Curatit's
+// serif (Hedvig Letters Serif, one regular weight; the owner asked for it back the same day), so
+// the serif and its weight ride on every heading variant, and they step down on smaller screens.
+//
+// The older variant names (displayLG, textBase, …) map onto the same scale, so every page keeps
+// working; new code should use the new names.
 const textStyles = {
-  display6XL: "text-4xl  sm:text-7xl md:text-9xl lg:text-[12rem]",
-  display5XL: "text-4xl  sm:text-7xl md:text-8xl lg:text-[10rem]",
-  display4XL: "text-4xl  sm:text-7xl md:text-8xl lg:text-9xl",
-  display3XL: "text-5xl  sm:text-6xl md:text-7xl lg:text-8xl",
-  display2XL: "text-5xl  sm:text-5xl md:text-6xl lg:text-7xl",
-  displayXL: "text-4xl  sm:text-4xl md:text-5xl lg:text-6xl",
-  displayLG: "text-3xl  sm:text-3xl md:text-4xl lg:text-5xl",
-  displayMD: "text-2xl  sm:text-2xl md:text-3xl lg:text-4xl",
-  displaySM: "text-lg  sm:text-xl md:text-2xl lg:text-3xl",
-  displayXS: "text-base  sm:text-lg md:text-xl lg:text-2xl",
-  textXL: "text-lg sm:text-xl md:text-2xl",
-  textLG: "text-base sm:text-lg md:text-xl ",
-  textBase: "text-base",
-  textSM: "text-sm ",
-  textXS: "text-xs ",
+  // Headings
+  h1: "font-display font-normal text-h3 sm:text-h2 lg:text-h1",
+  h2: "font-display font-normal text-h4 md:text-h3 lg:text-h2",
+  h3: "font-display font-normal text-h5 md:text-h4 lg:text-h3",
+  h4: "font-display font-normal text-h5 lg:text-h4",
+  h5: "font-display font-normal text-h6 lg:text-h5",
+  h6: "font-display font-normal text-h6",
+  // Body
+  bodyLG: "text-body-lg",
+  body: "text-body-base",
+  bodySM: "text-body-sm",
+  // Captions
+  captionLG: "text-caption-lg",
+  caption: "text-caption-base",
+  captionSM: "text-caption-sm",
+  captionXS: "text-caption-xs",
+  // Older names, kept so existing pages render on the new scale
+  display6XL: "font-display font-normal text-h3 sm:text-h2 lg:text-h1",
+  display5XL: "font-display font-normal text-h3 sm:text-h2 lg:text-h1",
+  display4XL: "font-display font-normal text-h3 sm:text-h2 lg:text-h1",
+  display3XL: "font-display font-normal text-h3 sm:text-h2 lg:text-h1",
+  display2XL: "font-display font-normal text-h3 sm:text-h2 lg:text-h1",
+  displayXL: "font-display font-normal text-h3 sm:text-h2 lg:text-h1",
+  displayLG: "font-display font-normal text-h3 sm:text-h2 lg:text-h1",
+  displayMD: "font-display font-normal text-h4 md:text-h3 lg:text-h2",
+  displaySM: "font-display font-normal text-h5 md:text-h4 lg:text-h3",
+  displayXS: "font-display font-normal text-h6 lg:text-h5",
+  textXL: "text-body-lg",
+  textLG: "text-body-lg",
+  textBase: "text-body-base",
+  textSM: "text-body-sm",
+  textXS: "text-caption-lg",
 };
 
 export type TextVariant = keyof typeof textStyles;
 
 type TextProps = HTMLAttributes<HTMLElement> & {
   tag?: TextTag; // Defaults to a paragraph
-  variant?: TextVariant; // Defaults to textBase
+  variant?: TextVariant; // Defaults to body (15/24)
   href?: string; // Only used when tag is "a"
   target?: string;
   rel?: string;
@@ -47,7 +72,7 @@ type TextProps = HTMLAttributes<HTMLElement> & {
 
 export default function Text({
   tag: Tag = "p",
-  variant = "textBase",
+  variant = "body",
   className = "",
   href,
   target,
@@ -58,7 +83,15 @@ export default function Text({
   const classes = `${textStyles[variant]} ${className}`.trim();
 
   if (Tag === "a" && href) {
-    return <Link href={href} target={target} rel={rel} className={classes} {...rest} />;
+    return (
+      <Link
+        href={href}
+        target={target}
+        rel={rel}
+        className={classes}
+        {...rest}
+      />
+    );
   }
   return <Tag className={classes} {...rest} />;
 }

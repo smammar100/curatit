@@ -18,10 +18,29 @@ import Plugs from "@/components/fundations/icons/Plugs";
 import { createClient } from "@/utils/supabase/client";
 import { AuthNotice } from "./AuthParts";
 
-type Details = { authorization_id: string; redirect_uri: string; client: { client_id?: string; client_name?: string; client_uri?: string; logo_uri?: string }; user: { id: string; email?: string }; scope: string };
+type Details = {
+  authorization_id: string;
+  redirect_uri: string;
+  client: {
+    client_id?: string;
+    client_name?: string;
+    client_uri?: string;
+    logo_uri?: string;
+  };
+  user: { id: string; email?: string };
+  scope: string;
+};
 
-const ALLOWS = ["Search the library and read posts, slides and images", "Read the published creative analyses", "Build creative briefs from references", "See the email address of your account"];
-const NEVER = ["Post, comment or change anything on your account", "See your boards or notes"];
+const ALLOWS = [
+  "Search the library and read posts, slides and images",
+  "Read the published creative analyses",
+  "Build creative briefs from references",
+  "See the email address of your account",
+];
+const NEVER = [
+  "Post, comment or change anything on your account",
+  "See your boards or notes",
+];
 
 export default function OAuthConsent() {
   const [details, setDetails] = useState<Details | null>(null);
@@ -29,17 +48,28 @@ export default function OAuthConsent() {
   const [busy, setBusy] = useState<"approve" | "deny" | null>(null);
 
   useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get("authorization_id");
-    if (!id) return setError("This link is missing its authorization id. Start again from the app that asked for access.");
+    const id = new URLSearchParams(window.location.search).get(
+      "authorization_id",
+    );
+    if (!id)
+      return setError(
+        "This link is missing its authorization id. Start again from the app that asked for access.",
+      );
     const supabase = createClient();
     (async () => {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) {
-        window.location.replace(`/signin?next=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}`);
+        window.location.replace(
+          `/signin?next=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}`,
+        );
         return;
       }
-      const { data, error } = await supabase.auth.oauth.getAuthorizationDetails(id);
-      if (error || !data) return setError("This request can't be found. It may have expired; start again from the app.");
+      const { data, error } =
+        await supabase.auth.oauth.getAuthorizationDetails(id);
+      if (error || !data)
+        return setError(
+          "This request can't be found. It may have expired; start again from the app.",
+        );
       // Consent already given: Supabase hands back the address to continue to
       if ("redirect_url" in data && data.redirect_url) {
         window.location.replace(data.redirect_url);
@@ -53,25 +83,41 @@ export default function OAuthConsent() {
     if (!details) return;
     setBusy(choice);
     const supabase = createClient();
-    const { data, error } = choice === "approve" ? await supabase.auth.oauth.approveAuthorization(details.authorization_id) : await supabase.auth.oauth.denyAuthorization(details.authorization_id);
+    const { data, error } =
+      choice === "approve"
+        ? await supabase.auth.oauth.approveAuthorization(
+            details.authorization_id,
+          )
+        : await supabase.auth.oauth.denyAuthorization(details.authorization_id);
     if (error || !data?.redirect_url) {
       setBusy(null);
-      return setError("That didn't go through. Try again, or start over from the app.");
+      return setError(
+        "That didn't go through. Try again, or start over from the app.",
+      );
     }
     window.location.replace(data.redirect_url);
   };
 
   const app = details?.client.client_name?.trim() || "An app";
-  const appHost = details?.client.client_uri ? safeHost(details.client.client_uri) : null;
+  const appHost = details?.client.client_uri
+    ? safeHost(details.client.client_uri)
+    : null;
 
   return (
     <div>
       {/* The app's mark and Curatit's, joined: who is asking, who is asked */}
-      <div className="mb-6 flex items-center justify-center gap-3" aria-hidden="true">
+      <div
+        className="mb-6 flex items-center justify-center gap-3"
+        aria-hidden="true"
+      >
         <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-base-100 ring-1 ring-edge">
           {details?.client.logo_uri ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={details.client.logo_uri} alt="" className="size-full object-cover" />
+            <img
+              src={details.client.logo_uri}
+              alt=""
+              className="size-full object-cover"
+            />
           ) : (
             <Plugs className="size-5 text-base-500" />
           )}
@@ -88,10 +134,15 @@ export default function OAuthConsent() {
         </span>
       </div>
 
-      <Text tag="h1" variant="displaySM" className="text-center font-display font-light text-balance text-base-900">
+      <Text
+        tag="h1"
+        variant="displaySM"
+        className="text-center text-balance text-base-900"
+      >
         {details ? (
           <>
-            <span className="font-normal">{app}</span> wants to use Curatit as you
+            <span className="font-normal">{app}</span> wants to use Curatit as
+            you
           </>
         ) : (
           "Allow access to Curatit?"
@@ -103,25 +154,42 @@ export default function OAuthConsent() {
           <AuthNotice>{error}</AuthNotice>
         </div>
       )}
-      {!details && !error && <p className="mt-4 text-center text-sm text-base-600">Checking the request…</p>}
+      {!details && !error && (
+        <p className="mt-4 text-center text-sm text-base-600">
+          Checking the request…
+        </p>
+      )}
 
       {details && (
         <>
-          <div className="mt-6 rounded-lg bg-base-50 p-4 ring-1 ring-base-200">
-            <p className="text-xs font-medium tracking-wide text-base-500 uppercase">Allowing lets it</p>
+          <div className="mt-6 rounded-xl bg-card p-4 shadow-xs">
+            <p className="text-xs font-medium tracking-wide text-base-500 uppercase">
+              Allowing lets it
+            </p>
             <ul className="mt-2 space-y-1.5">
               {ALLOWS.map((line) => (
-                <li key={line} className="flex items-start gap-2 text-sm text-base-900">
+                <li
+                  key={line}
+                  className="flex items-start gap-2 text-sm text-base-900"
+                >
                   <Check className="mt-1 size-3.5 shrink-0 text-base-500" />
                   {line}
                 </li>
               ))}
             </ul>
-            <p className="mt-4 text-xs font-medium tracking-wide text-base-500 uppercase">It can never</p>
+            <p className="mt-4 text-xs font-medium tracking-wide text-base-500 uppercase">
+              It can never
+            </p>
             <ul className="mt-2 space-y-1.5">
               {NEVER.map((line) => (
-                <li key={line} className="flex items-start gap-2 text-sm text-base-600">
-                  <span className="mt-2 size-1 shrink-0 rounded-full bg-base-400" aria-hidden="true" />
+                <li
+                  key={line}
+                  className="flex items-start gap-2 text-sm text-base-600"
+                >
+                  <span
+                    className="mt-2 size-1 shrink-0 rounded-full bg-base-400"
+                    aria-hidden="true"
+                  />
                   {line}
                 </li>
               ))}
@@ -129,10 +197,24 @@ export default function OAuthConsent() {
           </div>
 
           <div className="mt-6 flex gap-3">
-            <Button type="button" size="sm" variant="default" className="flex-1" onClick={() => decide("approve")} disabled={busy !== null}>
+            <Button
+              type="button"
+              size="sm"
+              variant="default"
+              className="flex-1"
+              onClick={() => decide("approve")}
+              disabled={busy !== null}
+            >
               {busy === "approve" ? "Allowing…" : `Allow ${app}`}
             </Button>
-            <Button type="button" size="sm" variant="muted" className="flex-1" onClick={() => decide("deny")} disabled={busy !== null}>
+            <Button
+              type="button"
+              size="sm"
+              variant="muted"
+              className="flex-1"
+              onClick={() => decide("deny")}
+              disabled={busy !== null}
+            >
               {busy === "deny" ? "Denying…" : "Deny"}
             </Button>
           </div>
@@ -140,11 +222,15 @@ export default function OAuthConsent() {
           <dl className="mt-5 space-y-1 text-xs text-base-500">
             <div className="flex justify-between gap-4">
               <dt>Signed in as</dt>
-              <dd className="truncate text-base-900">{details.user.email ?? "you"}</dd>
+              <dd className="truncate text-base-900">
+                {details.user.email ?? "you"}
+              </dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt>Then goes to</dt>
-              <dd className="truncate text-base-900">{safeHost(details.redirect_uri)}</dd>
+              <dd className="truncate text-base-900">
+                {safeHost(details.redirect_uri)}
+              </dd>
             </div>
             {appHost && (
               <div className="flex justify-between gap-4">
@@ -153,7 +239,10 @@ export default function OAuthConsent() {
               </div>
             )}
           </dl>
-          <p className="mt-4 text-center text-xs text-pretty text-base-500">Access lasts until you revoke it from your account. Curatit never shares your password with the app.</p>
+          <p className="mt-4 text-center text-xs text-pretty text-base-500">
+            Access lasts until you revoke it from your account. Curatit never
+            shares your password with the app.
+          </p>
         </>
       )}
     </div>

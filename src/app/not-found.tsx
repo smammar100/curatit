@@ -21,7 +21,7 @@ export default async function NotFound() {
       <section>
         <Wrapper variant="standard" className="flex min-h-dvh flex-col items-center justify-center pt-24 pb-12 text-center">
           <div className="text-balance">
-            <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
+            <Text tag="h1" variant="displayLG" className="text-base-900">
               <span className="sr-only">404: </span>
               This page is gone.
             </Text>

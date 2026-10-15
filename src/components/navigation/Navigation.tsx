@@ -2,6 +2,7 @@ import Link from "next/link";
 // Assets
 import Lockup from "@/components/assets/Lockup";
 // Fundations
+import Badge from "@/components/fundations/elements/Badge";
 import Button from "@/components/fundations/elements/Button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 // Components
@@ -24,7 +25,7 @@ export default function Navigation() {
           <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full gap-3 relative">
             <Link
               href="/"
-              className="w-fit shrink-0 foucs:outline-none"
+              className="w-fit shrink-0 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus"
               aria-label="Go to homepage"
             >
               <Lockup />
@@ -33,15 +34,11 @@ export default function Navigation() {
               {links.map((link) => (
                 <Link
                   key={link.href}
-                  className="inline-flex items-center gap-1.5 text-base-600 hover:text-base-900 text-xs whitespace-nowrap"
+                  className="inline-flex min-h-7 items-center gap-1.5 rounded-sm text-body-sm whitespace-nowrap text-secondary-foreground transition-colors duration-150 hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
                   href={link.href}
                 >
                   {link.text}
-                  {link.beta && (
-                    <span className="rounded px-1 py-0.5 text-[10px]/none font-medium text-base-600 ring-1 ring-base-200">
-                      Beta
-                    </span>
-                  )}
+                  {link.beta && <Badge size="sm">Beta</Badge>}
                 </Link>
               ))}
             </div>
@@ -50,7 +47,7 @@ export default function Navigation() {
               <Button
                 isLink
                 size="xs"
-                variant="muted"
+                variant="transparent"
                 href="/signin"
                 className="shrink-0"
               >

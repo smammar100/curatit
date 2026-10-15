@@ -70,7 +70,7 @@ export default function McpDemo() {
       ref={ref}
       role="group"
       aria-label="Demo: an AI agent asking Curatit for references and getting three posts back"
-      className="relative overflow-hidden rounded-xl bg-base-50 lg:aspect-4/3"
+      className="relative overflow-hidden rounded-2xl bg-base-50 lg:aspect-4/3"
       data-step={step}
     >
       {/* Grows with its content on small screens; centred in a fixed 4:3 panel from lg up */}

@@ -72,7 +72,7 @@
 }
 /*  Define your custom theme variables */
 @theme {
-  --color-white: oklch(0.986 0.002 67.8);
+  --color-white: #ffffff;
   /* Colors*/
  --color-accent-50: oklch(96.37% 0.014 34.3);
   --color-accent-100: oklch(92.11% 0.031 32.56);
@@ -88,40 +88,170 @@
   /* Danger: red, for errors only (a field's note and ring, the form's error panel). Redder and
      darker than the terracotta accent so an error never reads as a link. Text is 5.4:1 or more
      on the card in both themes */
-  --color-danger-50: oklch(0.97 0.014 20);
-  --color-danger-100: oklch(0.93 0.035 20);
-  --color-danger-500: oklch(0.6 0.21 25);
-  --color-danger-600: oklch(0.54 0.21 26);
-  --color-danger-700: oklch(0.47 0.18 26);
+  --color-danger-50: #fff8f7;
+  --color-danger-100: #feebe7;
+  --color-danger-500: #e54d2e;
+  --color-danger-600: #dd4425;
+  --color-danger-700: #d13415;
   /* Warning (amber) and success (green): only for the password strength meter, which runs
      danger → warning → success. The -500/-400/-600 shades fill its bars; its label uses the
      -600 (danger) and -700 shades, 5.3:1 or more on the card in both themes */
-  --color-warning-500: oklch(0.72 0.16 62);
-  --color-warning-700: oklch(0.53 0.13 55);
-  --color-success-400: oklch(0.68 0.17 142);
-  --color-success-600: oklch(0.56 0.15 150);
-  --color-success-700: oklch(0.5 0.13 150);
+  --color-warning-500: #f76b15;
+  --color-warning-700: #cc4e00;
+  --color-success-400: #5bb98b;
+  --color-success-600: #30a46c;
+  --color-success-700: #218358;
   /* Base palette */
 
- --color-base-50: oklch(0.964 0.003 84.4);
-  --color-base-100: oklch(0.922 0.007 88.56);
-  --color-base-200: oklch(0.836 0.012 89.69);
-  --color-base-300: oklch(0.751 0.01 87.44);
-  --color-base-400: oklch(0.664 0.009 84.55);
-  --color-base-500: oklch(0.569 0.008 88.63);
-  --color-base-600: oklch(0.482 0.007 84.55);
-  --color-base-700: oklch(0.398 0.005 91.46);
-  --color-base-800: oklch(0.309 0.004 84.54);
-  --color-base-900: oklch(0.223 0.002 67.71);
-  --color-base-950: oklch(0.177 0.002 106.5);
+ --color-base-50: #f9f9f9;
+  --color-base-100: #f0f0f0;
+  --color-base-200: #e0e0e0;
+  --color-base-300: #cecece;
+  --color-base-400: #bbbbbb;
+  --color-base-500: #8d8d8d;
+  --color-base-600: #646464;
+  --color-base-700: #4a4a4a;
+  --color-base-800: #2f2f2f;
+  --color-base-900: #202020;
+  --color-base-950: #111111;
   /* Semantic tokens */
   /* Off-white that never flips: text on an accent fill */
-  --color-paper: oklch(0.986 0.002 67.8);
+  --color-paper: #ffffff;
   /* 1px edge drawn just inside images and on floating surfaces: pure black at 10% (white at
      10% in dark mode), never a tinted neutral */
   --color-edge: oklch(0 0 0 / 0.1);
   /* The band that sweeps across a loading skeleton: a step lighter than base-100 in both themes */
-  --color-shimmer: oklch(0.964 0.003 84.4);
+  --color-shimmer: #f9f9f9;
+
+  /* ---- Interfere design system (design.interfere.com), installed 2026-10-15 at the owner's
+     request: its surfaces, foregrounds, borders, radii, shadows and type scale, on the primitive
+     scales the site sets below in :root. The brand set is Curatit's own terracotta, not
+     Interfere's blue. The older base / accent names above stay for the dashboard and anything not
+     yet moved over; their values are now the same neutral grey scale. ---- */
+  /* Surfaces */
+  --color-page: var(--color-white);
+  --color-shell: var(--i-shell);
+  --color-container: var(--i-container);
+  --color-card: var(--gray-a2);
+  --color-sunken: var(--i-sunken);
+  --color-modal: var(--i-modal);
+  --color-standout: var(--i-standout);
+  --color-component: var(--gray-a3);
+  --color-component-hover: var(--gray-a4);
+  --color-component-active: var(--gray-a5);
+  --color-component-on-sunken: var(--i-component-on-sunken);
+  --color-component-on-container-subtle: var(--i-container-subtle);
+  --color-component-on-container-subtle-hover: var(--i-container-subtle-hover);
+  --color-transparent-hover: var(--gray-a3);
+  --color-transparent-active: var(--gray-a3);
+  /* Foregrounds */
+  --color-primary-foreground: var(--gray-a12);
+  --color-secondary-foreground: var(--gray-a11);
+  --color-tertiary-foreground: var(--gray-a9);
+  --color-disabled: var(--gray-a3);
+  --color-disabled-foreground: var(--gray-a8);
+  --color-on-inverted-foreground: var(--i-on-inverted);
+  --color-on-standout-primary-foreground: var(--i-on-standout);
+  --color-on-standout-secondary-foreground: var(--white-a7);
+  /* Inverted (the primary button) */
+  --color-inverted-solid: var(--i-inverted);
+  --color-inverted-solid-hover: var(--i-inverted-hover);
+  --color-inverted-solid-active: var(--i-inverted-active);
+  /* Brand: Curatit's terracotta in Interfere's roles */
+  --color-brand-solid: var(--color-accent-600);
+  --color-brand-solid-hover: var(--color-accent-700);
+  --color-brand-solid-active: var(--color-accent-800);
+  --color-brand-subtle: color-mix(in oklab, var(--color-accent-500) 10%, transparent);
+  --color-brand-subtle-hover: color-mix(in oklab, var(--color-accent-500) 16%, transparent);
+  --color-brand-foreground: var(--color-accent-600);
+  --color-on-brand-solid-foreground: var(--color-paper);
+  --color-on-brand-subtle-foreground: var(--color-accent-700);
+  --color-brand-border-default: color-mix(in oklab, var(--color-accent-500) 40%, transparent);
+  --color-brand-border-subtle: color-mix(in oklab, var(--color-accent-500) 30%, transparent);
+  --color-brand-border-focus: color-mix(in oklab, var(--color-accent-500) 60%, transparent);
+  /* Positive / warning / danger */
+  --color-positive-solid: var(--color-success-600);
+  --color-positive-subtle: color-mix(in oklab, var(--color-success-600) 10%, transparent);
+  --color-positive-foreground: var(--color-success-700);
+  --color-warning-solid: var(--color-warning-500);
+  --color-warning-subtle: color-mix(in oklab, var(--color-warning-500) 12%, transparent);
+  --color-warning-foreground: var(--color-warning-700);
+  --color-danger-solid: var(--color-danger-500);
+  --color-danger-solid-hover: var(--color-danger-600);
+  --color-danger-solid-active: var(--color-danger-700);
+  --color-danger-subtle: color-mix(in oklab, var(--color-danger-500) 6%, transparent);
+  --color-danger-subtle-hover: color-mix(in oklab, var(--color-danger-500) 12%, transparent);
+  --color-danger-foreground: var(--color-danger-700);
+  --color-on-danger-solid-foreground: var(--color-paper);
+  --color-danger-border-default: color-mix(in oklab, var(--color-danger-500) 45%, transparent);
+  --color-danger-border-subtle: color-mix(in oklab, var(--color-danger-500) 28%, transparent);
+  /* Borders */
+  --color-border-default: var(--gray-a3);
+  --color-border-subtle: var(--gray-a2);
+  --color-border-strong: var(--gray-a6);
+  --color-border-inverted: var(--i-border-inverted);
+  /* Radius: xs 2, sm 4, md 6, lg 8, xl 10, 2xl 12, 3xl 16, 4xl 20, 5xl 24 */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
+  --radius-3xl: 16px;
+  --radius-4xl: 20px;
+  --radius-5xl: 24px;
+  /* Shadows: border (xs), default (sm, and the bare `shadow`), large (md, lg), extra large (xl,
+     2xl). Their colours are the --shadow-* primitives in :root, which flip in dark mode: drops
+     fade out and a half-pixel inner highlight takes over */
+  --shadow-2xs: 0 0 0 1px var(--shadow-border-color);
+  --shadow-xs: 0 0 0 1px var(--shadow-border-color);
+  --shadow-sm: 0 0 0 0.5px var(--shadow-inner-1) inset, 0 0 0 0.5px var(--shadow-drop-1), 0 1px 1px -1px var(--shadow-drop-2), 0 1px 2px 0 var(--shadow-drop-3);
+  --shadow-md: 0 0 0 0.5px var(--gray-a3), 0 2px 3px -2px var(--gray-a3), 0 3px 12px -4px var(--black-a2), 0 4px 16px -8px var(--black-a1);
+  --shadow-lg: 0 0 0 0.5px var(--gray-a3), 0 2px 3px -2px var(--gray-a3), 0 3px 12px -4px var(--black-a2), 0 4px 16px -8px var(--black-a1);
+  --shadow-xl: 0 0 0 0.5px var(--shadow-xl-inner-1) inset, 0 0 0 0.5px var(--shadow-xl-drop-1), 0 8px 40px 0 var(--shadow-xl-drop-2), 0 12px 32px -16px var(--shadow-xl-drop-3);
+  --shadow-2xl: 0 0 0 0.5px var(--shadow-xl-inner-1) inset, 0 0 0 0.5px var(--shadow-xl-drop-1), 0 8px 40px 0 var(--shadow-xl-drop-2), 0 12px 32px -16px var(--shadow-xl-drop-3);
+  /* Type scale: headings are Inter medium with tight tracking; body 18 / 15 / 13 on a 24 / 24 / 20
+     leading; captions 12 / 11 / 10 / 8 on 16 (12 for the smallest) */
+  --text-h1: 3.5rem;
+  --text-h1--line-height: 3.5rem;
+  --text-h1--letter-spacing: -0.01em;
+  --text-h1--font-weight: 500;
+  --text-h2: 2.75rem;
+  --text-h2--line-height: 3.5rem;
+  --text-h2--letter-spacing: -0.01em;
+  --text-h2--font-weight: 500;
+  --text-h3: 2.25rem;
+  --text-h3--line-height: 2.75rem;
+  --text-h3--letter-spacing: -0.01em;
+  --text-h3--font-weight: 500;
+  --text-h4: 1.75rem;
+  --text-h4--line-height: 2.25rem;
+  --text-h4--letter-spacing: -0.01em;
+  --text-h4--font-weight: 500;
+  --text-h5: 1.5rem;
+  --text-h5--line-height: 2rem;
+  --text-h5--letter-spacing: -0.01em;
+  --text-h5--font-weight: 500;
+  --text-h6: 1.25rem;
+  --text-h6--line-height: 1.5rem;
+  --text-h6--letter-spacing: -0.01em;
+  --text-h6--font-weight: 500;
+  --text-body-lg: 1.125rem;
+  --text-body-lg--line-height: 1.5rem;
+  --text-body-base: 0.9375rem;
+  --text-body-base--line-height: 1.5rem;
+  --text-body-sm: 0.8125rem;
+  --text-body-sm--line-height: 1.25rem;
+  --text-caption-lg: 0.75rem;
+  --text-caption-lg--line-height: 1rem;
+  --text-caption-base: 0.6875rem;
+  --text-caption-base--line-height: 1rem;
+  --text-caption-sm: 0.625rem;
+  --text-caption-sm--line-height: 1rem;
+  --text-caption-xs: 0.5rem;
+  --text-caption-xs--line-height: 0.75rem;
+  --font-weight-semimedium: 450;
+  --font-mono: ui-monospace, "Cascadia Code", "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
   /* Loading skeletons (components/dashboard/Skeleton.tsx): a band of light crossing the block */
   --animate-shimmer: shimmer 1.6s ease-in-out infinite;
   @keyframes shimmer {
@@ -169,9 +299,53 @@
   }
 }
 :root {
-  /* Typography */
-  font-feature-settings:  "tnum" 1; /* Open 4 */
+  /* Typography: tabular numbers, and Inter's round quotes and commas (ss03), as Interfere sets it */
+  font-feature-settings: "tnum" 1, "ss03" 1;
   color-scheme: light;
+
+  /* Interfere's primitive scales (Radix Colors): a neutral grey, alpha greys over white and
+     black, and the shadow colours. The semantic tokens in @theme read these */
+  --gray-a1: #00000003;
+  --gray-a2: #00000006;
+  --gray-a3: #0000000f;
+  --gray-a4: #00000017;
+  --gray-a5: #0000001f;
+  --gray-a6: #00000026;
+  --gray-a7: #00000031;
+  --gray-a8: #00000044;
+  --gray-a9: #00000072;
+  --gray-a10: #0000007c;
+  --gray-a11: #0000009b;
+  --gray-a12: #000000df;
+  --black-a1: #0000000d;
+  --black-a2: #0000001a;
+  --black-a3: #00000026;
+  --black-a6: #00000066;
+  --black-a7: #00000080;
+  --white-a7: #ffffff80;
+  --i-shell: #f8f8f8;
+  --i-container: #ffffff;
+  --i-sunken: var(--black-a1);
+  --i-modal: #ffffff;
+  --i-standout: #202020;
+  --i-component-on-sunken: #ffffff;
+  --i-container-subtle: #ffffff;
+  --i-container-subtle-hover: #f9f9f9;
+  --i-on-inverted: #ffffff;
+  --i-on-standout: #ffffff;
+  --i-inverted: #000000f2;
+  --i-inverted-hover: #000000cc;
+  --i-inverted-active: #000000b3;
+  --i-border-inverted: #000000;
+  --shadow-inner-1: #0000;
+  --shadow-drop-1: #0000000f;
+  --shadow-drop-2: #0000001a;
+  --shadow-drop-3: #0000000d;
+  --shadow-border-color: #00000012;
+  --shadow-xl-inner-1: #0000;
+  --shadow-xl-drop-1: #0000000f;
+  --shadow-xl-drop-2: #0000000d;
+  --shadow-xl-drop-3: #00000026;
   --fs-display: 28px;
   --lh-display: 34px;
   --fs-display-compact: 24px;
@@ -198,23 +372,24 @@
   --lh-micro-compact: 12px;
 }
 /* (These dark values are mirrored in .vision-night, the Vision page's panel; change both.)
-   Dark theme: the warm neutral scale reversed (paper becomes a warm near-black, cards sit a
-   step lighter than the canvas, headings a step short of white), and the terracotta accent
-   with a quarter less chroma so it doesn't vibrate on a dark ground */
+   Dark theme (Interfere's dark scales since 2026-10-15): a near-black page, the neutral grey
+   scale reversed so cards sit a step lighter than the canvas and headings a step short of
+   white, the alpha greys over white, and the terracotta accent with a quarter less chroma so
+   it doesn't vibrate on a dark ground */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --color-white: oklch(0.175 0.004 80);
-  --color-base-50: oklch(0.215 0.005 80);
-  --color-base-100: oklch(0.26 0.006 82);
-  --color-base-200: oklch(0.32 0.007 84);
-  --color-base-300: oklch(0.4 0.008 85);
-  --color-base-400: oklch(0.5 0.008 86);
-  --color-base-500: oklch(0.6 0.008 87);
-  --color-base-600: oklch(0.7 0.008 88);
-  --color-base-700: oklch(0.78 0.007 88);
-  --color-base-800: oklch(0.86 0.006 88);
-  --color-base-900: oklch(0.93 0.005 88);
-  --color-base-950: oklch(0.97 0.003 88);
+  --color-white: oklch(15% 0 0);
+  --color-base-50: #191919;
+  --color-base-100: #222222;
+  --color-base-200: #313131;
+  --color-base-300: #484848;
+  --color-base-400: #606060;
+  --color-base-500: #6e6e6e;
+  --color-base-600: #b4b4b4;
+  --color-base-700: #c6c6c6;
+  --color-base-800: #d9d9d9;
+  --color-base-900: #eeeeee;
+  --color-base-950: #f5f5f5;
   --color-accent-50: oklch(0.27 0.035 35);
   --color-accent-100: oklch(0.32 0.05 34);
   --color-accent-200: oklch(0.4 0.07 35);
@@ -226,18 +401,64 @@
   --color-accent-800: oklch(0.45 0.085 35);
   --color-accent-900: oklch(0.35 0.06 35);
   --color-accent-950: oklch(0.28 0.04 38);
-  --color-danger-50: oklch(0.26 0.06 25);
-  --color-danger-100: oklch(0.32 0.09 25);
-  --color-danger-500: oklch(0.66 0.19 24);
-  --color-danger-600: oklch(0.72 0.16 22);
-  --color-danger-700: oklch(0.82 0.1 20);
-  --color-warning-500: oklch(0.78 0.15 68);
-  --color-warning-700: oklch(0.82 0.13 75);
-  --color-success-400: oklch(0.78 0.16 140);
-  --color-success-600: oklch(0.7 0.16 150);
-  --color-success-700: oklch(0.8 0.14 150);
+  --color-danger-50: #1f1513;
+  --color-danger-100: #391714;
+  --color-danger-500: #e54d2e;
+  --color-danger-600: #ec6142;
+  --color-danger-700: #ff977d;
+  --color-warning-500: #f76b15;
+  --color-warning-700: #ffa057;
+  --color-success-400: #2f7c57;
+  --color-success-600: #30a46c;
+  --color-success-700: #3dd68c;
   --color-edge: oklch(1 0 0 / 0.1);
-  --color-shimmer: oklch(0.32 0.007 84);
+  --color-shimmer: #2a2a2a;
+  --gray-a1: #00000000;
+  --gray-a2: #ffffff09;
+  --gray-a3: #ffffff12;
+  --gray-a4: #ffffff1b;
+  --gray-a5: #ffffff22;
+  --gray-a6: #ffffff2c;
+  --gray-a7: #ffffff3b;
+  --gray-a8: #ffffff55;
+  --gray-a9: #ffffff64;
+  --gray-a10: #ffffff72;
+  --gray-a11: #ffffffaf;
+  --gray-a12: #ffffffed;
+  --i-shell: #000000;
+  --i-container: #111111;
+  --i-sunken: var(--black-a6);
+  --i-modal: oklch(25.2% 0 0);
+  --i-standout: #222222;
+  --i-component-on-sunken: #2a2a2a;
+  --i-container-subtle: var(--gray-a2);
+  --i-container-subtle-hover: var(--gray-a3);
+  --i-on-inverted: #000000;
+  --i-on-standout: var(--gray-a12);
+  --i-inverted: #fffffff2;
+  --i-inverted-hover: #ffffffcc;
+  --i-inverted-active: #ffffffb3;
+  --i-border-inverted: #ffffff;
+  --shadow-inner-1: #ffffff12;
+  --shadow-drop-1: #0000;
+  --shadow-drop-2: #0000;
+  --shadow-drop-3: #0000;
+  --shadow-border-color: #ffffff12;
+  --shadow-xl-inner-1: #ffffff12;
+  --shadow-xl-drop-1: #0000;
+  --shadow-xl-drop-2: #0000000d;
+  --shadow-xl-drop-3: #00000026;
+}
+/* No widows or orphans in the copy (2026-10-15, at the owner's request): headings balance their
+   lines and running text wraps "pretty", which keeps a last line from being one short word.
+   Both are base styles, so a utility on the element still wins */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+  }
+  p, li, dd, dt, figcaption, summary, blockquote, label {
+    text-wrap: pretty;
+  }
 }
 /* While the theme switches, nothing tweens: every colour would otherwise animate on its own clock */
 [data-theme-switching] *,

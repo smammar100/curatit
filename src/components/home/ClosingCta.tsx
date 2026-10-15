@@ -47,7 +47,7 @@ export default function ClosingCta({ posts }: { posts: LibraryPost[] }) {
             <Text
               tag="h2"
               variant="displayLG"
-              className="font-display font-light"
+              className=""
             >
               <span className="block text-base-500">Find references</span>
               <span className="block text-base-900">

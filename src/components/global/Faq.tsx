@@ -65,11 +65,7 @@ export default function Faq({
     <section>
       <Wrapper variant="standard" className="section-y">
         <div className="text-center">
-          <Text
-            tag="h2"
-            variant="displayLG"
-            className="text-base-900 font-display font-thin"
-          >
+          <Text tag="h2" variant="displayLG" className="text-base-900">
             Frequently Asked Questions
           </Text>
         </div>
@@ -77,7 +73,7 @@ export default function Faq({
           <div>
             {faqs.map((faq) => (
               <details key={faq.question} className="group cursor-pointer">
-                <summary className="text-sm leading-normal text-base-900  font-medium flex items-center justify-between w-full py-4 text-left sm:px-8 select-none hover:text-accent-500 focus:text-accent-500">
+                <summary className="flex w-full items-center justify-between py-4 text-left text-body-base font-medium text-primary-foreground select-none transition-colors duration-150 hover:text-brand-foreground focus-visible:text-brand-foreground sm:px-8">
                   {faq.question}
                   <Plus className="size-4 duration-300 ease-out transform group-open:-rotate-45" />
                 </summary>

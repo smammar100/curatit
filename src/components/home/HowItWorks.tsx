@@ -40,11 +40,7 @@ export default function HowItWorks() {
     <section id="how-it-works">
       <Wrapper variant="standard" className="section-y">
         <div className="text-balance max-w-2xl mx-auto text-center">
-          <Text
-            tag="h2"
-            variant="displayLG"
-            className="text-base-900 font-display font-thin"
-          >
+          <Text tag="h2" variant="displayLG" className="text-base-900">
             How it works
           </Text>
           <Text tag="p" variant="textBase" className="text-base-600 mt-4">
@@ -56,13 +52,13 @@ export default function HowItWorks() {
           {steps.map((step) => (
             <li
               key={step.title}
-              className="relative flex min-h-110 min-w-0 flex-col overflow-clip rounded-xl bg-base-50 md:aspect-[421/560]"
+              className="relative flex min-h-110 min-w-0 flex-col overflow-clip rounded-2xl bg-base-50 md:aspect-[421/560]"
             >
               <div className="relative z-10 px-6 py-7 lg:px-8">
                 <Text
                   tag="h3"
                   variant="displayXS"
-                  className="text-base-900 font-display font-light text-balance"
+                  className="text-base-900 text-balance"
                 >
                   {step.title}
                 </Text>

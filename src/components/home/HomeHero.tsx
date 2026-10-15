@@ -46,7 +46,7 @@ export default function HomeHero({ posts }: { posts: LibraryPost[] }) {
           <Text
             tag="h1"
             variant="displayLG"
-            className="font-display font-light text-base-900"
+            className="text-base-900"
           >
             Find ideas for your next social media post.
           </Text>

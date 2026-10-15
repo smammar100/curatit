@@ -18,7 +18,11 @@ import type { ExampleSearch } from "./searchExamples";
 const HOLD_MS = 5200;
 const TYPE_MS = 38;
 
-export default function SearchReel({ searches }: { searches: ExampleSearch[] }) {
+export default function SearchReel({
+  searches,
+}: {
+  searches: ExampleSearch[];
+}) {
   const [active, setActive] = useState(0);
   const [typed, setTyped] = useState(searches[0]?.query.length ?? 0);
   const [playing, setPlaying] = useState(false);
@@ -29,13 +33,18 @@ export default function SearchReel({ searches }: { searches: ExampleSearch[] }) 
   // Runs only while on screen, in a visible tab, without reduced motion
   useEffect(() => {
     const el = ref.current;
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+      return;
     let inView = false;
-    const update = () => setPlaying(inView && document.visibilityState === "visible");
-    const observer = new IntersectionObserver(([entry]) => {
-      inView = entry.isIntersecting;
-      update();
-    }, { threshold: 0.3 });
+    const update = () =>
+      setPlaying(inView && document.visibilityState === "visible");
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry.isIntersecting;
+        update();
+      },
+      { threshold: 0.3 },
+    );
     observer.observe(el);
     document.addEventListener("visibilitychange", update);
     return () => {
@@ -56,7 +65,10 @@ export default function SearchReel({ searches }: { searches: ExampleSearch[] }) 
   const done = search ? typed >= search.query.length : true;
   useEffect(() => {
     if (!playing || paused || !done || searches.length < 2) return;
-    const timer = setTimeout(() => choose((active + 1) % searches.length), HOLD_MS);
+    const timer = setTimeout(
+      () => choose((active + 1) % searches.length),
+      HOLD_MS,
+    );
     return () => clearTimeout(timer);
   });
 
@@ -68,17 +80,39 @@ export default function SearchReel({ searches }: { searches: ExampleSearch[] }) 
   if (!search) return null;
 
   return (
-    <div ref={ref} onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
+    <div
+      ref={ref}
+      onPointerEnter={() => setPaused(true)}
+      onPointerLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+    >
       {/* The query, typed */}
-      <p className="flex min-h-12 items-center gap-3 font-display text-2xl font-light text-base-900 md:text-3xl lg:text-4xl" aria-live="off">
-        <SearchSparkle className="size-6 shrink-0 text-base-900 lg:size-7" aria-hidden="true" />
+      <p
+        className="flex min-h-12 items-center gap-3 font-display text-h5 text-base-900 md:text-h4 lg:text-h3"
+        aria-live="off"
+      >
+        <SearchSparkle
+          className="size-6 shrink-0 text-base-900 lg:size-7"
+          aria-hidden="true"
+        />
         <span className="sr-only">Search: </span>
         <span>{search.query.slice(0, typed)}</span>
-        <span aria-hidden="true" className={cx("-ml-2 h-[0.9em] w-px bg-base-900", done && "search-reel-caret")} />
+        <span
+          aria-hidden="true"
+          className={cx(
+            "-ml-2 h-[0.9em] w-px bg-base-900",
+            done && "search-reel-caret",
+          )}
+        />
       </p>
 
       {/* The results: a row that runs off the right edge (the section clips it) */}
-      <ul key={active} aria-label={`Results for “${search.query}”`} className="mt-8 flex gap-4 sm:gap-6">
+      <ul
+        key={active}
+        aria-label={`Results for “${search.query}”`}
+        className="mt-8 flex gap-4 sm:gap-6"
+      >
         {search.results.map((result, i) => (
           <li
             key={result.shortCode}
@@ -86,21 +120,46 @@ export default function SearchReel({ searches }: { searches: ExampleSearch[] }) 
             style={{ animationDelay: `${i * 70}ms` }}
           >
             <div className="relative aspect-4/5 overflow-hidden rounded bg-base-100 shadow ring-1 ring-base-900/5">
-              <Image src={result.cover} alt="" fill sizes="(min-width: 1024px) 272px, (min-width: 640px) 240px, 200px" className="object-cover" />
+              <Image
+                src={result.cover}
+                alt=""
+                fill
+                sizes="(min-width: 1024px) 272px, (min-width: 640px) 240px, 200px"
+                className="object-cover"
+              />
             </div>
             {/* The brand's mark on the tile's corner, like an app icon */}
             <div className="absolute top-3 left-3 size-12 overflow-hidden rounded-xl bg-white shadow ring-1 ring-base-900/5 sm:size-14">
-              {result.logo ? <Image src={result.logo} alt="" fill sizes="56px" className="object-cover" /> : null}
+              {result.logo ? (
+                <Image
+                  src={result.logo}
+                  alt=""
+                  fill
+                  sizes="56px"
+                  className="object-cover"
+                />
+              ) : null}
             </div>
-            <a href={result.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400">
-              <span className="sr-only">Open this {result.brand} post on Instagram (opens in a new tab)</span>
+            <a
+              href={result.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute inset-0 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400"
+            >
+              <span className="sr-only">
+                Open this {result.brand} post on Instagram (opens in a new tab)
+              </span>
             </a>
           </li>
         ))}
       </ul>
 
       {/* Every search as a button, so it can be picked rather than waited for */}
-      <div role="group" aria-label="Example searches" className="mt-6 flex flex-wrap gap-x-5 gap-y-1">
+      <div
+        role="group"
+        aria-label="Example searches"
+        className="mt-6 flex flex-wrap gap-x-5 gap-y-1"
+      >
         {searches.map((option, i) => (
           <button
             key={option.query}
@@ -109,7 +168,9 @@ export default function SearchReel({ searches }: { searches: ExampleSearch[] }) 
             onClick={() => choose(i)}
             className={cx(
               "min-h-10 rounded-sm text-sm transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400",
-              i === active ? "text-base-900" : "text-base-500 hover:text-base-900",
+              i === active
+                ? "text-base-900"
+                : "text-base-500 hover:text-base-900",
             )}
           >
             {option.query}

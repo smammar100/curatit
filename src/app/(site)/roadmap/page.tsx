@@ -104,7 +104,7 @@ export default async function RoadmapPage() {
       <section>
         <Wrapper variant="standard" className="page-start">
           <div className="max-w-2xl">
-            <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 text-balance">
+            <Text tag="h1" variant="displayLG" className="text-base-900 text-balance">
               Roadmap
             </Text>
             <Text className="mt-6 text-pretty text-base-600">
@@ -128,7 +128,7 @@ export default async function RoadmapPage() {
 
       <section aria-labelledby="coming">
         <Wrapper variant="standard" className="section-y">
-          <Text tag="h2" id="coming" variant="displaySM" className="font-display font-thin text-base-900">
+          <Text tag="h2" id="coming" variant="displaySM" className="text-base-900">
             What&apos;s coming
           </Text>
           <div className="mt-8 grid gap-4 md:grid-cols-3">

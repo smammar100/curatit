@@ -44,8 +44,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   // Browser chrome colour: paper, or the dark canvas (the values of --color-white in global.css)
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fcfbfa" },
-    { media: "(prefers-color-scheme: dark)", color: "#171513" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0b0b" },
   ],
 };
 

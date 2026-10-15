@@ -14,7 +14,7 @@ export default function BrandName({
   return (
     <p
       className={cx(
-        "flex min-w-0 items-center gap-1.5 text-xs font-medium text-base-900",
+        "flex min-w-0 items-center gap-1.5 text-caption-lg font-medium text-primary-foreground",
         className,
       )}
     >

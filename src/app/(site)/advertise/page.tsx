@@ -33,7 +33,7 @@ export default function AdvertisePage() {
     <section>
       <Wrapper variant="standard" className="page-start">
         <div className="text-center max-w-3xl mx-auto text-balance">
-          <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 text-center">
+          <Text tag="h1" variant="displayLG" className="text-base-900 text-center">
             Put your launch in front of the Curatit crowd
           </Text>
           <Text tag="p" variant="textBase" className="text-base-600 mt-4">
@@ -46,7 +46,7 @@ export default function AdvertisePage() {
             <div key={pkg.name} className="flex flex-col h-full justify-between bg-base-50 rounded-lg p-8 ">
               <div className="flex flex-col gap-8">
                 <div className="space-y-3">
-                  <Text tag="p" variant="displaySM" className="text-base-900 text-balance font-display font-light">
+                  <Text tag="p" variant="displaySM" className="text-base-900 text-balance">
                     {pkg.name}
                   </Text>
                   <Text tag="p" variant="textSM" className="text-base-600">
@@ -54,7 +54,7 @@ export default function AdvertisePage() {
                   </Text>
                 </div>
                 <div>
-                  <Text tag="p" variant="displayLG" className="text-base-900 font-display font-light">
+                  <Text tag="p" variant="displayLG" className="text-base-900">
                     {pkg.price}
                   </Text>
                 </div>

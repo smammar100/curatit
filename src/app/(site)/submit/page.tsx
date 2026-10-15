@@ -10,7 +10,7 @@ export default function SubmitPage() {
       <Wrapper variant="standard" className="page-start">
         <div className="mx-auto max-w-xl sm:px-8">
           <div className="text-balance">
-            <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
+            <Text tag="h1" variant="displayLG" className="text-base-900">
               Submit your site to Curatit
             </Text>
             <Text tag="p" variant="textBase" className="mt-2 ext-base-600 text-balance">

@@ -13,6 +13,7 @@ import Plugs from "@/components/fundations/icons/Plugs";
 // Components
 import SearchReel from "@/components/mcp/SearchReel";
 import { runExampleSearches } from "@/components/mcp/searchExamples";
+import Badge from "@/components/fundations/elements/Badge";
 import ClientInstall from "@/components/mcp/ClientInstall";
 import { TOOLS } from "@/components/mcp/tools";
 import { getPublishedPosts } from "@/lib/posts";
@@ -37,12 +38,15 @@ export const revalidate = 3600;
 
 const TOKEN_HREF = "/dashboard/settings/tokens";
 
-const linkClass = "underline decoration-base-300 underline-offset-2 transition-colors duration-150 hover:text-accent-600";
+const linkClass =
+  "underline decoration-base-300 underline-offset-2 transition-colors duration-150 hover:text-accent-600";
 
 export default async function AgentsPage() {
   // If the library can't be reached, the example searches are left out (SearchReel renders nothing without them)
   const posts = await getPublishedPosts().catch(() => []);
-  const searches = posts.length ? await runExampleSearches(posts).catch(() => []) : [];
+  const searches = posts.length
+    ? await runExampleSearches(posts).catch(() => [])
+    : [];
   const count = posts.length ? `${posts.length} ` : "";
 
   const benefits = [
@@ -72,15 +76,20 @@ export default async function AgentsPage() {
             <div className="lg:col-span-7">
               <p className="flex items-center gap-2 text-sm text-base-600">
                 Curatit MCP
-                <span className="rounded-md bg-base-50 px-2 py-0.5 text-xs font-medium text-base-900 ring-1 ring-base-200">Beta</span>
+                <Badge>Beta</Badge>
               </p>
-              <Text tag="h1" variant="displayLG" className="mt-4 font-display font-light text-balance text-base-900">
+              <Text
+                tag="h1"
+                variant="displayLG"
+                className="mt-4 text-balance text-base-900"
+              >
                 Bring Curatit to your AI assistant
               </Text>
             </div>
             <Text className="text-pretty text-base-600 lg:col-span-5 lg:pb-1">
-              Search real brand posts, read their editor-approved breakdowns and build briefs from inside Claude, Cursor, VS Code or ChatGPT. Every answer comes with
-              its source.
+              Search real brand posts, read their editor-approved breakdowns and
+              build briefs from inside Claude, Cursor, VS Code or ChatGPT. Every
+              answer comes with its source.
             </Text>
           </div>
           <div id="install" className="mt-10 scroll-mt-24 lg:mt-12">
@@ -93,12 +102,22 @@ export default async function AgentsPage() {
       <section aria-labelledby="why" className="overflow-x-clip">
         <Wrapper variant="standard" className="section-y">
           <div className="max-w-3xl">
-            <Text tag="h2" id="why" variant="displayLG" className="font-display font-light text-balance text-base-900">
+            <Text
+              tag="h2"
+              id="why"
+              variant="displayLG"
+              className="text-balance text-base-900"
+            >
               <span className="block">Finding references took hours.</span>
               <span className="block">Now it&apos;s one question.</span>
             </Text>
-            <Text tag="p" variant="textBase" className="mt-4 max-w-xl text-pretty text-base-600">
-              Ask in plain words and get real brand posts back, not descriptions of ones that don&apos;t exist.
+            <Text
+              tag="p"
+              variant="textBase"
+              className="mt-4 max-w-xl text-pretty text-base-600"
+            >
+              Ask in plain words and get real brand posts back, not descriptions
+              of ones that don&apos;t exist.
             </Text>
           </div>
           {searches.length > 0 && (
@@ -109,9 +128,15 @@ export default async function AgentsPage() {
           <ul className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
             {benefits.map((benefit) => (
               <li key={benefit.title}>
-                <span className="flex size-9 items-center justify-center rounded-full bg-base-50 text-base-900 ring-1 ring-edge">{benefit.icon}</span>
-                <h3 className="mt-4 text-base font-medium text-base-900">{benefit.title}</h3>
-                <p className="mt-1 text-sm text-pretty text-base-600">{benefit.body}</p>
+                <span className="flex size-9 items-center justify-center rounded-full bg-base-50 text-base-900 ring-1 ring-edge">
+                  {benefit.icon}
+                </span>
+                <h3 className="mt-4 text-base font-medium text-base-900">
+                  {benefit.title}
+                </h3>
+                <p className="mt-1 text-sm text-pretty text-base-600">
+                  {benefit.body}
+                </p>
               </li>
             ))}
           </ul>
@@ -123,19 +148,34 @@ export default async function AgentsPage() {
         <Wrapper variant="standard" className="section-y">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
             <div className="lg:col-span-4">
-              <Text tag="h2" id="tools" variant="displaySM" className="font-display font-thin text-balance text-base-900">
+              <Text
+                tag="h2"
+                id="tools"
+                variant="displaySM"
+                className="text-balance text-base-900"
+              >
                 Six read-only tools
               </Text>
-              <Text variant="textSM" className="mt-3 max-w-xs text-pretty text-base-600">
-                Your assistant picks the one it needs. None of them can change anything.
+              <Text
+                variant="textSM"
+                className="mt-3 max-w-xs text-pretty text-base-600"
+              >
+                Your assistant picks the one it needs. None of them can change
+                anything.
               </Text>
             </div>
             <ul className="grid grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2 lg:col-span-8">
               {TOOLS.map((tool) => (
                 <li key={tool.name}>
-                  <h3 className="text-sm font-medium text-base-900">{tool.title}</h3>
-                  <p className="mt-1 text-sm text-pretty text-base-500">{tool.does}</p>
-                  <p className="mt-2 font-mono text-xs break-all text-base-400">{tool.name}</p>
+                  <h3 className="text-sm font-medium text-base-900">
+                    {tool.title}
+                  </h3>
+                  <p className="mt-1 text-sm text-pretty text-base-500">
+                    {tool.does}
+                  </p>
+                  <p className="mt-2 font-mono text-xs break-all text-base-400">
+                    {tool.name}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -148,7 +188,9 @@ export default async function AgentsPage() {
         <Wrapper variant="standard" className="section-y">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-2xl bg-white p-5 ring-1 ring-edge lg:p-6">
-              <h3 className="text-base font-medium text-base-900">What your tool can do</h3>
+              <h3 className="text-base font-medium text-base-900">
+                What your tool can do
+              </h3>
               <ul className="mt-4 space-y-3 text-sm text-pretty text-base-600">
                 {[
                   `Read what you can read: the library's ${count}published posts and their editor-approved analyses.`,
@@ -156,23 +198,33 @@ export default async function AgentsPage() {
                   "Draft an original brief grounded in the posts you choose (with the Briefs scope), keeping what was observed apart from what's recommended.",
                 ].map((line) => (
                   <li key={line} className="flex gap-3">
-                    <Check className="mt-0.5 size-4 shrink-0 text-base-900" aria-hidden="true" />
+                    <Check
+                      className="mt-0.5 size-4 shrink-0 text-base-900"
+                      aria-hidden="true"
+                    />
                     {line}
                   </li>
                 ))}
               </ul>
             </div>
             <div className="rounded-2xl bg-white p-5 ring-1 ring-edge lg:p-6">
-              <h3 className="text-base font-medium text-base-900">What it can&apos;t do</h3>
+              <h3 className="text-base font-medium text-base-900">
+                What it can&apos;t do
+              </h3>
               <ul className="mt-4 space-y-3 text-sm text-pretty text-base-600">
-                {["Post anything, or change your account.", "See your boards.", "Keep working once its token expires or is revoked. Tokens last 30 to 365 days."].map(
-                  (line) => (
-                    <li key={line} className="flex gap-3">
-                      <Close className="mt-0.5 size-4 shrink-0 text-base-500" aria-hidden="true" />
-                      {line}
-                    </li>
-                  ),
-                )}
+                {[
+                  "Post anything, or change your account.",
+                  "See your boards.",
+                  "Keep working once its token expires or is revoked. Tokens last 30 to 365 days.",
+                ].map((line) => (
+                  <li key={line} className="flex gap-3">
+                    <Close
+                      className="mt-0.5 size-4 shrink-0 text-base-500"
+                      aria-hidden="true"
+                    />
+                    {line}
+                  </li>
+                ))}
               </ul>
               <p className="mt-4 text-sm text-base-600">
                 Make and revoke tokens in{" "}
@@ -185,9 +237,10 @@ export default async function AgentsPage() {
           </div>
 
           <div className="mt-4 flex flex-col gap-3 rounded-2xl bg-base-50 p-5 sm:flex-row sm:items-center lg:p-6">
-            <span className="w-fit shrink-0 rounded-md bg-white px-2 py-0.5 text-xs font-medium text-base-900 ring-1 ring-base-200">Beta</span>
+            <Badge className="w-fit">Beta</Badge>
             <p className="text-sm text-pretty text-base-600">
-              Things may change while we test it, and the ChatGPT connector is still being tried out.{" "}
+              Things may change while we test it, and the ChatGPT connector is
+              still being tried out.{" "}
               <a href={SUPPORT_MAILTO} className={linkClass}>
                 Tell us what breaks
               </a>
@@ -201,9 +254,13 @@ export default async function AgentsPage() {
       <section aria-labelledby="start">
         <Wrapper variant="standard" className="section-y">
           <div className="mx-auto max-w-2xl text-center text-balance">
-            <Text tag="h2" id="start" variant="displayMD" className="font-display font-thin">
-              <span className="block text-base-500">Your next brief starts in a chat.</span>
-              <span className="block text-base-900">Bring the library with you.</span>
+            <Text tag="h2" id="start" variant="displayMD" className="">
+              <span className="block text-base-500">
+                Your next brief starts in a chat.
+              </span>
+              <span className="block text-base-900">
+                Bring the library with you.
+              </span>
             </Text>
             <div className="mt-8 flex flex-wrap justify-center gap-2">
               <Button isLink size="base" variant="default" href={TOKEN_HREF}>

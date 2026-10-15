@@ -5,116 +5,129 @@ description: Curatit's design system - typography, color, spacing, and component
 
 # Curatit design system
 
-Curatit is a directory / showcase theme with a warm, editorial, gallery-like
-feel: thin serif display type over a warm paper background, monochrome card
-"mats" holding shadowed screenshots, and a single terracotta accent used only
-for interaction states. New UI here should be indistinguishable from the
-existing pages.
+Curatit is a directory / showcase site with a calm, gallery-like feel: the
+posts are the colour, the chrome around them is neutral and quiet. Since
+2026-10-15 its tokens, type scale and components are **Interfere's design
+system** (https://design.interfere.com, read off the site and installed by
+hand, since it ships no package), with Curatit's own terracotta standing in
+for Interfere's blue as the brand colour. New UI here should be
+indistinguishable from the existing pages.
 
 ## Design personality
 
-- Gallery calm: content (site screenshots, product shots) is the hero;
-  the chrome around it stays warm gray and quiet.
-- Serif elegance, sans utility: display headings are a thin serif
-  (`font-display`); everything functional (body, buttons, cards, meta) is Inter.
-- Warmth over starkness: even "white" is a warm off-white token; neutrals
-  are warm grays, never cold slate.
-- Color is an event: the terracotta accent appears only on hovers, focus
-  rings, links, and the occasional accent button - never on headings or panels.
+- Gallery calm: content (post covers, product shots) is the hero; the chrome
+  stays neutral grey and quiet.
+- Serif headlines, sans everything else: headings are Hedvig Letters Serif
+  (`font-display`, its one regular weight) on Interfere's sizes and
+  tracking; body, UI, cards, buttons and captions are Inter. The owner kept
+  the serif when the system came in.
+- Neutral, not warm: the page is pure white (near-black in dark mode) and the
+  greys are Radix's neutral gray, mostly as alpha tints so they sit on any
+  surface.
+- Colour is an event: the terracotta brand colour appears only on hovers,
+  focus rings, links and the `accent` (brand) Button, never on headings or
+  panels.
 
 ## Typography
 
 Two families, both defined in `src/styles/global.css` under `@theme` and
 loaded with `next/font/google` in `src/app/layout.tsx`:
 
-- `--font-sans`: **Inter** (variable, with optical sizing) - the default; body,
-  UI, cards, buttons. `:root` sets `font-feature-settings: "tnum" 1`
-  (tabular numbers) globally.
-- `--font-display`: **Hedvig Letters Serif** (Google Fonts, optical size
-  12..24) - used via the `font-display` class, for display headings only.
+- `--font-sans`: **Inter** (variable) - everything. `:root` sets
+  `font-feature-settings: "tnum" 1, "ss03" 1` (tabular numbers; round quotes
+  and commas, as Interfere sets it).
+- `--font-display`: **Hedvig Letters Serif** - every heading, through the
+  `Text` heading variants (which carry `font-display font-normal`), the
+  wordmark and the dashboard's display role.
+- `--font-mono`: a system monospace stack (Interfere's Berkeley Mono isn't
+  ours to ship).
 
-Never introduce another font. (One exception: the Vision graph's small selection readouts,
-`<.03 FINT.>`, use the system monospace stack as an instrument-panel detail.)
+Never introduce another font.
+
+The scale is Interfere's, as `--text-*` tokens that carry size, leading,
+tracking and (for headings) weight, so one class sets all four:
+
+| Token | Size / leading | Notes |
+| --- | --- | --- |
+| `text-h1` … `text-h6` | 56/56, 44/56, 36/44, 28/36, 24/32, 20/24 | `-0.01em`; serif regular through `Text`, Inter medium when used bare |
+| `text-body-lg`, `text-body-base`, `text-body-sm` | 18/24, 15/24, 13/20 | regular |
+| `text-caption-lg`, `-base`, `-sm`, `-xs` | 12/16, 11/16, 10/16, 8/12 | regular; uppercase captions add `tracking-wider` |
+
+Weights: `font-normal` 400, `font-semimedium` 450, `font-medium` 500,
+`font-semibold` 600. Serif headings are regular (the face has one weight);
+never bold.
 
 Always use the `Text` component (`@/components/fundations/elements/Text`)
-instead of raw tags with ad-hoc sizes. Variants: `display6XL` down to
-`displayXS`, then `textXL`, `textLG`, `textBase`, `textSM`, `textXS`.
+instead of raw tags with ad-hoc sizes. Variants `h1`-`h6` step down on
+smaller screens (`h1` is 36 → 44 → 56); `bodyLG`, `body` (the default),
+`bodySM`; `captionLG`, `caption`, `captionSM`, `captionXS`. The older names
+(`displayLG`, `textBase`, …) still work and map onto the same scale.
 
-- Page hero title: `tag="h1" variant="displayLG"` +
-  `text-base-900 font-display font-light`, on every page (the homepage,
-  Vision, Roadmap, 404 and the share page included; one size site-wide since
-  2026-10-12, so no page's title is bigger than another's), centered inside a
-  `text-balance max-w-3xl mx-auto text-center` div; multi-line heroes stack
-  `<span className="block">` lines.
-- Section heading: `tag="h2" variant="displaySM"` +
-  `text-base-900 font-display font-thin`.
-- Card title: `tag="h3" variant="textSM"` + `font-medium` (sans, NOT
-  `font-display`) in `text-base-900`, or `text-base-600` for quiet captions.
-- Card meta line: `variant="textXS"` + `uppercase font-medium text-base-600`.
-- Lead / body: `variant="textBase"` in `text-base-600`, placed `mt-4` after
-  its heading.
-
-**Display type is thin.** Serif headings use `font-thin` or `font-light`
-only. `font-medium` is reserved for small sans UI text (buttons, card
-titles, labels). Never `font-semibold`/`font-bold` on a heading.
+- Page hero title: `tag="h1" variant="h1"` + `text-primary-foreground` (or
+  `text-base-900`), centred inside a `text-balance max-w-3xl mx-auto
+  text-center` div; multi-line heroes stack `<span className="block">` lines.
+- Section heading: `tag="h2" variant="h1"` on the homepage (every section's
+  heading matches the hero's size, at the owner's request); `variant="h2"`
+  or `h3` elsewhere.
+- Card title: `tag="h3" variant="h6"` or `bodySM` + `font-medium`.
+- Card meta line: `variant="captionLG"` + `uppercase tracking-wider
+  text-secondary-foreground`.
+- Lead / body: `variant="body"` in `text-secondary-foreground`
+  (`text-base-600`), `mt-4` after its heading, at most two lines on the
+  homepage. Widows and orphans: `global.css` balances every heading and
+  wraps every paragraph, list item and label `pretty` as a base style, so
+  a last line is never one short word.
 
 ## Color system
 
-Custom oklch scales in `@theme` (`src/styles/global.css`) - use only
-these, never Tailwind default palettes, never hex in markup:
+Interfere's semantic tokens, in `@theme` (`src/styles/global.css`), on top of
+the Radix primitives set in `:root` and flipped in
+`:root[data-theme="dark"]`. Use the semantic names in new code:
 
-- `base` - warm gray neutral scale (hue ~85-90). All text, backgrounds,
-  borders. Note `--color-white` itself is overridden to a warm off-white,
-  so `bg-white` is paper, not pure white.
-- `accent` - terracotta / burnt orange (hue ~35).
-- `danger` - red (hue ~25), for errors only: a field's error note
-  (`text-danger-600`) and ring (`ring-danger-500`, focus `ring-danger-100`),
-  and a form's error panel (`bg-danger-50 text-danger-700`). Always with an
-  icon and words, never colour alone. Redder and darker than accent so an error
-  never reads as a link.
-- One exception to the monochrome rule: the dashboard's search pill wears a
-  colourful `BorderBeam` (`border-beam`), a glow travelling round its edge.
-  Don't spread it to other controls.
-- `warning` (amber) and `success` (green) - only for the password strength
-  meter (`auth/PasswordField`), which runs danger, warning, success with the
-  level's word beside it. Don't reach for them elsewhere.
+- Surfaces: `bg-page` (the canvas; `bg-white` is the same), `bg-container`
+  (white / `#111`), `bg-card` (a 2% tint, the grey mat), `bg-component`
+  (6%, chips and tertiary buttons; `-hover`, `-active`), `bg-sunken`,
+  `bg-modal`, `bg-standout` (near-black / dark grey),
+  `bg-component-on-container-subtle` (a white control on a white container,
+  with `-hover`), `bg-transparent-hover`.
+- Foregrounds: `text-primary-foreground` (87% black), `text-secondary-foreground`
+  (61%), `text-tertiary-foreground` (45%, under 4.5:1 so never for text that
+  carries meaning), `text-disabled-foreground`, `text-on-inverted-foreground`.
+- Brand (terracotta): `bg-brand-solid` (`-hover`, `-active`),
+  `bg-brand-subtle`, `text-brand-foreground`, `text-on-brand-solid-foreground`,
+  `outline-brand-border-focus` (the focus ring everywhere).
+- Status: `positive`, `warning`, `danger`, each with `-solid`, `-subtle`,
+  `-foreground` and `-border-default` (danger also `-subtle-hover`,
+  `-border-subtle`). Errors are always an icon and words as well as red.
+- Borders: `ring-border-default` (6%), `-subtle` (2%), `-strong` (15%),
+  `border-border-default`; `edge` stays for the 1px line inside images.
+- Inverted: `bg-inverted-solid` (`-hover`, `-active`) is the primary button.
+
+The older scales still exist and are fine to read: `base-50`…`950` is now
+the same neutral grey (`base-50` ≈ `card`, `base-900` ≈
+`primary-foreground`), `accent-*` the terracotta, `paper` white text on an
+accent fill. Never use Tailwind's own `gray`/`zinc`/`slate`, never hex in
+markup.
 
 Usage rules:
 
-- Page background is (warm) white; cards and muted buttons sit on
-  `bg-base-50`; headings `text-base-900`, body `text-base-600`, quiet meta
-  `text-base-500`.
-- **Accent is interaction-only**: link hovers (`hover:text-accent-600` /
-  `-500`), form focus (`focus:border-accent-500 focus:ring-accent-100`),
-  text selection (`selection:bg-accent-50 selection:text-accent-500` on
-  `<body>`), prose links/blockquotes, and the `accent` Button variant.
-  Never use accent for headings, body copy, or section backgrounds.
-- There are no tinted color panels and no hue rotation - the page stays
-  monochrome warm gray; the screenshots inside cards provide the color.
-  One named exception: the MCP landing page's install panel (`.mcp-gradient`
-  on `/agents`, after ElevenLabs' MCP page), a soft, low-chroma sage, sky and
-  sand wash behind the install card. Don't reuse it elsewhere.
-- Dark surfaces are rare and purposeful: the site footer's inset panel and the Vision page's
-  "Night" panel (`.vision-night`, the dark tokens scoped to one inset panel, inverting to paper
-  on the dark site like the footer; both panels round at `rounded-[1.5rem]`/`[2rem]`, a named
-  exception to the radius rules), the default Button (`bg-base-800`)
-  and the search modal backdrop (`bg-black/50`).
+- **Accent is interaction-only**: link hovers (`hover:text-brand-foreground`),
+  focus (`focus-visible:outline-brand-border-focus`), text selection, prose
+  links, and the `accent` Button. Never for headings, body copy or section
+  backgrounds.
+- No tinted panels, no hue rotation; the page stays neutral and the post
+  covers provide the colour. Named exceptions: the MCP install panel's
+  `.mcp-gradient`, the dashboard search pill's `BorderBeam`.
+- Dark surfaces are rare: the footer's inset panel and the Vision page's
+  `.vision-night` panel (both inverting to paper on the dark site through
+  their own `--f-*` / scoped tokens), the primary Button and the search
+  backdrop.
 - **Dark theme** (`data-theme="dark"` on `<html>`, set before paint by
-  `global/ThemeScript` from localStorage or the system, switched by
-  `global/ThemeToggle` in both navigations): the tokens flip, the classes do
-  not. `:root[data-theme="dark"]` in `global.css` redefines `--color-white`
-  (paper becomes a warm near-black), reverses the `base` scale (cards sit a
-  step lighter than the canvas) and desaturates `accent` by a quarter. So keep
-  writing `bg-white`, `text-base-900`, `bg-base-50`, and never add `dark:`
-  for a colour. Two semantic tokens exist for what must not flip or must
-  flip differently: `text-paper` for text on an accent fill (the accent
-  Button, badges on `bg-accent-600`), and `edge` for the 1px line inside
-  images and on floating surfaces (`outline-edge`, `ring-edge`: black/10 in
-  light, white/10 in dark). Shadows are invisible on dark, so a surface that
-  needs separation there adds `dark:ring-1 dark:ring-edge` - the one
-  legitimate `dark:` use. Inline colours in client components use
-  `light-dark(light, dark)` (see `Categories`), and prose/Shiki colours are
-  mapped to the tokens in `global.css`.
+  `global/ThemeScript`, switched by `global/ThemeToggle`): the tokens flip,
+  the classes do not. The page goes `oklch(15% 0 0)`, the grey scale
+  reverses, the alpha greys turn white-based, shadows lose their drops and
+  gain a half-pixel inner highlight. So never add `dark:` for a colour or a
+  shadow. Inline colours in client components use `light-dark()`.
 
 ## Layout and spacing
 
@@ -125,116 +138,111 @@ Usage rules:
   `mx-auto max-w-xl sm:px-8` div, never a second Wrapper, or the phone gutter
   doubles. A sideways-scrolling row bleeds with `-mx-4 px-4` so its first item
   still starts on the gutter.
-
 - Every section is `<section>` wrapping a `Wrapper`
   (`@/components/fundations/containers/Wrapper`): `variant="standard"`
   (`max-w-7xl 2xl:max-w-[110rem] px-4 sm:px-8`) for pages, `variant="narrow"`
-  (`max-w-xl`) for forms/auth, `variant="prose"` for markdown bodies (the
-  prose preset styles links/blockquotes in accent and code blocks
-  `rounded-2xl`).
+  (`max-w-xl`) for forms/auth, `variant="prose"` for markdown bodies.
 - Page rhythm (2026-10-15): two utilities in `global.css`, never ad-hoc
   `py-*` / `pt-*` on a section's Wrapper. A page's first section is
-  `className="page-start"`: its first line of content starts 112px from the
-  top of the window on phones and 160px from `lg`, on every page (the
-  homepage hero and the Vision panel are tuned by hand to land on the same
-  line). Every section after it is `className="section-y"` (48px above and
-  below, 64px from `lg`), so neighbours always sit 96px / 128px apart, and the
-  footer's own `mt-12 lg:mt-16` keeps the last section the same distance from
-  it. Spacing inside a section stays as below.
+  `className="page-start"` (first line of content 112px from the top on
+  phones, 160px from `lg`); every section after it is
+  `className="section-y"` (48px above and below, 64px from `lg`), and the
+  footer's own `mt-12 lg:mt-16` keeps the last section the same distance.
 - Rhythm inside a section: `mt-12` between major blocks, `mt-8` between a
   section header row and its grid, `mt-2`-`mt-4` between a title and its
   supporting text, `gap-8` in card grids.
-- Section header row: `flex flex-wrap gap-4 justify-between items-center`
-  holding the `displaySM` serif heading and a small `muted` Button link
-  ("See all articles").
-- Card grids: `grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3`
-  (blog, store) or `lg:grid-cols-4` (sites directory).
-- **Card anatomy** (see `sites/SiteCard.tsx`, `blog/BlogCard.tsx`):
-  a `p-8 bg-base-50 rounded-lg` mat containing the image
-  (`object-cover aspect-8/5 w-full object-top rounded shadow`), caption/meta
-  below the mat at `mt-2`-`mt-4`, and a stretched link
-  (`<Link>` with `absolute inset-0`). Grids dim siblings on hover:
-  `group-hover:opacity-30 hover:opacity-100 peer hover:peer-hover:opacity-30 duration-300`.
-- Images use `next/image` and always declare `width`/`height` and use the `aspect-8/5` +
-  `object-top` crop inside mats.
+- Card grids: `grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3`.
+- **Card anatomy**: a `p-6 bg-card rounded-2xl` mat (or `bg-container
+  shadow-xs` for a white card with a hairline) holding the image
+  (`rounded shadow`), caption/meta below at `mt-2`-`mt-4`, and a stretched
+  link (`absolute inset-0`).
+- Images use `next/image` and always declare `width`/`height`.
 
 ## Components
 
 Reuse these before writing anything new:
 
-- **Button** (`fundations/elements/Button.tsx`): variants `default`
-  (`bg-base-800`, white text), `accent` (`bg-accent-600`), `muted`
-  (`bg-base-50 text-base-900`), `none`; sizes `xxs`-`xl` with fixed heights
-  (`h-7.5`-`h-13`) and baked-in radius (`rounded-lg`, `rounded-xl` at `xl`) -
-  do not add your own `rounded-*`; `isLink` + `href` renders a `next/link` anchor;
-  `iconOnly` + `size` for square icon buttons; `gap` prop (`xs`-`lg`) spaces
-  icon slots. **Width is a per-use decision** - the component renders a
-  block-level `flex` that stretches to its container: standalone CTAs get
-  `w-fit` (e.g. pricing cards use `className="w-fit mt-8"`), form submits get
-  `w-full`, buttons in a flex row need no width class. Tag/filter chips are
-  `size="xs" variant="muted"` with `class="capitalize"`.
+- **Button** (`fundations/elements/Button.tsx`), Interfere's: 13px medium
+  text at every size; sizes `xxs` 24, `xs` 28, `sm` 32, `base` (and `md`,
+  `lg`, `xl`) 40, radius 6 up to `xs` and 8 from `sm`, `shape="pill"` for
+  round ends, `iconOnly` for a square. Variants: `default` (primary,
+  inverted solid), `secondary` (white with the default shadow), `muted`
+  (tertiary, a tint), `accent` (brand), `danger`, `dangerSubtle`,
+  `transparent`, `none`. No borders on any of them. `isLink` + `href`
+  renders a `next/link`. **Width is a per-use decision**: standalone CTAs
+  get `w-fit`, form submits `w-full`, buttons in a flex row nothing. The
+  header's Sign in is `transparent`, every signup action `default`.
+- **Badge** (`fundations/elements/Badge.tsx`): 16 / 20 / 24px, 11 / 12 /
+  13px regular text, radius 4 (6 at `lg`), variants `default`,
+  `transparent`, `inverted`, `outline`, `brand`, `danger`. The Beta chips use
+  it.
 - **Text**: the only sanctioned type scale (see Typography).
-- **Wrapper**: the only page-width container. Don't hand-roll
-  `max-w-* mx-auto` wrappers.
-- **Form inputs** share one canonical recipe (see `components/auth/AuthParts.tsx`,
-  `Footer.tsx`, `sites/SearchDialog.tsx`): `h-9 rounded-md bg-white ring-1 ring-base-200
-  placeholder-base-400 shadow-sm focus:border-accent-500 focus:ring-accent-100
-  focus:ring-2 text-xs`. Copy it verbatim for new inputs.
-- Icons live in `fundations/icons/` as individual components built on the
-  shared `Icon.tsx` shell (`ArrowUpRight`, `Search`, `Plus`, ...); add new ones
-  there in the same style instead of importing icon packs.
+- **Wrapper**: the only page-width container.
+- **Form inputs** share one recipe, `inputClass` in
+  `components/auth/AuthParts.tsx`: `h-10 rounded-lg
+  bg-component-on-container-subtle px-3 text-body-sm shadow-sm
+  placeholder:text-tertiary-foreground`, a 2px `brand-border-focus` shadow on
+  focus, `danger-border-default` when the field has a problem, and
+  `pointer-coarse:text-[16px]` so iOS doesn't zoom. Labels are `text-body-sm
+  font-medium text-primary-foreground`. Import it rather than copying it.
+- Icons live in `fundations/icons/` as individual components on the shared
+  `Icon.tsx` shell (Phosphor bold paths); add new ones there.
 
 ## Corners, borders, shadows
 
-- Radius policy (real counts: 48x `rounded-lg`, 8x `rounded-md`, 8x
-  `rounded`, 3x `rounded-xl`, 1x `rounded-2xl`): `rounded-lg` for card mats
-  and buttons, plain `rounded` for images inside mats, `rounded-md` for
-  inputs. Nothing larger except the prose code-block preset. No
-  `rounded-full` except tiny indicators.
-- Shadows are only for "physical" objects: `shadow` on screenshots/product
-  images sitting on their mat, `shadow-sm` on inputs. **Never** shadow a
-  card, panel, or button.
-- Borders are `ring-1 ring-base-200` (inputs) or `divide-y divide-base-200`
-  (feature lists) - no heavy `border-2` styles.
+- Radius scale (Interfere's): `rounded-xs` 2, `sm` 4, `md` 6, `lg` 8, `xl`
+  10, `2xl` 12, `3xl` 16, `4xl` 20, `5xl` 24, `full`. Buttons and inputs
+  `md`/`lg` (the Button bakes its own in), chips `sm`, cards and mats `2xl`,
+  the auth card `2xl`, the footer panel `4xl`/`5xl`. Plain `rounded` for
+  images inside mats. Inner radius = outer radius − padding.
+- Shadows (Interfere's, on the `--shadow-*` tokens): `shadow-xs` is a 1px
+  hairline (the border for white cards), `shadow-sm` / `shadow` the default
+  (a half-pixel ring and two soft drops; inputs, the secondary button),
+  `shadow-md` / `shadow-lg` large, `shadow-xl` extra large (the auth card).
+  Every one has its own dark-mode treatment, so never add `dark:ring-*` to
+  stand in for a shadow.
+- Borders are alpha tints: `ring-1 ring-border-default` (6%) or
+  `divide-y divide-border-default`; `ring-border-strong` (15%) for an
+  outline badge. No `border-2`.
 
 ## Voice and copy
 
-Short declarative statements, often two stacked sentences in heroes
-("No concepts. Just real websites."). Practical, anti-hype tone aimed at
-designers ("benchmark your own work, not to copy it"). Sentence case
-everywhere, no Title Case, no emoji; exclamation marks are rare and playful
-("See them all!") - default to none.
+Short declarative statements, often two stacked sentences in heroes.
+Practical, anti-hype tone aimed at designers. Sentence case everywhere, no
+Title Case, no emoji; exclamation marks are rare and playful - default to
+none. Subtext under a heading is two lines at most.
 
 ## Do / Don't
 
 Do:
 
 - Copy an existing section's structure before inventing a new layout.
-- Put every image on a `p-8 bg-base-50 rounded-lg` mat with `rounded shadow`
-  on the image itself.
+- Put every image on a `bg-card rounded-2xl` mat with `rounded shadow` on
+  the image itself.
 - Use `text-balance` on headings and `max-w-3xl mx-auto text-center` for
   centered heroes.
-- Pair every serif display heading with `font-thin` or `font-light`.
+- Reach for the semantic tokens (`text-secondary-foreground`,
+  `ring-border-default`, `bg-component`) in new code.
 
 Don't:
 
-- Don't use `font-display` on card titles, buttons, or body text - serif is
-  for display headings only.
-- Don't put accent color on headings, backgrounds, or body copy; it is for
+- Don't use `font-display` on buttons, labels, captions or body text; the
+  serif is for headings (the `Text` heading variants add it), the wordmark
+  and the dashboard's display role.
+- Don't put accent colour on headings, backgrounds, or body copy; it is for
   hovers, focus, links, and the accent Button.
-- Don't introduce new fonts, colors outside `@theme`, gradients, or `dark:`
-  classes for colour (the tokens flip; see Color system).
-- Don't use default Tailwind `slate`/`gray`/`zinc`/`orange` classes - the
-  scales here are `base-*` and `accent-*`.
-- Don't shadow cards or buttons, and don't exceed `rounded-lg` outside the
-  established input/prose cases.
+- Don't introduce new fonts, colours outside `@theme`, gradients, or `dark:`
+  classes for colour or shadow (the tokens flip).
+- Don't use default Tailwind `slate`/`gray`/`zinc`/`orange` classes.
+- Don't put a border on a button, and don't exceed `rounded-2xl` on a card.
 - Don't inline a heading with raw classes when `Text` has a variant for it.
 
 ## Quality check before finishing
 
-1. Fonts, colors, and spacing all come from existing tokens and match a
+1. Fonts, colours, radii and shadows all come from the tokens and match a
    sibling section.
-2. New section reads correctly at `sm`, `md`, and `lg` breakpoints.
-3. Headings use `Text` variants with `font-display font-thin/light`;
+2. New section reads correctly at `sm`, `md`, and `lg` breakpoints, in both
+   themes.
+3. Headings use `Text` heading variants (the serif on Interfere's scale);
    buttons use `Button` variants with an explicit width decision.
 4. No new dependencies, no unused imports, minimal diff.

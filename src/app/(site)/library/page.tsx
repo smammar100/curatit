@@ -18,7 +18,7 @@ export default function LibraryPage() {
     <section>
       <Wrapper variant="standard" className="page-start">
         <div className="text-balance max-w-3xl mx-auto text-center">
-          <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
+          <Text tag="h1" variant="displayLG" className="text-base-900">
             The library
           </Text>
           <Text tag="p" variant="textBase" className="text-base-600 mt-4 max-w-xl mx-auto">

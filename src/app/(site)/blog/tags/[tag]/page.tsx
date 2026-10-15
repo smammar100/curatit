@@ -19,7 +19,7 @@ export default async function BlogTagPage({ params }: { params: Promise<{ tag: s
   return (
     <section className="relative overflow-hidden">
       <Wrapper variant="standard" className="page-start">
-        <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
+        <Text tag="h1" variant="displayLG" className="text-base-900">
           All blog posts about {tag}
         </Text>
         <div className="grid grid-cols-1 gap-px gap-y-12 md:grid-cols-2 lg:grid-cols-3 group mt-8">

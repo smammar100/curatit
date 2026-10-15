@@ -105,7 +105,7 @@ export default async function Footer() {
 
   return (
     <footer className="mt-12 bg-white px-4 lg:mt-16 pb-[max(1rem,env(safe-area-inset-bottom))]">
-      <div className="footer-panel relative isolate overflow-clip rounded-[1.5rem] sm:rounded-[2rem]">
+      <div className="footer-panel relative isolate overflow-clip rounded-4xl sm:rounded-5xl">
         <div className="grid grid-cols-2 lg:grid-cols-12">
           {/* The logo and the statement */}
           <div
@@ -122,7 +122,7 @@ export default async function Footer() {
               />
               <Logo className="h-4 w-auto" aria-hidden="true" />
             </Link>
-            <p className="mt-10 max-w-sm font-display text-3xl font-light leading-tight text-balance lg:mt-16 lg:text-4xl">
+            <p className="mt-10 max-w-sm font-display text-h4 text-balance lg:mt-16 lg:text-h3">
               <span className="text-[color:var(--f-quiet)]">
                 Real brand posts.{" "}
               </span>

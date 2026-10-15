@@ -49,7 +49,7 @@ export default async function VisionPage() {
         <div className="vision-night overflow-clip rounded-[1.5rem] sm:rounded-[2rem]">
           <Wrapper variant="standard" className="pt-12 pb-20 lg:pt-20 lg:pb-28">
             <div className="mx-auto max-w-2xl text-center">
-              <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 text-balance">
+              <Text tag="h1" variant="displayLG" className="text-base-900 text-balance">
                 Taste you can learn from.
               </Text>
               {/* A note from the founder, in his own voice, signed below */}
@@ -103,7 +103,7 @@ export default async function VisionPage() {
         <Wrapper variant="standard" className="section-y">
           <div className="mx-auto max-w-2xl text-center">
             {posts.length > 0 && (
-              <Text tag="h2" variant="displaySM" className="font-display font-thin text-balance text-base-900">
+              <Text tag="h2" variant="displaySM" className="text-balance text-base-900">
                 {posts.length} posts from {brands} brands so far, and more every week.
               </Text>
             )}
