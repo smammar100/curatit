@@ -8,6 +8,7 @@ import type { z } from "zod";
 import { SERVER_INFO } from "./config";
 import { TOOLS, type ToolName } from "./contracts";
 import { principalOf } from "./auth/principal";
+import { SEARCH_WIDGET_URI, SEARCH_WIDGET_HTML } from "./search-widget";
 import { executeTool, toCallToolResult, TOOL_META, toolOutputSchema, type Runtime } from "./tools";
 
 export const SERVER_INSTRUCTIONS =
@@ -15,6 +16,13 @@ export const SERVER_INSTRUCTIONS =
 
 export function createCuratitServer(rt: Runtime): McpServer {
   const server = new McpServer(SERVER_INFO, { capabilities: { tools: {} }, instructions: SERVER_INSTRUCTIONS });
+  // A standards-based MCP Apps HTML resource, shared by ChatGPT and compatible hosts.
+  server.registerResource(
+    "Curatit visual search",
+    SEARCH_WIDGET_URI,
+    { mimeType: "text/html;profile=mcp-app", description: "Visual gallery of Curatit search results" },
+    async () => ({ contents: [{ uri: SEARCH_WIDGET_URI, mimeType: "text/html;profile=mcp-app", text: SEARCH_WIDGET_HTML, _meta: { ui: { csp: { resourceDomains: ["https://ytxtwowgxmztaboxgdmq.supabase.co"], connectDomains: [] }, prefersBorder: true } } }] }),
+  );
   for (const name of Object.keys(TOOLS) as ToolName[]) {
     const meta = TOOL_META[name];
     // Typed as plain zod schemas: the registry's indexed types are unions the SDK's overloads
@@ -28,6 +36,7 @@ export function createCuratitServer(rt: Runtime): McpServer {
         description: meta.description,
         inputSchema,
         outputSchema,
+        ...(name === "curatit_search_posts" ? { _meta: { ui: { resourceUri: SEARCH_WIDGET_URI }, "openai/outputTemplate": SEARCH_WIDGET_URI } } : {}),
         annotations: { title: meta.title, readOnlyHint: meta.readOnly, destructiveHint: false, idempotentHint: meta.idempotent, openWorldHint: false },
       },
       async (args: unknown, ctx: ServerContext) => {
