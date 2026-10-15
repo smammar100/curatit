@@ -76,9 +76,8 @@ export default function PricingPage() {
               variant="textBase"
               className="text-base-600 mt-4 max-w-xl mx-auto"
             >
-              One plan for now: the whole post library, breakdowns, boards and
-              sharing, for designers, strategists and social media teams. Team
-              plans come later.
+              The whole library, breakdowns, boards and sharing. Team plans come
+              later.
             </Text>
           </div>
           <div className="mx-auto mt-12 max-w-xl">

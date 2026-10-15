@@ -28,9 +28,8 @@ export default function McpSection() {
               Find references in your AI assistant.
             </Text>
             <Text tag="p" variant="textBase" className="text-base-600 mt-4">
-              Search Curatit and use post breakdowns while you work in Claude,
-              Cursor, VS Code or ChatGPT. The integration is in beta and open to
-              every account.
+              Search Curatit and read post breakdowns from Claude, Cursor, VS
+              Code or ChatGPT.
             </Text>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Button isLink size="base" variant="default" href="/agents">

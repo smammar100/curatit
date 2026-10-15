@@ -66,8 +66,17 @@ export default function Categories({
       observer.disconnect();
     };
   }, [categories]);
-  const FADE = "5rem";
-  const mask = `linear-gradient(to right, ${more.left ? "transparent" : "black"}, black ${FADE}, black calc(100% - ${FADE}), ${more.right ? "transparent" : "black"})`;
+  // An edge with more beyond it is fully clear under its caret (which ends 4.75rem in from
+  // the edge), then fades in, so no tab text shows through the caret
+  const edge = (side: "left" | "right") =>
+    side === "left"
+      ? more.left
+        ? "transparent 0, transparent 4.75rem, black 8rem"
+        : "black 0"
+      : more.right
+        ? "black calc(100% - 8rem), transparent calc(100% - 4.75rem), transparent 100%"
+        : "black 100%";
+  const mask = `linear-gradient(to right, ${edge("left")}, ${edge("right")})`;
   const nudge = (dir: 1 | -1) =>
     row.current?.scrollBy({
       left: dir * row.current.clientWidth * 0.6,
@@ -88,8 +97,7 @@ export default function Categories({
             Explore posts by industry.
           </Text>
           <Text tag="p" variant="textBase" className="text-base-600 mt-4">
-            Browse examples from finance, food, travel and more. Choose an
-            industry to see what brands are posting.
+            Browse examples from finance, food, travel and more.
           </Text>
         </div>
         {/* One scrolling row, bleeding to the page gutter.

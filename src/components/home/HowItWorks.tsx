@@ -15,23 +15,21 @@ const steps: {
   {
     title: "Find posts for your project.",
     muted:
-      "Describe what you need, such as a carousel that introduces a new feature, to find relevant examples.",
+      "Describe the post you need, like a carousel that launches a feature.",
     demoLabel:
       "Interactive example: searching the library by describing the post you need",
     demo: <SearchDemo />,
   },
   {
     title: "Understand the copy and design.",
-    muted:
-      "Explore the post's message, structure and visual choices to find ideas you can adapt.",
+    muted: "See the message, structure and visual choices behind each post.",
     demoLabel:
       "Interactive example: a carousel's slides, each labelled with its role",
     demo: <DetailDemo />,
   },
   {
     title: "Save and share your references.",
-    muted:
-      "Group useful posts into a private board, then share a view-only link with your team or client.",
+    muted: "Save posts to a private board and share a view-only link.",
     demoLabel: "Interactive example: a shared board as the client sees it",
     demo: <BoardDemo />,
   },
@@ -50,9 +48,8 @@ export default function HowItWorks() {
             How it works
           </Text>
           <Text tag="p" variant="textBase" className="text-base-600 mt-4">
-            Find an example, explore its breakdown, and save it for your next
-            project. The three cards below are interactive examples, so try
-            them.
+            Find an example, see how it's built, save it for later. Try the
+            cards below.
           </Text>
         </div>
         <ul className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

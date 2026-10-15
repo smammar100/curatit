@@ -64,10 +64,8 @@ export default function ProblemSolution() {
             variant="textBase"
             className="text-base-600 mt-4 max-w-xl mx-auto"
           >
-            Finding the right reference can mean digging through saved posts,
-            screenshots and old links. Search for the kind of post you need,
-            explore the breakdown, and save useful examples for your project.
-            Drag the line to compare.
+            No more digging through saved posts and screenshots. Search for the
+            post you need and save what's useful.
           </Text>
         </div>
         {/* The two sides named above the stage, so nothing sits on the scene itself */}

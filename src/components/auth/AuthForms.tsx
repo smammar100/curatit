@@ -258,9 +258,8 @@ export function SignUpForm() {
   return (
     <>
       <Heading title="Create your account">
-        Find social media references and save them for your next project. Free
-        while Curatit is in beta: the whole library, breakdowns, boards and
-        sharing.
+        Find references and save them for your next project. Free during the
+        beta.
       </Heading>
       <form action={action} {...check.form} className="mt-6 space-y-4">
         <Next />
