@@ -198,7 +198,10 @@ live("live catalog", () => {
     expect(analysis.decisions[0].slides_label ?? "Caption").toMatch(/^(Slides? \d|Cover|Caption)/);
     expect(analysis.application.when_to_use.length).toBeGreaterThan(0);
     expect(analysis.visual?.length).toBeGreaterThan(0);
-    expect(analysis.brief_markdown).toMatch(/^# Creative brief: /);
+    // The post page's 1:1 replica brief, every stored slide linked from Storage
+    expect(analysis.brief_markdown).toMatch(/^# Instagram post — 1:1 replica brief/);
     expect(analysis.brief_markdown).not.toMatch(/cover sample/i);
+    const slideLinks = analysis.brief_markdown!.match(/^Source image: <https:\/\/[^>]+\/storage\/v1\/object\/public\/library\/[^>]+>$/gm) ?? [];
+    expect(slideLinks).toHaveLength(data.post.media.length);
   }, 40_000);
 });
