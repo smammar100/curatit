@@ -75,16 +75,24 @@ export default function PostWall({ covers }: { covers: string[] }) {
                 className="relative aspect-4/5 overflow-hidden rounded bg-base-100"
               >
                 {eager ? (
-                  <img
-                    src={src}
-                    srcSet={srcSet}
-                    sizes="(max-width: 1024px) 33vw, 16vw"
-                    alt=""
-                    fetchPriority="high"
-                    decoding="async"
-                    draggable={false}
-                    className="absolute inset-0 size-full object-cover"
-                  />
+                  // Inside a <picture>, which React leaves alone: an eager <img> anywhere else in
+                  // a server component becomes a preload hint in the page's data, and a page
+                  // prefetching /signin or /signup (every "Create account" link does) acted on
+                  // those hints at once, downloading these nine covers at high priority while its
+                  // own first paint was still on its way (2026-10-16). The <img> is still in this
+                  // page's HTML, where the browser finds it as early.
+                  <picture className="contents">
+                    <img
+                      src={src}
+                      srcSet={srcSet}
+                      sizes="(max-width: 1024px) 33vw, 16vw"
+                      alt=""
+                      fetchPriority="high"
+                      decoding="async"
+                      draggable={false}
+                      className="absolute inset-0 size-full object-cover"
+                    />
+                  </picture>
                 ) : (
                   <img
                     data-src={src}

@@ -1,18 +1,22 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
-import type { LibraryPost } from "@/lib/posts";
+import type { LibraryPost, PostCard } from "@/lib/posts";
+
+// A post as the demos draw it: the card, plus its proportions (the library window's masonry)
+// and its first line (the MCP demo's results)
+export type HomePost = PostCard & Pick<LibraryPost, "width" | "height" | "hook">;
 
 // The library posts the homepage demos show, keyed by short code. The page
 // loads them from Supabase on the server and hands them down here, so the
 // client demos can look them up without fetching.
-const HomePostsContext = createContext<Record<string, LibraryPost>>({});
+const HomePostsContext = createContext<Record<string, HomePost>>({});
 
 export function HomePostsProvider({
   posts,
   children,
 }: {
-  posts: LibraryPost[];
+  posts: HomePost[];
   children: ReactNode;
 }) {
   const byShortCode = Object.fromEntries(
@@ -31,6 +35,6 @@ export function usePosts(shortCodes: string[]) {
   return shortCodes.flatMap((shortCode) => posts[shortCode] ?? []);
 }
 
-export function usePost(shortCode: string): LibraryPost | undefined {
+export function usePost(shortCode: string): HomePost | undefined {
   return useContext(HomePostsContext)[shortCode];
 }

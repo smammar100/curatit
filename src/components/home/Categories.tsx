@@ -10,7 +10,7 @@ import { CATEGORY_ICONS } from "@/components/dashboard/categoryIcons";
 import CaretLeft from "@/components/fundations/icons/CaretLeft";
 import CaretRight from "@/components/fundations/icons/CaretRight";
 import type { CategoryDef } from "@/lib/categories";
-import { categoryPosts, type LibraryPost } from "@/lib/posts";
+import type { PostCard } from "@/lib/posts";
 import { cx } from "@/lib/cx";
 import BrandName from "./BrandName";
 import PostCover from "./PostCover";
@@ -29,20 +29,20 @@ function tabTone(hue: number) {
 }
 
 // One gallery, filtered by a row of category tabs. `categories` are the brands' main categories
-// with enough posts to fill the gallery and `posts` just what the tabs can show (both picked on
-// the server, see page.tsx); a tab's gallery takes its extra tags too. The ten slots stay put;
+// with enough posts to fill the gallery and `galleries` each tab's ten posts, by slug (both picked
+// on the server, see page.tsx); a tab's gallery takes its extra tags too. The ten slots stay put;
 // each one cross-fades to its new post, slot by slot, so the grid never reflows.
 export default function Categories({
   categories,
-  posts,
+  galleries,
 }: {
   categories: CategoryDef[];
-  posts: LibraryPost[];
+  galleries: Record<string, PostCard[]>;
 }) {
   const [active, setActive] = useState(categories[0]?.slug ?? "");
   const reduceMotion = useReducedMotion();
   const id = useId();
-  const shown = categoryPosts(posts, active, 10);
+  const shown = galleries[active] ?? [];
 
   // The tab row scrolls sideways once it doesn't fit; which edges have more beyond them
   // (2026-10-15, at the person's request, after the dashboard's CategoryBar): that edge fades
