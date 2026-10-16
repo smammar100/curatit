@@ -104,6 +104,7 @@ function formula(roles: (string | null)[]) {
 }
 
 const LEVEL_ORDER = ["none", "low", "medium", "high"];
+const PLACEHOLDER_ROLE = /cover sample \d+; not a brand token/i;
 const ORDER: IntegrityStatus[] = ["concern", "cannot_verify", "observed", "verified"];
 
 function slideDetail(raw: unknown, index: number, count: number, numbering: Numbering): SlideDetail {
@@ -275,10 +276,15 @@ export function toPublicAnalysis(analysis: AnalysisRecord, slideRows: SlideRecor
     return s ? sentences(s, 1) : null;
   };
   // The colours: the roles when the analysis gives them (each hex measured on a slide), else the
-  // slides' measured colours, first seen first
+  // slides' measured colours, first seen first. A role that only says which sample it was ("Cover
+  // sample 1; not a brand token", on every 2026-10-13 analysis) names no job, so the colour stays
+  // and its role is null
   const colourRoles: ColourView[] = list(d.colour_roles)
     .map(record)
-    .flatMap((c) => (typeof c.hex === "string" && /^#[0-9a-f]{6}$/i.test(c.hex) && text(c.role) ? [{ hex: c.hex.toLowerCase(), role: text(c.role) }] : []));
+    .flatMap((c) => {
+      const role = text(c.role);
+      return typeof c.hex === "string" && /^#[0-9a-f]{6}$/i.test(c.hex) && role ? [{ hex: c.hex.toLowerCase(), role: PLACEHOLDER_ROLE.test(role) ? null : role }] : [];
+    });
   const colours: ColourView[] = colourRoles.length ? colourRoles : [...new Set(slides.flatMap((slide) => slide?.colours ?? []).map((hex) => hex.toLowerCase()))].slice(0, 6).map((hex) => ({ hex, role: null }));
   const section = (key: VisualSection["key"], title: string, insight: string | null, tags: { value: string; evidence: EvidenceTarget[] }[], always = false): VisualSection[] => {
     const chips = tags.slice(0, 4);

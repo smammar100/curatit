@@ -195,7 +195,8 @@ export async function createBrief(repo: CatalogRepository, input: BriefInputT): 
   };
   const format = input.output_format ?? "markdown";
   return {
-    data: { brief, text: renderBrief(brief, format), output_format: format, method: "deterministic_template" },
+    // A prompt is rendered as the Markdown brief until the brief has its own prompt renderer
+    data: { brief, text: renderBrief(brief, format === "prompt" ? "markdown" : format), output_format: format, method: "deterministic_template" },
     warnings,
     taxonomyVersion: analysed[0]?.creative?.taxonomy_version ?? null,
   };

@@ -30,6 +30,14 @@ export type RawCompactAnalysis = {
   hook_technique: string | null;
   concept: string | null;
   creative_summary: string | null;
+  // Creative Intelligence 3.0 (…_creative_mcp_analysis_v3): the strategy line and the copy
+  // strategy's labels, with 'unknown', 'none' and 'other' already left out. Absent from a database
+  // without that migration, so read them with a fallback
+  strategy_headline: string | null;
+  strategy_summary: string | null;
+  tones: string[];
+  persuasion: string[];
+  cta: string | null;
   why_it_might_work: { hypothesis: string; evidence: string[] }[];
   takeaways: string[];
   analysis_evidence: RawEvidence[];
@@ -49,6 +57,10 @@ export type RawSlideAnalysis = {
   image: { bucket: string; path: string } | null;
 };
 
+// One row of post_slide_analyses for the analysis's current version: the slide record as the
+// pipeline validated it (src/lib/creative/schema.ts SlideObservation)
+export type RawSlideRecord = { version_id: string; position: number; observation: unknown };
+
 export type RawDetailAnalysis = RawCompactAnalysis & {
   hook: { technique: string | null; observed_text: string | null; location: string | null } | null;
   narrative: { pattern: string | null; arc: string | null; slides: RawSlideAnalysis[] } | null;
@@ -56,6 +68,13 @@ export type RawDetailAnalysis = RawCompactAnalysis & {
   attention_mechanisms: unknown[];
   adaptation_ideas: unknown[];
   constraints_or_uncertainties: unknown[];
+  // What the post page reads (src/lib/creative/display.ts), so services/post.ts can build the same
+  // view with toPublicAnalysis: the Creative DNA whole and the current version's slide records
+  dna: unknown;
+  slide_records: RawSlideRecord[];
+  current_version_id: string | null;
+  expected_slides: number | null;
+  processed_slides: number | null;
 };
 
 export type RawSearchHit = {
@@ -116,8 +135,11 @@ export type RawPost = {
 export type RawTerm = { slug: string; label: string; description: string | null; parent: string | null; synonyms: string[]; posts: number };
 export type RawTerms = { taxonomy_version: string | null; dimensions: Record<string, RawTerm[]> };
 
-export type RawCategoryItem = { name: string; slug: string; description: string | null };
-export type RawBrandItem = { name: string; slug: string; category: string | null; website?: string | null };
+// posts counts a category's published posts by main category or tag, main_posts by main category
+// alone; a brand's categories are main first. Optional: only a curatit_mcp_taxonomy that counts
+// them returns them
+export type RawCategoryItem = { name: string; slug: string; description: string | null; posts?: number | null; main_posts?: number | null };
+export type RawBrandItem = { name: string; slug: string; category: string | null; website?: string | null; posts?: number | null; categories?: RawCategory[] };
 
 // A post's slides from instagram_post_media, with the post's own alt and size for a single image
 export type RawSlide = { position: number; alt: string | null; was_video: boolean; width: number | null; height: number | null };

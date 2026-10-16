@@ -3,9 +3,12 @@
 // caller supplies. The library keeps WebP at most 1080px wide, so the size is read from the
 // file's own header (one small range request) rather than guessed, and inline delivery is
 // capped at 1024px on the longest edge and 1 MiB, using Storage's resizer for anything larger.
+// Both fetches end with the call's deadline. When the size can't be read, a link still goes out,
+// with its size null and a warning: the link doesn't depend on the probe, the bytes do.
 
 import type { MediaInputT, MediaOutputT } from "../contracts";
-import { CuratitError, invalid, notFound } from "../errors";
+import { markStage, withDeadline } from "../deadline";
+import { CuratitError, invalid, notFound, toCuratitError, upstreamFailure } from "../errors";
 import type { CatalogRepository } from "../repo/types";
 import { loadPost, parseMediaId, slideLabel } from "./shared";
 
@@ -13,6 +16,21 @@ export const INLINE_MAX_BYTES = 1024 * 1024;
 export const INLINE_MAX_EDGE = 1024;
 const FETCH_TIMEOUT_MS = 10_000;
 const ALLOWED_TYPES = new Set(["image/webp", "image/jpeg", "image/png"]);
+const TYPE_BY_EXTENSION: Record<string, string> = { webp: "image/webp", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png" };
+
+// A storage fetch, as a stage of the call: a request that never got an answer is tagged with the
+// stage and becomes UPSTREAM_UNAVAILABLE or TIMEOUT
+async function storageFetch(stage: string, fetchImpl: typeof fetch, url: string, init: RequestInit = {}) {
+  markStage(stage);
+  try {
+    return await fetchImpl(url, { ...init, signal: withDeadline(FETCH_TIMEOUT_MS) });
+  } catch (error) {
+    throw toCuratitError(upstreamFailure(stage, error, 0));
+  }
+}
+
+const storageDown = (stage: string, status: number) =>
+  new CuratitError("UPSTREAM_UNAVAILABLE", "Image storage didn't answer. Try again shortly.", { cause: upstreamFailure(stage, { message: `Storage answered HTTP ${status}` }, status) });
 
 export type ImageBytes = { bytes: Uint8Array<ArrayBuffer>; mimeType: string };
 
@@ -41,9 +59,9 @@ type Probe = { width: number | null; height: number | null; bytes: number | null
 
 // The file's size and pixel size from its first 30 bytes
 export async function probeImage(url: string, fetchImpl: typeof fetch = fetch): Promise<Probe> {
-  const res = await fetchImpl(url, { headers: { Range: "bytes=0-29" }, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+  const res = await storageFetch("probe", fetchImpl, url, { headers: { Range: "bytes=0-29" } });
   if (res.status === 404) throw notFound("The image file isn't in storage any more.");
-  if (!res.ok && res.status !== 206) throw new CuratitError("UPSTREAM_UNAVAILABLE", "Image storage didn't answer. Try again shortly.");
+  if (!res.ok && res.status !== 206) throw storageDown("probe", res.status);
   const mimeType = res.headers.get("content-type")?.split(";")[0] ?? "application/octet-stream";
   const head = new Uint8Array(await res.arrayBuffer());
   const range = res.headers.get("content-range");
@@ -72,7 +90,17 @@ export async function getMedia(
   const slide = slides.find((s) => s.position === index);
   const url = repo.publicUrl(image.path);
   const warnings: string[] = [];
-  const probe = await probeImage(url, fetchImpl);
+  const link = (input.delivery ?? "link") === "link";
+  let probe: Probe;
+  try {
+    probe = await probeImage(url, fetchImpl);
+  } catch (error) {
+    const err = toCuratitError(error);
+    // Inline delivery needs the size; a missing file is missing either way
+    if (!link || err.code === "NOT_FOUND") throw err;
+    probe = { width: null, height: null, bytes: null, mimeType: TYPE_BY_EXTENSION[image.path.split(".").pop()?.toLowerCase() ?? ""] ?? "application/octet-stream" };
+    warnings.push("Image storage didn't say how large this image is just now, so width, height and bytes are null. The link itself should work.");
+  }
   if (!ALLOWED_TYPES.has(probe.mimeType)) throw new CuratitError("UPSTREAM_UNAVAILABLE", "The stored file isn't an image type this tool serves.");
 
   const base = {
@@ -85,7 +113,7 @@ export async function getMedia(
     alt_text: slide?.alt ?? (index === 0 ? post.alt : null),
   };
 
-  if ((input.delivery ?? "link") === "link") {
+  if (link) {
     warnings.push("A link is not an image the model has seen. Hosts that can show images may ask for delivery=inline.");
     return { data: { ...base, url, mime_type: probe.mimeType, width: probe.width, height: probe.height, bytes: probe.bytes, delivery: "link", resized: false }, image: null, warnings };
   }
@@ -110,8 +138,8 @@ export async function getMedia(
     fetchUrl = resizedUrl;
     resized = true;
   }
-  const res = await fetchImpl(fetchUrl, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
-  if (!res.ok) throw new CuratitError("UPSTREAM_UNAVAILABLE", "Image storage didn't answer. Try again shortly.");
+  const res = await storageFetch(resized ? "image_resize" : "image_fetch", fetchImpl, fetchUrl);
+  if (!res.ok) throw storageDown(resized ? "image_resize" : "image_fetch", res.status);
   const mimeType = res.headers.get("content-type")?.split(";")[0] ?? probe.mimeType;
   if (!ALLOWED_TYPES.has(mimeType)) throw new CuratitError("UPSTREAM_UNAVAILABLE", "The image came back in a type this tool doesn't serve.");
   const bytes = new Uint8Array(await res.arrayBuffer());
