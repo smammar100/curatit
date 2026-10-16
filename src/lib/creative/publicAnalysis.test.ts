@@ -245,7 +245,12 @@ describe("briefMarkdown", () => {
     expect(brief.match(/Reference image unavailable/g)).toHaveLength(3);
     expect(brief.match(/No slide analysis recorded/g)).toHaveLength(3);
     expect(brief).not.toContain("javascript:");
-    expect(brief).toContain("ask me to attach that slide and wait");
+    expect(brief).toContain("Do not ask the user to reattach images already linked in this brief");
+    expect(brief).toContain("fetch the object URL directly");
+    expect(brief).toContain("verify that each decodes as an image");
+    expect(brief).toContain("state the specific attempted methods and blocker");
+    expect(brief).not.toContain("ask me to attach that slide and wait");
+    expect(brief).not.toContain("Ask me to attach this slide");
     expect(brief).toContain("Exact asset files, font identities, coordinates and per-slide dimensions are not supplied");
   });
 

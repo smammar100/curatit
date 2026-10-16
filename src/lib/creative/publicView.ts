@@ -192,10 +192,18 @@ export function briefMarkdown(analysis: PublicAnalysis, source: BriefSource, ori
     "",
     '"1:1" means fidelity to the reference, not a square aspect ratio. Keep each source image’s aspect ratio, crop and orientation. Do not redesign, modernise, simplify or embellish. Only change photos and identity-specific copy as required by the public-figure substitution rule below.',
     "",
-    "Open and inspect every reference image before generating. Supply the actual images to the image-generation/editing tool as references; a URL written in a prompt is not an attached image. If you cannot access an image, ask me to attach that slide and wait. If image generation is unavailable, say so and return a production-ready reconstruction specification; do not claim an image was generated.",
+    "Execute this brief now: retrieve the reference images, inspect them, and produce the requested image files. Do not stop after finding links, listing dimensions or describing a plan. The supplied image URLs are retrieval inputs, not a request for the user to upload files. Follow the retrieval workflow below before reporting any access limitation.",
   ]);
   // Always include this conditional rule: older analyses may not identify the person by name.
   // The downstream creator inspects every image; no brittle name list or face identification.
+  section("Retrieve references and generate — no re-upload handoff", [
+    "1. Fetch each Source image URL below as an image using an available image-fetch tool or an HTTP-capable runtime (for example Python requests/urllib or curl). For public Supabase Storage URLs, fetch the object URL directly; do not rely on a search result, HTML preview or metadata record as proof that the image bytes were retrieved. Do not request credentials for public objects.",
+    "2. When a runtime is available, save the returned bytes as local reference files, verify that each decodes as an image, and read its actual dimensions. WebP is a valid source format; decode or losslessly convert it to PNG only if the editing tool requires PNG. Preserve the original source files and slide order.",
+    "3. Open and inspect every downloaded image. Pass actual local files, fetched image attachments or supported image inputs to the image-generation/editing tool. A URL appearing only in prompt text does not attach the image. When image generation is available, use it for reconstruction/editing; original files renamed or converted to PNG are not a newly generated reconstruction.",
+    "4. If the first retrieval method fails, try another available supported method. Distinguish an HTTP failure, an invalid image response, a filesystem limitation and an image-tool attachment limitation. Do not bypass access controls or claim that a metadata lookup was an image download. For a missing image URL, try the source post or Curatit tools if available.",
+    "5. Do not ask the user to reattach images already linked in this brief, or pause for a ‘generate’ confirmation. Continue through generation and return the separate output files whenever the tools permit it. Do not present retrieved originals as completed generated outputs.",
+    "6. If all available retrieval routes fail, or image generation is genuinely unavailable, state the specific attempted methods and blocker, then return the best supported production specification. Mark inaccessible visual details as unknown; do not invent them or claim that a replica was generated. This brief cannot grant unavailable tool capabilities.",
+  ]);
   section("Public-figure photos — treatment only", [
     "If any reference features a public figure (such as an athlete, celebrity, artist, creator or politician), reproduce the image treatment, not the person or the original photograph. Do not recreate their face, generate a lookalike, reuse their photo, or use an Unsplash photo of that same public figure. If the subject’s status is uncertain, use the same placeholder workflow rather than guessing their identity.",
     "- Preserve the photo frame, crop proportions, subject placement and scale, camera angle, lighting direction, colour grade, contrast, grain, blur, cutout or masking, shadows, overlays and relationship to the typography. Choose a different subject with a compatible broad pose; do not replicate distinctive personal features.",
@@ -234,7 +242,7 @@ export function briefMarkdown(analysis: PublicAnalysis, source: BriefSource, ori
     const slide = analysis.slides[i];
     const url = imageLink(source.images[i], origin);
     out.push(`### Slide ${i + 1}${source.videos?.[i] || source.format === "video" ? " — video cover only" : ""}`, "");
-    out.push(url ? `![Slide ${i + 1} reference](<${url}>)\n\nSource image: <${url}>` : "Reference image unavailable. Ask me to attach this slide before reconstructing it.", "");
+    out.push(url ? `![Slide ${i + 1} reference](<${url}>)\n\nSource image: <${url}>` : "Reference image unavailable. Try the source post or available Curatit tools using the retrieval workflow above; do not invent a URL or ask for a re-upload.", "");
     if (!slide) {
       out.push("No slide analysis recorded. Inspect the reference for all copy and visual details; do not infer them from neighbouring slides.", "");
       continue;
