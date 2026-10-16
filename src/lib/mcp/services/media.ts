@@ -8,7 +8,7 @@
 
 import type { MediaInputT, MediaOutputT } from "../contracts";
 import { markStage, withDeadline } from "../deadline";
-import { CuratitError, invalid, notFound, toCuratitError, upstreamFailure } from "../errors";
+import { causeOf, CuratitError, invalid, notFound, toCuratitError, upstreamFailure } from "../errors";
 import type { CatalogRepository } from "../repo/types";
 import { loadPost, parseMediaId, slideLabel } from "./shared";
 
@@ -57,10 +57,24 @@ export function webpDimensions(head: Uint8Array): { width: number; height: numbe
 
 type Probe = { width: number | null; height: number | null; bytes: number | null; mimeType: string };
 
+// Supabase Storage answers a missing public object with 400 and a JSON body naming 404
+// ("statusCode": "404", "error": "not_found"), not with a 404 status, so a 400 is read before
+// it's taken for an outage
+async function missingInStorage(res: Response) {
+  if (res.status === 404) return true;
+  if (res.status !== 400) return false;
+  try {
+    const body = (await res.clone().json()) as { statusCode?: unknown; error?: unknown; message?: unknown };
+    return String(body.statusCode) === "404" || /not[_ ]?found/i.test(String(body.error ?? body.message ?? ""));
+  } catch {
+    return false;
+  }
+}
+
 // The file's size and pixel size from its first 30 bytes
 export async function probeImage(url: string, fetchImpl: typeof fetch = fetch): Promise<Probe> {
   const res = await storageFetch("probe", fetchImpl, url, { headers: { Range: "bytes=0-29" } });
-  if (res.status === 404) throw notFound("The image file isn't in storage any more.");
+  if (await missingInStorage(res)) throw notFound("The image file isn't in storage any more.");
   if (!res.ok && res.status !== 206) throw storageDown("probe", res.status);
   const mimeType = res.headers.get("content-type")?.split(";")[0] ?? "application/octet-stream";
   const head = new Uint8Array(await res.arrayBuffer());
@@ -96,8 +110,11 @@ export async function getMedia(
     probe = await probeImage(url, fetchImpl);
   } catch (error) {
     const err = toCuratitError(error);
-    // Inline delivery needs the size; a missing file is missing either way
-    if (!link || err.code === "NOT_FOUND") throw err;
+    // Inline delivery needs the size; a missing file is missing either way; and a link only
+    // goes out blind when Storage failed to answer (a 5xx, a timeout, a network error), never
+    // when it answered that the request was wrong (a 4xx), because that link wouldn't work
+    const status = causeOf(err)?.http_status;
+    if (!link || err.code === "NOT_FOUND" || (status !== null && status !== undefined && status < 500 && status !== 0)) throw err;
     probe = { width: null, height: null, bytes: null, mimeType: TYPE_BY_EXTENSION[image.path.split(".").pop()?.toLowerCase() ?? ""] ?? "application/octet-stream" };
     warnings.push("Image storage didn't say how large this image is just now, so width, height and bytes are null. The link itself should work.");
   }
@@ -127,7 +144,10 @@ export async function getMedia(
   let resized = false;
   if (longest > maxEdge || (probe.bytes ?? 0) > INLINE_MAX_BYTES) {
     if (probe.width && probe.height) {
-      const scale = maxEdge / longest;
+      // Never ask the resizer for more pixels than the file has. When only the byte cap
+      // trips, shrink by area (bytes scale roughly with it) with a little room to spare
+      let scale = Math.min(1, maxEdge / longest);
+      if ((probe.bytes ?? 0) > INLINE_MAX_BYTES) scale = Math.min(scale, 0.9 * Math.sqrt(INLINE_MAX_BYTES / (probe.bytes as number)));
       width = Math.max(1, Math.round(probe.width * scale));
       height = Math.max(1, Math.round(probe.height * scale));
     }

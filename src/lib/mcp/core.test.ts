@@ -1,14 +1,37 @@
 import { describe, expect, it } from "vitest";
 import { hashToken, mintToken, parseScopes, PAT_PREFIX } from "./auth/pat";
-import { looksLikeJwt } from "./auth/oauth";
+import { isTokenProblem, looksLikeJwt } from "./auth/oauth";
 import { loadConfig, resetConfigCache } from "./config";
 import { TOOLS } from "./contracts";
 import { decodeCursor, encodeCursor } from "./cursor";
+import { runWithDeadline } from "./deadline";
 import { CuratitError, toCuratitError } from "./errors";
 import { createLogger, redact } from "./log";
 import { buildOpenApi, REST_ROUTES } from "./openapi";
 import { createMemoryLimiter, Throttle } from "./ratelimit";
-import { queryToInput } from "./rest";
+import { mediaHeader, queryToInput } from "./rest";
+
+describe("deadline", () => {
+  it("stops a call that outlives its budget, or whose caller hung up, with TIMEOUT", async () => {
+    const never = () => new Promise<never>(() => {});
+    await expect(runWithDeadline(20, null, never)).rejects.toMatchObject({ code: "TIMEOUT", status: 504, message: expect.stringMatching(/longer than/) });
+    const gone = AbortSignal.abort();
+    await expect(runWithDeadline(10_000, gone, never)).rejects.toMatchObject({ code: "TIMEOUT", message: expect.stringMatching(/cancelled/) });
+    await expect(runWithDeadline(10_000, null, async () => 7)).resolves.toBe(7);
+  });
+});
+
+describe("OAuth outages", () => {
+  it("tells a bad token from a sign-in service that didn't answer", () => {
+    const named = (name: string, message = "") => Object.assign(new Error(message), { name });
+    expect(isTokenProblem(named("JWTExpired"))).toBe(true);
+    expect(isTokenProblem(named("JWSSignatureVerificationFailed"))).toBe(true);
+    expect(isTokenProblem(named("JWKSNoMatchingKey", "no applicable key found in the JSON Web Key Set"))).toBe(true);
+    expect(isTokenProblem(named("JWKSTimeout"))).toBe(false);
+    expect(isTokenProblem(named("JWKSInvalid"))).toBe(false);
+    expect(isTokenProblem(new TypeError("fetch failed"))).toBe(false);
+  });
+});
 
 const base = { NODE_ENV: "test", NEXT_PUBLIC_SUPABASE_URL: "https://x.supabase.co", NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "pk", SUPABASE_SECRET_KEY: "sk" } as NodeJS.ProcessEnv;
 
@@ -41,7 +64,10 @@ describe("cursor", () => {
   const secret = new Uint8Array(32).fill(1);
   it("round-trips and refuses tampering, other searches and other principals", async () => {
     const cursor = await encodeCursor(secret, { offset: 8, search: "s1", principal: "p1" });
-    expect(await decodeCursor(secret, cursor, { search: "s1", principal: "p1" })).toBe(8);
+    expect(await decodeCursor(secret, cursor, { search: "s1", principal: "p1" })).toEqual({ offset: 8, marker: null });
+    // The catalog marker rides along when the first page had one
+    const marked = await encodeCursor(secret, { offset: 8, search: "s1", principal: "p1", marker: "abc123" });
+    expect(await decodeCursor(secret, marked, { search: "s1", principal: "p1" })).toEqual({ offset: 8, marker: "abc123" });
     await expect(decodeCursor(secret, cursor, { search: "s2", principal: "p1" })).rejects.toMatchObject({ code: "INVALID_ARGUMENT" });
     await expect(decodeCursor(secret, cursor, { search: "s1", principal: "p2" })).rejects.toMatchObject({ code: "INVALID_ARGUMENT" });
     await expect(decodeCursor(new Uint8Array(32).fill(2), cursor, { search: "s1", principal: "p1" })).rejects.toMatchObject({ code: "INVALID_ARGUMENT" });
@@ -124,6 +150,13 @@ describe("rate limiter", () => {
 });
 
 describe("REST adapter", () => {
+  it("carries inline media metadata in a header that survives any alt text", () => {
+    const header = mediaHeader({ alt_text: "Café ☕ “quotes” — dash", width: 3 });
+    // Headers are byte strings: nothing above U+00FF may remain
+    expect(() => new Response("x", { headers: { "X-Curatit-Media": header } })).not.toThrow();
+    expect(JSON.parse(decodeURIComponent(header))).toEqual({ alt_text: "Café ☕ “quotes” — dash", width: 3 });
+  });
+
   it("turns query strings into typed inputs", () => {
     const input = queryToInput(new URL("https://x/api/v1/posts/search?query=cash&limit=3&filters.layouts=framed-card,list-stack&filters.analysed_only=true&filters.goals=education&filters.goals=awareness"));
     expect(input).toEqual({ query: "cash", limit: 3, filters: { layouts: ["framed-card", "list-stack"], analysed_only: true, goals: ["education", "awareness"] } });
@@ -132,7 +165,12 @@ describe("REST adapter", () => {
   it("generates an OpenAPI document for every tool from the shared contracts", () => {
     resetConfigCache();
     const doc = buildOpenApi(loadConfig(base));
-    expect(doc.openapi).toBe("3.1.0");
+    // 3.0.3, because the schemas are emitted with `nullable: true`, which 3.1 doesn't have
+    expect(doc.openapi).toBe("3.0.3");
+    const media = doc.paths["/api/v1/media/{media_id}"] as { get: { responses: Record<string, { content?: Record<string, unknown>; headers?: Record<string, unknown> }> } };
+    expect(Object.keys(media.get.responses["200"].content ?? {})).toEqual(expect.arrayContaining(["application/json", "image/webp"]));
+    expect(media.get.responses["200"].headers).toHaveProperty("X-Curatit-Media");
+    expect(Object.keys(media.get.responses)).toEqual(expect.arrayContaining(["500", "504"]));
     for (const name of Object.keys(TOOLS) as (keyof typeof TOOLS)[]) {
       const route = REST_ROUTES[name];
       const op = (doc.paths[route.path] as Record<string, { "x-mcp-tool": string; security: unknown }>)[route.method.toLowerCase()];

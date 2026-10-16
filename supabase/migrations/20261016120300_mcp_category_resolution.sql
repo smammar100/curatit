@@ -23,7 +23,7 @@ set lock_timeout = '5s';
 -- A name compared loosely: lower case, "&" and the word "and" left out, then everything but letters
 -- and digits, so "Food & Drink", "food_drink" and "Food and drink" are one name, and so are
 -- "Coca Cola" and "coca-cola", "ubereats" and "Uber Eats". The same rule as nameKey() in
--- src/lib/mcp/services/terms.ts; change the two together
+-- src/lib/mcp/services/shared.ts; change the two together
 create function private.curatit_mcp_name_key(p_value text)
 returns text
 language sql

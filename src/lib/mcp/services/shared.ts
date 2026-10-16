@@ -11,6 +11,16 @@ export const slideLabel = (index: number, total: number) => (total <= 1 ? "Cover
 
 export const mediaId = (postId: string, position: number) => `${postId}.${position}`;
 
+// A name compared loosely: lower case, "&" and the word "and" left out, then everything but
+// letters and digits, so "Food & Drink", "food_drink" and "Food and drink" are one name, and so
+// are "Coca Cola" and "coca-cola". The same rule as private.curatit_mcp_name_key in
+// …_mcp_category_resolution.sql; change the two together
+export const nameKey = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/&|\band\b/g, " ")
+    .replace(/[^a-z0-9]+/g, "");
+
 export function parseMediaId(id: string) {
   const dot = id.lastIndexOf(".");
   const post = id.slice(0, dot);

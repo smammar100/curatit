@@ -8,6 +8,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { TOOLS, type ToolName } from "@/lib/mcp/contracts";
 import { success } from "@/lib/mcp/envelope";
+import { causeOf, toCuratitError } from "@/lib/mcp/errors";
 import { createSupabaseCatalog } from "@/lib/mcp/repo/supabase";
 import type { CatalogRepository } from "@/lib/mcp/repo/types";
 import { createBrief } from "@/lib/mcp/services/brief";
@@ -119,7 +120,11 @@ async function sweep(): Promise<Sweep> {
         start = page.data.next_start;
       }
     } catch (error) {
-      out.failures.push(`${id}: ${error instanceof Error ? error.message : String(error)}`);
+      // The code and the cause (stage, Postgres code, HTTP status), so a failing sweep says what
+      // failed rather than only how it read
+      const err = toCuratitError(error);
+      const cause = causeOf(err);
+      out.failures.push(`${id}: ${err.code} ${err.message}${cause ? ` [${[cause.stage, cause.pg_code, cause.http_status].filter(Boolean).join(" ")}]` : ""}`);
     }
   });
   return out;

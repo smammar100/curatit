@@ -114,5 +114,5 @@ export function resetConfigCache() {
   cached = null;
 }
 
-// The site a visitor reads about tokens on; SITE_URL is still a placeholder, so prefer the base URL
+// The site a visitor reads about tokens on: the base URL, or the production site for a local run
 export const docsUrl = (config: McpConfig) => new URL("/docs/mcp", config.publicBaseUrl.href === "http://localhost:3000/" ? SITE_URL : config.publicBaseUrl);

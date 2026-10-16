@@ -291,6 +291,21 @@ describe("media", () => {
     await expectError(getMedia(repo, { media_id: `${FIXTURE_IDS.carousel}.9` }, { fetch: fakeFetch(1) }), "NOT_FOUND", /no slide 9/);
   });
 
+  it("reads Storage's 400-for-missing as not found, and only links blind when Storage failed", async () => {
+    const repo = createFixtureCatalog();
+    // Supabase Storage answers a missing public object with 400 and a JSON body naming 404
+    const missing: typeof fetch = async () => new Response(JSON.stringify({ statusCode: "404", error: "not_found", message: "Object not found" }), { status: 400, headers: { "content-type": "application/json" } });
+    await expectError(getMedia(repo, { media_id: `${FIXTURE_IDS.carousel}.1` }, { fetch: missing }), "NOT_FOUND", /isn't in storage/);
+    // Storage answering that the request was wrong is not an outage to link through
+    const refused: typeof fetch = async () => new Response("forbidden", { status: 403 });
+    await expectError(getMedia(repo, { media_id: `${FIXTURE_IDS.carousel}.1` }, { fetch: refused }), "UPSTREAM_UNAVAILABLE");
+    // Storage down: the link still goes out, with its size unknown and a warning
+    const down: typeof fetch = async () => new Response("bad gateway", { status: 502 });
+    const { data, warnings } = await getMedia(repo, { media_id: `${FIXTURE_IDS.carousel}.1` }, { fetch: down });
+    expect(data).toMatchObject({ delivery: "link", width: null, bytes: null });
+    expect(warnings.join(" ")).toMatch(/didn't say how large/);
+  });
+
   it("delivers inline within the caps and resizes past them", async () => {
     const repo = createFixtureCatalog();
     const small = await getMedia(repo, { media_id: `${FIXTURE_IDS.single}.0`, delivery: "inline" }, { fetch: fakeFetch(900, new Uint8Array(900)) });
@@ -310,6 +325,16 @@ describe("media", () => {
     );
     expect(big.data.resized).toBe(true);
     expect(calls.at(-1)).toMatch(/render.*w=1&h=1/);
+    // Only the byte cap tripped (the 2×3 file is tiny on its edges): the resizer is asked for
+    // fewer pixels, never more than the file has
+    const asked: string[] = [];
+    const heavy = await getMedia(
+      repo,
+      { media_id: `${FIXTURE_IDS.single}.0`, delivery: "inline" },
+      { fetch: async (input, init) => (asked.push(String(input)), fakeFetch(2 * 1024 * 1024)(input, init)), resizedUrl: (path, w, h) => `https://storage.example/render/${path}?w=${w}&h=${h}` },
+    );
+    expect(heavy.data.resized).toBe(true);
+    expect(asked.at(-1)).toMatch(/w=1&h=[12]\b/);
     await expectError(getMedia(repo, { media_id: `${FIXTURE_IDS.single}.0`, delivery: "inline", max_edge: 1 }, { fetch: fakeFetch(5000) }), "INVALID_ARGUMENT", /no resizer/);
   });
 });

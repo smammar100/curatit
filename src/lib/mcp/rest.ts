@@ -9,9 +9,17 @@ import { principalOf } from "./auth/principal";
 import type { Verifier } from "./auth/verifier";
 import { failure, newRequestId } from "./envelope";
 import { CuratitError } from "./errors";
+import { advertisedScopes, withChallengeScope } from "./http";
 import { executeTool, type Runtime } from "./tools";
 
 const MAX_BODY_BYTES = 64 * 1024;
+
+// The inline image's metadata (the envelope's data) travels in a response header. Headers are
+// byte strings, and alt text is scraped Instagram text with emoji and curly quotes in it, so
+// the JSON is percent-encoded: decodeURIComponent(header) gives it back
+export function mediaHeader(data: unknown) {
+  return encodeURIComponent(JSON.stringify(data));
+}
 
 export type RestDeps = { runtime: Runtime; verifier: Verifier };
 
@@ -48,7 +56,7 @@ export function createRestHandler(deps: RestDeps, tool: ToolName, options: { pat
     } catch (error) {
       const challenge = bearerAuthChallengeResponse(error instanceof OAuthError ? error : new OAuthError(OAuthErrorCode.InvalidToken, "A bearer token is required."), { resourceMetadataUrl });
       const body = failure(newRequestId(), new CuratitError(challenge.status === 403 ? "FORBIDDEN" : challenge.status === 401 ? "UNAUTHENTICATED" : "UPSTREAM_UNAVAILABLE", challenge.status === 401 ? "A valid bearer token is required. See the WWW-Authenticate header." : "The token can't be checked right now."));
-      return Response.json(body, { status: challenge.status, headers: challenge.headers });
+      return withChallengeScope(Response.json(body, { status: challenge.status, headers: challenge.headers }), resourceMetadataUrl, advertisedScopes(runtime.config));
     }
 
     let input: Record<string, unknown>;
@@ -63,11 +71,11 @@ export function createRestHandler(deps: RestDeps, tool: ToolName, options: { pat
       input[options.pathParam] = decodeURIComponent(params[options.pathParam] ?? "");
     }
 
-    const outcome = await executeTool(runtime, tool, input, principal);
+    const outcome = await executeTool(runtime, tool, input, principal, request.signal);
     const headers: Record<string, string> = { "Cache-Control": "no-store", "X-Request-Id": outcome.envelope.request_id };
     if (outcome.envelope.error?.retry_after_seconds) headers["Retry-After"] = String(outcome.envelope.error.retry_after_seconds);
     if (outcome.image) {
-      return new Response(outcome.image.bytes, { status: 200, headers: { ...headers, "Content-Type": outcome.image.mimeType, "X-Curatit-Media": JSON.stringify(outcome.envelope.data) } });
+      return new Response(outcome.image.bytes, { status: 200, headers: { ...headers, "Content-Type": outcome.image.mimeType, "X-Curatit-Media": mediaHeader(outcome.envelope.data) } });
     }
     return Response.json(outcome.envelope, { status: outcome.status, headers });
   };

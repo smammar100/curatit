@@ -497,10 +497,10 @@ export const BriefInput = z
     brand_context: text(z.string().trim().max(4000)).optional().describe("Your brand, product, voice and constraints on identity."),
     constraints: text(z.string().trim().max(4000)).optional().describe("Format, aspect ratio, safe margins, legal or data constraints, deadlines."),
     output_format: z
-      .enum(["markdown", "json", "text", "prompt"])
+      .enum(["markdown", "json", "text"])
       .optional()
       .meta({ default: "markdown" })
-      .describe("How the brief text is rendered (default markdown); prompt is a Markdown prompt to paste into any LLM. The structured brief is always returned."),
+      .describe("How the brief text is rendered (default markdown). The structured brief is always returned, with a portable generation_prompt."),
   })
   .strict();
 
@@ -540,7 +540,7 @@ export const BriefSchema = z.object({
 export const BriefOutput = z.object({
   brief: BriefSchema,
   text: z.string().describe("The brief rendered in the requested output_format."),
-  output_format: z.enum(["markdown", "json", "text", "prompt"]),
+  output_format: z.enum(["markdown", "json", "text"]),
   method: z.literal("deterministic_template").describe("Assembled from stored, editor-approved analysis and a template; no model ran. Proposed choices are recommendations."),
 });
 

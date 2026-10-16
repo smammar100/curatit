@@ -213,6 +213,7 @@ describe("tool inputs", () => {
     expect(search.parse({ query: "x" })).toEqual({ query: "x" });
     const carousel = z.toJSONSchema(TOOLS.curatit_get_carousel.input) as { properties: Record<string, { default?: unknown }> };
     expect(carousel.properties.start_slide.default).toBe(0);
-    expect(TOOLS.curatit_create_brief.input.parse({ objective: "x", audience: "y", reference_post_ids: ["ABCDE"], output_format: "prompt" }).output_format).toBe("prompt");
+    // No "prompt" format until the brief has a renderer of its own: refused, not quietly Markdown
+    expect(TOOLS.curatit_create_brief.input.safeParse({ objective: "x", audience: "y", reference_post_ids: ["ABCDE"], output_format: "prompt" }).success).toBe(false);
   });
 });

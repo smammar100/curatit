@@ -28,11 +28,34 @@ export async function getTaxonomy(repo: CatalogRepository, input: TaxonomyInputT
 
   const dimensions: TaxonomyOutputT["dimensions"] = wanted.map(({ dimension, filter }) => {
     const base = { dimension, filter, single_value: FILTERS[filter].single, description: FILTERS[filter].description };
+    // Counts and everyday names come from curatit_mcp_taxonomy where it has them
+    // (…_mcp_category_resolution); null where the database doesn't count yet
     if (dimension === "industry") {
-      return { ...base, values: categories.map((c) => ({ slug: c.slug, label: c.name, description: c.description, parent: null, synonyms: [], posts: null })) };
+      return {
+        ...base,
+        values: categories.map((c) => ({
+          slug: c.slug,
+          label: c.name,
+          description: c.description,
+          parent: null,
+          synonyms: c.synonyms ?? [],
+          posts: typeof c.posts === "number" ? c.posts : null,
+          main_posts: typeof c.main_posts === "number" ? c.main_posts : null,
+        })),
+      };
     }
     if (dimension === "brand") {
-      return { ...base, values: brands.map((b) => ({ slug: b.slug, label: b.name, description: b.category ? `Industry: ${b.category}` : null, parent: b.category, synonyms: [], posts: null })) };
+      return {
+        ...base,
+        values: brands.map((b) => ({
+          slug: b.slug,
+          label: b.name,
+          description: b.category ? `Industry: ${b.category}` : null,
+          parent: b.category,
+          synonyms: [],
+          posts: typeof b.posts === "number" ? b.posts : null,
+        })),
+      };
     }
     if (dimension === "format") {
       return {

@@ -99,6 +99,9 @@ export type RawSearchResult = {
   sort: "newest" | "relevance";
   search_mode: string;
   filters: Record<string, string[]>;
+  // A short mark of the published catalog as it was for this page (…_mcp_search_v2_reasons);
+  // a later page whose mark differs was taken from a changed library. Absent before that migration
+  catalog_marker?: string | null;
 };
 
 // The request curatit_mcp_search_v2 takes
@@ -138,7 +141,7 @@ export type RawTerms = { taxonomy_version: string | null; dimensions: Record<str
 // posts counts a category's published posts by main category or tag, main_posts by main category
 // alone; a brand's categories are main first. Optional: only a curatit_mcp_taxonomy that counts
 // them returns them
-export type RawCategoryItem = { name: string; slug: string; description: string | null; posts?: number | null; main_posts?: number | null };
+export type RawCategoryItem = { name: string; slug: string; description: string | null; posts?: number | null; main_posts?: number | null; synonyms?: string[] | null };
 export type RawBrandItem = { name: string; slug: string; category: string | null; website?: string | null; posts?: number | null; categories?: RawCategory[] };
 
 // A post's slides from instagram_post_media, with the post's own alt and size for a single image
