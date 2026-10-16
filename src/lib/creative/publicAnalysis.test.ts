@@ -207,11 +207,24 @@ describe("briefMarkdown", () => {
     expect(brief).toContain("1080 × 1350 px");
     expect(brief).toContain("not a per-slide measurement");
     expect(brief).toContain("not a square aspect ratio");
-    expect(brief).toContain("preserve the original copy, branding, imagery, composition and colours");
+    expect(brief).toContain("Preserve the original copy, branding, imagery, composition and colours");
     expect(brief).toContain("do not impose a new safe-area template");
     expect(brief).toContain(source.url);
     expect(brief).not.toMatch(/\[your brand\]|Core idea to borrow|Write new words|in my own palette/);
     expect(brief.endsWith("\n")).toBe(true);
+  });
+
+  it("carries the photo substitution rule even when older analysis has no person metadata", () => {
+    const analysis = toPublicAnalysis(record({ concept: "A post" }, 1), [], 1)!;
+    const brief = briefMarkdown(analysis, { ...source, slides: 1, images: source.images.slice(0, 1) }, origin);
+    expect(brief).toContain("Public-figure photos — treatment only");
+    expect(brief).toContain("Do not recreate their face, generate a lookalike");
+    expect(brief).toContain("Unsplash photo-page URL, photographer");
+    expect(brief).toContain("Unsplash photo placeholder");
+    expect(brief).toContain("Replace names, handles, signatures, quotations, achievements");
+    expect(brief).toContain("do not restore the original person during comparison");
+    expect(brief).toContain("For references without public figures or uncertain subjects, retain the normal reconstruction workflow");
+    expect(brief).not.toContain("Use an Unsplash photo of the same person");
   });
 
   it("keeps a single-image or video-cover brief within its actual scope", () => {
