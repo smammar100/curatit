@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import { afterFirstPaint } from "@/lib/afterFirstPaint";
 
 // Hydrating every section up front is most of the work a phone does before it can paint
 // and respond, and almost none of it is on screen yet. This keeps a section's server HTML
@@ -27,11 +28,46 @@ import {
 // Otherwise the covers of the section just below the fold load during the hero's first
 // paint and, on a slow connection, delay it. `contain-intrinsic-size` is the stand-in height
 // while skipped (the real one takes over once rendered), so the page's scroll length is sane.
+//
+// A section already in view when the page first paints waits for the visitor: their first
+// scroll, tap or key (2026-10-16). On a phone the first section's heading shows under the hero
+// at load while its stage is still below the fold (its top at 109 to 160% of the screen's
+// height, 360 to 430px wide), so it used to come alive at once, and its code, its render and
+// its dozen covers landed in the seconds Lighthouse measures, worst on a slow device, where
+// the render alone was 200 to 500ms of blocking time. Arriving through a link to a section
+// (/#how-it-works) counts as the visitor having moved.
 
 const FOCUSABLE = "a[href], button, input, select, textarea, [tabindex]";
 const SKIPPABLE =
   "[content-visibility:auto] [contain-intrinsic-size:auto_100vh]";
 const subscribe = () => () => {};
+
+// Whether the visitor has scrolled, tapped or pressed a key, noted from the moment this module
+// loads: a section below the fold is only ever seen by scrolling, and that scroll must count
+const SIGNS = ["scroll", "pointerdown", "keydown", "touchstart"] as const;
+let engaged = false;
+const waiting = new Set<() => void>();
+if (typeof window !== "undefined") {
+  const engage = () => {
+    engaged = true;
+    for (const sign of SIGNS) window.removeEventListener(sign, engage);
+    for (const callback of waiting) callback();
+    waiting.clear();
+  };
+  for (const sign of SIGNS)
+    window.addEventListener(sign, engage, { passive: true });
+}
+
+// Runs `callback` once the visitor has moved (at once if they have, if the page isn't at its
+// top, or if they arrived through a link to a section). Returns a function that cancels it.
+function whenEngaged(callback: () => void): () => void {
+  if (engaged || window.scrollY > 0 || location.hash) {
+    callback();
+    return () => {};
+  }
+  waiting.add(callback);
+  return () => waiting.delete(callback);
+}
 
 export default function HydrateOnView({
   children,
@@ -74,14 +110,21 @@ export default function HydrateOnView({
     // the start with a ratio of 0, and since scrolling it into view never crosses a
     // threshold after that, the observer never called back and the section never came to
     // life. One pixel in, it crosses into the shortened root and fires.
+    //
+    // It starts watching only once the first paint is on screen, so a section's code and covers
+    // never compete with the headline (see lib/afterFirstPaint), and comes alive only once the
+    // visitor has moved (see whenEngaged above).
     const reveal = () => startTransition(() => setShow(true));
+    let cancelWait = () => {};
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) reveal();
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+        cancelWait = whenEngaged(reveal);
       },
       { rootMargin: ahead ? "0px 0px 50% 0px" : "0px 0px -1px 0px" },
     );
-    observer.observe(element);
+    const cancel = afterFirstPaint(() => observer.observe(element));
 
     // Tabbing into a section still showing server HTML: render it now, and remember where
     // focus is so it can move to the same control in the new markup
@@ -94,6 +137,8 @@ export default function HydrateOnView({
     element.addEventListener("focusin", onFocusIn);
 
     return () => {
+      cancel();
+      cancelWait();
       observer.disconnect();
       element.removeEventListener("focusin", onFocusIn);
     };

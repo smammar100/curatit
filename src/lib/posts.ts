@@ -194,6 +194,15 @@ export function categoryPosts(posts: LibraryPost[], category: string, count: num
   return picked;
 }
 
-// A post with only its cover, for places that never show the other slides. Keeps the
-// data the page sends to the browser small.
-export const withCoverOnly = (post: LibraryPost): LibraryPost => ({ ...post, images: post.images.slice(0, 1) });
+// A post as a card draws it: its short code, its files and the brand's name and mark. Whatever a
+// client component takes is written into the page's data, every field of every post, so the
+// homepage hands its demos this rather than the whole post (2026-10-16: it was sending 109 full
+// posts, ids, links, dates and categories included). `images` is the cover alone unless a demo
+// shows the other slides.
+export type PostCard = Pick<LibraryPost, "shortCode" | "images"> & { brand: Pick<LibraryPost["brand"], "name" | "logo"> };
+
+export const toPostCard = (post: LibraryPost, images = post.images.slice(0, 1)): PostCard => ({
+  shortCode: post.shortCode,
+  images,
+  brand: { name: post.brand.name, logo: post.brand.logo },
+});

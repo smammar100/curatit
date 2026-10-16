@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState, type ReactNode } from "react";
 import { cx } from "@/lib/cx";
+import { useMounted } from "@/lib/useMounted";
 import PostCover from "./PostCover";
 import { scattered } from "./demo";
 import { usePost } from "./HomePosts";
@@ -25,6 +26,24 @@ function Cover({ id, className }: { id: string; className?: string }) {
   return post ? (
     <PostCover post={post} sizes="120px" className={className} />
   ) : null;
+}
+
+// The chat scrap's avatar, requested only after mount like the covers (PostCover): in the server
+// HTML it's an empty circle of the same size, so it stays out of the bytes the first paint waits for
+function Avatar() {
+  const mounted = useMounted();
+  const className = "size-9 shrink-0 rounded-full object-cover";
+  return mounted ? (
+    <Image
+      src="/images/avatar.jpeg"
+      alt=""
+      width={36}
+      height={36}
+      className={className}
+    />
+  ) : (
+    <span aria-hidden="true" className={className} />
+  );
 }
 
 function Card({
@@ -133,13 +152,7 @@ const scraps: Scrap[] = [
     delay: 0.4,
     node: (
       <Card className="flex gap-3 p-3">
-        <Image
-          src="/images/avatar.jpeg"
-          alt=""
-          width={36}
-          height={36}
-          className="size-9 shrink-0 rounded-full object-cover"
-        />
+        <Avatar />
         <div className="min-w-0">
           <p className="text-[12px] text-base-500">
             <span className="font-medium text-base-900">Priya</span> · 10:42

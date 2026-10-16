@@ -19,7 +19,7 @@ export default function PostCover({
   priority,
   className,
 }: {
-  post: LibraryPost;
+  post: Pick<LibraryPost, "images">;
   slide?: number;
   sizes?: string;
   priority?: boolean;

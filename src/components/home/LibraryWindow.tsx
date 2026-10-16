@@ -13,23 +13,22 @@ import Check from "@/components/fundations/icons/Check";
 import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
 import Plus from "@/components/fundations/icons/Plus";
 import Search from "@/components/fundations/icons/Search";
-import type { LibraryPost } from "@/lib/posts";
 // Components
 import AppWindow from "./AppWindow";
 import BrandName from "./BrandName";
 import { board, libraryWindow } from "./demo";
-import { usePosts } from "./HomePosts";
+import { usePosts, type HomePost } from "./HomePosts";
 import { cx } from "@/lib/cx";
 import { useMounted } from "@/lib/useMounted";
 
 // Five columns in a wide window, four in a medium one, three on a phone
 const COLUMNS = 5;
-const ratio = (post: LibraryPost) =>
+const ratio = (post: HomePost) =>
   post.width && post.height ? post.width / post.height : 0.8;
 
 // Each post to the column that's shortest so far, as the dashboard's grid deals them
-function intoColumns(posts: LibraryPost[]) {
-  const columns: LibraryPost[][] = Array.from({ length: COLUMNS }, () => []);
+function intoColumns(posts: HomePost[]) {
+  const columns: HomePost[][] = Array.from({ length: COLUMNS }, () => []);
   const heights = Array<number>(COLUMNS).fill(0);
   for (const post of posts) {
     const shortest = heights.indexOf(Math.min(...heights));
@@ -127,9 +126,9 @@ function Tile({
   saved,
   boardCovers,
 }: {
-  post: LibraryPost;
+  post: HomePost;
   saved: boolean;
-  boardCovers: LibraryPost[];
+  boardCovers: HomePost[];
 }) {
   // The cover is requested only after mount, so the window's twelve files stay out of the first paint
   const mounted = useMounted();
