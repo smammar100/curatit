@@ -31,7 +31,15 @@ function island<P extends object>(
   };
 }
 
-export const ProblemSolution = island(() => import("./ProblemSolution"));
+// The first section below the hero. On a phone it is already in view at load, so it hydrates
+// at once; its pop-in is CSS (Scattered), so it skips the motion provider and framer-motion's
+// animation features stay out of the page until a section that needs them scrolls into view.
+// (Its intro hook, useIntroOnce, still uses framer-motion's small useInView and
+// useReducedMotion.)
+const ProblemSolutionLazy = lazy(() => import("./ProblemSolution"));
+export function ProblemSolution() {
+  return <ProblemSolutionLazy />;
+}
 export const SearchDemo = island(() => import("./SearchDemo"));
 export const DetailDemo = island(() => import("./DetailDemo"));
 export const BoardDemo = island(() => import("./BoardDemo"));

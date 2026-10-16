@@ -3,6 +3,7 @@
 // of eighteen animated cards out of the browser's work on the homepage.
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import DeferredImages from "@/components/global/DeferredImages";
 
 /* ── the corridor ────────────────────────────────────────────────
  * Two rails of cards ride from far behind the screen toward the
@@ -226,12 +227,14 @@ export function ImageStreamHero({
                   }}
                 >
                   {img ? (
+                    // Curatit: the file is named in data attributes and set by the script below
+                    // once the page has loaded, so the first paint doesn't wait on these bytes
                     <img
-                      src={img.src}
-                      srcSet={img.srcSet}
+                      data-src={img.src}
+                      data-srcset={img.srcSet}
+                      suppressHydrationWarning
                       sizes={img.sizes}
                       alt={img.alt ?? ""}
-                      loading="lazy"
                       decoding="async"
                       className="h-full w-full object-cover"
                       draggable={false}
@@ -244,6 +247,9 @@ export function ImageStreamHero({
         </div>
       </div>
 
+      {/* Curatit: swap each card's file in after load (see the img above). A small client
+          child; the corridor itself stays a server component */}
+      <DeferredImages selector={`.${card} img`} />
       {children}
     </div>
   );

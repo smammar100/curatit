@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useEffect, useState, type ReactNode } from "react";
-import { m } from "framer-motion";
 import { cx } from "@/lib/cx";
 import PostCover from "./PostCover";
 import { scattered } from "./demo";
@@ -372,10 +371,6 @@ const connectors = [
   "M1170 330 C 1250 340, 1240 410, 1270 440",
 ];
 
-const variants = {
-  hidden: { opacity: 0, scale: 0.86, y: 12 },
-  shown: { opacity: 1, scale: 1, y: 0 },
-};
 
 export default function Scattered({ className }: { className?: string }) {
   const { ref, intro } = useIntroOnce<HTMLDivElement>(
@@ -432,31 +427,22 @@ export default function Scattered({ className }: { className?: string }) {
           ))}
         </svg>
         {scraps.map((scrap) => (
-          <m.div
+          // The pop-in is CSS (.scattered-hidden / .scattered-in in global.css): hidden while armed, then each
+          // scrap springs in on its own delay once the intro plays. No motion components here,
+          // so the first section below the hero hydrates without the animation engine.
+          <div
             key={scrap.key}
-            className="absolute"
+            className={cx("scattered-scrap absolute", hidden && "scattered-hidden", intro === "play" && "scattered-in")}
             style={{
               left: scrap.x,
               top: scrap.y,
               width: scrap.w,
-              rotate: scrap.rotate ?? 0,
+              rotate: `${scrap.rotate ?? 0}deg`,
+              animationDelay: intro === "play" ? `${scrap.delay}s` : undefined,
             }}
-            variants={variants}
-            initial={false}
-            animate={hidden ? "hidden" : "shown"}
-            transition={
-              hidden
-                ? { duration: 0 }
-                : {
-                    type: "spring",
-                    stiffness: 320,
-                    damping: 26,
-                    delay: intro === "play" ? scrap.delay : 0,
-                  }
-            }
           >
             {scrap.node}
-          </m.div>
+          </div>
         ))}
       </div>
     </div>

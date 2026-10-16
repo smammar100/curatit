@@ -33,7 +33,18 @@ const SKIPPABLE =
   "[content-visibility:auto] [contain-intrinsic-size:auto_100vh]";
 const subscribe = () => () => {};
 
-export default function HydrateOnView({ children }: { children: ReactNode }) {
+export default function HydrateOnView({
+  children,
+  ahead = false,
+}: {
+  children: ReactNode;
+  /**
+   * Come alive half a screen before the section scrolls in, so its code and its covers (which
+   * are requested only after mount) are there by the time it is on screen. For every section
+   * but the first: the first starts right at the fold, where any margin would render it on load.
+   */
+  ahead?: boolean;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   // True on the server and while hydrating; false when the page was reached by client-side
   // navigation, where there is no server HTML to keep and the section renders right away
@@ -68,7 +79,7 @@ export default function HydrateOnView({ children }: { children: ReactNode }) {
       ([entry]) => {
         if (entry.isIntersecting) reveal();
       },
-      { rootMargin: "0px 0px -1px 0px" },
+      { rootMargin: ahead ? "0px 0px 50% 0px" : "0px 0px -1px 0px" },
     );
     observer.observe(element);
 
@@ -86,7 +97,7 @@ export default function HydrateOnView({ children }: { children: ReactNode }) {
       observer.disconnect();
       element.removeEventListener("focusin", onFocusIn);
     };
-  }, [show]);
+  }, [show, ahead]);
 
   // A link into the page (/#how-it-works): the browser jumps to the target while the skipped
   // sections above it still have their stand-in height, so it lands in the wrong place. Every

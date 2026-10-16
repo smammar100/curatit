@@ -13,6 +13,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import SearchSparkle from "@/components/fundations/icons/SearchSparkle";
 import { cx } from "@/lib/cx";
+import { useMounted } from "@/lib/useMounted";
 import type { ExampleSearch } from "./searchExamples";
 
 const HOLD_MS = 5200;
@@ -27,6 +28,8 @@ export default function SearchReel({
   const [typed, setTyped] = useState(searches[0]?.query.length ?? 0);
   const [playing, setPlaying] = useState(false);
   const [paused, setPaused] = useState(false);
+  // Covers are requested only after mount, so the first results stay out of the first paint
+  const mounted = useMounted();
   const ref = useRef<HTMLDivElement>(null);
   const search = searches[active];
 
@@ -120,17 +123,19 @@ export default function SearchReel({
             style={{ animationDelay: `${i * 70}ms` }}
           >
             <div className="relative aspect-4/5 overflow-hidden rounded bg-base-100 shadow ring-1 ring-base-900/5">
-              <Image
-                src={result.cover}
-                alt=""
-                fill
-                sizes="(min-width: 1024px) 272px, (min-width: 640px) 240px, 200px"
-                className="object-cover"
-              />
+              {mounted && (
+                <Image
+                  src={result.cover}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 272px, (min-width: 640px) 240px, 200px"
+                  className="object-cover"
+                />
+              )}
             </div>
             {/* The brand's mark on the tile's corner, like an app icon */}
             <div className="absolute top-3 left-3 size-12 overflow-hidden rounded-xl bg-white shadow ring-1 ring-base-900/5 sm:size-14">
-              {result.logo ? (
+              {mounted && result.logo ? (
                 <Image
                   src={result.logo}
                   alt=""

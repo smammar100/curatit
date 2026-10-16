@@ -20,6 +20,7 @@ import BrandName from "./BrandName";
 import { board, libraryWindow } from "./demo";
 import { usePosts } from "./HomePosts";
 import { cx } from "@/lib/cx";
+import { useMounted } from "@/lib/useMounted";
 
 // Five columns in a wide window, four in a medium one, three on a phone
 const COLUMNS = 5;
@@ -130,20 +131,24 @@ function Tile({
   saved: boolean;
   boardCovers: LibraryPost[];
 }) {
+  // The cover is requested only after mount, so the window's twelve files stay out of the first paint
+  const mounted = useMounted();
   return (
     <li className={cx("relative", saved && "z-10")}>
       <div
         className="relative w-full overflow-hidden rounded-sm bg-base-100"
         style={{ aspectRatio: ratio(post) }}
       >
-        <Image
-          src={post.images[0]}
-          alt=""
-          fill
-          sizes="(min-width: 1024px) 170px, 30vw"
-          draggable={false}
-          className="object-cover"
-        />
+        {mounted && (
+          <Image
+            src={post.images[0]}
+            alt=""
+            fill
+            sizes="(min-width: 1024px) 170px, 30vw"
+            draggable={false}
+            className="object-cover"
+          />
+        )}
       </div>
       {saved && (
         <>
@@ -170,7 +175,7 @@ function Tile({
                 )}
               >
                 <span className="relative size-5 shrink-0 overflow-hidden rounded-sm bg-base-100">
-                  {i === 0 && boardCovers[0] && (
+                  {i === 0 && mounted && boardCovers[0] && (
                     <Image
                       src={boardCovers[0].images[0]}
                       alt=""

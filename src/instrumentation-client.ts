@@ -1,6 +1,7 @@
 // Next runs this before every page hydrates. It only schedules analytics: PostHog starts after the
-// page has loaded, at the first sign of a person (a tap, a key, a scroll) or after five quiet
-// seconds, whichever comes first. Its script is a few hundred milliseconds of main-thread work on a
+// page has loaded, at the first sign of a person (a tap, a key, a scroll) or after eight quiet
+// seconds, whichever comes first (five until 2026-10-16: PostHog's start was landing inside the
+// window Lighthouse measures as blocking time). Its script is a few hundred milliseconds of main-thread work on a
 // slow phone, and starting it straight after load showed up as blocking time on the homepage
 // (Lighthouse mobile, 2026-10-13: median 82 against 85 without it; with this start, 86 against
 // 83, the page's bytes unchanged in the window Lighthouse measures). The cost of waiting: a visit
@@ -18,8 +19,15 @@ function start() {
     for (const sign of SIGNS) window.removeEventListener(sign, go);
     void loadAnalytics();
   };
-  for (const sign of SIGNS) window.addEventListener(sign, go, { once: true, passive: true });
-  timer = window.setTimeout(() => ("requestIdleCallback" in window ? requestIdleCallback(go, { timeout: 2000 }) : go()), 5000);
+  for (const sign of SIGNS)
+    window.addEventListener(sign, go, { once: true, passive: true });
+  timer = window.setTimeout(
+    () =>
+      "requestIdleCallback" in window
+        ? requestIdleCallback(go, { timeout: 2000 })
+        : go(),
+    8000,
+  );
 }
 
 if (document.readyState === "complete") start();

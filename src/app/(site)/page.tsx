@@ -34,7 +34,8 @@ export default async function HomePage() {
   const gallery = [...new Map(tabs.flatMap((category) => categoryPosts(posts, category.slug, 10)).map((post) => [post.id, withCoverOnly(post)])).values()];
 
   // Below the hero, each section keeps its server HTML and only comes alive as it scrolls
-  // into view, so a phone's first seconds go to the hero alone (see HydrateOnView). The FAQ
+  // into view (the ones after the first, half a screen ahead), so a phone's first seconds go to
+  // the hero alone (see HydrateOnView). The FAQ
   // is server-only, so it has nothing to hydrate.
   return (
     <HomePostsProvider posts={featured}>
@@ -42,17 +43,17 @@ export default async function HomePage() {
       <HydrateOnView>
         <ProblemSolution />
       </HydrateOnView>
-      <HydrateOnView>
+      <HydrateOnView ahead>
         <HowItWorks />
       </HydrateOnView>
-      <HydrateOnView>
+      <HydrateOnView ahead>
         <Categories categories={tabs} posts={gallery} />
       </HydrateOnView>
-      <HydrateOnView>
+      <HydrateOnView ahead>
         <McpSection />
       </HydrateOnView>
       <Faq faqs={faqs} />
-      <HydrateOnView>
+      <HydrateOnView ahead>
         <ClosingCta posts={posts} />
       </HydrateOnView>
     </HomePostsProvider>

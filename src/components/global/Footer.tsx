@@ -1,10 +1,14 @@
 import type { ReactNode } from "react";
-import Image from "next/image";
 import Link from "next/link";
 // Assets
 import Logo from "@/components/assets/Logo";
 import Symbol from "@/components/assets/Symbol";
-import { getPublishedPosts, type LibraryPost } from "@/lib/posts";
+import DeferredImages from "@/components/global/DeferredImages";
+import {
+  getPublishedPosts,
+  optimizedImage,
+  type LibraryPost,
+} from "@/lib/posts";
 import { SUPPORT_MAILTO } from "@/lib/site";
 import FooterNewsletter from "./FooterNewsletter";
 
@@ -170,19 +174,26 @@ export default async function Footer() {
                   key={`${post.id}-${i}`}
                   className="relative aspect-4/5 w-24 shrink-0 overflow-hidden rounded-sm bg-[color:var(--f-raise)] sm:w-28 lg:w-32"
                 >
-                  <Image
-                    src={post.images[0]}
-                    alt=""
-                    fill
+                  {/* Started after the page has loaded (DeferredImages below): on a short page
+                      the strip is close enough to the fold for the browser to fetch its covers
+                      during the first paint (2026-10-16, Lighthouse mobile) */}
+                  <img
+                    data-src={optimizedImage(post.images[0], 128, 75)}
+                    data-srcset={`${optimizedImage(post.images[0], 128, 75)} 128w, ${optimizedImage(post.images[0], 256, 75)} 256w`}
+                    suppressHydrationWarning
                     sizes="128px"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
                     draggable={false}
-                    className="object-cover"
+                    className="absolute inset-0 size-full object-cover"
                   />
                 </div>
               ))}
             </div>
           </div>
         )}
+        <DeferredImages selector=".footer-strip img" />
 
         <div className="flex flex-wrap items-center justify-between gap-x-6 px-6 py-5 sm:px-8">
           <p className="text-xs/5 text-[color:var(--f-quiet)]">
