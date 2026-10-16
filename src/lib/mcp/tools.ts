@@ -1,12 +1,13 @@
 // The six research tools, as one registry both transports run: MCP registers them on a server,
 // REST calls the same `executeTool`. A call checks the credential's scope, takes a rate-limit
-// slot, runs the service, and wraps the outcome in the envelope; every failure becomes a
-// CuratitError with a safe message. Tool descriptions are Curatit's own and never include
-// anything scraped.
+// slot, runs the service inside one deadline (CALL_BUDGET_MS, cut short when the caller goes
+// away), and wraps the outcome in the envelope; every failure becomes a CuratitError with a safe
+// message. Tool descriptions are Curatit's own and never include anything scraped.
 
 import type { ImageContent } from "@modelcontextprotocol/server";
-import { TOOLS, type ToolName, envelopeSchema } from "./contracts";
+import { TOOLS, type ToolName, envelopeSchema, type PostInputT } from "./contracts";
 import type { McpConfig } from "./config";
+import { CALL_BUDGET_MS, runWithDeadline } from "./deadline";
 import { failure, newRequestId, success, type Envelope } from "./envelope";
 import { CuratitError, toCuratitError } from "./errors";
 import type { Logger } from "./log";
@@ -19,6 +20,7 @@ import { getMedia, type ImageBytes, type MediaDeps } from "./services/media";
 import { getCarousel, getPost } from "./services/post";
 import { searchPosts } from "./services/search";
 import { getTaxonomy } from "./services/taxonomy";
+import { carouselText, postText, searchText, withWarnings } from "./text";
 
 export type Runtime = {
   config: McpConfig;
@@ -81,8 +83,9 @@ export type ToolOutcome = {
   text: string;
 };
 
-// Runs a tool for a principal: the one path MCP and REST share
-export async function executeTool(rt: Runtime, name: ToolName, rawArgs: unknown, principal: Principal): Promise<ToolOutcome> {
+// Runs a tool for a principal: the one path MCP and REST share. `signal` is the transport's own
+// (the MCP request's cancellation, the HTTP request's), so a caller who hangs up stops the work
+export async function executeTool(rt: Runtime, name: ToolName, rawArgs: unknown, principal: Principal, signal?: AbortSignal): Promise<ToolOutcome> {
   const requestId = newRequestId();
   const started = Date.now();
   const tool = TOOLS[name];
@@ -96,7 +99,8 @@ export async function executeTool(rt: Runtime, name: ToolName, rawArgs: unknown,
       });
     }
     release = await rt.throttle.acquire(principalKey(principal), name === "curatit_create_brief" ? "brief" : "read");
-    const outcome = await run(rt, name, parsed.data, principal);
+    // The limiter's wait sits outside the budget, so a call that queued still gets all of it
+    const outcome = await runWithDeadline(CALL_BUDGET_MS, signal, () => run(rt, name, parsed.data, principal));
     const envelope = success(requestId, outcome.data, outcome.warnings, outcome.taxonomyVersion);
     rt.log.info("tool.ok", { request_id: requestId, tool: name, ms: Date.now() - started, account: await pseudonym(principal.subjectId), credential: principal.credentialKind });
     return { envelope, status: 200, image: outcome.image, text: outcome.text };
@@ -109,7 +113,8 @@ export async function executeTool(rt: Runtime, name: ToolName, rawArgs: unknown,
       code: err.code,
       ms: Date.now() - started,
       account: await pseudonym(principal.subjectId),
-      ...(err.code === "INTERNAL_ERROR" && { cause: String(err.cause ?? err.message) }),
+      // Why, for the failures that are ours: a TIMEOUT's cause names the stage it stopped in
+      ...((err.code === "INTERNAL_ERROR" || err.code === "TIMEOUT") && { cause: typeof err.cause === "object" && err.cause ? JSON.stringify(err.cause) : String(err.cause ?? err.message) }),
     });
     return { envelope: failure(requestId, err), status: err.status, image: null, text: `${err.code}: ${err.message}` };
   } finally {
@@ -128,38 +133,27 @@ async function run(rt: Runtime, name: ToolName, args: unknown, principal: Princi
     }
     case "curatit_search_posts": {
       const r = await searchPosts(rt.repo, args as never, { signingSecret: rt.config.signingSecret, principalKey: principalKey(principal) });
-      const lines = r.data.posts.map((p, i) => `${i + 1}. ${p.brand.name} (${p.industry?.name ?? "no industry"}), ${p.format}, ${p.posted_at?.slice(0, 10) ?? "undated"}: "${p.caption_excerpt.slice(0, 90)}" [post_id ${p.post_id}${p.analysis_available ? ", analysed" : ""}]${p.match_reasons.length ? ` — ${p.match_reasons[0]}` : ""}`);
-      const head = r.data.posts.length ? `${r.data.posts.length} post${r.data.posts.length === 1 ? "" : "s"}${r.data.next_cursor ? " (more with next_cursor)" : ""}:` : "No posts matched.";
-      const tail = r.data.suggestions.length ? `\nSuggestions: ${r.data.suggestions.join(" ")}` : "";
-      return { data: r.data, warnings: r.warnings, taxonomyVersion: null, image: null, text: `${head}\n${lines.join("\n")}${tail}`.trim() };
+      return { data: r.data, warnings: r.warnings, taxonomyVersion: null, image: null, text: withWarnings(r.warnings, searchText(r.data)) };
     }
     case "curatit_get_post": {
+      // The text a host reads when it ignores structured content: every category and the
+      // published analysis as the post page reads it (text.ts), not just its concept
       const r = await getPost(rt.repo, args as never);
-      const p = r.data.post;
-      const text = [
-        `${p.brand.name} (${p.industry?.name ?? "no industry"}), ${p.format}, posted ${p.posted_at?.slice(0, 10) ?? "undated"}: ${p.source_url}`,
-        `Caption: ${p.caption.text.slice(0, 300)}${p.caption.truncated || p.caption.text.length > 300 ? "…" : ""}`,
-        `Counts: ${p.metrics.likes ?? "not available"} likes, ${p.metrics.comments ?? "not available"} comments, collected ${p.metrics.observed_at?.slice(0, 10) ?? "at an unknown time"}.`,
-        `Media: ${p.media.length} slide${p.media.length === 1 ? "" : "s"} (${p.media.map((m) => m.media_id).join(", ")}).`,
-        p.analysis ? `Analysis: ${p.analysis.concept ?? p.analysis.summary ?? "published"}` : "No published analysis yet.",
-        p.missing.length ? `Missing: ${p.missing.join("; ")}` : "",
-      ].join("\n");
-      return { data: r.data, warnings: [], taxonomyVersion: r.taxonomyVersion, image: null, text };
+      return { data: r.data, warnings: [], taxonomyVersion: r.taxonomyVersion, image: null, text: postText(r.data.post, (args as PostInputT).detail_level === "full") };
     }
     case "curatit_get_carousel": {
       const r = await getCarousel(rt.repo, args as never);
-      const lines = r.data.slides.map((s) => `${s.slide_label}${s.was_video ? " (video cover)" : ""}: ${s.analysis?.headline ? `"${s.analysis.headline}"` : s.alt_text ?? "no text recorded"}${s.analysis?.role ? ` — ${s.analysis.role}` : ""} [${s.media_id}]`);
-      return { data: r.data, warnings: r.warnings, taxonomyVersion: r.taxonomyVersion, image: null, text: `${r.data.short_code}: ${r.data.total_slides} slides, ${r.data.slides_analysed} analysed.\n${lines.join("\n")}${r.data.next_start !== null ? `\nNext page: start_slide ${r.data.next_start}` : ""}` };
+      return { data: r.data, warnings: r.warnings, taxonomyVersion: r.taxonomyVersion, image: null, text: withWarnings(r.warnings, carouselText(r.data)) };
     }
     case "curatit_get_media": {
       const r = await getMedia(rt.repo, args as never, rt.media);
       const d = r.data;
       const text = d.delivery === "link" ? `${d.slide_label} of post ${d.post_id}: ${d.url} (${d.mime_type}, ${d.width ?? "?"}×${d.height ?? "?"}, ${d.bytes ?? "?"} bytes)` : `${d.slide_label} of post ${d.post_id}, delivered inline (${d.mime_type}, ${d.width ?? "?"}×${d.height ?? "?"}).`;
-      return { data: r.data, warnings: r.warnings, taxonomyVersion: null, image: r.image, text };
+      return { data: r.data, warnings: r.warnings, taxonomyVersion: null, image: r.image, text: withWarnings(r.warnings, text) };
     }
     case "curatit_create_brief": {
       const r = await createBrief(rt.repo, args as never);
-      return { data: r.data, warnings: r.warnings, taxonomyVersion: r.taxonomyVersion, image: null, text: r.data.text };
+      return { data: r.data, warnings: r.warnings, taxonomyVersion: r.taxonomyVersion, image: null, text: withWarnings(r.warnings, r.data.text) };
     }
   }
 }

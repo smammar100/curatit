@@ -1,5 +1,7 @@
-// The OpenAPI 3.1 document for /api/v1, generated from the same zod contracts the MCP tools
-// use, so the two surfaces can't drift. Served at /api/v1/openapi.json.
+// The OpenAPI document for /api/v1, generated from the same zod contracts the MCP tools use,
+// so the two surfaces can't drift. Served at /api/v1/openapi.json. It declares OpenAPI 3.0.3
+// because that is what the schemas are emitted as (`nullable: true`, which 3.1 doesn't have):
+// a 3.1 label over 3.0 schemas made generated clients type every nullable field as required.
 
 import { z } from "zod";
 import { SCOPES, SERVER_INFO, type McpConfig } from "./config";
@@ -56,13 +58,27 @@ export function buildOpenApi(config: McpConfig) {
       "x-mcp-tool": name,
       security: [{ bearerAuth: [tool.scope] }],
       responses: {
-        "200": { description: "The result envelope.", content: { "application/json": { schema: envelope(tool.output) } } },
+        "200":
+          name === "curatit_get_media"
+            ? {
+                description: "The result envelope; with delivery=inline, the image bytes instead, and the envelope's data as the X-Curatit-Media header.",
+                headers: { "X-Curatit-Media": { description: "With delivery=inline: the result's data as percent-encoded JSON (decodeURIComponent gives the object).", schema: { type: "string" } } },
+                content: {
+                  "application/json": { schema: envelope(tool.output) },
+                  "image/webp": { schema: { type: "string", format: "binary" } },
+                  "image/jpeg": { schema: { type: "string", format: "binary" } },
+                  "image/png": { schema: { type: "string", format: "binary" } },
+                },
+              }
+            : { description: "The result envelope.", content: { "application/json": { schema: envelope(tool.output) } } },
         "400": errorResponse("INVALID_ARGUMENT"),
         "401": errorResponse("UNAUTHENTICATED: missing or invalid token (see WWW-Authenticate)."),
         "403": errorResponse("FORBIDDEN: the token lacks the scope."),
         "404": errorResponse("NOT_FOUND"),
         "429": errorResponse("RATE_LIMITED or QUOTA_EXCEEDED (see Retry-After)."),
+        "500": errorResponse("INTERNAL_ERROR"),
         "503": errorResponse("UPSTREAM_UNAVAILABLE"),
+        "504": errorResponse("TIMEOUT: the call ran past its budget."),
       },
     };
     if (route.method === "POST") {
@@ -76,7 +92,7 @@ export function buildOpenApi(config: McpConfig) {
   paths["/api/v1/health/ready"] = { get: { operationId: "healthReady", summary: "Readiness", security: [], responses: { "200": { description: "Dependencies answer." }, "503": { description: "A dependency doesn't." } } } };
 
   return {
-    openapi: "3.1.0",
+    openapi: "3.0.3",
     info: {
       title: "Curatit research API",
       version: SERVER_INFO.version,

@@ -49,7 +49,7 @@ Deterministic (`services/brief.ts`): observed facts (on-slide text, labels, slid
 
 ## Not built (by design or blocked)
 
-- Resources and prompts: tools carry everything.
+- Prompts: tools carry everything. One resource exists, the `ui://curatit/search-results` MCP Apps widget for hosts that render it (ChatGPT); registering it makes the SDK advertise `resources`, and the server sets `listChanged: false` because it is stateless and never sends that notification.
 - Semantic search, boards over MCP (scopes reserved: `curatit:boards:*`).
 - An authorization server of our own: Supabase Auth's is the one to use once enabled; see `security.md` for the gaps that remain.
 - Server-side model calls.

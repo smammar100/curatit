@@ -1,5 +1,5 @@
-// OAuth access tokens from Supabase Auth's OAuth 2.1 server, once the project has it on (it's
-// off today; docs/mcp/security.md says how to enable it). The token is a JWT signed with the
+// OAuth access tokens from Supabase Auth's OAuth 2.1 server (on for the project and being
+// tested; docs/mcp/security.md has the status and the known gaps). The token is a JWT signed with the
 // project's asymmetric key: it's checked against the issuer's JWKS, for the exact issuer, not
 // expired, and for `client_id`, which only tokens issued through the OAuth server carry, so a
 // first-party browser session can't be replayed here.
@@ -29,6 +29,18 @@ function jwks(issuer: URL) {
   return set;
 }
 
+// The jose errors that say the token itself is wrong (expired, bad signature, wrong claims,
+// an algorithm not allowed). JWKSNoMatchingKey is the token's fault too (a kid the issuer
+// doesn't have), unless jose says the key set couldn't be fetched at all.
+const TOKEN_PROBLEMS = new Set(["JWTExpired", "JWTClaimValidationFailed", "JWTInvalid", "JWSInvalid", "JWSSignatureVerificationFailed", "JOSEAlgNotAllowed", "JOSENotSupported", "JWKSMultipleMatchingKeys"]);
+
+export function isTokenProblem(error: unknown) {
+  const name = (error as { name?: string })?.name ?? "";
+  if (TOKEN_PROBLEMS.has(name)) return true;
+  if (name === "JWKSNoMatchingKey") return !/fetch/i.test(String(error));
+  return false;
+}
+
 export function looksLikeJwt(token: string) {
   return /^[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}$/.test(token);
 }
@@ -44,9 +56,10 @@ export async function verifyOAuthToken(issuer: URL, token: string): Promise<OAut
       clockTolerance: 30,
     }));
   } catch (error) {
-    const name = (error as { name?: string })?.name ?? "";
-    // The JWKS being unreachable is our problem, not the token's
-    if (name === "JWKSTimeout" || name === "JWKSNoMatchingKey" && /fetch/i.test(String(error))) {
+    // jose's validation errors mean the token is bad. Anything else (the JWKS unreachable, a
+    // non-2xx or malformed key set, a network failure) is our side's problem, and answering
+    // "invalid token" would make clients throw a good token away and ask people to sign in again
+    if (!isTokenProblem(error)) {
       throw new CuratitError("UPSTREAM_UNAVAILABLE", "The sign-in service didn't answer. Try again shortly.", { cause: error });
     }
     return null;

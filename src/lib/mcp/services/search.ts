@@ -8,7 +8,7 @@ import { FILTERS, type FilterKey, type SearchInputT, type SearchOutputT } from "
 import { decodeCursor, encodeCursor, fingerprint } from "../cursor";
 import { invalid, toCuratitError } from "../errors";
 import type { CatalogRepository, RawSearchRequest } from "../repo/types";
-import { brandOf, classification, excerpt, industryOf, mediaId } from "./shared";
+import { brandOf, classification, excerpt, industryOf, mediaId, nameKey } from "./shared";
 
 export const SEARCH_DEFAULT_LIMIT = 8;
 
@@ -21,8 +21,10 @@ export async function searchPosts(repo: CatalogRepository, input: SearchInputT, 
   const limit = input.limit ?? SEARCH_DEFAULT_LIMIT;
   const warnings: string[] = [];
 
+  // analysed_only narrows only when true: `false` is the default and filters nothing
   const activeKeys = (Object.keys(filters) as (keyof typeof filters)[]).filter((k) => {
     const v = filters[k];
+    if (k === "analysed_only") return v === true;
     return Array.isArray(v) ? v.length > 0 : v !== undefined;
   });
   if (!query && !activeKeys.some((k) => k !== "platforms")) {
@@ -43,6 +45,11 @@ export async function searchPosts(repo: CatalogRepository, input: SearchInputT, 
       }
       request[dimension] = resolved;
       applied[key] = [resolved];
+      // The database reads names loosely ("fashion" lands on shopping, "fintech" on finance);
+      // when that changes the value, the caller is told, so nothing is remapped behind their back
+      if (nameKey(resolved) !== nameKey(values[0])) {
+        warnings.push(`${key} "${values[0]}" was read as "${resolved}". Pass the slug itself to search exactly that; curatit_get_taxonomy lists them.`);
+      }
     } else if (dimension === "format") {
       request.format = values[0];
       applied[key] = [values[0]];
@@ -70,13 +77,24 @@ export async function searchPosts(repo: CatalogRepository, input: SearchInputT, 
   if (query) request.query = queryMode === "any_word" ? anyWord(query) : query;
   request.limit = limit;
 
-  const search = await fingerprint({ query, queryMode, applied, sort });
+  // The same search sent with its filters in another order is the same search, so the
+  // fingerprint sees them sorted
+  const search = await fingerprint({ query, queryMode, applied: canonical(applied), sort });
   const cursorScope = { search, principal: ctx.principalKey };
-  request.offset = input.cursor ? await decodeCursor(ctx.signingSecret, input.cursor, cursorScope) : 0;
+  const page = input.cursor ? await decodeCursor(ctx.signingSecret, input.cursor, cursorScope) : null;
+  request.offset = page?.offset ?? 0;
 
   const result = await repo.search(request).catch((error) => {
     throw toCuratitError(error);
   });
+
+  // The first page's cursor carries the catalog's marker; a later page from a changed library
+  // (posts published or unpublished in between) is still served, with a warning, since the
+  // offsets are still valid, only shifted
+  const marker = result.catalog_marker ?? page?.marker ?? null;
+  if (page?.marker && result.catalog_marker && page.marker !== result.catalog_marker) {
+    warnings.push("The library changed since this search's first page (posts were added or removed), so this page may repeat or skip a post. Start the search again for one consistent set.");
+  }
 
   const posts = result.posts.map((hit) => ({
     post_id: hit.id,
@@ -98,7 +116,7 @@ export async function searchPosts(repo: CatalogRepository, input: SearchInputT, 
     score: typeof hit.score === "number" ? hit.score : null,
   }));
 
-  const nextCursor = result.has_more && result.next_offset !== null ? await encodeCursor(ctx.signingSecret, { offset: result.next_offset, ...cursorScope }) : null;
+  const nextCursor = result.has_more && result.next_offset !== null ? await encodeCursor(ctx.signingSecret, { offset: result.next_offset, marker, ...cursorScope }) : null;
   if (result.has_more && result.next_offset === null) warnings.push("The catalog's search stops at 500 results per query. Narrow the search to go further.");
 
   const suggestions = posts.length === 0 && !input.cursor ? relaxations(query, queryMode, applied) : [];
@@ -112,6 +130,15 @@ export async function searchPosts(repo: CatalogRepository, input: SearchInputT, 
     },
     warnings,
   };
+}
+
+// The applied filters with keys and values in one order, for the cursor's fingerprint
+function canonical(applied: Record<string, string[]>) {
+  return Object.fromEntries(
+    Object.keys(applied)
+      .sort()
+      .map((k) => [k, [...applied[k]].sort()]),
+  );
 }
 
 // The function's reasons count slides from zero ("seen on slide 0, 1"); people count from 1

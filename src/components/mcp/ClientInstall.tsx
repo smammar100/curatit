@@ -46,7 +46,7 @@ const envToken = (
 );
 const askStep: Step = {
   title: "Ask for references",
-  body: "Try: Find three fintech carousels that launch a feature, with their sources. Every answer comes back with real Instagram links.",
+  body: "Try: Find three finance carousels that launch a feature, with their sources. Every answer comes back with real Instagram links.",
 };
 
 const CLIENTS: Client[] = [
@@ -55,7 +55,7 @@ const CLIENTS: Client[] = [
     name: "Claude Code",
     mark: "claudeCode",
     title: "Add Curatit to Claude Code",
-    intro: "One command in your terminal. Claude Code reads the token from your shell.",
+    intro: "One command in your terminal. Your shell fills the token in, and Claude Code keeps it in its own config (~/.claude.json), so treat that file like the token.",
     steps: [
       tokenStep(envToken),
       { title: "Add the server", body: "Run this in your terminal:", code: `claude mcp add --transport http curatit ${MCP_URL} --header "Authorization: Bearer $CURATIT_ACCESS_TOKEN"` },
