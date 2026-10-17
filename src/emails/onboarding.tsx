@@ -206,5 +206,5 @@ function StepMark({ n, done }: { n: number; done: boolean }) {
 Onboarding.PreviewProps = {
   email: 'ammar@studio.co',
   done: { search: true },
-  unsubscribeUrl: 'https://curatit.vercel.app/unsubscribe',
+  unsubscribeUrl: 'https://www.curatit.app/unsubscribe',
 } satisfies OnboardingProps;

@@ -8,7 +8,7 @@ Set on Vercel (Project → Settings → Environment Variables) or in `.env.local
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | yes | Catalog reads under RLS (already set) |
 | `SUPABASE_SECRET_KEY` | yes | Token verification, rate limits, metrics' observation time (service_role; never in a browser or the bridge) |
-| `CURATIT_PUBLIC_BASE_URL` | production | The canonical origin, `https://curatit.vercel.app`; resource metadata and CORS derive from it |
+| `CURATIT_PUBLIC_BASE_URL` | production | The canonical origin, `https://www.curatit.app` (since 17 October 2026, `../domain.md`); resource metadata, CORS, the OpenAPI server and the links in emails derive from it |
 | `CURATIT_MCP_SIGNING_SECRET` | production | Signs search cursors; `openssl rand -hex 32` |
 | `CURATIT_OAUTH_ISSUER` | no | `https://ytxtwowgxmztaboxgdmq.supabase.co/auth/v1` once Supabase's OAuth server is on; unset keeps OAuth off |
 | `CURATIT_ALLOWED_ORIGINS` | no | Extra browser origins for `/mcp`, comma-separated |
@@ -43,7 +43,7 @@ The code reads the old and the new shapes, so it can be deployed before or after
 
 - `GET /api/v1/health/live` → `{"status":"ok"}`: the process is up.
 - `GET /api/v1/health/ready` → `{"status":"ready"}` or `503 {"status":"not_ready"}`: a cheap catalog read answered.
-- A real check is a tool call: initialize → `tools/list` → `curatit_search_posts` with a small query → `curatit_get_post` on a known id, with a restricted test token. `scripts/mcp-smoke.ts` does exactly that (`npm run mcp:smoke -- --server https://curatit.vercel.app`, token from `CURATIT_ACCESS_TOKEN`); run it after every deploy, and on a schedule if a monitor can run Node.
+- A real check is a tool call: initialize → `tools/list` → `curatit_search_posts` with a small query → `curatit_get_post` on a known id, with a restricted test token. `scripts/mcp-smoke.ts` does exactly that (`npm run mcp:smoke -- --server https://www.curatit.app`, token from `CURATIT_ACCESS_TOKEN`); run it after every deploy, and on a schedule if a monitor can run Node.
 
 ## Logs and metrics
 

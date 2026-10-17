@@ -18,6 +18,7 @@ import Button from "@/components/fundations/elements/Button";
 import TerminalWindow from "@/components/fundations/icons/TerminalWindow";
 import { cx } from "@/lib/cx";
 import CopyBlock from "./CopyBlock";
+import { SITE_URL } from "@/lib/site";
 import { MCP_URL } from "./tools";
 
 const TOKEN_HREF = "/dashboard/settings/tokens";
@@ -147,7 +148,7 @@ const REST: Card = {
     {
       title: "Call a tool",
       body: "A search, for example:",
-      code: `curl -X POST https://curatit.vercel.app/api/v1/posts/search \\
+      code: `curl -X POST ${SITE_URL}/api/v1/posts/search \\
   -H "Authorization: Bearer $CURATIT_ACCESS_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"query": "launch", "filters": {"industries": ["fintech"], "formats": ["carousel"]}}'`,

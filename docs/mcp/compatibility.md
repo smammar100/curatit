@@ -5,7 +5,7 @@ Status as of 12 October 2026. A client is **passed** only when a real session in
 ## Server facts
 
 - Pinned SDK: `@modelcontextprotocol/server` and `@modelcontextprotocol/client` **2.3.1** (zod 4.6.5). Serves both protocol eras the SDK supports: the 2025 line (`2025-11-25`, `2025-06-18`, `2025-03-26`, `2024-11-05`, `2024-10-07`, negotiated at `initialize`) and `2026-07-28` (per-request, via `server/discover`). Transport: Streamable HTTP, stateless, POST only (`GET`/`DELETE` → 405, which the 2025-11-25 transport allows when no stream is offered). No deprecated HTTP+SSE transport.
-- Endpoint: `https://curatit.vercel.app/mcp` once deployed. Protected Resource Metadata: `/.well-known/oauth-protected-resource/mcp` (and the root fallback).
+- Endpoint: `https://www.curatit.app/mcp` (since 17 October 2026; `https://curatit.vercel.app/mcp`, where the tests below ran, serves the same deployment and keeps working, `../domain.md`). Protected Resource Metadata: `/.well-known/oauth-protected-resource/mcp` (and the root fallback).
 - Credentials: personal access tokens today; Supabase OAuth once the project's OAuth server is on (`security.md`).
 - Contract: envelope `schema_version` **1.1** (13 October 2026). 1.1 only adds fields, so a client written for 1.0 keeps working; it should read `schema_version` as "at least", not "exactly".
 
@@ -29,7 +29,7 @@ What 1.1 added to 1.0, all additive:
 | Stdio bridge (`packages/mcp-bridge`) with a local SDK client | stdio → Streamable HTTP | **Passed** in process (in-memory stdio pair → bridge → hosted handler): tools mirrored with annotations, calls and errors forwarded, token never leaves the `Authorization` header, no token → no start | `packages/mcp-bridge/src/bridge.test.ts` |
 | MCP Inspector (CLI, `@modelcontextprotocol/inspector` latest on 12 Oct 2026) | Remote URL + bearer header | **Passed**: `--cli https://curatit.vercel.app/mcp --transport http --method tools/list` lists the six tools with titles, descriptions and schemas; `tools/call curatit_search_posts query=launch limit=2` returns two real posts (H&M, ChatGPT). Through the bridge as a stdio command: not completed, the CLI's `-e` env passing didn't reach the bridge in the forms tried; the Inspector UI with the bridge is untested | terminal output, 12 Oct 2026 |
 | Claude Desktop / Claude.ai connectors | Remote URL (OAuth) or the bridge (command + env token) | Untested. The remote route needs Supabase's OAuth server on; the bridge route needs the built CLI on the machine | |
-| Claude Code | Remote (`claude mcp add --transport http curatit https://curatit.vercel.app/mcp --header "Authorization: Bearer …"`) or the bridge | Untested | |
+| Claude Code | Remote (`claude mcp add --transport http curatit https://www.curatit.app/mcp --header "Authorization: Bearer …"`) or the bridge | Untested | |
 | Cursor | Remote URL with headers, or the bridge | Untested | |
 | VS Code (Copilot MCP) | Remote URL, or the bridge | Untested | |
 | ChatGPT connectors | Remote MCP with OAuth | Untested; ChatGPT requires OAuth (no bearer headers), so this waits on Supabase's OAuth server and issue #2820 | |

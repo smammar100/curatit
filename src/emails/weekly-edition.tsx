@@ -267,5 +267,5 @@ export default function WeeklyEdition({
 
 WeeklyEdition.PreviewProps = {
   email: 'sara@studio.co',
-  unsubscribeUrl: 'https://curatit.vercel.app/unsubscribe',
+  unsubscribeUrl: 'https://www.curatit.app/unsubscribe',
 } satisfies WeeklyEditionProps;

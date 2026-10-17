@@ -12,7 +12,7 @@ Status: **untested**. Illustrative, from VS Code's MCP documentation on 12 Octob
   "servers": {
     "curatit": {
       "type": "http",
-      "url": "https://curatit.vercel.app/mcp",
+      "url": "https://www.curatit.app/mcp",
       "headers": { "Authorization": "Bearer ${input:curatit-token}" }
     }
   }

@@ -4,7 +4,7 @@ Decision record for the server built on 12 October 2026 from `CURATIT_UNIVERSAL_
 
 ## Where it lives
 
-Inside the Next.js app, on the production domain, rather than as a separate service. The reasons: the official MCP TypeScript SDK v2 serves a web-standard `fetch(Request)` handler, which is exactly what a Next route handler is; the catalog's database functions, Supabase clients, auth and deployment already exist here; and one deployment means one set of secrets, one CI and one domain for OAuth discovery (`https://curatit.vercel.app/.well-known/oauth-protected-resource/mcp`). The server's code is `src/lib/mcp/`, with thin route files:
+Inside the Next.js app, on the production domain, rather than as a separate service. The reasons: the official MCP TypeScript SDK v2 serves a web-standard `fetch(Request)` handler, which is exactly what a Next route handler is; the catalog's database functions, Supabase clients, auth and deployment already exist here; and one deployment means one set of secrets, one CI and one domain for OAuth discovery (`https://www.curatit.app/.well-known/oauth-protected-resource/mcp`). The server's code is `src/lib/mcp/`, with thin route files:
 
 | Route | File | What |
 | --- | --- | --- |

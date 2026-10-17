@@ -16,7 +16,7 @@ npm run email:render   # rebuild supabase/templates/*.html
 
 Tests: `src/emails/emails.test.tsx` renders every template (and its variants) and checks that each image is a PNG or JPG that exists in `public/email`, that each one stays under Gmail's 102 KB clipping size, and that `supabase/templates/` still matches the templates (it fails after a template change until `npm run email:render` runs). `src/lib/email.test.tsx` covers sending with Resend replaced: off without a key, never throws, and the welcome email's contents.
 
-Images point at the deployed site (`CURATIT_PUBLIC_BASE_URL`, else `https://curatit.vercel.app`), so the preview shows them only once `public/email/` is deployed. To see them before that, run the preview with `EMAIL_ASSET_URL=http://localhost:3000` while `npm run dev` is running.
+Images point at the deployed site (`CURATIT_PUBLIC_BASE_URL`, else `https://www.curatit.app`, the canonical address since 2026-10-17: `docs/domain.md`), so the preview shows them only once `public/email/` is deployed. To see them before that, run the preview with `EMAIL_ASSET_URL=http://localhost:3000` while `npm run dev` is running.
 
 ## The emails
 
@@ -50,7 +50,7 @@ Its idempotency key is `welcome/<user id>`, so a second click on the link within
 ## Setup (the owner's steps)
 
 1. **Resend.** The sending domain is `curatit.app` (bought on 2026-10-17, DNS on Vercel), set up in Resend in the Tokyo region (`ap-northeast-1`) with sending and receiving on: DKIM (`resend._domainkey`), SPF (`send` and `rsend` CNAMEs), the receiving MX on the root (mail to `@curatit.app` lands in Resend's inbox) and a monitor-only DMARC record (`_dmarc`, `p=none`). The app sends from `Curatit <hello@curatit.app>` unless `EMAIL_FROM` says otherwise. What's left: create an API key and set `RESEND_API_KEY` (and `EMAIL_REPLY_TO` if replies shouldn't go to `SUPPORT_EMAIL`) in Vercel and `.env.local`.
-2. **Deploy `public/email/`**, so the images exist at `https://curatit.vercel.app/email/…`.
+2. **Deploy `public/email/`**, so the images exist at `https://www.curatit.app/email/…`, and set `CURATIT_PUBLIC_BASE_URL=https://www.curatit.app` in Vercel (`docs/domain.md`; the links and images follow it).
 3. **Supabase SMTP.** Authentication → Emails → SMTP settings: host `smtp.resend.com`, port `465`, username `resend`, password the Resend API key, sender `hello@curatit.app` (name Curatit). This also lifts the default sender's limit of a few emails an hour to team members only.
 4. **Supabase templates.** Authentication → Emails → Templates: paste each file and set its subject.
 

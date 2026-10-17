@@ -8,7 +8,7 @@ Status: **untested**. Illustrative, from Cursor's MCP documentation on 12 Octobe
 {
   "mcpServers": {
     "curatit": {
-      "url": "https://curatit.vercel.app/mcp",
+      "url": "https://www.curatit.app/mcp",
       "headers": { "Authorization": "Bearer ${env:CURATIT_ACCESS_TOKEN}" }
     }
   }

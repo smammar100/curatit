@@ -72,7 +72,7 @@ describe("bridge", () => {
   });
 
   it("parses arguments and never takes a token from them", () => {
-    expect(parseArgs([])).toMatchObject({ server: "https://curatit.vercel.app/mcp", timeoutMs: 60_000 });
+    expect(parseArgs([])).toMatchObject({ server: "https://www.curatit.app/mcp", timeoutMs: 60_000 });
     expect(parseArgs(["--server", "https://staging.example/mcp", "--timeout", "5000"])).toMatchObject({ server: "https://staging.example/mcp", timeoutMs: 5000 });
     expect(() => parseArgs(["--token", "x"])).toThrow(/Unknown option/);
   });
