@@ -53,7 +53,11 @@ export async function sendEmail({ to, subject, react, idempotencyKey }: Email): 
  * person is signed in by then. */
 export function sendWelcomeEmail(user: { id: string; email?: string; user_metadata?: { full_name?: unknown } }) {
   if (!user.email) return Promise.resolve(false);
-  const name = typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name.trim().split(/\s+/)[0] : undefined;
+  const first = typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name.trim().split(/\s+/)[0] : undefined;
+  // Anyone can set this metadata when calling Supabase Auth directly, so only a name-shaped word
+  // goes into the email: "evil.example/verify" would otherwise arrive from hello@curatit.app as a
+  // link mail clients make clickable
+  const name = first && first.length <= 40 && /^[\p{L}\p{M}'’-]+$/u.test(first) ? first : undefined;
   return sendEmail({
     to: user.email,
     subject: welcomeSubject,

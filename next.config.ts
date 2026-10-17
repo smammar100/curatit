@@ -16,6 +16,24 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/library/**" },
     ],
   },
+  // Security headers on every response (2026-10-18). frame-ancestors keeps Curatit out of other
+  // sites' frames (clickjacking); nosniff stops a file being run as a type it isn't; the
+  // referrer policy sends only the origin to other sites. A full Content-Security-Policy is left
+  // for later: the page's inline scripts (ThemeScript, DeferredImages) would need nonces first.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        ],
+      },
+    ];
+  },
   // The About page became Vision (2026-10-12); old links still land
   async redirects() {
     return [{ source: "/about", destination: "/vision", permanent: true }];

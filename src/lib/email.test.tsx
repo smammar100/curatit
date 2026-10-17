@@ -112,6 +112,23 @@ describe("sendWelcomeEmail", () => {
     expect(await render(message().react)).toContain("Welcome to Curatit.");
   });
 
+  it("leaves out a name that isn't name-shaped, so a URL can't become a link in the email", async () => {
+    const { sendWelcomeEmail } = await load();
+    for (const full_name of ["evil.example/verify now", "https://evil.example", "<b>Sara</b>", "x".repeat(41)]) {
+      send.mockClear();
+      await sendWelcomeEmail({ id: "u4", email: "new@studio.co", user_metadata: { full_name } });
+      const html = await render(message().react);
+      expect(html).toContain("Welcome to Curatit.");
+      expect(html).not.toContain("evil.example");
+    }
+  });
+
+  it("keeps names with accents, apostrophes and hyphens", async () => {
+    const { sendWelcomeEmail } = await load();
+    await sendWelcomeEmail({ id: "u5", email: "z@studio.co", user_metadata: { full_name: "Zoë-Anne O’Neil" } });
+    expect(await render(message().react)).toContain("Welcome to Curatit, Zoë-Anne.");
+  });
+
   it("sends nothing to an account without an email address", async () => {
     const { sendWelcomeEmail } = await load();
     expect(await sendWelcomeEmail({ id: "u3" })).toBe(false);
