@@ -6,7 +6,7 @@
 //   NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY  the catalog (reads, under RLS)
 //   SUPABASE_SECRET_KEY            token verification and rate limits (service_role; never
 //                                  reaches a browser or the bridge)
-//   CURATIT_PUBLIC_BASE_URL        this deployment's canonical origin, e.g. https://curatit.vercel.app
+//   CURATIT_PUBLIC_BASE_URL        this deployment's canonical origin, e.g. https://www.curatit.app
 //   CURATIT_MCP_SIGNING_SECRET     signs search cursors (32+ random bytes, base64 or hex)
 // Optional:
 //   CURATIT_OAUTH_ISSUER           Supabase Auth's issuer, https://<ref>.supabase.co/auth/v1, once
@@ -65,7 +65,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): McpConfig {
   try {
     publicBaseUrl = new URL(baseUrl);
   } catch {
-    throw new Error("CURATIT_PUBLIC_BASE_URL must be an absolute URL such as https://curatit.vercel.app");
+    throw new Error("CURATIT_PUBLIC_BASE_URL must be an absolute URL such as https://www.curatit.app");
   }
   if (production && publicBaseUrl.protocol !== "https:") throw new Error("CURATIT_PUBLIC_BASE_URL must use https in production.");
   if (publicBaseUrl.pathname !== "/") throw new Error("CURATIT_PUBLIC_BASE_URL must be an origin with no path.");

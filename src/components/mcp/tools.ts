@@ -1,7 +1,9 @@
 // The MCP server's six tools as the marketing pages describe them: the connect page at /docs/mcp
 // and the MCP landing page at /agents (which also uses the plain titles). The tools themselves are
 // registered in src/lib/mcp/tools.ts; keep these lines in step when one changes.
-export const MCP_URL = "https://curatit.vercel.app/mcp";
+import { SITE_URL } from "@/lib/site";
+
+export const MCP_URL = `${SITE_URL}/mcp`;
 
 export const TOOLS = [
   { name: "curatit_get_taxonomy", title: "Learn the filters", does: "The values every filter accepts: industries, brands, formats, goals, creative approaches and the visual dimensions." },

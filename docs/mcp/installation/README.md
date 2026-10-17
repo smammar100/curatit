@@ -2,9 +2,9 @@
 
 One server, three ways in:
 
-1. **Remote MCP** at `https://curatit.vercel.app/mcp` (Streamable HTTP). Send a Curatit personal access token as `Authorization: Bearer …`. Hosts that only speak OAuth need the project's OAuth server, which isn't on yet (`../security.md`).
+1. **Remote MCP** at `https://www.curatit.app/mcp` (Streamable HTTP). Send a Curatit personal access token as `Authorization: Bearer …`. Hosts that only speak OAuth need the project's OAuth server, which isn't on yet (`../security.md`).
 2. **The stdio bridge**, for hosts that launch a local command: `packages/mcp-bridge` (build it with `npm run mcp:bridge:build`; it isn't on npm). It reads the token from `CURATIT_ACCESS_TOKEN` and forwards to the remote server.
-3. **REST** at `https://curatit.vercel.app/api/v1` with the same token, described by `/api/v1/openapi.json`, for applications without MCP; `packages/model-adapter` is a reference tool loop over it.
+3. **REST** at `https://www.curatit.app/api/v1` with the same token, described by `/api/v1/openapi.json`, for applications without MCP; `packages/model-adapter` is a reference tool loop over it.
 
 **Get a token:** sign in, open the account menu → API tokens (`/dashboard/settings/tokens`), create one with the scopes you need (`curatit:read` for research, `curatit:brief` for briefs). It's shown once. Revoke it from the same page.
 

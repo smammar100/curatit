@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // curatit-mcp: MCP over stdio for local clients, forwarding to the hosted Curatit server.
-//   CURATIT_ACCESS_TOKEN=… node dist/cli.js --server https://curatit.vercel.app/mcp
+//   CURATIT_ACCESS_TOKEN=… node dist/cli.js --server https://www.curatit.app/mcp
 // stdout carries MCP messages only; everything else goes to stderr. Ctrl-C or SIGTERM closes
 // the connection and exits.
 
@@ -11,7 +11,7 @@ import { CredentialError, loadToken } from "./credentials.js";
 const log = (line: string) => process.stderr.write(`[${BRIDGE_INFO.name}] ${line}\n`);
 
 export function parseArgs(argv: string[]) {
-  const out = { server: "https://curatit.vercel.app/mcp", timeoutMs: 60_000, help: false };
+  const out = { server: "https://www.curatit.app/mcp", timeoutMs: 60_000, help: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--server" && argv[i + 1]) out.server = argv[++i];
@@ -45,7 +45,7 @@ async function main() {
   try {
     serverUrl = new URL(args.server);
   } catch {
-    log("--server must be a URL such as https://curatit.vercel.app/mcp");
+    log("--server must be a URL such as https://www.curatit.app/mcp");
     process.exit(2);
   }
 

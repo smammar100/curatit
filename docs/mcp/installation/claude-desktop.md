@@ -13,7 +13,7 @@ Settings → Developer → Edit Config opens `claude_desktop_config.json`:
   "mcpServers": {
     "curatit": {
       "command": "node",
-      "args": ["/absolute/path/to/Curatit/packages/mcp-bridge/dist/cli.js", "--server", "https://curatit.vercel.app/mcp"],
+      "args": ["/absolute/path/to/Curatit/packages/mcp-bridge/dist/cli.js", "--server", "https://www.curatit.app/mcp"],
       "env": { "CURATIT_ACCESS_TOKEN": "your token, kept in this file only, never committed" }
     }
   }

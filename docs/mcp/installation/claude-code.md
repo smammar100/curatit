@@ -5,13 +5,13 @@ Status: **untested**. Commands are illustrative, from Claude Code's documentatio
 Remote, with the token taken from your shell environment:
 
 ```bash
-claude mcp add --transport http curatit https://curatit.vercel.app/mcp --header "Authorization: Bearer $CURATIT_ACCESS_TOKEN"
+claude mcp add --transport http curatit https://www.curatit.app/mcp --header "Authorization: Bearer $CURATIT_ACCESS_TOKEN"
 ```
 
 Or the bridge:
 
 ```bash
-claude mcp add curatit --env CURATIT_ACCESS_TOKEN=$CURATIT_ACCESS_TOKEN -- node /absolute/path/to/Curatit/packages/mcp-bridge/dist/cli.js --server https://curatit.vercel.app/mcp
+claude mcp add curatit --env CURATIT_ACCESS_TOKEN=$CURATIT_ACCESS_TOKEN -- node /absolute/path/to/Curatit/packages/mcp-bridge/dist/cli.js --server https://www.curatit.app/mcp
 ```
 
 Check with `claude mcp list`; then, in a session: *Find three finance carousel posts and show their sources.*

@@ -4,7 +4,7 @@ For applications without MCP support. Status: the REST routes run the same tool 
 
 ## REST
 
-Base `https://curatit.vercel.app/api/v1`, `Authorization: Bearer <token>`, JSON envelopes (`schema_version`, `request_id`, `data` or `error`, `warnings`, `provenance`). The document: `GET /api/v1/openapi.json` (no auth).
+Base `https://www.curatit.app/api/v1`, `Authorization: Bearer <token>`, JSON envelopes (`schema_version`, `request_id`, `data` or `error`, `warnings`, `provenance`). The document: `GET /api/v1/openapi.json` (no auth).
 
 | Method | Route | Tool |
 | --- | --- | --- |
@@ -18,7 +18,7 @@ Base `https://curatit.vercel.app/api/v1`, `Authorization: Bearer <token>`, JSON 
 Query strings: `filters.layouts=framed-card,list-stack`; repeated keys make arrays; `true`, `false` and integers are typed.
 
 ```bash
-curl -s https://curatit.vercel.app/api/v1/posts/search -H "Authorization: Bearer $CURATIT_ACCESS_TOKEN" -H "Content-Type: application/json" -d '{"filters":{"industries":["finance"],"formats":["carousel"]},"limit":3}'
+curl -s https://www.curatit.app/api/v1/posts/search -H "Authorization: Bearer $CURATIT_ACCESS_TOKEN" -H "Content-Type: application/json" -d '{"filters":{"industries":["finance"],"formats":["carousel"]},"limit":3}'
 ```
 
 ## The model adapter
@@ -26,7 +26,7 @@ curl -s https://curatit.vercel.app/api/v1/posts/search -H "Authorization: Bearer
 `packages/model-adapter` (build: `npm run mcp:adapter:build`) turns the OpenAPI document into function schemas (Anthropic and OpenAI shapes) and runs a bounded tool loop: each call the model asks for is checked against the allowlist, sent to REST with the token kept in the process, and its envelope handed back as data; the loop stops at its budget of iterations, calls and time.
 
 ```bash
-CURATIT_ACCESS_TOKEN=… ANTHROPIC_API_KEY=… node packages/model-adapter/dist/cli.js --server https://curatit.vercel.app "Find three finance carousel posts and show their sources."
+CURATIT_ACCESS_TOKEN=… ANTHROPIC_API_KEY=… node packages/model-adapter/dist/cli.js --server https://www.curatit.app "Find three finance carousel posts and show their sources."
 ```
 
 Tested with a scripted model (`tool-loop.test.ts`); not yet with a live model API.

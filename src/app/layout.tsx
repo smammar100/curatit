@@ -23,7 +23,11 @@ export const metadata: Metadata = {
   description:
     "A searchable library of real brand social media posts, reviewed by editors, with breakdowns of their copy and design. Find examples, save them to boards, share them with your team.",
   authors: [{ name: "Curatit" }],
+  // "./" is each page's own path on SITE_URL, so a page read on curatit.vercel.app names its
+  // www.curatit.app address (docs/domain.md)
+  alternates: { canonical: "./" },
   openGraph: {
+    url: "./",
     title: "Curatit",
     description:
       "A searchable library of real brand social media posts, reviewed by editors. Find examples, save them to boards, share them with your team.",

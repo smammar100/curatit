@@ -1,12 +1,12 @@
 // The synthetic check for a deployment: initialize, list tools, a small search, a known post,
 // as a real authenticated MCP client. Run after a deploy, or on a schedule:
-//   CURATIT_ACCESS_TOKEN=… npm run mcp:smoke -- --server https://curatit.vercel.app
+//   CURATIT_ACCESS_TOKEN=… npm run mcp:smoke -- --server https://www.curatit.app
 // Exit code 0 when every step passed. The token is read from the environment only.
 
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 
 const args = process.argv.slice(2);
-const origin = args.includes("--server") ? args[args.indexOf("--server") + 1] : "https://curatit.vercel.app";
+const origin = args.includes("--server") ? args[args.indexOf("--server") + 1] : "https://www.curatit.app";
 const token = process.env.CURATIT_ACCESS_TOKEN;
 if (!token) {
   console.error("Set CURATIT_ACCESS_TOKEN (a personal access token with curatit:read).");
