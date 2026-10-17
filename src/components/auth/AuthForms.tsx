@@ -34,7 +34,6 @@ import {
 } from "@/lib/auth";
 import { SUPPORT_MAILTO } from "@/lib/site";
 import { AuthField, AuthNotice } from "./AuthParts";
-import Captcha from "./Captcha";
 import PasswordField from "./PasswordField";
 
 const linkClass = "font-medium text-accent-500 hover:text-accent-600";
@@ -212,7 +211,6 @@ export function SignInForm() {
             </Link>
           }
         />
-        <Captcha resetOn={state} />
         {error && <AuthNotice>{error}</AuthNotice>}
         <Submit pending={pending} idle="Sign in" busy="Signing in…" />
       </form>
@@ -279,7 +277,6 @@ export function SignUpForm() {
           }
         />
         <PasswordField error={check.errors.password} />
-        <Captcha resetOn={state} />
         {error && <AuthNotice>{error}</AuthNotice>}
         <Submit
           pending={pending}
@@ -338,7 +335,6 @@ function CheckEmail({ email }: { email: string }) {
       >
         <input type="hidden" name="email" value={email} />
         <Next />
-        <Captcha resetOn={state} />
         {state.error && <AuthNotice>{state.error}</AuthNotice>}
         {resent && !pending && !state.error && (
           <p role="status" className="text-center text-sm text-base-600">
@@ -404,7 +400,6 @@ export function ForgotPasswordForm() {
           defaultValue={state.email}
           error={check.errors.email}
         />
-        <Captcha resetOn={state} />
         {state.error && !check.any && <AuthNotice>{state.error}</AuthNotice>}
         <Submit pending={pending} idle="Send reset link" busy="Sending…" />
       </form>

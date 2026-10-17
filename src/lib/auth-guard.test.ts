@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { captchaToken, isDisposableEmail } from "./auth-guard";
+import { isDisposableEmail } from "./auth-guard";
 import { emailProblem } from "./auth";
 
 describe("isDisposableEmail", () => {
@@ -15,18 +15,6 @@ describe("isDisposableEmail", () => {
     // A domain that only ends with a listed name's letters isn't one of its subdomains
     expect(isDisposableEmail("me@notmailinator.com")).toBe(false);
     expect(isDisposableEmail("not-an-email")).toBe(false);
-  });
-});
-
-describe("captchaToken", () => {
-  it("passes on the Turnstile token when the form has one", () => {
-    const form = new FormData();
-    form.set("cf-turnstile-response", "tok");
-    expect(captchaToken(form)).toBe("tok");
-  });
-
-  it("leaves the option out without one, as Supabase expects while CAPTCHA is off", () => {
-    expect(captchaToken(new FormData())).toBeUndefined();
   });
 });
 

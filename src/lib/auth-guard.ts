@@ -1,6 +1,6 @@
 // Guards in front of the auth actions (2026-10-18, a pre-launch security pass): a per-visitor
-// limit on attempts, a refusal of throwaway email domains at sign-up, and the Turnstile token
-// handed on to Supabase. Server only (it reads next/headers).
+// limit on attempts and a refusal of throwaway email domains at sign-up. Server only (it reads
+// next/headers).
 //
 // Supabase Auth limits requests per IP too, but the actions call it from Vercel, so it sees
 // Vercel's address rather than the visitor's: one bot isn't told apart from everyone else, and
@@ -64,12 +64,4 @@ export function isDisposableEmail(email: string) {
     if (DISPOSABLE_DOMAINS.has(parts.slice(i).join("."))) return true;
   }
   return false;
-}
-
-// The Cloudflare Turnstile token the form carries when the widget is on (it adds a hidden
-// cf-turnstile-response field). Supabase checks it when Attack Protection → CAPTCHA is on;
-// without a token the option is left out, which is what Supabase expects while CAPTCHA is off.
-export function captchaToken(form: FormData) {
-  const token = form.get("cf-turnstile-response");
-  return typeof token === "string" && token ? token : undefined;
 }
