@@ -1,21 +1,22 @@
 // Picks a brand's library posts from an apify/instagram-post-scraper run
 // (dataDetailLevel: detailedData, resultsLimit: 30, skipPinnedPosts: true) and
 // saves them verbatim to data/instagram/<handle>.json. Reels are dropped and
-// the newest 5 static images and carousels are kept.
+// the newest 5 static images and carousels are kept (or as many as [keep]).
 //
-//   node scripts/pick-library-posts.mjs <handle> <runId> <datasetId>
+//   node scripts/pick-library-posts.mjs <handle> <runId> <datasetId> [keep]
 //
 // Then add the brand to scripts/library-sources.mjs.
 
 import fs from "node:fs";
 
-const [handle, runId, datasetId] = process.argv.slice(2);
+const [handle, runId, datasetId, keepArg] = process.argv.slice(2);
 if (!handle || !runId || !datasetId) {
-  console.error("Usage: node scripts/pick-library-posts.mjs <handle> <runId> <datasetId>");
+  console.error("Usage: node scripts/pick-library-posts.mjs <handle> <runId> <datasetId> [keep]");
   process.exit(1);
 }
 
-const keep = 5;
+// Brands added since 2026-10-15 keep every still of a 10-post scrape
+const keep = Number(keepArg) || 5;
 const api = `https://api.apify.com/v2/datasets/${datasetId}`;
 const items = await (await fetch(`${api}/items?format=json&clean=true`)).json();
 const { data: dataset } = await (await fetch(api)).json();
