@@ -1,9 +1,11 @@
 // The onboarding funnel's server steps: the sign-up action records signed_up only for an account
 // it just created (and hands that id back so the browser can identify), and the email callback
-// records email_confirmed only when the link confirmed the address just now.
+// records email_confirmed only when the link confirmed the address just now. The welcome email
+// goes out at the same two moments: a confirmed link, or a sign-up that needs no confirmation.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const capture = vi.fn();
+const welcome = vi.fn();
 const auth = {
   signUp: vi.fn(),
   exchangeCodeForSession: vi.fn(),
@@ -22,6 +24,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("next/server", async (original) => ({ ...(await original<typeof import("next/server")>()), after: (run: () => unknown) => run() }));
 vi.mock("@/utils/supabase/server", () => ({ createClient: () => ({ auth }) }));
 vi.mock("@/lib/analytics-server", () => ({ captureServerEvent: (...args: unknown[]) => capture(...args) }));
+vi.mock("@/lib/email", () => ({ sendWelcomeEmail: (...args: unknown[]) => welcome(...args) }));
 
 const { signUp } = await import("./actions");
 const { GET } = await import("./callback/route");
@@ -37,6 +40,7 @@ const form = () => {
 
 beforeEach(() => {
   capture.mockReset();
+  welcome.mockReset();
   for (const fn of Object.values(auth)) fn.mockReset();
 });
 
@@ -46,12 +50,14 @@ describe("sign-up", () => {
     const state = await signUp({}, form());
     expect(state).toEqual({ sent: "new@example.com", userId: "u1" });
     expect(capture).toHaveBeenCalledWith("u1", "signed_up", { confirmation_required: true });
+    expect(welcome).not.toHaveBeenCalled();
   });
 
   it("records a new account that's signed in at once, before redirecting", async () => {
     auth.signUp.mockResolvedValue({ data: { user: { id: "u2", created_at: now(), identities: [{}] }, session: {} }, error: null });
     await expect(signUp({}, form())).rejects.toThrow("REDIRECT /dashboard");
     expect(capture).toHaveBeenCalledWith("u2", "signed_up", { confirmation_required: false });
+    expect(welcome).toHaveBeenCalledWith(expect.objectContaining({ id: "u2" }));
   });
 
   it("doesn't count or hand out an older unconfirmed account whose link was just resent", async () => {
@@ -79,12 +85,14 @@ describe("the email link", () => {
     const response = await GET(withNextUrl("code=abc&next=%2Fdashboard"));
     expect(response.headers.get("location")).toBe("http://localhost:3000/dashboard");
     expect(capture).toHaveBeenCalledWith("u1", "email_confirmed", { via: "code" });
+    expect(welcome).toHaveBeenCalledWith(expect.objectContaining({ id: "u1" }));
   });
 
   it("doesn't count a password reset for an address confirmed long ago", async () => {
     auth.exchangeCodeForSession.mockResolvedValue({ data: { user: { id: "u1", email_confirmed_at: ago(60 * 24) } }, error: null });
     await GET(withNextUrl("code=abc&next=%2Freset-password"));
     expect(capture).not.toHaveBeenCalled();
+    expect(welcome).not.toHaveBeenCalled();
   });
 
   it("records nothing when the link fails", async () => {

@@ -10,6 +10,7 @@ import { after } from "next/server";
 import { isAuthWeakPasswordError, type AuthError } from "@supabase/supabase-js";
 import { captureServerEvent } from "@/lib/analytics-server";
 import { authMessage, emailProblem, passwordProblem, safeNext } from "@/lib/auth";
+import { sendWelcomeEmail } from "@/lib/email";
 import { SITE_URL } from "@/lib/site";
 import { createClient } from "@/utils/supabase/server";
 
@@ -88,8 +89,12 @@ export async function signUp(_: AuthState, form: FormData): Promise<AuthState> {
   const user = data.user;
   const created = user && Date.now() - new Date(user.created_at).getTime() < 2 * 60_000 ? user : null;
   if (created) after(() => captureServerEvent(created.id, "signed_up", { confirmation_required: !data.session }));
-  // With confirmation off there's a session already; otherwise the link finishes it
-  if (data.session) redirect(next);
+  // With confirmation off there's a session already, so the account is ready and gets its
+  // welcome now; otherwise the link finishes it, and /auth/callback sends the welcome
+  if (data.session) {
+    if (created) after(() => sendWelcomeEmail(created));
+    redirect(next);
+  }
   return { sent: email, userId: created?.id };
 }
 

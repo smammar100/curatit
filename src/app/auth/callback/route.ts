@@ -3,6 +3,7 @@ import { after, NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { captureServerEvent } from "@/lib/analytics-server";
 import { safeNext } from "@/lib/auth";
+import { sendWelcomeEmail } from "@/lib/email";
 import { createClient } from "@/utils/supabase/server";
 
 // Where Supabase sends people back to from the links in its emails (confirm sign-up, reset
@@ -35,6 +36,10 @@ export async function GET(request: NextRequest) {
   // confirmed long ago doesn't count). The onboarding funnel's third step, after signed_up.
   const user = data.user;
   const confirmed = user?.email_confirmed_at ? Date.now() - new Date(user.email_confirmed_at).getTime() < 15 * 60_000 : false;
-  if (user && confirmed) after(() => captureServerEvent(user.id, "email_confirmed", { via: code ? "code" : type }));
+  // The same moment sends the welcome email (once per account, by its idempotency key).
+  if (user && confirmed) {
+    after(() => captureServerEvent(user.id, "email_confirmed", { via: code ? "code" : type }));
+    after(() => sendWelcomeEmail(user));
+  }
   return NextResponse.redirect(new URL(next, request.url));
 }
