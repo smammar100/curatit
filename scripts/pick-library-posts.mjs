@@ -15,8 +15,14 @@ if (!handle || !runId || !datasetId) {
   process.exit(1);
 }
 
-// Brands added since 2026-10-15 keep every still of a 10-post scrape
-const keep = Number(keepArg) || 5;
+// Brands added since 2026-10-15 keep every still of a 10-post scrape. A count that isn't a whole
+// number from 1 up stops here: slice() would quietly read -1 as "all but the last", and every
+// saved item is published and queued for analysis
+const keep = keepArg === undefined ? 5 : Number(keepArg);
+if (!Number.isSafeInteger(keep) || keep < 1) {
+  console.error(`keep must be a whole number from 1 up, not "${keepArg}"`);
+  process.exit(1);
+}
 const api = `https://api.apify.com/v2/datasets/${datasetId}`;
 const items = await (await fetch(`${api}/items?format=json&clean=true`)).json();
 const { data: dataset } = await (await fetch(api)).json();
