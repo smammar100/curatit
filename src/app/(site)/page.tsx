@@ -6,6 +6,7 @@ import HomeHero from "@/components/home/HomeHero";
 import { HomePostsProvider } from "@/components/home/HomePosts";
 import HowItWorks from "@/components/home/HowItWorks";
 import HydrateOnView from "@/components/home/HydrateOnView";
+import CreativeDnaSection from "@/components/home/CreativeDnaSection";
 import McpSection from "@/components/home/McpSection";
 import { detail, featuredPosts } from "@/components/home/demo";
 import { Categories, ProblemSolution } from "@/components/home/islands";
@@ -61,6 +62,9 @@ export default async function HomePage() {
       </HydrateOnView>
       <HydrateOnView ahead>
         <Categories categories={tabs} galleries={galleries} />
+      </HydrateOnView>
+      <HydrateOnView ahead>
+        <CreativeDnaSection />
       </HydrateOnView>
       <HydrateOnView ahead>
         <McpSection />

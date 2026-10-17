@@ -45,6 +45,40 @@ export const detail = {
   sequence: ["Announcement", "Benefit", "Benefit", "Benefit", "CTA"],
 };
 
+// The Creative DNA section's illustration: the same Wise carousel's cover taken apart the way its
+// published analysis reads it. The labels, the strategy and the colours are the analysis's own
+// (the colours measured from the slide's pixels); where each pin and picking spot sits is read
+// off the 1080 × 1350 slide by hand, in percent of the image. `short` is the pin on phones.
+export const dna = {
+  post: detail.post,
+  headline: "Present the new feature inside a familiar travel hub",
+  pins: [
+    { side: "left", x: 18, y: 21, label: "Hook", value: "News headline", short: "Headline" },
+    { side: "left", x: 24, y: 46, label: "Layout", value: "Phone mock-up", short: "Mock-up" },
+    { side: "right", x: 72, y: 7, label: "Kicker", value: "Names the launch", short: "Kicker" },
+    { side: "right", x: 70, y: 62, label: "Product", value: "Feature in use", short: "In use" },
+  ],
+  samples: [
+    { hex: "#090501", x: 88, y: 15 },
+    { hex: "#FFFCF3", x: 50, y: 49 },
+    { hex: "#172B01", x: 60, y: 84 },
+    { hex: "#EEE9B0", x: 92, y: 76 },
+  ],
+  // The first lines of the Markdown that Copy brief puts on the clipboard for this post
+  brief: [
+    "# Instagram post — 1:1 replica brief",
+    "Reconstruct the carousel as exactly 5 images.",
+    "Slide 1: Travel-data launch headline and phone",
+    "Colours: #090501 #FFFCF3 #172B01 #EEE9B0",
+  ],
+} satisfies {
+  post: string;
+  headline: string;
+  pins: { side: "left" | "right"; x: number; y: number; label: string; value: string; short: string }[];
+  samples: { hex: string; x: number; y: number }[];
+  brief: string[];
+};
+
 // A research board as the board demo shows it
 export const board = {
   name: "Payments app launch",
