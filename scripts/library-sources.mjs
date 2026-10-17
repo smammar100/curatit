@@ -288,6 +288,23 @@ export const sources = [
     // Affinity belongs to Canva and co-posts with it
     brandAccounts: ["canva", "affinity"],
   },
+  // Added 2026-10-17, all ten stills of each scrape
+  {
+    file: "data/instagram/postmates.json",
+    folder: "food-drink",
+    categories: ["food-drink"],
+    brand: { name: "Postmates", slug: "postmates", websiteUrl: "https://postmates.com" },
+    brandAccounts: ["postmates"],
+  },
+  {
+    file: "data/instagram/gofundme.json",
+    folder: "finance",
+    categories: ["finance"],
+    brand: { name: "GoFundMe", slug: "gofundme", websiteUrl: "https://www.gofundme.com" },
+    // GoFundMe Pro (its nonprofit platform) and @gofundmenl are GoFundMe's own and co-post with it;
+    // fundraisers like @hawaiimutualaid post with @gofundme as co-author but aren't filed here
+    brandAccounts: ["gofundme", "gofundmepro", "gofundmenl"],
+  },
 ];
 
 // Mirrors the generated instagram_posts.format column
