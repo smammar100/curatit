@@ -17,7 +17,9 @@
     "mcp:bridge:build": "npm run build --workspace @curatit/mcp-bridge",
     "mcp:adapter:build": "npm run build --workspace @curatit/model-adapter",
     "test:mcp:live": "vitest run tests/mcp",
-    "mcp:smoke": "tsx scripts/mcp-smoke.ts"
+    "mcp:smoke": "tsx scripts/mcp-smoke.ts",
+    "email:dev": "email dev --dir src/emails --port 3001",
+    "email:render": "tsx scripts/render-emails.tsx"
   },
   "dependencies": {
     "@modelcontextprotocol/client": "2.3.1",
@@ -26,6 +28,8 @@
     "@opentelemetry/exporter-logs-otlp-http": "^0.223.0",
     "@opentelemetry/resources": "^2.12.0",
     "@opentelemetry/sdk-logs": "^0.223.0",
+    "@react-email/components": "^1.0.12",
+    "@react-email/render": "^2.1.1",
     "@shikijs/rehype": "^4.5.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
@@ -47,6 +51,7 @@
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
     "remark-smartypants": "^3.0.3",
+    "resend": "^6.34.1",
     "tailwind-merge": "^3.7.0",
     "tailwind-scrollbar-hide": "^4.0.0",
     "tailwindcss": "^4.3.3",
@@ -55,12 +60,14 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@react-email/ui": "^6.11.3",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "happy-dom": "20.14.5",
     "postcss": "^8.5.29",
+    "react-email": "^6.11.3",
     "sharp": "0.35.5",
     "tsx": "4.23.15",
     "typescript": "~6.0.3",
