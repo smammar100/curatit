@@ -809,6 +809,26 @@
   }
 }
 
+/* Covers that start after the first paint (global/DeferredImages: the hero corridor, the
+   sign-in wall, the footer strip). Until the file is set an image is hidden, or Chrome draws an
+   outlined box with a broken-image icon; the tile's fill shows instead. Then it fades in once
+   loaded (an opacity change only, and at once under reduced motion). */
+img[data-src] {
+  visibility: hidden;
+}
+img[data-fade] {
+  opacity: 0;
+  transition: opacity 400ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+img[data-fade="in"] {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  img[data-fade] {
+    transition: none;
+  }
+}
+
 /* The filmstrip: the newest covers, repeated so the track is wider than any window, drifting
    left by half its width and looping (the second half is the first again, so the seam is
    invisible). Still under reduced motion */

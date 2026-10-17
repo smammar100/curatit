@@ -7,7 +7,7 @@ import { createElement, type FunctionComponent } from "react";
 import { describe, expect, it } from "vitest";
 import { render } from "@react-email/render";
 import { supabaseTemplates } from "./_components/supabase";
-import { assetBase } from "./_components/tokens";
+import { appUrl, assetBase } from "./_components/tokens";
 
 type Template = FunctionComponent<Record<string, unknown>> & { PreviewProps?: Record<string, unknown> };
 
@@ -82,11 +82,17 @@ describe("the Supabase Auth templates", () => {
     },
   );
 
-  it("link with Supabase's confirmation URL, never a guessed one", async () => {
+  it("send links through /auth/confirm, so a mail scanner can't use the token up", async () => {
+    const links: Record<string, string> = { "confirm-signup": "email", "reset-password": "recovery", "change-email": "email_change" };
     for (const [name, element] of supabaseTemplates) {
       const html = await render(element);
-      const links = attr(html, "a", "href").filter((href) => !href!.startsWith(assetBase));
-      if (["confirm-signup", "reset-password", "change-email"].includes(name)) expect(links).toContain("{{ .ConfirmationURL }}");
+      expect(html).not.toContain("{{ .ConfirmationURL }}");
+      if (links[name]) {
+        const hrefs = attr(html, "a", "href").map((href) => href!.replace(/&amp;/g, "&"));
+        expect(hrefs).toContain(`${appUrl}/auth/confirm?token_hash={{ .TokenHash }}&type=${links[name]}&next={{ .RedirectTo }}`);
+      }
     }
+    // Nowhere in Curatit takes a typed sign-up code, so the email doesn't offer one
+    expect(await render(supabaseTemplates.find(([name]) => name === "confirm-signup")![1])).not.toContain("{{ .Token }}");
   });
 });

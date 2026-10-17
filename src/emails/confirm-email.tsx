@@ -46,6 +46,5 @@ export default function ConfirmEmail({ email, confirmUrl, code, expiresIn = '1 h
 
 ConfirmEmail.PreviewProps = {
   email: 'ammar@studio.co',
-  confirmUrl: 'https://www.curatit.app/auth/callback?token_hash=pkce_8f2c1e&type=signup',
-  code: '482913',
+  confirmUrl: 'https://www.curatit.app/auth/confirm?token_hash=pkce_8f2c1e&type=email',
 } satisfies ConfirmEmailProps;

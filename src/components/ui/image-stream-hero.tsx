@@ -208,9 +208,11 @@ export function ImageStreamHero({
               // the right at every depth.
               const img = images[i % Math.max(images.length, 1)];
               return (
+                // Curatit: a soft fill with a hairline edge, so each card reads as a quiet tile
+                // until its cover fades in over both (the edge is inset, under the image)
                 <div
                   key={`${name}-${i}`}
-                  className={cn(card, "absolute overflow-hidden")}
+                  className={cn(card, "absolute overflow-hidden bg-base-100 ring-1 ring-edge ring-inset")}
                   style={{
                     left: "50%",
                     top: `${axis}%`,

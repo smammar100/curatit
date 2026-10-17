@@ -65,7 +65,7 @@ Its idempotency key is `welcome/<user id>`, so a second click on the link within
 
    Security notifications are off by default; turn on those two. They ask people to reply if something's wrong, so the sender should be an inbox someone reads.
 
-The templates link with `{{ .ConfirmationURL }}`, which goes through Supabase and back to `/auth/callback` with a PKCE code, the flow the callback already handles. The copy says links work for 1 hour; if the Email OTP expiry changes in Supabase, change `expiresIn` in the templates and render again.
+The confirm, reset and change-email templates don't link to `{{ .ConfirmationURL }}`. They link to `/auth/confirm?token_hash={{ .TokenHash }}&type=…&next={{ .RedirectTo }}`, a page with one button that posts the token to `/auth/callback`. Some mail providers (Outlook's Safe Links, for one) open every link in an email to scan it, which would use up a one-time link before the person clicks; a page that waits for a click can't be used up that way (Supabase's own advice on email prefetching). The confirm email shows no code, because Curatit has nowhere to type one. These token links also work in any browser, unlike the default templates' PKCE links, but the sign-up and reset screens still say "open it in this browser" while Supabase's default templates may be in use. The copy says links work for 1 hour; if the Email OTP expiry changes in Supabase, change `expiresIn` in the templates and render again.
 
 ## How the brand maps to email
 
