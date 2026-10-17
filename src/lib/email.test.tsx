@@ -53,15 +53,15 @@ describe("sendEmail", () => {
     expect(options()).toEqual({ idempotencyKey: "k1" });
   });
 
-  it("falls back to hello@curatit.app and the support inbox", async () => {
+  it("falls back to hello@curatit.app, with replies to the sender rather than a free-mail inbox", async () => {
     vi.stubEnv("RESEND_API_KEY", "re_test");
     vi.stubEnv("EMAIL_FROM", "");
     vi.stubEnv("EMAIL_REPLY_TO", "");
     send.mockResolvedValue({ data: { id: "e1" }, error: null });
     const { sendEmail } = await load();
-    const { SUPPORT_EMAIL } = await import("./site");
     await sendEmail(email);
-    expect(message()).toMatchObject({ from: "Curatit <hello@curatit.app>", replyTo: SUPPORT_EMAIL });
+    expect(message()).toMatchObject({ from: "Curatit <hello@curatit.app>" });
+    expect(message().replyTo).toBeUndefined();
   });
 
   it("reports false and logs when Resend refuses the email", async () => {
