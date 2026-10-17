@@ -46,6 +46,6 @@ export default function ConfirmEmail({ email, confirmUrl, code, expiresIn = '1 h
 
 ConfirmEmail.PreviewProps = {
   email: 'ammar@studio.co',
-  confirmUrl: 'https://curatit.vercel.app/auth/confirm?token_hash=pkce_8f2c1e&type=email',
+  confirmUrl: 'https://curatit.vercel.app/auth/callback?token_hash=pkce_8f2c1e&type=signup',
   code: '482913',
 } satisfies ConfirmEmailProps;

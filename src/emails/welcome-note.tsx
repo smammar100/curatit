@@ -237,8 +237,9 @@ export default function WelcomeNote({
   );
 }
 
+// As the app sends it (src/lib/email.tsx): a transactional welcome, so no unsubscribe link.
 WelcomeNote.PreviewProps = {
   email: 'sara@studio.co',
   firstName: 'Sara',
-  unsubscribeUrl: 'https://curatit.vercel.app/unsubscribe',
+  libraryUrl: `${appUrl}/dashboard`,
 } satisfies WelcomeNoteProps;

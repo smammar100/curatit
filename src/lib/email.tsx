@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Resend } from "resend";
-import Welcome, { subject as welcomeSubject } from "@/emails/welcome";
+import WelcomeNote, { subject as welcomeSubject } from "@/emails/welcome-note";
 import { appUrl } from "@/emails/_components/tokens";
 import { SUPPORT_EMAIL } from "@/lib/site";
 
@@ -16,10 +16,11 @@ function resend() {
   return client;
 }
 
-// EMAIL_FROM must be on a domain verified in Resend, e.g. `Curatit <hello@curatit.com>`.
-// EMAIL_REPLY_TO is where replies land; the welcome email asks people to reply, so it should
-// be an inbox someone reads.
-const from = () => process.env.EMAIL_FROM || "Curatit <onboarding@resend.dev>";
+// The sender is on curatit.app, verified in Resend (docs/emails.md); EMAIL_FROM overrides it,
+// and must also be on a domain verified there.
+// EMAIL_REPLY_TO is where replies land; the welcome is signed by Ammar, so people answer it,
+// and it should be an inbox someone reads.
+const from = () => process.env.EMAIL_FROM || "Curatit <hello@curatit.app>";
 const replyTo = () => process.env.EMAIL_REPLY_TO || SUPPORT_EMAIL;
 
 type Email = {
@@ -46,16 +47,17 @@ export async function sendEmail({ to, subject, react, idempotencyKey }: Email): 
   }
 }
 
-/** The welcome email, once per account: sent when the sign-up is confirmed (the email link, or
- * straight away when the project doesn't confirm addresses). */
+/** The welcome email (the "note": a hero of library posts, three short paragraphs and Ammar's
+ * signature), once per account: sent when the sign-up is confirmed (the email link, or straight
+ * away when the project doesn't confirm addresses). Its button opens the dashboard, since the
+ * person is signed in by then. */
 export function sendWelcomeEmail(user: { id: string; email?: string; user_metadata?: { full_name?: unknown } }) {
   if (!user.email) return Promise.resolve(false);
   const name = typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name.trim().split(/\s+/)[0] : undefined;
-  const brief = "launch carousel that shows the product";
   return sendEmail({
     to: user.email,
     subject: welcomeSubject,
-    react: <Welcome email={user.email} firstName={name || undefined} brief={brief} searchUrl={`${appUrl}/dashboard?q=${encodeURIComponent(brief)}`} />,
+    react: <WelcomeNote email={user.email} firstName={name || undefined} libraryUrl={`${appUrl}/dashboard`} />,
     idempotencyKey: `welcome/${user.id}`,
   });
 }
