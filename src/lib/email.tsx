@@ -3,6 +3,7 @@ import { Resend } from "resend";
 import WelcomeNote, { subject as welcomeSubject } from "@/emails/welcome-note";
 import { appUrl } from "@/emails/_components/tokens";
 import { SUPPORT_EMAIL } from "@/lib/site";
+import { isUnsubscribed, unsubscribeUrl } from "@/lib/unsubscribe";
 
 // Server only (it reads RESEND_API_KEY). Every email the app itself sends goes through here, to
 // Resend. The templates are in src/emails (React Email); Supabase Auth's own emails (confirm,
@@ -26,7 +27,13 @@ const replyTo = () => process.env.EMAIL_REPLY_TO || SUPPORT_EMAIL;
 type Email = {
   to: string;
   subject: string;
-  react: ReactElement;
+  /** The email, or for an optional one a function given its unsubscribe link for the footer. */
+  react: ReactElement | ((unsubscribeUrl: string) => ReactElement);
+  /** Marks an optional email (onboarding, the weekly edition, product notices) and names it,
+   * e.g. "onboarding". It isn't sent to anyone who has unsubscribed, and it carries an
+   * unsubscribe link and the one-click List-Unsubscribe headers. Leave it out for account and
+   * billing emails, which nobody can opt out of. */
+  optional?: string;
   /** Resend drops a second send with the same key within 24 hours, so a retry or a second
    * click on a link never sends twice. */
   idempotencyKey?: string;
@@ -34,11 +41,22 @@ type Email = {
 
 /** Sends one email. Never throws: a failed send is logged and reported as false, because no
  * email is worth failing the request that triggered it. */
-export async function sendEmail({ to, subject, react, idempotencyKey }: Email): Promise<boolean> {
+export async function sendEmail({ to, subject, react, optional, idempotencyKey }: Email): Promise<boolean> {
   const api = resend();
   if (!api) return false;
   try {
-    const { error } = await api.emails.send({ from: from(), replyTo: replyTo(), to, subject, react }, { idempotencyKey });
+    let headers: Record<string, string> | undefined;
+    if (optional) {
+      const link = unsubscribeUrl(to, optional);
+      // No link means no signing secret: an optional email without a way out isn't sent
+      if (!link || (await isUnsubscribed(to))) return false;
+      const oneClick = link.replace("/unsubscribe?", "/api/unsubscribe?");
+      headers = { "List-Unsubscribe": `<${oneClick}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" };
+      if (typeof react === "function") react = react(link);
+    } else if (typeof react === "function") {
+      throw new Error("Only an optional email takes an unsubscribe link");
+    }
+    const { error } = await api.emails.send({ from: from(), replyTo: replyTo(), to, subject, react, headers }, { idempotencyKey });
     if (error) console.error(JSON.stringify({ msg: "email_failed", subject, error: error.name, detail: error.message }));
     return !error;
   } catch (cause) {

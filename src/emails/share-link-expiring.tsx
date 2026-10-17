@@ -14,6 +14,8 @@ export type ShareLinkExpiringProps = {
   daysLeft?: number;
   expiresOn?: string;
   newLinkUrl?: string;
+  /** sendEmail's unsubscribe link (an optional email: sent with `optional`) */
+  unsubscribeUrl?: string;
 };
 
 export const getSubject = (boardName = 'Q4 launch references', daysLeft = 3) =>
@@ -33,13 +35,14 @@ export default function ShareLinkExpiring({
   daysLeft = 3,
   expiresOn = '17 Oct 2026',
   newLinkUrl = `${appUrl}/library`,
+  unsubscribeUrl,
 }: ShareLinkExpiringProps) {
   const total = postCount ?? posts.length;
   const days = `${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`;
   return (
     <Layout
       preview={`The read-only link to ${boardName} stops working on ${expiresOn}.`}
-      footer={<Footer reason={<>You're getting this because {email} made a share link for a Curatit board.</>} />}
+      footer={<Footer reason={<>You're getting this because {email} made a share link for a Curatit board.</>} unsubscribeUrl={unsubscribeUrl} />}
     >
       <H1>Your share link expires in {days}</H1>
       <Body2 style={{ marginTop: '12px' }}>
@@ -81,4 +84,5 @@ export default function ShareLinkExpiring({
 
 ShareLinkExpiring.PreviewProps = {
   email: 'sara@studio.co',
+  unsubscribeUrl: 'https://www.curatit.app/unsubscribe',
 } satisfies ShareLinkExpiringProps;

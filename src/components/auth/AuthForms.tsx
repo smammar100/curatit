@@ -36,7 +36,7 @@ import { SUPPORT_MAILTO } from "@/lib/site";
 import { AuthField, AuthNotice } from "./AuthParts";
 import PasswordField from "./PasswordField";
 
-const linkClass = "font-medium text-accent-500 hover:text-accent-600";
+export const linkClass = "font-medium text-accent-500 hover:text-accent-600";
 
 function useParam(name: string) {
   const [value, setValue] = useState<string | null>(null);
@@ -52,7 +52,7 @@ function Next() {
   return next ? <input type="hidden" name="next" value={next} /> : null;
 }
 
-function Heading({ title, children }: { title: string; children: ReactNode }) {
+export function Heading({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="text-center text-balance">
       <Text tag="h1" variant="h5" className="text-primary-foreground">
@@ -65,7 +65,7 @@ function Heading({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Footer({ children }: { children: ReactNode }) {
+export function Footer({ children }: { children: ReactNode }) {
   return (
     <Text
       tag="p"
@@ -142,7 +142,7 @@ function useValidation(
   };
 }
 
-function Submit({
+export function Submit({
   pending,
   idle,
   busy,
