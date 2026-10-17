@@ -89,7 +89,7 @@ TeamInvite.PreviewProps = {
   inviterName: 'Sara Malik',
   inviterEmail: 'sara@rhombus.studio',
   workspaceName: 'Rhombus Studio',
-  acceptUrl: 'https://curatit.vercel.app/invite/7f3k9q',
+  acceptUrl: 'https://www.curatit.app/invite/7f3k9q',
   members: 4,
   boards: 12,
 } satisfies TeamInviteProps;

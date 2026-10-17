@@ -39,5 +39,5 @@ export default function ResetPassword({ email, resetUrl, expiresIn = '1 hour' }:
 
 ResetPassword.PreviewProps = {
   email: 'ammar@studio.co',
-  resetUrl: 'https://curatit.vercel.app/auth/callback?token_hash=pkce_3a91d0&type=recovery&next=/reset-password',
+  resetUrl: 'https://www.curatit.app/auth/callback?token_hash=pkce_3a91d0&type=recovery&next=/reset-password',
 } satisfies ResetPasswordProps;

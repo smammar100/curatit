@@ -65,9 +65,10 @@ export const type = {
 } as const;
 
 // Where the PNG and JPG assets in /public/email are served from.
-// Links and images always point at the deployed site (CURATIT_PUBLIC_BASE_URL), never at the
-// request's origin: an inbox can't reach localhost or a protected preview build.
-const site = process.env.CURATIT_PUBLIC_BASE_URL || 'https://curatit.vercel.app';
+// Links and images always point at the deployed site (CURATIT_PUBLIC_BASE_URL, else the canonical
+// www.curatit.app, docs/domain.md), never at the request's origin: an inbox can't reach localhost
+// or a protected preview build.
+const site = process.env.CURATIT_PUBLIC_BASE_URL || 'https://www.curatit.app';
 export const assetBase = (process.env.EMAIL_ASSET_URL || site).replace(/\/$/, '');
 export const appUrl = site.replace(/\/$/, '');
 export const asset = (file: string) => `${assetBase}/email/${file}`;
