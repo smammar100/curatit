@@ -28,15 +28,24 @@ import { afterFirstPaint } from "@/lib/afterFirstPaint";
 // `loading="lazy"`, so after the swap the browser still only fetches the ones near the viewport.
 // The images carry `suppressHydrationWarning`: if `load` fires before React has hydrated them,
 // the server's attributes no longer match the props, on purpose.
+//
+// Until the swap an image has a size but no file, which Chrome draws as an outlined box with a
+// broken-image icon (seen on the homepage's corridor, 2026-10-17), so `img[data-src]` is hidden
+// in global.css and the tile's own fill shows instead. The swap marks the image `data-fade` and
+// it fades in once its file has loaded (`data-fade="in"`); one that fails stays hidden.
 
 function swap(selector: string) {
   document
     .querySelectorAll<HTMLImageElement>(`${selector}[data-src]`)
     .forEach((image) => {
+      image.dataset.fade = "";
+      const show = () => (image.dataset.fade = "in");
+      image.addEventListener("load", show, { once: true });
       image.srcset = image.dataset.srcset || "";
       image.src = image.dataset.src || "";
       image.removeAttribute("data-src");
       image.removeAttribute("data-srcset");
+      if (image.complete && image.naturalWidth) show();
     });
 }
 
@@ -67,6 +76,6 @@ export default function DeferredImages({ selector }: { selector: string }) {
   const query = JSON.stringify(`${selector}[data-src]`);
   // The same as the effect, in plain script: after `load`, then after the first contentful paint
   // (straight away where the browser doesn't report paint timing)
-  const script = `(function(){var go=function(){document.querySelectorAll(${query}).forEach(function(i){i.srcset=i.dataset.srcset||"";i.src=i.dataset.src;i.removeAttribute("data-src");i.removeAttribute("data-srcset")})};var start=function(){var P=window.PerformanceObserver;if(!P||!P.supportedEntryTypes||P.supportedEntryTypes.indexOf("paint")<0)return go();var o=new P(function(l){if(l.getEntriesByName("first-contentful-paint").length){o.disconnect();go()}});o.observe({type:"paint",buffered:true})};if(document.readyState==="complete")start();else addEventListener("load",start,{once:true})})()`;
+  const script = `(function(){var go=function(){document.querySelectorAll(${query}).forEach(function(i){i.dataset.fade="";var s=function(){i.dataset.fade="in"};i.addEventListener("load",s,{once:true});i.srcset=i.dataset.srcset||"";i.src=i.dataset.src;i.removeAttribute("data-src");i.removeAttribute("data-srcset");if(i.complete&&i.naturalWidth)s()})};var start=function(){var P=window.PerformanceObserver;if(!P||!P.supportedEntryTypes||P.supportedEntryTypes.indexOf("paint")<0)return go();var o=new P(function(l){if(l.getEntriesByName("first-contentful-paint").length){o.disconnect();go()}});o.observe({type:"paint",buffered:true})};if(document.readyState==="complete")start();else addEventListener("load",start,{once:true})})()`;
   return <script dangerouslySetInnerHTML={{ __html: script }} />;
 }

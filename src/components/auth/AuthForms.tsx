@@ -413,6 +413,72 @@ export function ForgotPasswordForm() {
   );
 }
 
+// /auth/confirm, where the confirm, reset and change-email links land. The link's token is only
+// used when the person clicks the button (a POST to /auth/callback), so a mail scanner that
+// opens every link doesn't use it up first. Supabase's {{ .RedirectTo }} arrives as next: the
+// /auth/callback?next=… address the flow was started with, so the visitor still ends up where
+// they were going; failing that, each kind of link has its own default.
+const CONFIRM = {
+  email: { title: "Confirm your email", body: "One click and your Curatit account is ready.", button: "Confirm email", busy: "Confirming…", next: "/dashboard" },
+  recovery: { title: "Reset your password", body: "Continue to choose a new password for your account.", button: "Choose a new password", busy: "Opening…", next: "/reset-password" },
+  email_change: { title: "Confirm your new email", body: "Confirm this is the address you want to use for Curatit.", button: "Confirm new email", busy: "Confirming…", next: "/dashboard" },
+} as const;
+const CONFIRM_TYPES: Record<string, keyof typeof CONFIRM> = { email: "email", signup: "email", recovery: "recovery", email_change: "email_change" };
+
+function nextFromLink(raw: string | null) {
+  if (!raw) return null;
+  try {
+    const url = new URL(raw, location.origin);
+    if (url.origin !== location.origin) return null;
+    return url.pathname === "/auth/callback" ? url.searchParams.get("next") : url.pathname + url.search;
+  } catch {
+    return null;
+  }
+}
+
+export function ConfirmLinkForm() {
+  const [link, setLink] = useState<{ tokenHash: string | null; type: string | null; next: string | null } | null>(null);
+  const [pending, setPending] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setLink({ tokenHash: params.get("token_hash"), type: params.get("type"), next: nextFromLink(params.get("next")) });
+  }, []);
+  const kind = link?.type ? CONFIRM_TYPES[link.type] : undefined;
+  const copy = CONFIRM[kind ?? "email"];
+
+  if (link && (!link.tokenHash || !kind)) {
+    return (
+      <>
+        <Heading title="This link isn't complete">
+          Open the button in the email again, or copy the whole link into your browser.
+        </Heading>
+        <Footer>
+          <Link href="/signin" className={linkClass}>
+            Back to sign in
+          </Link>
+        </Footer>
+      </>
+    );
+  }
+  return (
+    <>
+      <Heading title={copy.title}>{copy.body}</Heading>
+      <form method="post" action="/auth/callback" onSubmit={() => setPending(true)} className="mt-6">
+        <input type="hidden" name="token_hash" value={link?.tokenHash ?? ""} />
+        <input type="hidden" name="type" value={link?.type ?? ""} />
+        <input type="hidden" name="next" value={link?.next ?? copy.next} />
+        {/* Waits for the address to be read, so it never posts an empty token */}
+        <Submit pending={!link || pending} idle={copy.button} busy={link ? copy.busy : copy.button} />
+      </form>
+      <Footer>
+        <Link href="/signin" className={linkClass}>
+          Back to sign in
+        </Link>
+      </Footer>
+    </>
+  );
+}
+
 export function ResetPasswordForm() {
   const [state, action, pending] = useActionState(updatePassword, {});
   const check = useValidation(

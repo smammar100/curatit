@@ -1,9 +1,11 @@
 // The onboarding funnel's server steps: the sign-up action records signed_up only for an account
 // it just created (and hands that id back so the browser can identify), and the email callback
-// records email_confirmed only when the link confirmed the address just now.
+// records email_confirmed only when the link confirmed the address just now. The welcome email
+// goes out at the same two moments: a confirmed link, or a sign-up that needs no confirmation.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const capture = vi.fn();
+const welcome = vi.fn();
 const auth = {
   signUp: vi.fn(),
   exchangeCodeForSession: vi.fn(),
@@ -22,9 +24,10 @@ vi.mock("next/navigation", () => ({
 vi.mock("next/server", async (original) => ({ ...(await original<typeof import("next/server")>()), after: (run: () => unknown) => run() }));
 vi.mock("@/utils/supabase/server", () => ({ createClient: () => ({ auth }) }));
 vi.mock("@/lib/analytics-server", () => ({ captureServerEvent: (...args: unknown[]) => capture(...args) }));
+vi.mock("@/lib/email", () => ({ sendWelcomeEmail: (...args: unknown[]) => welcome(...args) }));
 
 const { signUp } = await import("./actions");
-const { GET } = await import("./callback/route");
+const { GET, POST } = await import("./callback/route");
 
 const now = () => new Date().toISOString();
 const ago = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
@@ -37,6 +40,7 @@ const form = () => {
 
 beforeEach(() => {
   capture.mockReset();
+  welcome.mockReset();
   for (const fn of Object.values(auth)) fn.mockReset();
 });
 
@@ -46,12 +50,14 @@ describe("sign-up", () => {
     const state = await signUp({}, form());
     expect(state).toEqual({ sent: "new@example.com", userId: "u1" });
     expect(capture).toHaveBeenCalledWith("u1", "signed_up", { confirmation_required: true });
+    expect(welcome).not.toHaveBeenCalled();
   });
 
   it("records a new account that's signed in at once, before redirecting", async () => {
     auth.signUp.mockResolvedValue({ data: { user: { id: "u2", created_at: now(), identities: [{}] }, session: {} }, error: null });
     await expect(signUp({}, form())).rejects.toThrow("REDIRECT /dashboard");
     expect(capture).toHaveBeenCalledWith("u2", "signed_up", { confirmation_required: false });
+    expect(welcome).toHaveBeenCalledWith(expect.objectContaining({ id: "u2" }));
   });
 
   it("doesn't count or hand out an older unconfirmed account whose link was just resent", async () => {
@@ -79,12 +85,14 @@ describe("the email link", () => {
     const response = await GET(withNextUrl("code=abc&next=%2Fdashboard"));
     expect(response.headers.get("location")).toBe("http://localhost:3000/dashboard");
     expect(capture).toHaveBeenCalledWith("u1", "email_confirmed", { via: "code" });
+    expect(welcome).toHaveBeenCalledWith(expect.objectContaining({ id: "u1" }));
   });
 
   it("doesn't count a password reset for an address confirmed long ago", async () => {
     auth.exchangeCodeForSession.mockResolvedValue({ data: { user: { id: "u1", email_confirmed_at: ago(60 * 24) } }, error: null });
     await GET(withNextUrl("code=abc&next=%2Freset-password"));
     expect(capture).not.toHaveBeenCalled();
+    expect(welcome).not.toHaveBeenCalled();
   });
 
   it("records nothing when the link fails", async () => {
@@ -92,6 +100,42 @@ describe("the email link", () => {
     const response = await GET(withNextUrl("code=abc"));
     expect(response.headers.get("location")).toBe("http://localhost:3000/signin?error=otp_expired");
     expect(capture).not.toHaveBeenCalled();
+  });
+
+  // /auth/confirm's button posts here, so the token is only used by a click, never by a mail
+  // scanner opening the link
+  const post = (fields: Record<string, string>) => {
+    const body = new FormData();
+    for (const [name, value] of Object.entries(fields)) body.set(name, value);
+    const url = "http://localhost:3000/auth/callback";
+    return Object.assign(new Request(url, { method: "POST", body }), { nextUrl: new URL(url) }) as unknown as Parameters<typeof POST>[0];
+  };
+
+  it("confirms a sign-up from the confirm page's button, then sends the welcome", async () => {
+    auth.verifyOtp.mockResolvedValue({ data: { user: { id: "u4", email_confirmed_at: now() } }, error: null });
+    const response = await POST(post({ token_hash: "pkce_abc", type: "email", next: "/dashboard/p/xyz" }));
+    expect(auth.verifyOtp).toHaveBeenCalledWith({ type: "email", token_hash: "pkce_abc" });
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("http://localhost:3000/dashboard/p/xyz");
+    expect(capture).toHaveBeenCalledWith("u4", "email_confirmed", { via: "email" });
+    expect(welcome).toHaveBeenCalledWith(expect.objectContaining({ id: "u4" }));
+  });
+
+  it("sends a used or expired link from the confirm page to sign-in with its error", async () => {
+    auth.verifyOtp.mockResolvedValue({ data: { user: null, session: null }, error: { code: "otp_expired" } });
+    const response = await POST(post({ token_hash: "pkce_old", type: "recovery", next: "/reset-password" }));
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("http://localhost:3000/signin?error=otp_expired");
+    expect(welcome).not.toHaveBeenCalled();
+  });
+
+  it("refuses a post with no token, an unknown type, or somewhere else to go", async () => {
+    expect((await POST(post({ type: "email" }))).headers.get("location")).toBe("http://localhost:3000/signin?error=access_denied");
+    expect((await POST(post({ token_hash: "t", type: "admin" }))).headers.get("location")).toBe("http://localhost:3000/signin?error=access_denied");
+    expect(auth.verifyOtp).not.toHaveBeenCalled();
+    auth.verifyOtp.mockResolvedValue({ data: { user: { id: "u5", email_confirmed_at: ago(60 * 24) } }, error: null });
+    const response = await POST(post({ token_hash: "t", type: "recovery", next: "https://evil.example/x" }));
+    expect(response.headers.get("location")).toBe("http://localhost:3000/dashboard");
   });
 
   it("records a confirmation through a token link too", async () => {
