@@ -6,7 +6,7 @@ import path from "node:path";
 import { createElement, type FunctionComponent } from "react";
 import { describe, expect, it } from "vitest";
 import { render } from "@react-email/render";
-import { supabaseTemplates } from "./_components/supabase";
+import { asciiHtml, supabaseTemplates } from "./_components/supabase";
 import { appUrl, assetBase } from "./_components/tokens";
 
 type Template = FunctionComponent<Record<string, unknown>> & { PreviewProps?: Record<string, unknown> };
@@ -75,7 +75,10 @@ describe("the Supabase Auth templates", () => {
     async ({ file, element }) => {
       const saved = fs.readFileSync(`supabase/templates/${file}.html`, "utf8").replace(/\r\n/g, "\n");
       const html = await render(element);
-      expect(saved).toBe(html);
+      expect(saved).toBe(asciiHtml(html));
+      // Plain ASCII, so pasting it into the dashboard can't garble a character
+      expect(saved).toMatch(/^[\x00-\x7f]*$/);
+      expect(html.match(/<style[\s\S]*?<\/style>/g)?.join("") ?? "").toMatch(/^[\x00-\x7f]*$/);
       // No placeholder escaped or split, so Supabase can fill every one
       expect(html).not.toMatch(/\{\{[^}]*&|\{\{\s*$/);
       for (const placeholder of html.match(/\{\{[^}]*\}\}/g) ?? []) expect(placeholder).toMatch(/^\{\{ \.[A-Za-z]+ \}\}$/);

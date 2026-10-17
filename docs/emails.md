@@ -5,7 +5,7 @@ Curatit's emails are React Email templates in `src/emails/`, sent through [Resen
 Two routes send them:
 
 - **The app** sends its own emails with `sendEmail()` in `src/lib/email.tsx`, through Resend's API. Today that's only the welcome email.
-- **Supabase Auth** sends the six account emails (confirm, reset password and so on) itself. They're the same templates, rendered to HTML with `npm run email:render` into `supabase/templates/`, pasted into the Supabase dashboard and sent through Resend's SMTP.
+- **Supabase Auth** sends the six account emails (confirm, reset password and so on) itself. They're the same templates, rendered to HTML with `npm run email:render` into `supabase/templates/`, pasted into the Supabase dashboard and sent through Resend's SMTP. The files are plain ASCII, every other character written as an HTML entity: the first confirm email Supabase sent (2026-10-17) arrived with its invisible preheader padding and footer dot garbled ("Â â€Œ" in the inbox preview), from a paste that went through the wrong encoding.
 
 ## Commands
 

@@ -27,3 +27,11 @@ export const supabaseTemplates: [name: string, element: React.ReactElement][] = 
   ['email-changed', <EmailChanged oldEmail="{{ .OldEmail }}" newEmail="{{ .Email }}" />],
   ['password-changed', <PasswordChanged email="{{ .Email }}" />],
 ];
+
+// The saved files are plain ASCII: every other character (the preheader's invisible padding, the
+// footer's middle dot) is written as an HTML entity. The first confirm email Supabase sent
+// (2026-10-17) showed them garbled, "Â â€Œâ€‹" in the inbox preview, because the pasted text
+// went through the wrong encoding on its way into the dashboard; an entity survives any copy.
+// (No template has such a character inside <style>, where an entity wouldn't be decoded.)
+export const asciiHtml = (html: string) =>
+  html.replace(/[^\x00-\x7f]/gu, (ch) => `&#x${ch.codePointAt(0)!.toString(16).toUpperCase()};`);
