@@ -49,5 +49,5 @@ export default function ChangeEmail({ email, newEmail, confirmUrl, expiresIn = '
 ChangeEmail.PreviewProps = {
   email: 'sara@studio.co',
   newEmail: 'sara@rhombus.studio',
-  confirmUrl: 'https://curatit.vercel.app/auth/callback?token_hash=pkce_51ad&type=email_change',
+  confirmUrl: 'https://curatit.vercel.app/auth/confirm?token_hash=pkce_51ad&type=email_change',
 } satisfies ChangeEmailProps;

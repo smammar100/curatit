@@ -4,8 +4,10 @@ import { type NextRequest, NextResponse } from "next/server";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-// Pages only for people who are signed out; a signed-in visitor goes to the dashboard
-const SIGNED_OUT_ONLY = ["/signin", "/signup", "/forgot-password"];
+// Pages only for people who are signed out; a signed-in visitor goes to the dashboard. Not
+// /forgot-password: the security emails send people there, and someone answering a possible
+// takeover may still be signed in somewhere
+const SIGNED_OUT_ONLY = ["/signin", "/signup"];
 
 // Refreshes the auth session on each request and passes the new cookies on (used by
 // src/proxy.ts), and keeps the dashboard for signed-in visitors. The dashboard's pages are

@@ -27,7 +27,7 @@ vi.mock("@/lib/analytics-server", () => ({ captureServerEvent: (...args: unknown
 vi.mock("@/lib/email", () => ({ sendWelcomeEmail: (...args: unknown[]) => welcome(...args) }));
 
 const { signUp } = await import("./actions");
-const { GET } = await import("./callback/route");
+const { GET, POST } = await import("./callback/route");
 
 const now = () => new Date().toISOString();
 const ago = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
@@ -100,6 +100,42 @@ describe("the email link", () => {
     const response = await GET(withNextUrl("code=abc"));
     expect(response.headers.get("location")).toBe("http://localhost:3000/signin?error=otp_expired");
     expect(capture).not.toHaveBeenCalled();
+  });
+
+  // /auth/confirm's button posts here, so the token is only used by a click, never by a mail
+  // scanner opening the link
+  const post = (fields: Record<string, string>) => {
+    const body = new FormData();
+    for (const [name, value] of Object.entries(fields)) body.set(name, value);
+    const url = "http://localhost:3000/auth/callback";
+    return Object.assign(new Request(url, { method: "POST", body }), { nextUrl: new URL(url) }) as unknown as Parameters<typeof POST>[0];
+  };
+
+  it("confirms a sign-up from the confirm page's button, then sends the welcome", async () => {
+    auth.verifyOtp.mockResolvedValue({ data: { user: { id: "u4", email_confirmed_at: now() } }, error: null });
+    const response = await POST(post({ token_hash: "pkce_abc", type: "email", next: "/dashboard/p/xyz" }));
+    expect(auth.verifyOtp).toHaveBeenCalledWith({ type: "email", token_hash: "pkce_abc" });
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("http://localhost:3000/dashboard/p/xyz");
+    expect(capture).toHaveBeenCalledWith("u4", "email_confirmed", { via: "email" });
+    expect(welcome).toHaveBeenCalledWith(expect.objectContaining({ id: "u4" }));
+  });
+
+  it("sends a used or expired link from the confirm page to sign-in with its error", async () => {
+    auth.verifyOtp.mockResolvedValue({ data: { user: null, session: null }, error: { code: "otp_expired" } });
+    const response = await POST(post({ token_hash: "pkce_old", type: "recovery", next: "/reset-password" }));
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("http://localhost:3000/signin?error=otp_expired");
+    expect(welcome).not.toHaveBeenCalled();
+  });
+
+  it("refuses a post with no token, an unknown type, or somewhere else to go", async () => {
+    expect((await POST(post({ type: "email" }))).headers.get("location")).toBe("http://localhost:3000/signin?error=access_denied");
+    expect((await POST(post({ token_hash: "t", type: "admin" }))).headers.get("location")).toBe("http://localhost:3000/signin?error=access_denied");
+    expect(auth.verifyOtp).not.toHaveBeenCalled();
+    auth.verifyOtp.mockResolvedValue({ data: { user: { id: "u5", email_confirmed_at: ago(60 * 24) } }, error: null });
+    const response = await POST(post({ token_hash: "t", type: "recovery", next: "https://evil.example/x" }));
+    expect(response.headers.get("location")).toBe("http://localhost:3000/dashboard");
   });
 
   it("records a confirmation through a token link too", async () => {
