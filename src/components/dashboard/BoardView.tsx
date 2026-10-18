@@ -87,7 +87,8 @@ export default function BoardView({ id }: { id: string }) {
         ) : (
           <>
             <header className="pt-2 pb-6">
-              <TextLink variant="quiet" href={feedHref("Saved")}>
+              {/* An invisible 44px tap area round the short word */}
+              <TextLink variant="quiet" href={feedHref("Saved")} className="after:absolute after:-inset-x-2 after:-inset-y-3">
                 Saved
               </TextLink>
               {/* The name and the actions share a row; the rest of the header hangs under the name */}

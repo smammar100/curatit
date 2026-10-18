@@ -260,7 +260,7 @@ function DecisionCard({ n, decision, open, onToggle, stage }: { n: number; decis
   return (
     <li className={cx("rounded-xl transition-[background-color] duration-150 ease-out-quint", open ? "bg-card" : "hover:bg-card")}>
       <button type="button" aria-expanded={open} aria-controls={id} onClick={onToggle} className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus">
-        <span className="mt-px w-5 shrink-0 text-caption text-tertiary-foreground tabular-nums">{String(n).padStart(2, "0")}</span>
+        <span className="mt-px w-5 shrink-0 text-caption text-secondary-foreground tabular-nums">{String(n).padStart(2, "0")}</span>
         <span className="min-w-0 flex-1">
           <span className="block text-body font-medium text-pretty text-primary-foreground">{decision.title}</span>
           {where && (

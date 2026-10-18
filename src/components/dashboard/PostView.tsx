@@ -169,7 +169,7 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
                 {post.categories.map((category, i) => (
                   <span key={category.slug}>
                     {i > 0 && " · "}
-                    <Link href={feedHref("Discover", "", category.slug)} className="hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus">
+                    <Link href={feedHref("Discover", "", category.slug)} className="relative after:absolute after:-inset-x-1 after:-inset-y-3 hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus">
                       {category.name}
                     </Link>
                   </span>

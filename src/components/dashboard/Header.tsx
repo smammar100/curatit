@@ -61,7 +61,7 @@ export default function Header({
               type="button"
               aria-current={option === view ? "page" : undefined}
               onClick={() => onView(option)}
-              className="rounded-sm text-title font-medium whitespace-nowrap text-secondary-foreground transition-colors duration-150 ease-out-quint hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-[current=page]:text-primary-foreground"
+              className="relative rounded-sm text-title font-medium whitespace-nowrap text-secondary-foreground after:absolute after:-inset-x-2 after:-inset-y-3 transition-colors duration-150 ease-out-quint hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-[current=page]:text-primary-foreground"
             >
               {option}
             </button>
@@ -111,7 +111,7 @@ function ViewMenu({ view, onChange, className }: { view: View | null; onChange: 
         type="button"
         aria-haspopup="menu"
         {...popover.triggerProps}
-        className="flex items-center gap-1.5 rounded-sm text-title font-medium text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
+        className="relative flex items-center gap-1.5 rounded-sm text-title font-medium text-primary-foreground after:absolute after:-inset-x-2 after:-inset-y-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
       >
         {view ?? "Feed"}
         <CaretDown className={cx("size-3.5 transition-transform duration-200 ease-out-quint motion-reduce:transition-none", popover.open && "rotate-180")} />
