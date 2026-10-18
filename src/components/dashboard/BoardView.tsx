@@ -7,13 +7,24 @@
 // opens up on hover or focus, and "Add a note" appears on hover. The name, description and notes
 // edit in place. Everything comes from BoardsProvider, so changes show at once and are written
 // in the background.
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 // Fundations
 import Button from "@/components/fundations/elements/Button";
+import Input from "@/components/fundations/elements/Input";
 import TextLink from "@/components/fundations/elements/TextLink";
+import Menu, { MenuItem, MenuSeparator } from "@/components/fundations/molecules/Menu";
 import BrandName from "@/components/home/BrandName";
 import { cx } from "@/lib/cx";
 import { NAME_MAX, SaveMenu, useBoards } from "./boards";
@@ -23,7 +34,7 @@ import Header from "./Header";
 import { DESCRIPTION_MAX } from "./NewBoardDialog";
 import { Block, GridSkeleton } from "./Skeleton";
 import type { Board, DashPost } from "./types";
-import { GLIDE_HIGHLIGHT, GLIDE_ROW, usePopover } from "./usePopover";
+import { usePopover } from "./usePopover";
 
 export const boardHref = (id: string) => `/dashboard/b/${id}`;
 export const shareHref = (token: string) => `/s/${token}`;
@@ -333,8 +344,10 @@ function Editable({
   return multiline ? <textarea rows={3} {...shared} className={cx(shared.className, "resize-none")} /> : <input {...shared} />;
 }
 
-// Share: a read-only link anyone can open, made and turned off here. Opening it moves focus to its
-// first control; Escape takes focus back to Share.
+// Share: a read-only link anyone can open, made and turned off here. A popover dialog beside its
+// button (the dashboard's usePopover("dialog"): there's no shared popover molecule) built from the
+// shared atoms: the link in an Input, Copy, Create link and Stop sharing as Buttons, Open as a
+// TextLink. Opening it moves focus to its first control; Escape takes focus back to Share.
 function SharePanel({ board }: { board: Board }) {
   const { setSharing, notify } = useBoards();
   const popover = usePopover("dialog");
@@ -385,15 +398,17 @@ function SharePanel({ board }: { board: Board }) {
           </p>
           {board.shareToken ? (
             <>
+              {/* The link and Copy side by side, both at the Input's 40px */}
               <div className="mt-3 flex gap-2">
-                <input
+                <Input
                   readOnly
                   value={url}
                   aria-label="Share link"
+                  spellCheck={false}
                   onFocus={(event) => event.currentTarget.select()}
-                  className="h-8 min-w-0 flex-1 rounded-lg border-0 bg-component-on-container-subtle px-3 text-caption text-secondary-foreground shadow-sm transition-[box-shadow] duration-150 ease-out-quint focus:shadow-[0_0_0_2px_var(--color-brand-border-focus)] focus:ring-0 focus:outline-hidden pointer-coarse:text-[16px]"
+                  className="min-w-0 flex-1"
                 />
-                <Button type="button" size="sm" variant="default" onClick={copy} className="w-18 shrink-0">
+                <Button type="button" size="base" variant="default" onClick={copy} className="w-18 shrink-0">
                   {copied ? "Copied" : "Copy"}
                 </Button>
               </div>
@@ -418,119 +433,88 @@ function SharePanel({ board }: { board: Board }) {
   );
 }
 
-// More: rename, describe, delete (which asks first, with focus on Cancel; Cancel takes focus back
-// to "Delete board…")
+// More: the shared Menu (Rename, Add/Edit description, Delete board…). Delete asks first, where the
+// menu was: choosing it closes the menu and opens the question in its place, a small alertdialog
+// popover with focus on Cancel, so Enter can't delete by accident. It's a popover of its own, not
+// the Menu's contents, because a role="menu" may hold only items: a question and two plain buttons
+// inside it would be read as a broken menu, and Menu's arrow keys and typeahead would fight them.
+// Cancel and Escape take focus back to More.
 function MoreMenu({ board, onRename, onDescribe }: { board: Board; onRename: () => void; onDescribe: () => void }) {
   const router = useRouter();
   const { deleteBoard } = useBoards();
-  const popover = usePopover("menu");
-  const { glide, clearGlide } = popover;
-  const [confirming, setConfirming] = useState(false);
-  const backToDelete = useRef(false);
-  // Opening it again starts from the menu, not the question (reset once it has left, so the
-  // question doesn't flip back to the menu while fading out)
-  if (!popover.mounted && confirming) setConfirming(false);
-  // The rows leave for the question and come back after Cancel: no highlight left from before
-  useEffect(() => clearGlide(), [confirming, clearGlide]);
-  const item = cx("flex w-full rounded-md px-3 py-2 text-left text-body text-primary-foreground", GLIDE_ROW);
+  const confirm = usePopover("dialog");
+  const id = useId();
 
   return (
-    <div {...popover.rootProps} className="relative">
-      <Button aria-haspopup="menu" {...popover.triggerProps} variant="secondary" size="lg" shape="pill" iconOnly aria-label="More">
-        <span aria-hidden="true" className="flex gap-[3px]">
-          {[0, 1, 2].map((i) => (
-            <span key={i} className="size-[3px] rounded-full bg-current" />
-          ))}
-        </span>
-      </Button>
-      {popover.mounted && (
+    <div {...confirm.rootProps} className="relative">
+      <Menu
+        label="Board actions"
+        align="end"
+        trigger={
+          <Button
+            ref={confirm.triggerProps.ref}
+            // While the question is up, More takes it down (as it would close its menu)
+            onClick={(event) => {
+              if (!confirm.open) return;
+              event.preventDefault();
+              confirm.close(false);
+            }}
+            variant="secondary"
+            size="lg"
+            shape="pill"
+            iconOnly
+            aria-label="More"
+          >
+            <span aria-hidden="true" className="flex gap-[3px]">
+              {[0, 1, 2].map((i) => (
+                <span key={i} className="size-[3px] rounded-full bg-current" />
+              ))}
+            </span>
+          </Button>
+        }
+      >
+        <MenuItem onSelect={onRename}>Rename</MenuItem>
+        <MenuItem onSelect={onDescribe}>{board.description ? "Edit description" : "Add a description"}</MenuItem>
+        <MenuSeparator />
+        {/* Opens the question. Its trigger's click with no detail, as Enter makes, so the question
+            takes focus (to Cancel) however the item was chosen; the menu then closes, putting
+            focus on More, and the question's first frame moves it on to Cancel */}
+        <MenuItem tone="danger" onSelect={() => confirm.triggerProps.onClick({ detail: 0 } as ReactMouseEvent)}>
+          Delete board…
+        </MenuItem>
+      </Menu>
+      {confirm.mounted && (
         <div
-          {...popover.contentProps}
-          role={confirming ? undefined : "menu"}
-          aria-label={confirming ? undefined : "More"}
-          className={cx("absolute top-full right-0 z-30 mt-2 w-60 origin-top-right rounded-2xl bg-modal p-1.5 text-left shadow-lg outline-hidden", popover.motion)}
+          {...confirm.contentProps}
+          role="alertdialog"
+          aria-labelledby={`${id}-question`}
+          aria-describedby={`${id}-consequence`}
+          className={cx("absolute top-full right-0 z-40 mt-2 w-60 origin-top-right rounded-2xl bg-modal p-3.5 text-left shadow-lg", confirm.motion)}
         >
-          {confirming ? (
-            <div className="p-2" role="alertdialog" aria-label={`Delete ${board.name}`}>
-              <p className="text-body font-medium text-pretty text-primary-foreground">Delete “{board.name}”?</p>
-              <p className="mt-1 text-body text-pretty text-secondary-foreground">The board and its notes go for good. The posts stay in the library.</p>
-              <div className="mt-3 flex gap-2">
-                {/* Focus starts on Cancel, so Enter can't delete by accident */}
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="muted"
-                  autoFocus
-                  onClick={() => {
-                    backToDelete.current = true;
-                    setConfirming(false);
-                  }}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="danger"
-                  onClick={() => {
-                    router.push(feedHref("Saved"));
-                    deleteBoard(board.id);
-                  }}
-                  className="flex-1"
-                >
-                  Delete
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div ref={glide.ref} {...glide.handlers} className="relative">
-              <span aria-hidden="true" className={cx(GLIDE_HIGHLIGHT, "rounded-md")} style={glide.highlight.style} data-fresh={glide.highlight.fresh || undefined} />
-              <button
-                type="button"
-                role="menuitem"
-                tabIndex={-1}
-                data-glide-item
-                className={item}
-                onClick={() => {
-                  popover.close();
-                  onRename();
-                }}
-              >
-                Rename
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                tabIndex={-1}
-                data-glide-item
-                className={item}
-                onClick={() => {
-                  popover.close();
-                  onDescribe();
-                }}
-              >
-                {board.description ? "Edit description" : "Add a description"}
-              </button>
-              <div role="separator" className="mx-3 my-1 h-px bg-border-default" />
-              <button
-                ref={(element) => {
-                  if (element && backToDelete.current) {
-                    backToDelete.current = false;
-                    element.focus();
-                  }
-                }}
-                type="button"
-                role="menuitem"
-                tabIndex={-1}
-                data-glide-item
-                className={item}
-                onClick={() => setConfirming(true)}
-              >
-                Delete board…
-              </button>
-            </div>
-          )}
+          <p id={`${id}-question`} className="text-body font-medium text-pretty text-primary-foreground">
+            Delete “{board.name}”?
+          </p>
+          <p id={`${id}-consequence`} className="mt-1 text-body text-pretty text-secondary-foreground">
+            The board and its notes go for good. The posts stay in the library.
+          </p>
+          <div className="mt-3 flex gap-2">
+            {/* First, so the popover's focus lands on it */}
+            <Button type="button" size="sm" variant="muted" onClick={() => confirm.close()} className="flex-1">
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="danger"
+              onClick={() => {
+                router.push(feedHref("Saved"));
+                deleteBoard(board.id);
+              }}
+              className="flex-1"
+            >
+              Delete
+            </Button>
+          </div>
         </div>
       )}
     </div>

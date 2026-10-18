@@ -11,6 +11,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Button from "@/components/fundations/elements/Button";
+import Input from "@/components/fundations/elements/Input";
 import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
 import CaretLeft from "@/components/fundations/icons/CaretLeft";
 import CaretRight from "@/components/fundations/icons/CaretRight";
@@ -31,7 +32,6 @@ import DnaEditor from "./DnaEditor";
 import {
   ago,
   EvidenceChip,
-  fieldClass,
   fieldParts,
   Frame,
   label,
@@ -370,18 +370,16 @@ export function PostReviewView({
                   {busy === "reprocess" ? "Queuing…" : "Analyse again"}
                 </Button>
               </div>
-              <label className="mt-3 block">
-                <span className="sr-only">
-                  Note for the review history (optional)
-                </span>
-                <input
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  maxLength={2000}
-                  placeholder="Note for the history (optional)"
-                  className={fieldClass}
-                />
-              </label>
+              {/* No visible label (the placeholder says what it's for), so a name of its own, no Field */}
+              <Input
+                aria-label="Note for the review history (optional)"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                maxLength={2000}
+                autoComplete="off"
+                placeholder="Note for the history (optional)"
+                className="mt-3"
+              />
               {error && (
                 <p className="mt-2 text-caption text-danger-foreground">
                   {error}

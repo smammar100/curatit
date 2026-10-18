@@ -25,7 +25,8 @@
 // replaces the one on screen as soon as that one has been seen for 1.5s: the on-screen one plays
 // its exit, then the next enters. So the newest gets its full time and a burst still shows each
 // briefly. Each stays for its reading time, `toastDuration()`: 250 words a minute plus 1.5s,
-// clamped to 2.5–8s, and 5s at least with an action, unless `duration` (ms) is given. Its clock
+// clamped to 2.5–8s, 4s at least for danger and 5s at least with an action, unless `duration`
+// (ms) is given. Its clock
 // (and any replacement) stops while it's pointed at, while focus is in it and while the tab is
 // hidden, and runs on with the time it had left. Escape dismisses it while focus is inside, and
 // focus goes back where it came from.
@@ -78,11 +79,12 @@ const QUEUE_MAX = 3;
 const SEEN_MS = 1500;
 
 /** How long a toast stays: 250 words a minute (240ms a word, the action's label counted) plus
- *  1.5s to notice it, clamped to 2.5–8s; with an action, 5s at least, to reach it */
-export function toastDuration({ message, action }: Pick<ToastOptions, "message" | "action">) {
+ *  1.5s to notice it, clamped to 2.5–8s; a failure 4s at least (it's unexpected, and says what
+ *  to do: the dashboard's error toasts always had 4s), and with an action 5s at least, to reach it */
+export function toastDuration({ message, action, tone }: Pick<ToastOptions, "message" | "action" | "tone">) {
   const words = `${message} ${action?.label ?? ""}`.trim().split(/\s+/).filter(Boolean).length;
   const ms = Math.min(8000, Math.max(2500, words * 240 + 1500));
-  return action ? Math.max(5000, ms) : ms;
+  return Math.max(ms, action ? 5000 : 0, tone === "danger" ? 4000 : 0);
 }
 
 export type ToastProps = {

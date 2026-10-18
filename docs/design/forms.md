@@ -22,8 +22,11 @@ Then put it in a Field (unless it has no visible label: then aria-label, no Fiel
 Every control with a visible label is the only child of a `Field`. Field clones it to set `id`,
 `aria-labelledby`, `aria-describedby` (error, then hint), `aria-invalid` while there's an error,
 and `required`. It works in server components. A control with no visible label (a header search
-pill) takes `aria-label` instead. A group with a heading is a `<fieldset>` + `<legend>` around
-inline Fields.
+pill) takes `aria-label` instead. A set of controls under one heading is a `FieldGroup` (a named
+export of `Field.tsx`): a `<fieldset>` whose `<legend>` is set as a Field's label, with optional
+`description` under it and `error` under the set, around Fields or controls named with
+`aria-label` (the review editor's lists: "Takeaway 1", "Takeaway 2"). Its legend never greys, since
+one disabled control doesn't disable the question. `className` is layout only.
 
 `layout`: `stacked` (default: text entry, SearchField, Segmented), `inline` (Checkbox),
 `inline-end` (Switch). `descriptionAt`: `label` (default, read before typing) or `control` (a rule
@@ -42,6 +45,10 @@ about the value). Nothing else exists.
 <Field label="Email address" error={errors.email}>
   <Input type="email" name="email" autoComplete="email" />
 </Field>
+
+<FieldGroup legend="Takeaways (3 to 5)" error={problemsAt("takeaways")}>
+  {takeaways.map((text, i) => <Textarea key={i} aria-label={`Takeaway ${i + 1}`} rows={2} value={text} … />)}
+</FieldGroup>
 
 // Incorrect: the child is a wrapper, so the id and aria land on the div and the label points at nothing
 <Field label="Email address"><div className="relative"><Input type="email" /></div></Field>

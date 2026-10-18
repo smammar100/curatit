@@ -32,6 +32,7 @@ Parts: `Tabs` (the root, holds the selection), `TabList` (the row), `Tab`, `TabP
 | `TabList` `size` | `md`, `lg` | `md` | md: underline 40px, pill 36px. lg (44 / 40px): a row heading a marketing section. Labels are 13px medium at both |
 | `TabList` `aria-label` / `aria-labelledby` | one is required (the type enforces it) | | Name the row by what it switches: "Creative breakdown", "Lists" |
 | `TabList` `bleed` | boolean | `false` | Only for a row directly inside a Wrapper: it scrolls through the 16 / 32px gutter |
+| `TabList` `wrap` | boolean | `false` | Breaks onto more lines instead of scrolling, the lines 8px apart (pill) so touch areas never overlap: a pill row whose counts make it long (the review queue). Never with `bleed` |
 | `Tab` `icon` | a `fundations/icons` component | none | On every tab or none; decorative, sized 16px by the tab |
 | `Tab` `count` | a number | none | How many things the panel holds (Needs review 12), never a status |
 | `Tab` `disabled` | boolean | `false` | A view that exists and will have something; say why nearby. A view that never applies is left out (a single image has no Slides tab) |
@@ -52,7 +53,8 @@ classes land and the stylesheet order decides.
   on first render; colours fade 150ms for a pointer, snap for a key; nothing moves under reduced
   motion. The selected tab carries the indicator in the server's HTML.
 - A row that doesn't fit scrolls sideways and fades the edge with more beyond it; the selected tab
-  is scrolled clear of the fade on load and on change.
+  is scrolled clear of the fade on load and on change. With `wrap` it breaks onto another line
+  instead, and the indicator follows the selected tab to its line.
 - Panels are hidden unless selected and are always in the HTML (their state survives a switch).
   For a costly view, control `value` and render its children only when it's selected.
 
@@ -66,12 +68,24 @@ when it's only text. `TabPanel` works this out, and again when its content chang
 import Tabs, { Tab, TabList, TabPanel } from "@/components/fundations/molecules/Tabs";
 
 <Tabs value={view} onValueChange={setView}>
-  <TabList aria-label="Creative breakdown" variant="pill">
-    <Tab value="breakdown">Breakdown</Tab>
-    <Tab value="visual">Visual DNA</Tab>
+  <div className="sticky top-0 flex items-center justify-between gap-2">
+    <TabList aria-label="Creative breakdown" variant="pill">
+      <Tab value="breakdown">Breakdown</Tab>
+      <Tab value="visual">Visual DNA</Tab>
+    </TabList>
+    <CopyBrief />{/* an action beside the row is a Button, never a Tab */}
+  </div>
+  <TabPanel value="breakdown" className="mt-3">{view === "breakdown" && <Breakdown />}</TabPanel>
+  <TabPanel value="visual" className="mt-3">{view === "visual" && <VisualDna />}</TabPanel>
+</Tabs>
+
+// Correct (the review queue: counts, and a row that wraps on a phone)
+<Tabs value={list} onValueChange={setList}>
+  <TabList aria-label="Lists" variant="pill" wrap>
+    <Tab value="Needs review" count={12}>Needs review</Tab>
+    …
   </TabList>
-  <TabPanel value="breakdown" className="mt-3">…</TabPanel>
-  <TabPanel value="visual" className="mt-3">…</TabPanel>
+  …
 </Tabs>
 
 // Incorrect: a hand-rolled row (no roving tab stop, no handled keys), and colour on a tab
@@ -97,8 +111,8 @@ document.addEventListener("keydown", (event) => {
 
 **Never:** tabs as a stepper (steps have an order; tabs say any order is fine); tabs that change
 the address (use links); a tab that performs an action (Copy brief is a `Button` beside the row);
-tabs inside a tab panel; a second hand-rolled tab row anywhere (CreativeBreakdown, ReviewQueue
-and ClientInstall predate this component and move to it).
+tabs inside a tab panel; a second hand-rolled tab row anywhere (CreativeBreakdown and ReviewQueue
+moved onto this component on 2026-10-19; ClientInstall predates it and moves to it).
 
 ## Segmented, not tabs, for a setting
 

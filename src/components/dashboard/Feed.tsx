@@ -11,6 +11,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { inCategory, OLD_SLUGS } from "@/lib/categories";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/fundations/elements/Button";
+import EmptyState from "@/components/fundations/molecules/EmptyState";
 import BoardList from "./BoardList";
 import { useBoards } from "./boards";
 import CategoryBar from "./CategoryBar";
@@ -127,29 +128,32 @@ export default function Feed() {
 }
 
 function Empty({ view, query, onClear, onBrowse }: { view: View; query: string; onClear: () => void; onBrowse: () => void }) {
-  const nothingSaved = view === "Saved" && !query;
   // Nothing saved at all: the illustration, then how saving works
-  if (nothingSaved) {
+  if (view === "Saved" && !query) {
     return (
-      <div className="mx-auto flex max-w-sm flex-col items-center py-16 text-center">
-        <SavedArt />
-        <p className="mt-8 text-title font-medium text-primary-foreground">Your swipe file is empty</p>
-        <p className="mt-2 text-body text-pretty text-secondary-foreground">See a carousel that stops your thumb, or a launch you wish you’d made? Hit Save. It waits here for your next brief.</p>
-        <Button size="sm" variant="default" onClick={onBrowse} className="mt-6 w-fit">
-          Start your swipe file
-        </Button>
-      </div>
+      <EmptyState
+        illustration={<SavedArt />}
+        title="Your swipe file is empty"
+        description="See a carousel that stops your thumb, or a launch you wish you’d made? Hit Save. It waits here for your next brief."
+        action={
+          <Button size="sm" variant="default" onClick={onBrowse}>
+            Start your swipe file
+          </Button>
+        }
+      />
     );
   }
   // A search that found nothing
   return (
-    <div className="mx-auto max-w-sm py-24 text-center">
-      <p className="text-subtitle font-medium text-primary-foreground">{`Nothing matches ‘${query}’`}</p>
-      <p className="mt-2 text-body text-secondary-foreground">Try a format or a goal instead, like ‘carousel’ or ‘launch’.</p>
-      <button type="button" onClick={onClear} className="mt-6 rounded-sm text-body font-medium text-brand-foreground underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus">
-        Clear search
-      </button>
-    </div>
+    <EmptyState
+      title={`Nothing matches ‘${query}’`}
+      description="Try a format or a goal instead, like ‘carousel’ or ‘launch’."
+      action={
+        <Button size="sm" variant="default" onClick={onClear}>
+          Clear search
+        </Button>
+      }
+    />
   );
 }
 

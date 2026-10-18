@@ -40,8 +40,19 @@ function DemoCard({ name, children, demo }: { name: string; children: ReactNode;
 const PARTS: { part: string; sub?: string; classes: string[]; note: ReactNode }[] = [
   {
     part: "surface",
-    classes: ["bg-modal shadow-lg", "rounded-2xl p-1.5", "min-w-44 w-max max-w-72", "absolute z-40"],
-    note: "Floats over the page: the modal surface and the large shadow, 176 to 288px wide, as wide as its longest item.",
+    classes: ["bg-modal shadow-lg", "rounded-2xl p-1.5", "min-w-44 w-max max-w-72 · w-64 (fixed)", "absolute z-40"],
+    note: "Floats over the page: the modal surface and the large shadow, 176 to 288px wide, as wide as its longest item; width=\"fixed\" holds it at 256px for the person's own names.",
+  },
+  {
+    part: "scroll",
+    sub: "scrollable",
+    classes: ["max-h-72 overflow-y-auto", "overscroll-contain"],
+    note: "The items scroll past 288px, under the heading and above the footer; the glide lives inside the scroll, so it moves with the rows.",
+  },
+  {
+    part: "footer",
+    classes: ["outside the scroll", "its own glide"],
+    note: "Fixed at the foot: one MenuItem, which may open into an inline form (New board: Input and Button, 44px like the row).",
   },
   {
     part: "placement",
@@ -78,6 +89,11 @@ const PARTS: { part: string; sub?: string; classes: string[]; note: ReactNode }[
     note: "Optional, 16px, in the row's colour. Give every item in a group one, or none.",
   },
   {
+    part: "media",
+    classes: ["size-7 shrink-0", "the picture: size-full"],
+    note: "A 28px picture in place of the icon (a board's cover), making the row 44px tall.",
+  },
+  {
     part: "danger",
     classes: ['tone="danger"', "text-danger-foreground"],
     note: "Red words for an item that destroys something. Last, after a separator. The words say it too: Delete board…",
@@ -92,6 +108,17 @@ const PARTS: { part: string; sub?: string; classes: string[]; note: ReactNode }[
     sub: "MenuItemRadio",
     classes: ["Check size-3.5", "invisible when unchecked"],
     note: "On the right of the chosen option. Always in place, so the width doesn't change with the choice.",
+  },
+  {
+    part: "check",
+    sub: "MenuItemCheckbox",
+    classes: ["Check size-3.5", "invisible when off", "words truncate"],
+    note: "The same check on each thing that's on. Choosing flips it and closes the menu.",
+  },
+  {
+    part: "message",
+    classes: ["MenuMessage", "px-2.5 py-2", "text-body-sm text-secondary-foreground"],
+    note: "A line in place of the items while there's nothing to choose yet: Loading your boards…",
   },
   {
     part: "separator",
@@ -133,13 +160,43 @@ const MENU_PROPS: PropRow[] = [
     fallback: "required",
     note: "The button that opens it, usually a Button (or a Tooltip round one). Cloned with aria-haspopup, aria-expanded, aria-controls, the toggle and a ref; its own onClick and onKeyDown run first.",
   },
-  { name: "label", values: "string", fallback: "required", note: "The menu's name for screen readers: Board actions, Sort by." },
+  { name: "label", values: "string", fallback: "label or heading", note: "The menu's name for screen readers: Board actions, Sort by." },
+  {
+    name: "heading",
+    values: "string",
+    fallback: "label or heading",
+    note: "A visible title over the items, outside their scroll, that names the menu instead of label: Save to board.",
+  },
   { name: "align", values: '"start" | "end"', fallback: '"start"', note: "Lines up with the trigger's left or right edge. end for a trigger at the right of its row." },
   { name: "side", values: '"bottom" | "top"', fallback: '"bottom"', note: "Above the trigger near the bottom of the screen (a footer, a sticky bar)." },
   { name: "open", values: "boolean", fallback: "–", note: "Controlled: the page owns it. Pair with onOpenChange." },
   { name: "defaultOpen", values: "boolean", fallback: "false", note: "Uncontrolled: open on the first render." },
   { name: "onOpenChange", values: "(open) => void", fallback: "–", note: "Every time it opens or closes by itself; not for changes the open prop made." },
-  { name: "children", values: "items", fallback: "required", note: "MenuItem, MenuRadioGroup, MenuSeparator, MenuLabel. Nothing else: no fields, no paragraphs." },
+  {
+    name: "width",
+    values: '"content" | "fixed"',
+    fallback: '"content"',
+    note: "content: as wide as the longest item, 176–288px. fixed: 256px, for the person's own names, which truncate.",
+  },
+  { name: "scrollable", values: "boolean", fallback: "false", note: "The items scroll past 288px: a list that grows with the person's data (their boards)." },
+  {
+    name: "footer",
+    values: "ReactNode",
+    fallback: "–",
+    note: "Fixed below the items, outside their scroll, with its own glide: one MenuItem that may open into an inline form (New board). The only field a menu holds.",
+  },
+  {
+    name: "returnFocus",
+    values: '"always" | "keyboard"',
+    fallback: '"always"',
+    note: "keyboard: after a choice, focus goes back to the trigger only if it was made from the keyboard. For a trigger shown on hover or focus-within (a tile's Save).",
+  },
+  {
+    name: "children",
+    values: "items",
+    fallback: "required",
+    note: "MenuItem, MenuItemCheckbox, MenuRadioGroup, MenuSeparator, MenuLabel, MenuMessage. Nothing else: no fields, no paragraphs.",
+  },
   { name: "className", values: "string", fallback: "–", note: "On the wrapper round trigger and menu, for layout only (a margin, ml-auto)." },
 ];
 
@@ -148,6 +205,7 @@ const ITEM_PROPS: PropRow[] = [
   { name: "onSelect", values: "(event) => void", fallback: "–", note: "Runs on choosing. event.preventDefault() keeps the menu open." },
   { name: "href", values: "string", fallback: "–", note: "Makes it a next/link. Space works on it like Enter." },
   { name: "icon", values: "ReactNode", fallback: "–", note: "A Phosphor icon, drawn at 16px, decorative." },
+  { name: "media", values: "ReactNode", fallback: "–", note: "A 28px picture in place of the icon (a board's cover); give it size-full." },
   { name: "tone", values: '"neutral" | "danger"', fallback: '"neutral"', note: "danger: red, for an item that destroys something." },
   { name: "disabled", values: "boolean", fallback: "false", note: "Shown, skipped by the keyboard, can't be chosen." },
 ];
@@ -162,7 +220,15 @@ const RADIO_PROPS: PropRow[] = [
   },
   { name: "onValueChange", values: "(value: T) => void", fallback: "required", note: "Called on choosing; the menu then closes." },
   { name: "MenuItemRadio value", values: "string", fallback: "required", note: "The option's value. Also children, icon and disabled, as MenuItem." },
+  {
+    name: "MenuItemCheckbox",
+    values: "checked, onCheckedChange",
+    fallback: "required",
+    note: "One thing on or off (a post on a board). Always controlled; onCheckedChange(checked, event), and event.preventDefault() keeps the menu open. Also children, icon, media, disabled.",
+  },
   { name: "MenuLabel", values: "children, id?", fallback: "–", note: "A small heading over a group. Not focusable." },
+  { name: "MenuMessage", values: "children", fallback: "–", note: "A line in place of the items while there's nothing to choose yet. Not focusable." },
+  { name: "useMenu()", values: "{ close }", fallback: "–", note: "close({ fromKeyboard }) from inside the menu: the footer's form, on submit." },
   { name: "MenuSeparator", values: "none", fallback: "–", note: "A hairline between groups." },
   { name: "MenuCaret", values: "none", fallback: "–", note: "The trigger's caret for rightIcon; turns while open, read off aria-expanded." },
 ];
@@ -262,7 +328,8 @@ export default function MenuSheet() {
               <>
                 A hand-made <Mono>role=&quot;menu&quot;</Mono> (a second copy of focus, Escape and the glide to keep in
                 step); a field or a paragraph inside a menu (it&rsquo;s a list of choices, and typing fights the
-                typeahead: that&rsquo;s a Dialog, or a disclosure like the account menu); a menu for navigation across the
+                typeahead: that&rsquo;s a Dialog, or a disclosure like the account menu; the one exception is the{" "}
+                <Mono>footer</Mono>&rsquo;s item that opens into a name field, the Save menu&rsquo;s New board); a menu for navigation across the
                 site (that&rsquo;s the header&rsquo;s links); rows with a hover fill of their own (two fills under the
                 mouse).
               </>
@@ -291,6 +358,8 @@ export default function MenuSheet() {
  ├── It goes to another page → MenuItem href
  ├── It's one of a set of exclusive choices
  │   → MenuItemRadio in a MenuRadioGroup
+ ├── It turns one thing on or off (a post on
+ │   a board) → MenuItemCheckbox
  ├── It destroys something → MenuItem tone="danger",
  │   last, after a MenuSeparator, ending in …
  │   when a confirmation dialog follows
@@ -389,7 +458,7 @@ export default function MenuSheet() {
                 </div>
               </div>
               <div>
-                <Mono tone="primary">MenuRadioGroup, MenuItemRadio, MenuLabel, MenuSeparator, MenuCaret</Mono>
+                <Mono tone="primary">MenuRadioGroup, MenuItemRadio, MenuItemCheckbox, MenuLabel, MenuMessage, MenuSeparator, MenuCaret, useMenu</Mono>
                 <div className="mt-3">
                   <PropsMatrix rows={RADIO_PROPS} />
                 </div>

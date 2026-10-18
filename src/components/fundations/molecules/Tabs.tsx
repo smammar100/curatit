@@ -26,7 +26,9 @@
 // keyboard input and on first render; the labels' colours fade over 150ms for a pointer and snap
 // for a key; nothing moves under reduced motion. Until the indicator has measured, which
 // includes the server's HTML, the selected tab wears it itself. The row scrolls sideways when it
-// doesn't fit and fades the edge that has more tabs beyond it, only while it does.
+// doesn't fit and fades the edge that has more tabs beyond it, only while it does; with `wrap` it
+// breaks onto a second line instead (the review queue's lists, whose counts make it long) and the
+// indicator follows the selected tab to whichever line it's on.
 //
 // Use it for views of one thing. A setting with a few short values is Segmented; going to
 // another page is a link (TextLink, or a nav row like /system's); steps in a sequence are never
@@ -88,6 +90,13 @@ const sizes = {
     pill: "h-10 gap-2 px-4 pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:-inset-y-0.5",
   },
 };
+
+// A wrapping row's gaps: the lines sit far enough apart that a pill's 44px touch area (36px and
+// 4px each side) never overlaps the line under it
+const wrapGaps = {
+  underline: "gap-x-6 gap-y-1",
+  pill: "gap-x-1 gap-y-2",
+} as const;
 
 type Variant = keyof typeof variants;
 type Size = keyof typeof sizes;
@@ -191,6 +200,8 @@ type TabListProps = {
   size?: Size;
   /** Scroll edge to edge on phones, through the page gutter: for a row directly in a Wrapper */
   bleed?: boolean;
+  /** Break onto more lines instead of scrolling sideways (a pill row with counts). Never with bleed */
+  wrap?: boolean;
   ref?: Ref<HTMLDivElement>;
   /** Layout only, on the scrolling box (margins, width) */
   className?: string;
@@ -205,6 +216,7 @@ export function TabList({
   variant = "underline",
   size = "md",
   bleed = false,
+  wrap = false,
   ref,
   className,
   children,
@@ -302,9 +314,13 @@ export function TabList({
       <div
         ref={scroller}
         style={fade ? { maskImage: fade } : undefined}
-        className={cx("min-w-0 overflow-x-auto py-1 scrollbar-hide", bleed ? "-mx-4 px-4 sm:-mx-8 sm:px-8" : "-mx-1 px-1", className)}
+        className={cx(
+          "min-w-0 py-1",
+          wrap ? "-mx-1 px-1" : cx("overflow-x-auto scrollbar-hide", bleed ? "-mx-4 px-4 sm:-mx-8 sm:px-8" : "-mx-1 px-1"),
+          className,
+        )}
       >
-        <div className="relative w-max min-w-full">
+        <div className={cx("relative", wrap ? "w-full" : "w-max min-w-full")}>
           {variant === "underline" && (
             <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-border-default" />
           )}
@@ -322,7 +338,7 @@ export function TabList({
               unkey(event);
             }}
             onPointerMove={unkey}
-            className={cx("group/tabs relative flex", v.list)}
+            className={cx("group/tabs relative flex", wrap ? cx("flex-wrap", wrapGaps[variant]) : v.list)}
           >
             <span
               aria-hidden="true"

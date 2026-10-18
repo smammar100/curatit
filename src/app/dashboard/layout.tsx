@@ -5,6 +5,7 @@ import { BoardsProvider } from "@/components/dashboard/boards";
 import { PrefsProvider } from "@/components/dashboard/prefs";
 import { ProfileProvider } from "@/components/dashboard/profile";
 import { UserProvider } from "@/components/dashboard/user";
+import { ToastProvider } from "@/components/fundations/molecules/Toast";
 import type { DashPost } from "@/components/dashboard/types";
 import { getPublishedPosts } from "@/lib/posts";
 
@@ -56,10 +57,14 @@ export default async function DashboardLayout({ children, modal }: { children: R
       <div className="contents text-body">
         <ProfileProvider>
           <PrefsProvider>
-            <BoardsProvider posts={posts}>
-              <div id="dashboard-page">{children}</div>
-              {modal}
-            </BoardsProvider>
+            {/* The shared toast (fundations/molecules/Toast): one for the whole dashboard, round the
+                boards, whose saves and failures it confirms */}
+            <ToastProvider>
+              <BoardsProvider posts={posts}>
+                <div id="dashboard-page">{children}</div>
+                {modal}
+              </BoardsProvider>
+            </ToastProvider>
           </PrefsProvider>
         </ProfileProvider>
       </div>

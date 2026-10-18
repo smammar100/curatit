@@ -105,14 +105,21 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
       {/* The dimmed feed; a click on it closes the post */}
       <div aria-hidden="true" onClick={close} className="absolute inset-0 bg-black/55 backdrop-blur-sm" />
 
-      <button
-        type="button"
-        onClick={close}
-        aria-label="Close"
-        className="absolute top-5 right-5 z-10 flex size-11 items-center justify-center rounded-full bg-black/50 text-paper transition-[background-color,scale] duration-150 ease-out-quint hover:bg-paper/20 motion-safe:active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus lg:bg-paper/10 lg:hover:bg-paper/20"
-      >
-        <Close className="size-4" />
-      </button>
+      {/* Placed by a wrapper: Button is position: relative, which an `absolute` beside it would
+          fight. Its own colours (variant="none"): paper on the dimmed feed, which no variant is */}
+      <div className="absolute top-5 right-5 z-10">
+        <Button
+          variant="none"
+          size="lg"
+          shape="pill"
+          iconOnly
+          onClick={close}
+          aria-label="Close"
+          className="bg-black/50 text-paper hover:bg-paper/20 lg:bg-paper/10 lg:hover:bg-paper/20"
+        >
+          <Close className="size-4" />
+        </Button>
+      </div>
       {previous && <StepLink side="left" shortCode={previous.shortCode} />}
       {next && <StepLink side="right" shortCode={next.shortCode} />}
 
@@ -236,6 +243,8 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
 
 // The previous or next post in the feed, at the window's edge. It replaces the address rather
 // than adding to it, so Back still closes the post instead of stepping through every one seen.
+// A plain next/link rather than Button isLink: the step needs Link's `replace` and `scroll`,
+// which Button's link form doesn't pass through.
 function StepLink({ side, shortCode }: { side: "left" | "right"; shortCode: string }) {
   const Caret = side === "left" ? CaretLeft : CaretRight;
   return (
@@ -254,21 +263,30 @@ function StepLink({ side, shortCode }: { side: "left" | "right"; shortCode: stri
   );
 }
 
+// The slide arrows on the stage. The wrapper places them and fades one out at either end (Button
+// doesn't transition opacity); the Button brings its own colours, the panel's on the black stage
 function SlideButton({ side, disabled, onClick }: { side: "left" | "right"; disabled: boolean; onClick: () => void }) {
   const Caret = side === "left" ? CaretLeft : CaretRight;
   return (
-    <button
-      type="button"
-      aria-label={side === "left" ? "Previous slide" : "Next slide"}
-      disabled={disabled}
-      onClick={onClick}
+    <div
       className={cx(
-        "absolute top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-modal/90 text-primary-foreground transition-[opacity,scale] duration-150 ease-out-quint motion-safe:active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus disabled:pointer-events-none disabled:opacity-0",
+        "absolute top-1/2 -translate-y-1/2 transition-opacity duration-150 ease-out-quint",
         side === "left" ? "left-4" : "right-4",
+        disabled && "pointer-events-none opacity-0",
       )}
     >
-      <Caret className="size-4" />
-    </button>
+      <Button
+        variant="none"
+        shape="pill"
+        iconOnly
+        aria-label={side === "left" ? "Previous slide" : "Next slide"}
+        disabled={disabled}
+        onClick={onClick}
+        className="bg-modal/90 text-primary-foreground"
+      >
+        <Caret className="size-4" />
+      </Button>
+    </div>
   );
 }
 
@@ -408,7 +426,10 @@ function BoardsOn({ post }: { post: PostDetail }) {
 
 // The board picker and Save, at the foot of the panel like Cosmos. "New board…" swaps the
 // picker for a name field (and is all there is before the first board), and Save then makes
-// the board with this post on it.
+// the board with this post on it. The picker is a native <select> (a value in a form, which
+// Menu's own notes leave to the browser; there's no Select atom yet), and the name field keeps its
+// 48px pill to match it and Save on one row: Input has no pill and stops at 44px, so moving only
+// the field would set a 44px rounded box where the 48px pill select was a moment before.
 const NEW = "new";
 
 function SaveForm({ post }: { post: PostDetail }) {
@@ -445,14 +466,11 @@ function SaveForm({ post }: { post: PostDetail }) {
             className="h-12 w-full rounded-full border-0 bg-card pr-10 pl-5 text-body pointer-coarse:text-[16px] text-primary-foreground placeholder:text-tertiary-foreground transition-[box-shadow] duration-150 ease-out-quint focus:ring-2 focus:ring-brand-border-focus focus:outline-hidden"
           />
           {boards.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setChoice(null)}
-              aria-label="Back to your boards"
-              className="absolute top-1/2 right-2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-secondary-foreground transition-[background-color,color] duration-150 ease-out-quint hover:bg-transparent-hover hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
-            >
-              <Close className="size-3.5" />
-            </button>
+            <span className="absolute top-1/2 right-2 -translate-y-1/2">
+              <Button variant="transparent" size="sm" shape="pill" iconOnly onClick={() => setChoice(null)} aria-label="Back to your boards">
+                <Close className="size-3.5" />
+              </Button>
+            </span>
           )}
         </label>
       ) : (

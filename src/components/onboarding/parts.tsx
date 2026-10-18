@@ -7,6 +7,7 @@ import { useEffect, useId, useRef, type ReactNode, type Ref } from "react";
 import Image from "next/image";
 import Check from "@/components/fundations/icons/Check";
 import Button from "@/components/fundations/elements/Button";
+import Input from "@/components/fundations/elements/Input";
 import { ratio } from "@/components/dashboard/Grid";
 import { learnedChips, rank } from "@/components/dashboard/forYou";
 import type { Profile } from "@/components/dashboard/profile";
@@ -58,29 +59,26 @@ export function Progress({ step, total, className }: { step: number; total: numb
   );
 }
 
+// A toggle chip: the dashboard's 44px pill Button, pressed. On, it's the primary fill; off, it
+// brings its own grey mat (variant="none"), which no variant has
 export function Chip({ on, onClick, children, className }: { on: boolean; onClick: () => void; children: ReactNode; className?: string }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant={on ? "default" : "none"}
+      size="lg"
+      shape="pill"
       aria-pressed={on}
       onClick={onClick}
-      className={cx(
-        "flex h-11 items-center gap-2 rounded-full px-4 text-body font-medium whitespace-nowrap transition-[background-color,color,scale] duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.96]",
-        on ? "bg-inverted-solid text-on-inverted-foreground" : "bg-card text-primary-foreground hover:bg-transparent-hover",
-        className,
-      )}
+      className={cx(!on && "bg-card text-primary-foreground hover:bg-transparent-hover", className)}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
-// The dashboard's grey pill field: a hairline at rest, the 2px brand ring on focus
-const field =
-  "h-12 w-full rounded-full border-0 bg-card px-5 text-subtitle pointer-coarse:text-[16px] text-primary-foreground placeholder:text-tertiary-foreground ring-1 ring-border-default transition-[box-shadow] duration-150 ease-out-quint focus:ring-2 focus:ring-brand-border-focus focus:outline-hidden";
-
 // The name, then what they do as one tap. The name takes focus on arrival, except on touch
-// (the keyboard would jump up); Enter in it submits the step.
+// (the keyboard would jump up); Enter in it submits the step. The step's question is its visible
+// label, so the field is named by aria-label rather than a Field.
 export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: Partial<Draft>) => void }) {
   const ref = useRef<HTMLInputElement>(null);
   const groupLabel = useId();
@@ -89,10 +87,17 @@ export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: 
   }, []);
   return (
     <div className="space-y-5">
-      <label className="block">
-        <span className="sr-only">Your name</span>
-        <input ref={ref} type="text" name="name" value={value.name} onChange={(e) => onChange({ name: e.target.value })} placeholder="Your name" autoComplete="given-name" maxLength={60} className={field} />
-      </label>
+      <Input
+        ref={ref}
+        size="lg"
+        name="name"
+        aria-label="Your name"
+        value={value.name}
+        onChange={(e) => onChange({ name: e.target.value })}
+        placeholder="Your name"
+        autoComplete="given-name"
+        maxLength={60}
+      />
       <div>
         <p id={groupLabel} className="mb-2 text-caption font-medium text-secondary-foreground">
           And you’re a…

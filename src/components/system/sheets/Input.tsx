@@ -639,9 +639,9 @@ const error = check.any ? null : state.error;
               term: "Review pages",
               text: (
                 <>
-                  review/parts.tsx exports <Mono>fieldClass</Mono> (inputClass plus the focus ring),{" "}
-                  <Mono>areaClass</Mono> (a textarea) and <Mono>selectClass</Mono> (a select), built from{" "}
-                  <Mono>fieldParts</Mono> in the dashboard&rsquo;s <Mono>text-body</Mono>.
+                  Moved onto Field, Input and Textarea (FieldGroup over each set) on 2026-10-19. Only the selects are
+                  still the recipe: review/parts.tsx&rsquo;s <Mono>selectClass</Mono>, built from{" "}
+                  <Mono>fieldParts</Mono> in the dashboard&rsquo;s <Mono>text-body</Mono>, until there&rsquo;s a Select.
                 </>
               ),
             },

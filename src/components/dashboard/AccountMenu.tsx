@@ -6,7 +6,13 @@
 // then the theme (light, dark, system) and the grid
 // size, both remembered on this device. A disclosure rather than a role="menu" (2026-10-18): a
 // menu may hold only menu items, and this panel mixes links, a form's button and two radio
-// groups, so it opens in the tab order after the avatar and Tab walks through it.
+// groups, so it opens in the tab order after the avatar and Tab walks through it. So it isn't the
+// shared Menu (whose items are role="menuitem" and tab stops of none): it's usePopover's
+// disclosure, with the shared pieces where they apply (2026-10-19): the glide highlight and row
+// recipe the Menu uses (GLIDE_HIGHLIGHT, GLIDE_ROW), the Separator atom between the links and the
+// settings, Badge for the count and Segmented for the two settings. The rows stay its own: they're
+// links, a form's submit and buttons, full width with the icon at the far end in the subtitle
+// role, which no Button size or TextLink draws, and the 28px panel radius is the account menu's.
 import { useEffect, useState } from "react";
 import Link from "next/link";
 // Icons
@@ -24,6 +30,7 @@ import { SUPPORT_MAILTO } from "@/lib/site";
 import { cx } from "@/lib/cx";
 import Badge from "@/components/fundations/elements/Badge";
 import Segmented from "@/components/fundations/elements/Segmented";
+import Separator from "@/components/fundations/elements/Separator";
 import { signOut } from "@/app/auth/actions";
 import { resetAnalytics } from "@/lib/analytics";
 import { Avatar, useUser } from "./user";
@@ -121,7 +128,9 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
             </form>
           </div>
 
-          <div className="mx-3 my-2 h-px bg-border-default" />
+          <div className="px-3 py-2">
+            <Separator />
+          </div>
 
           <div className="flex items-center justify-between px-3 py-2">
             <span className="text-subtitle font-medium text-primary-foreground">Theme</span>

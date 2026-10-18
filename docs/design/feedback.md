@@ -51,7 +51,9 @@ Tones: `neutral` (default; `bg-card`, Info icon), `positive` (Check), `warning`
 
 A short message after an action, that leaves on its own. One `<ToastProvider>` around the app
 (or area); `const { toast, dismiss } = useToast()`. Never render `<Toast>` yourself: it's
-exported for the sheet.
+exported for the sheet. The dashboard's provider is in `src/app/dashboard/layout.tsx`, round
+`BoardsProvider`, whose `notify(text, "done" | "error")` is a thin call to `toast()` (neutral or
+danger) for the board writes and their undo-on-failure messages.
 
 `toast({ message, tone?, action?, duration? })` returns an id; `dismiss(id)` removes it.
 
@@ -60,8 +62,9 @@ Nothing else: a warning or a success that must stay is a Notice.
 
 - **One at a time.** A new toast waits (queue of 3, oldest dropped) and replaces the one on
   screen once that one has been seen for 1.5s. The newest gets its full time.
-- **Duration** from the words: 240ms a word (250 wpm) + 1.5s, clamped 2.5–8s; 5s at least with
-  an action. Pass `duration` only for a reason the words don't show.
+- **Duration** from the words: 240ms a word (250 wpm) + 1.5s, clamped 2.5–8s; 4s at least for
+  `danger` (a failure is unexpected and says what to do; the dashboard's error toasts always had
+  4s), 5s at least with an action. Pass `duration` only for a reason the words don't show.
 - **Pauses** while pointed at, while focus is inside and while the tab is hidden; resumes with
   the time left. Escape dismisses it; pressing the action runs it and dismisses; focus goes back
   where it came from.

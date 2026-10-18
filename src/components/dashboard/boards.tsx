@@ -2,25 +2,27 @@
 
 // The dashboard's boards: the signed-in person's boards from public.boards / board_posts, saving
 // a post to one or taking it off, making, renaming, describing, sharing and deleting boards,
-// notes on a board's posts, the toast that confirms each, and the "Save" menu on each tile. The pages are static, so the boards load in the browser once the
-// page is up (Row Level Security limits them to the owner's). Every change shows at once and is
+// notes on a board's posts, the toast that confirms each (the shared Toast, through the
+// ToastProvider round the dashboard in app/dashboard/layout.tsx), and the "Save" menu on each tile
+// (the shared Menu). The pages are static, so the boards load in the browser once the page is up
+// (Row Level Security limits them to the owner's). Every change shows at once and is
 // written in the background; if the write fails it's undone and the toast says so. A new board
 // gets its id here (crypto.randomUUID), so a post can be saved to it while it's still being
 // written: writes to a board wait for its creation.
-import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 // Fundations
 import Button from "@/components/fundations/elements/Button";
+import Input from "@/components/fundations/elements/Input";
+import Menu, { MenuItem, MenuItemCheckbox, MenuMessage, useMenu } from "@/components/fundations/molecules/Menu";
+import { useToast } from "@/components/fundations/molecules/Toast";
 // Icons
 import Check from "@/components/fundations/icons/Check";
 import Plus from "@/components/fundations/icons/Plus";
-import WarningCircle from "@/components/fundations/icons/WarningCircle";
 import { cx } from "@/lib/cx";
-import { usePresence } from "@/lib/motion";
 import { createClient } from "@/utils/supabase/client";
 import { track } from "@/lib/analytics";
 import type { Board, DashPost } from "./types";
-import { GLIDE_HIGHLIGHT, GLIDE_ROW, usePopover } from "./usePopover";
 
 type BoardsValue = {
   // Most recently used first
@@ -41,7 +43,7 @@ type BoardsValue = {
   setNote: (post: string, board: string, note: string) => void;
   // Turns the read-only link on (a new token every time, so an old link stays dead) or off
   setSharing: (id: string, on: boolean) => void;
-  // Shows a short confirmation, or a problem, at the bottom of the screen
+  // Shows a short confirmation, or a problem, at the bottom of the screen (the shared toast)
   notify: (text: string, tone?: "done" | "error") => void;
 };
 
@@ -67,33 +69,23 @@ export function useBoards() {
 
 const newestFirst = (a: { addedAt: string }, b: { addedAt: string }) => b.addedAt.localeCompare(a.addedAt);
 
-type Toast = { id: number; text: string; tone: "done" | "error" };
-// How long a toast stays: long enough to read, longer for a problem
-const TOAST_MS = { done: 2400, error: 4000 };
-
-// Whether this tab is in the background, where a toast's clock stops
-const onVisibility = (change: () => void) => {
-  document.addEventListener("visibilitychange", change);
-  return () => document.removeEventListener("visibilitychange", change);
-};
-const usePageHidden = () => useSyncExternalStore(onVisibility, () => document.hidden, () => false);
-
 export function BoardsProvider({ posts, children }: { posts: DashPost[]; children: ReactNode }) {
   const [supabase] = useState(() => createClient());
   const [boards, setBoards] = useState<Board[]>([]);
   const [status, setStatus] = useState<BoardsValue["status"]>("loading");
-  // The last toast, kept while it leaves; `toastOpen` is whether it's still meant to show
-  const [toast, setToast] = useState<Toast | null>(null);
-  const [toastOpen, setToastOpen] = useState(false);
-  const toastCount = useRef(0);
+  const { toast } = useToast();
   const [byCode] = useState(() => new Map(posts.map((post) => [post.shortCode, post])));
   // Boards still being written, so a save to one waits for it
   const creating = useRef(new Map<string, Promise<boolean>>());
 
-  const notify = useCallback((text: string, tone: Toast["tone"] = "done") => {
-    setToast({ id: ++toastCount.current, text, tone });
-    setToastOpen(true);
-  }, []);
+  // The shared toast: its reading time (2.5s at least, 4s for a failure), held while pointed at,
+  // focused or in a background tab; a failure is read out assertively
+  const notify = useCallback(
+    (text: string, tone: "done" | "error" = "done") => {
+      toast({ message: text, tone: tone === "error" ? "danger" : "neutral" });
+    },
+    [toast],
+  );
   const change = (id: string, edit: (board: Board) => Board) => setBoards((list) => list.map((b) => (b.id === id ? edit(b) : b)));
 
   useEffect(() => {
@@ -132,25 +124,6 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
       live = false;
     };
   }, [supabase, posts, notify]);
-
-  // A toast's clock stops while the pointer is on it and while the tab is in the background, and
-  // runs on with the time it had left; then the toast leaves (toast-out) and unmounts
-  const { mounted: toastMounted, closing: toastClosing } = usePresence(toastOpen, 120);
-  const [pointedAt, setPointedAt] = useState<number | null>(null);
-  const hidden = usePageHidden();
-  const paused = hidden || (toast !== null && pointedAt === toast.id);
-  const left = useRef<{ id: number; ms: number } | null>(null);
-  useEffect(() => {
-    if (!toast || !toastOpen || paused) return;
-    if (left.current?.id !== toast.id) left.current = { id: toast.id, ms: TOAST_MS[toast.tone] };
-    const entry = left.current;
-    const start = Date.now();
-    const timer = setTimeout(() => setToastOpen(false), entry.ms);
-    return () => {
-      clearTimeout(timer);
-      entry.ms -= Date.now() - start;
-    };
-  }, [toast, toastOpen, paused]);
 
   // Runs a write once the board exists; undoes the change if either fails. A post that's
   // already on the board (saved from another tab) counts as saved.
@@ -315,98 +288,63 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
       value={{ boards: sorted, status, list: posts, posts: byCode, save, remove, createBoard, updateBoard, deleteBoard, setNote, setSharing, notify }}
     >
       {children}
-      {/* The live region stays mounted, so each toast that enters it is announced */}
-      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
-        {toast && toastMounted && (
-          <p
-            key={toast.id}
-            role={toast.tone === "error" ? "alert" : undefined}
-            data-closing={toastClosing || undefined}
-            onPointerEnter={() => setPointedAt(toast.id)}
-            onPointerLeave={() => setPointedAt(null)}
-            className={cx(
-              "flex max-w-sm items-center gap-2 rounded-lg bg-inverted-solid px-4 py-2.5 text-body text-on-inverted-foreground shadow-lg motion-reduce:animate-none",
-              toastClosing ? "pointer-events-none animate-toast-out" : "pointer-events-auto animate-toast-in",
-            )}
-          >
-            {toast.tone === "error" ? <WarningCircle className="size-4 shrink-0" /> : <Check className="size-3.5 shrink-0" />}
-            <span className="min-w-0">{toast.text}</span>
-          </p>
-        )}
-      </div>
     </BoardsContext.Provider>
   );
 }
 
-// A name for a new board: a "New board" row that opens into a field. `onCreate` gets the
-// trimmed name, and whether it came from the keyboard (Enter in the field, or Create pressed
-// with a key) rather than a pointer. Used in the Save menu, where `menuItem` makes the row one
-// of its items.
-export function NewBoardForm({
-  onCreate,
-  open: startOpen = false,
-  label = "New board",
-  menuItem = false,
-  className,
-}: {
-  onCreate: (name: string, fromKeyboard: boolean) => void;
-  open?: boolean;
-  label?: string;
-  menuItem?: boolean;
-  className?: string;
-}) {
-  const [open, setOpen] = useState(startOpen);
+// The Save menu's last row: "New board", which opens in place into a name field and Create (the
+// one field the shared Menu allows, in its footer). Enter or Create makes the board with the post
+// on it and closes the menu; from the keyboard (Enter, or Create pressed with a key) focus goes
+// back to Save, from a pointer it stays put (see SaveMenu). Escape closes the menu, as anywhere in it.
+function NewBoardItem({ label, onCreate }: { label: string; onCreate: (name: string) => void }) {
+  const menu = useMenu();
+  const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   // Set by Create's click (a key press clicks with no detail); Enter in the field counts as keyboard
   const fromKeyboard = useRef(true);
   if (!open) {
     return (
-      <button
-        type="button"
-        role={menuItem ? "menuitem" : undefined}
-        tabIndex={menuItem ? -1 : undefined}
-        onClick={() => setOpen(true)}
-        className={cx(
-          "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-body text-primary-foreground hover:bg-transparent-hover focus-visible:bg-transparent-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-border-focus active:bg-transparent-hover",
-          className,
-        )}
+      <MenuItem
+        media={
+          <span className="flex size-full items-center justify-center rounded bg-component">
+            <Plus className="size-3.5" />
+          </span>
+        }
+        onSelect={(event) => {
+          event.preventDefault();
+          setOpen(true);
+        }}
       >
-        <span className="flex size-7 shrink-0 items-center justify-center rounded bg-component">
-          <Plus className="size-3.5" />
-        </span>
         {label}
-      </button>
+      </MenuItem>
     );
   }
-  // The field and Create are 32px (the small Button) and the form's padding brings it to the
-  // 44px of the row it replaces. The field is the inputs' recipe (inputClass in auth/AuthParts) at
-  // that size
+  // The field and Create are 40px, and the form's 2px padding brings it to the 44px of the row it
+  // replaces
   return (
     <form
-      className={cx("flex gap-1.5 p-1.5", className)}
+      className="flex gap-1.5 p-0.5"
       onSubmit={(event) => {
         event.preventDefault();
         const keyboard = fromKeyboard.current;
         fromKeyboard.current = true;
         const trimmed = name.trim();
-        if (trimmed) onCreate(trimmed, keyboard);
+        if (!trimmed) return;
+        onCreate(trimmed);
+        menu.close({ fromKeyboard: keyboard });
       }}
     >
-      <label className="min-w-0 flex-1">
-        <span className="sr-only">Board name</span>
-        <input
-          autoFocus
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          maxLength={NAME_MAX}
-          placeholder="Board name"
-          className="h-8 w-full rounded-lg border-0 bg-component-on-container-subtle px-3 text-body text-primary-foreground shadow-sm placeholder:text-tertiary-foreground transition-[box-shadow] duration-150 ease-out-quint focus:shadow-[0_0_0_2px_var(--color-brand-border-focus)] focus:ring-0 focus:outline-hidden pointer-coarse:text-[16px]"
-        />
-      </label>
+      <Input
+        autoFocus
+        aria-label="Board name"
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        maxLength={NAME_MAX}
+        placeholder="Board name"
+        className="min-w-0 flex-1"
+      />
       <Button
         type="submit"
-        size="sm"
-        variant="default"
         disabled={!name.trim()}
         onClick={(event) => {
           fromKeyboard.current = event.detail === 0;
@@ -418,85 +356,54 @@ export function NewBoardForm({
   );
 }
 
-// "Save" with a menu of boards: a board with the post on it shows a check, and choosing it takes
-// the post off again. `tone="overlay"` sits on an image. Choosing a board (or making one) from the
-// keyboard puts focus back on Save; a pointer's choice doesn't move focus there, because the tiles
-// reveal Save on focus-within and it would stay on screen after the pointer left.
+// "Save" with a menu of boards (the shared Menu): a board with the post on it shows a check, and
+// choosing it takes the post off again. `tone="overlay"` sits on an image. Choosing a board (or
+// making one) from the keyboard puts focus back on Save; a pointer's choice doesn't move focus
+// there (returnFocus="keyboard"), because the tiles reveal Save on focus-within and it would stay
+// on screen after the pointer left. The boards scroll under the "Save to board" heading; New board
+// stays at the foot.
 export function SaveMenu({ post, tone = "plain", className }: { post: string; tone?: "plain" | "overlay"; className?: string }) {
   const { boards, status, save, remove, createBoard } = useBoards();
-  const popover = usePopover("menu");
-  // The highlight lives inside the scrolling list, so it scrolls with the rows
-  const { glide } = popover;
-  const labelId = useId();
   const savedIn = boards.some((board) => board.items.some((item) => item.post === post));
 
   return (
-    <div {...popover.rootProps} className={cx("relative", className)}>
-      {/* On a cover it's a label like the tile's brand: the page's colour (white, near-black in
-          dark), nearly opaque, with the default shadow, so it reads over any image */}
-      <Button
-        aria-haspopup="menu"
-        {...popover.triggerProps}
-        size="sm"
-        variant={tone === "overlay" ? "none" : "muted"}
-        leftIcon={savedIn ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
-        className={tone === "overlay" ? "bg-page/95 text-primary-foreground shadow-sm hover:bg-page" : undefined}
-      >
-        {savedIn ? "Saved" : "Save"}
-      </Button>
-      {/* The dashboard's menu: rounded-2xl p-1.5, so its rows and their highlight are rounded-md
-          (12 − 6) */}
-      {popover.mounted && (
-        <div
-          {...popover.contentProps}
-          role="menu"
-          aria-labelledby={labelId}
-          className={cx("absolute right-0 z-20 mt-1.5 w-64 origin-top-right rounded-2xl bg-modal p-1.5 shadow-lg outline-hidden", popover.motion)}
+    <Menu
+      heading="Save to board"
+      align="end"
+      width="fixed"
+      scrollable
+      returnFocus="keyboard"
+      className={className}
+      trigger={
+        // On a cover it's a label like the tile's brand: the page's colour (white, near-black in
+        // dark), nearly opaque, with the default shadow, so it reads over any image
+        <Button
+          size="sm"
+          variant={tone === "overlay" ? "none" : "muted"}
+          leftIcon={savedIn ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
+          className={tone === "overlay" ? "bg-page/95 text-primary-foreground shadow-sm hover:bg-page" : undefined}
         >
-          <p id={labelId} className="px-2.5 pt-1.5 pb-2 text-caption font-medium text-secondary-foreground">
-            Save to board
-          </p>
-          {status === "loading" && <p className="px-2.5 py-2 text-body text-secondary-foreground">Loading your boards…</p>}
-          <div ref={glide.ref} {...glide.handlers} className="relative max-h-72 overflow-y-auto">
-            <span aria-hidden="true" className={cx(GLIDE_HIGHLIGHT, "rounded-md")} style={glide.highlight.style} data-fresh={glide.highlight.fresh || undefined} />
-            {boards.map((board) => {
-              const inBoard = board.items.some((item) => item.post === post);
-              return (
-                <button
-                  key={board.id}
-                  type="button"
-                  role="menuitemcheckbox"
-                  aria-checked={inBoard}
-                  tabIndex={-1}
-                  data-glide-item
-                  onClick={(event) => {
-                    if (inBoard) remove(post, board.id);
-                    else save(post, board.id);
-                    popover.close(event.detail === 0);
-                  }}
-                  className={cx("flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-body text-primary-foreground", GLIDE_ROW)}
-                >
-                  <BoardThumb board={board} className="size-7" />
-                  <span className="min-w-0 flex-1 truncate">{board.name}</span>
-                  {inBoard && <Check className="size-3.5 shrink-0 text-secondary-foreground" />}
-                </button>
-              );
-            })}
-          </div>
-          {/* Fixed at the foot, outside the scrolling list, so it keeps its own hover fill */}
-          {status !== "loading" && (
-            <NewBoardForm
-              menuItem
-              label={boards.length ? "New board" : "Make your first board"}
-              onCreate={(name, fromKeyboard) => {
-                createBoard(name, { firstPost: post });
-                popover.close(fromKeyboard);
-              }}
-            />
-          )}
-        </div>
-      )}
-    </div>
+          {savedIn ? "Saved" : "Save"}
+        </Button>
+      }
+      footer={
+        status !== "loading" && (
+          <NewBoardItem label={boards.length ? "New board" : "Make your first board"} onCreate={(name) => createBoard(name, { firstPost: post })} />
+        )
+      }
+    >
+      {status === "loading" && <MenuMessage>Loading your boards…</MenuMessage>}
+      {boards.map((board) => (
+        <MenuItemCheckbox
+          key={board.id}
+          checked={board.items.some((item) => item.post === post)}
+          onCheckedChange={(on) => (on ? save(post, board.id) : remove(post, board.id))}
+          media={<BoardThumb board={board} className="size-full" />}
+        >
+          {board.name}
+        </MenuItemCheckbox>
+      ))}
+    </Menu>
   );
 }
 

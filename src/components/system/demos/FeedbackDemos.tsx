@@ -8,15 +8,15 @@
 import { useEffect, useRef, useState } from "react";
 import Button from "@/components/fundations/elements/Button";
 import Notice from "@/components/fundations/molecules/Notice";
-import { ToastProvider, toastDuration, useToast, type ToastOptions } from "@/components/fundations/molecules/Toast";
+import { ToastProvider, toastDuration, useToast, type ToastOptions, type ToastTone } from "@/components/fundations/molecules/Toast";
 
 const seconds = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 
 /** The reading time a toast would get, for the sheet's table (toastDuration is client code) */
-export function ToastDuration({ message, action }: { message: string; action?: string }) {
+export function ToastDuration({ message, action, tone }: { message: string; action?: string; tone?: ToastTone }) {
   return (
     <span className="font-mono text-caption-lg text-primary-foreground tabular-nums">
-      {seconds(toastDuration({ message, action: action ? { label: action, onClick: () => {} } : undefined }))}
+      {seconds(toastDuration({ message, tone, action: action ? { label: action, onClick: () => {} } : undefined }))}
     </span>
   );
 }

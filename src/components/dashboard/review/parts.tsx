@@ -1,13 +1,11 @@
 "use client";
 
 // Small pieces the review pages share: the page frame, status pills, section headings, evidence
-// chips, the form fields and the formatting of costs and times.
+// chips, the selects' recipe and the formatting of costs and times.
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { inputClass } from "@/components/auth/AuthParts";
 import Badge from "@/components/fundations/elements/Badge";
-import { cx } from "@/lib/cx";
 import { term, type Dimension } from "@/lib/creative/taxonomy";
 import { feedHref } from "../Feed";
 import Header from "../Header";
@@ -124,13 +122,11 @@ export function useBusy() {
 }
 
 // The buttons are the shared Button (`default` for the main action, `secondary` for the rest, at
-// size sm with round ends). The fields: the auth forms' input (inputClass) with its brand ring on
-// focus. A textarea and the selects keep the recipe's parts (surface, default shadow, focus ring,
-// 16px on touch screens so iOS doesn't zoom) at their own heights, in the dashboard's body role.
-// focus:ring-0 takes off the 1px blue ring @tailwindcss/forms draws on a focused textarea or
-// select, which would sit over the brand ring, as inputClass does for inputs
+// size sm with round ends), the text fields the shared Field with Input and Textarea (since
+// 2026-10-19). The selects are native until the design system has a Select, so they keep the
+// field recipe's parts here (surface, default shadow, brand focus ring, 16px on touch screens so
+// iOS doesn't zoom) at their own heights, in the dashboard's body role. focus:ring-0 takes off the
+// 1px blue ring @tailwindcss/forms draws on a focused select, which would sit over the brand ring
 const focusRing = "focus:shadow-[0_0_0_2px_var(--color-brand-border-focus)]";
 export const fieldParts = `border-0 bg-component-on-container-subtle text-primary-foreground shadow-sm placeholder:text-tertiary-foreground transition-[box-shadow] duration-150 ease-out-quint focus:ring-0 focus:outline-hidden pointer-coarse:text-[16px] ${focusRing}`;
-export const fieldClass = cx(inputClass, focusRing);
-export const areaClass = `block w-full rounded-lg px-3 py-2.5 text-body ${fieldParts}`;
 export const selectClass = `h-10 rounded-lg py-0 pr-8 pl-3 text-body ${fieldParts}`;

@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import Symbol from "@/components/assets/Symbol";
 import Button from "@/components/fundations/elements/Button";
 import CaretLeft from "@/components/fundations/icons/CaretLeft";
+import Notice from "@/components/fundations/molecules/Notice";
 import { useBoards } from "@/components/dashboard/boards";
 import { rank } from "@/components/dashboard/forYou";
 import { useProfile } from "@/components/dashboard/profile";
@@ -218,9 +219,9 @@ export default function Welcome() {
                 )}
               </div>
               {failed && (
-                <p role="alert" className="mt-4 text-body text-danger-foreground">
+                <Notice tone="danger" live className="mt-4">
                   We couldn’t save that. Check your connection and try again.
-                </p>
+                </Notice>
               )}
               <div className="mt-8 flex items-center gap-4">
                 <Button type="submit" size="base" variant="default" disabled={!ready || saving !== null} className="w-fit">

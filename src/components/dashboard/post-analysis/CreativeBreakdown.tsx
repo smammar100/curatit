@@ -10,11 +10,14 @@
 //   imagery, visual devices, and branding & consistency, each one insight, a few attributes and
 //   the slides that show them; on a carousel, what stays the same and the sequence as a bar.
 // Beside the tabs, Copy brief puts the reference-led reconstruction prompt on the clipboard
-// (2026-10-14; the Download .md button beside it was taken out on 2026-10-15). Both are the panel's own pieces: the tabs as they always were,
-// the button the same as the Instagram link above it. The bar stays in view while the panel scrolls, and switching tabs brings the new tab's
-// start into view. One slide index in PostView drives the stage, ← / →, the bar and every slide
+// (2026-10-14; the Download .md button beside it was taken out on 2026-10-15). The tabs are the
+// shared Tabs (pill, since 2026-10-19; a hand-built row before), whose ← / → / Home / End are
+// marked handled so PostView's slide arrows leave them be; the button is the same as the
+// Instagram link above it. The bar stays in view while the panel scrolls, and switching tabs
+// brings the new tab's start into view only when the panel had scrolled past it. One slide index in PostView drives the stage, ← / →, the bar and every slide
 // link, so they never disagree; a single image has no slide links at all (it's always on screen).
-import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import Tabs, { Tab, TabList, TabPanel } from "@/components/fundations/molecules/Tabs";
 import CaretDown from "@/components/fundations/icons/CaretDown";
 import Check from "@/components/fundations/icons/Check";
 import Copy from "@/components/fundations/icons/Copy";
@@ -73,7 +76,6 @@ function scrollParent(element: HTMLElement) {
 
 export default function CreativeBreakdown({ analysis, index, onSlide, videos, source }: Props) {
   const [view, setView] = useState<View>("breakdown");
-  const tabs = useRef<Partial<Record<View, HTMLButtonElement | null>>>({});
   const top = useRef<HTMLDivElement>(null);
   const switched = useRef(false);
   const stage: Stage = { index, onSlide, carousel: analysis.slides.length > 1 };
@@ -100,55 +102,32 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
     if (offset < 0) pane.scrollTop = Math.max(0, pane.scrollTop + offset);
   }, [view]);
 
-  // ← / → (Home, End) move between tabs, and are marked handled so the stage's arrows leave them be.
-  // A key snaps the selection (data-keys on the row turns the tabs' fade off); a pointer brings it back
-  const unkey = (event: { currentTarget: HTMLElement }) => {
-    delete event.currentTarget.dataset.keys;
-  };
-  const onTabKey = (event: KeyboardEvent<HTMLDivElement>) => {
-    const at = views.findIndex((v) => v.id === view);
-    const next =
-      event.key === "ArrowRight" ? (at + 1) % views.length : event.key === "ArrowLeft" ? (at - 1 + views.length) % views.length : event.key === "Home" ? 0 : event.key === "End" ? views.length - 1 : -1;
-    if (next < 0) return;
-    event.preventDefault();
-    event.stopPropagation();
-    event.currentTarget.dataset.keys = "";
-    choose(views[next].id);
-    tabs.current[views[next].id]?.focus();
-  };
-
   return (
     <div>
       <div ref={top} aria-hidden="true" />
-      {/* Sticky over the panel's own padding (px-6 in PostView), so content slides under it */}
-      <div className="sticky top-0 z-10 -mx-6 flex flex-wrap items-center justify-between gap-2 bg-modal px-6 py-1.5">
-        <div role="tablist" aria-label="Creative breakdown" onKeyDown={onTabKey} onPointerDown={unkey} onPointerMove={unkey} className="group/tabs -mx-1 flex min-w-0 scrollbar-hide gap-1 overflow-x-auto px-1 py-1">
-          {views.map((v) => (
-            <button
-              key={v.id}
-              ref={(element) => {
-                tabs.current[v.id] = element;
-              }}
-              id={`breakdown-tab-${v.id}`}
-              type="button"
-              role="tab"
-              aria-selected={view === v.id}
-              aria-controls="breakdown-panel"
-              tabIndex={view === v.id ? 0 : -1}
-              onClick={() => choose(v.id)}
-              className="relative inline-flex h-9 shrink-0 items-center rounded-full px-3.5 text-body font-medium whitespace-nowrap text-secondary-foreground transition-[background-color,color] duration-150 ease-out-quint group-data-keys/tabs:transition-none before:absolute before:inset-x-0 before:-inset-y-1 hover:bg-transparent-hover hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-selected:bg-inverted-solid aria-selected:text-on-inverted-foreground"
-            >
-              {v.label}
-            </button>
-          ))}
+      <Tabs value={view} onValueChange={choose}>
+        {/* Sticky over the panel's own padding (px-6 in PostView), so content slides under it */}
+        <div className="sticky top-0 z-10 -mx-6 flex flex-wrap items-center justify-between gap-2 bg-modal px-6 py-1.5">
+          <TabList aria-label="Creative breakdown" variant="pill">
+            {views.map((v) => (
+              <Tab key={v.id} value={v.id}>
+                {v.label}
+              </Tab>
+            ))}
+          </TabList>
+          <CopyBrief analysis={analysis} source={source} />
         </div>
-        <CopyBrief analysis={analysis} source={source} />
-      </div>
 
-      <div id="breakdown-panel" role="tabpanel" aria-labelledby={`breakdown-tab-${view}`} className="mt-3">
-        {view === "breakdown" && <Breakdown analysis={analysis} stage={stage} />}
-        {view === "visual" && <VisualDna analysis={analysis} stage={stage} videos={videos} />}
-      </div>
+        {/* Each view renders only while it's shown, so a switch starts it afresh, as before */}
+        <TabPanel value="breakdown" className="mt-3">
+          {view === "breakdown" && <Breakdown analysis={analysis} stage={stage} />}
+        </TabPanel>
+        {views.some((v) => v.id === "visual") && (
+          <TabPanel value="visual" className="mt-3">
+            {view === "visual" && <VisualDna analysis={analysis} stage={stage} videos={videos} />}
+          </TabPanel>
+        )}
+      </Tabs>
 
       <p className="mt-5 text-micro text-pretty text-secondary-foreground">
         AI-written from every slide, checked by Curatit&apos;s editors.{!analysis.complete && " Some slides have no record, so this may be incomplete."}

@@ -1,7 +1,8 @@
 "use client";
 
 // A dialog: a task that takes the screen's focus until it's done or dismissed (2026-10-18), the
-// new-board dialog's native <dialog> made one component. showModal() does the hard parts: the page
+// new-board dialog's native <dialog> made one component (and, since 2026-10-19, what that dialog
+// is built on, through radius="large" and titleVariant="quiet"). showModal() does the hard parts: the page
 // behind is inert, focus stays inside, Escape asks to close, and focus goes back to whatever
 // opened it. It scales in from 0.97 and fades over 200ms and leaves in 140ms (.dialog-motion in
 // global.css), the backdrop with it; neither under reduced motion. The page behind stops
@@ -25,6 +26,22 @@ const sizes = {
   sm: "max-w-sm",
   md: "max-w-md",
   lg: "max-w-2xl",
+} as const;
+
+// Corners: the scale's 16px, or the new-board dialog's 28px (2026-10-19, kept from its Cosmos
+// prototype: a dialog whose content is one large field and a full-width pill reads softer). The
+// padding stays 24px either way
+const radii = {
+  default: "rounded-3xl",
+  large: "rounded-[28px]",
+} as const;
+
+// The title: a heading that names the task (the default), or a quiet label over content that
+// carries the subject itself (the new board's name, set large in the middle). Both are the h2
+// the dialog is labelled by
+const titleVariants = {
+  default: "text-body-base font-medium text-balance text-primary-foreground",
+  quiet: "text-body-base font-medium text-balance text-secondary-foreground",
 } as const;
 
 // .dialog-motion's exit, so the contents stay for it and then unmount
@@ -61,6 +78,11 @@ export type DialogProps = {
   description?: ReactNode;
   /** sm 384px (a confirmation), md 448px (a short form), lg 672px (a longer read) */
   size?: keyof typeof sizes;
+  /** default 16px corners; large 28px, only for a dialog built round one large field (the new board) */
+  radius?: keyof typeof radii;
+  /** default: the title as the dialog's heading; quiet: a secondary-coloured label, for a dialog
+   *  whose first field is the real subject. Either way it's the accessible name */
+  titleVariant?: keyof typeof titleVariants;
   /** alertdialog for a decision with consequences (delete for good); it's announced as urgent */
   role?: "dialog" | "alertdialog";
   /** The body. Scrolls when it's taller than the screen; the title and footer stay put */
@@ -81,6 +103,8 @@ export default function Dialog({
   title,
   description,
   size = "md",
+  radius = "default",
+  titleVariant = "default",
   role = "dialog",
   children,
   footer,
@@ -133,14 +157,15 @@ export default function Dialog({
         pressedOutside.current = false;
       }}
       className={cx(
-        "dialog-motion m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-hidden rounded-3xl border-0 bg-modal p-0 text-primary-foreground shadow-xl backdrop:bg-black/40",
+        "dialog-motion m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-hidden border-0 bg-modal p-0 text-primary-foreground shadow-xl backdrop:bg-black/40",
         sizes[size],
+        radii[radius],
       )}
     >
       {mounted && (
         <div className="flex max-h-[calc(100dvh-2rem)] flex-col pb-6">
           <div className={cx("shrink-0 px-6 pt-6", closeButton && "pr-16")}>
-            <h2 id={`${id}-title`} className="text-body-base font-medium text-balance text-primary-foreground">
+            <h2 id={`${id}-title`} className={titleVariants[titleVariant]}>
               {title}
             </h2>
             {description && (

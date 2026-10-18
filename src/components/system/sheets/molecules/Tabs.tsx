@@ -134,6 +134,17 @@ export default function TabsSheet() {
             ),
           },
           {
+            term: "Wrap",
+            text: (
+              <>
+                By default a row that doesn&rsquo;t fit scrolls sideways and fades the edge with more beyond it.{" "}
+                <Mono>wrap</Mono> breaks it onto more lines instead, for a pill row whose counts make it long (the
+                review queue); the lines sit 8px apart so their touch areas never overlap, and the indicator follows
+                the selected tab to its line. Never with <Mono>bleed</Mono>.
+              </>
+            ),
+          },
+          {
             term: "Labels",
             text: (
               <>
@@ -257,10 +268,10 @@ export default function TabsSheet() {
               rows={[
                 {
                   label: "count",
-                  sub: "the review queue",
+                  sub: "the review queue, wrap",
                   cells: [
                     <Tabs key="c" defaultValue="review" className="w-full">
-                      <TabList aria-label="Lists" variant="pill">
+                      <TabList aria-label="Lists" variant="pill" wrap>
                         {QUEUE.map((v) => (
                           <Tab key={v.value} value={v.value} count={v.count}>
                             {v.label}

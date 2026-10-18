@@ -19,13 +19,15 @@ const SPECIMENS: { label: string; sub: string; tone: ToastTone; message: string;
 ];
 
 // Reading times, worked out by toastDuration() in Toast.tsx
-const DURATIONS: { message: string; action?: string; words: number; note: string }[] = [
+const DURATIONS: { message: string; action?: string; tone?: ToastTone; words: number; note: string }[] = [
   { message: "Link copied", words: 2, note: "the 2.5s floor" },
   { message: "Saved to Moodboard", words: 3, note: "the 2.5s floor" },
   { message: "Removed from Moodboard", action: "Undo", words: 4, note: "the 5s floor for an action" },
-  { message: "Couldn’t load your boards. Reload the page to try again.", words: 10, note: "240ms a word, plus 1.5s" },
+  { message: "Couldn’t save to Moodboard. Try again.", tone: "danger", words: 6, note: "the 4s floor for danger" },
+  { message: "Couldn’t load your boards. Reload the page to try again.", tone: "danger", words: 10, note: "the 4s floor for danger" },
   {
     message: "Couldn’t save to Moodboard. Check your connection, then save it again.",
+    tone: "danger",
     words: 11,
     note: "240ms a word, plus 1.5s",
   },
@@ -88,8 +90,8 @@ export default function ToastSheet() {
             term: "Timing",
             text: (
               <>
-                Its reading time, from the words: 250 a minute plus 1.5s, clamped to 2.5–8s, and 5s at least with an
-                action. Pass <Mono>duration</Mono> (ms) only for a reason the words don&rsquo;t show. The clock stops
+                Its reading time, from the words: 250 a minute plus 1.5s, clamped to 2.5–8s, 4s at least for danger
+                and 5s at least with an action. Pass <Mono>duration</Mono> (ms) only for a reason the words don&rsquo;t show. The clock stops
                 while it&rsquo;s pointed at, while focus is in it and while the tab is hidden, and runs on with the time
                 it had left.
               </>
@@ -172,7 +174,7 @@ export default function ToastSheet() {
                 cells: [
                   <Mono key="w">{d.words}</Mono>,
                   <Mono key="a">{d.action ?? "none"}</Mono>,
-                  <ToastDuration key="s" message={d.message} action={d.action} />,
+                  <ToastDuration key="s" message={d.message} action={d.action} tone={d.tone} />,
                   <span key="n" className="text-body-sm text-secondary-foreground">
                     {d.note}
                   </span>,

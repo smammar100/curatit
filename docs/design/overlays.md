@@ -26,23 +26,39 @@ a native `<select>`; views of one thing are `Tabs`; word that something happened
 Use for actions on one thing that needn't be on screen (Rename, Share, Delete) or one choice
 out of sight until asked for (Sort by). Two to eight items.
 
-- `Menu`: `trigger` (a Button element, required), `label` (accessible name, required),
+- `Menu`: `trigger` (a Button element, required), `label` (accessible name) or `heading` (a
+  visible title over the items that names the menu; one of the two, required),
   `align` `"start"` (default) | `"end"`, `side` `"bottom"` (default) | `"top"`,
-  `open` / `defaultOpen` / `onOpenChange`, `className` (wrapper, layout only).
-- `MenuItem`: `onSelect` (preventDefault keeps it open), `href` (a next/link), `icon`,
-  `tone` `"neutral"` (default) | `"danger"`, `disabled`.
+  `open` / `defaultOpen` / `onOpenChange`, `width` `"content"` (default, 176–288px) | `"fixed"`
+  (256px, for the person's own names, which truncate), `scrollable` (the items scroll past
+  288px), `footer` (fixed below the items, outside their scroll), `returnFocus` `"always"`
+  (default) | `"keyboard"`, `className` (wrapper, layout only).
+- `MenuItem`: `onSelect` (preventDefault keeps it open), `href` (a next/link), `icon` (16px) or
+  `media` (a 28px picture: a board's cover), `tone` `"neutral"` (default) | `"danger"`, `disabled`.
+- `MenuItemCheckbox`: `checked` + `onCheckedChange(checked, event)` (always controlled;
+  preventDefault keeps the menu open), `icon` or `media`, `disabled`. One thing on or off (a post
+  on a board); the check sits at the end, the words truncate.
 - `MenuRadioGroup` (`label?`, `value`, `onValueChange`: always controlled, because the contents
-  unmount on close) with `MenuItemRadio` (`value`); `MenuSeparator`; `MenuLabel`; `MenuCaret`
-  (the trigger's `rightIcon`, turns while open).
+  unmount on close) with `MenuItemRadio` (`value`); `MenuSeparator`; `MenuLabel`; `MenuMessage`
+  (a line in place of the items while there's nothing to choose yet: Loading your boards…);
+  `MenuCaret` (the trigger's `rightIcon`, turns while open); `useMenu().close({ fromKeyboard })`
+  (closes it from inside: the footer's form, on submit).
 
-Rules: choosing an item closes the menu and returns focus to the trigger. The danger item is
+Rules: choosing an item closes the menu and returns focus to the trigger. A confirmation for a
+menu's item (Delete board…) is not menu content (a role="menu" holds only items): it's a small
+`role="alertdialog"` popover opened where the menu was, focus on Cancel, as BoardView's More does. The danger item is
 last, after a separator, and ends in … when a dialog follows. Icons on all items of a group or
-none. No fields or paragraphs inside (they fight the arrow keys and typeahead). The menu is
-positioned inside its wrapper, so an ancestor with `overflow` clips it.
+none. No fields or paragraphs inside (they fight the arrow keys and typeahead), with one
+exception: the `footer` may hold one MenuItem that turns into an inline form when chosen (the
+Save menu's New board: an `Input` and a `Button`, Enter submits, Escape still closes the menu).
+A list that grows with the person's data gets `heading`, `scrollable` and `width="fixed"`. With
+`returnFocus="keyboard"`, choosing puts focus back on the trigger only from the keyboard: for a
+trigger revealed on hover or focus-within (a tile's Save), which focus would keep on screen. The
+menu is positioned inside its wrapper, so an ancestor with `overflow` clips it.
 
 Keyboard: Enter / Space / ↓ open on the first item (the checked one in a radio group), ↑ on the
 last; ↑ ↓ wrap, Home / End, a letter jumps; Escape and Shift+Tab close to the trigger; Tab closes
-and moves on.
+and moves on. Keys typed into the footer's field are the field's.
 
 ```tsx
 // Correct
@@ -50,6 +66,16 @@ and moves on.
   <MenuItem onSelect={onRename}>Rename</MenuItem>
   <MenuSeparator />
   <MenuItem tone="danger" onSelect={askToDelete}>Delete board…</MenuItem>
+</Menu>
+
+// Correct: the person's boards, each on or off, New board fixed at the foot (boards.tsx SaveMenu)
+<Menu heading="Save to board" align="end" width="fixed" scrollable returnFocus="keyboard"
+  trigger={<Button size="sm" variant="muted" leftIcon={<Plus className="size-3.5" />}>Save</Button>}
+  footer={<NewBoardItem label="New board" onCreate={createWithPost} />}>
+  {boards.map((b) => (
+    <MenuItemCheckbox key={b.id} checked={has(b)} onCheckedChange={(on) => (on ? save(b) : remove(b))}
+      media={<BoardThumb board={b} className="size-full" />}>{b.name}</MenuItemCheckbox>
+  ))}
 </Menu>
 
 // Incorrect: a hand-made role="menu" (BoardView's MoreMenu before the migration), rows
@@ -66,7 +92,9 @@ Not for messages (Notice, Toast), choices from a list (Menu) or anything long (a
 
 - `open` + `onOpenChange` (required: always controlled), `title` (string, required, the
   accessible name), `description` (read with it), `size` `"sm"` 384 | `"md"` 448 (default) |
-  `"lg"` 672, `role` `"dialog"` (default) | `"alertdialog"`, `children` (body, scrolls),
+  `"lg"` 672, `radius` `"default"` 16px | `"large"` 28px (only a dialog built round one large
+  field: the new board), `titleVariant` `"default"` | `"quiet"` (the title in the secondary
+  colour, a label over a field that is the subject; still the accessible name), `role` `"dialog"` (default) | `"alertdialog"`, `children` (body, scrolls),
   `footer` (buttons, primary last), `closeButton` (default true), `dismissible` (backdrop
   closes; default true), `initialFocus` (a ref).
 - A destructive confirmation: `size="sm" role="alertdialog"`, `initialFocus` on Cancel, a

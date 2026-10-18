@@ -4,17 +4,15 @@
 // and failed, for editors. AI drafts wait here until an editor approves them; nothing an AI wrote
 // is public before that. Analyses themselves run on a person's machine (npm run creative -- work),
 // so the queue shows what's waiting for that, not a progress bar.
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Button from "@/components/fundations/elements/Button";
+import Tabs, {
+  Tab,
+  TabList,
+  TabPanel,
+} from "@/components/fundations/molecules/Tabs";
 import { cx } from "@/lib/cx";
 import { refreshPostPage } from "@/app/dashboard/review/actions";
 import { track } from "@/lib/analytics";
@@ -42,7 +40,7 @@ import {
 import { saveWalk, walkOf } from "./walk";
 
 const TABS = ["Needs review", "Failed", "Published", "Recent runs"] as const;
-type Tab = (typeof TABS)[number];
+type List = (typeof TABS)[number];
 
 export default function ReviewQueue() {
   const editor = useIsEditor();
@@ -80,10 +78,7 @@ export function QueueView({
   failed: string | null;
   onRefresh: () => void;
 }) {
-  const [tab, setTab] = useState<Tab>("Needs review");
-  const tabRefs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({});
-  const ids = useId();
-  const tabId = (name: Tab) => `${ids}-tab-${TABS.indexOf(name)}`;
+  const [tab, setTab] = useState<List>("Needs review");
   const counts = queue?.counts;
   const tiles: [string, number | undefined][] = [
     ["Queued", counts?.pending],
@@ -113,39 +108,47 @@ export function QueueView({
       ),
     );
   }, [queue, tab]);
-  const lists: Record<Tab, number | undefined> = {
+  const lists: Record<List, number | undefined> = {
     "Needs review": queue?.review.length,
     Failed: queue?.failed.length,
     Published: queue?.published.length,
     "Recent runs": queue?.runs.length,
   };
 
-  // ← / → (Home, End) move between the lists, as in the post panel's Creative breakdown: only
-  // the open tab is in the tab order, focus follows the key, and the key is marked handled so
-  // the dashboard's own arrow handlers leave it be. A key snaps the selection (data-keys on
-  // the row turns the tabs' fade off) and a pointer brings the fade back
-  const unkey = (event: { currentTarget: HTMLElement }) => {
-    delete event.currentTarget.dataset.keys;
-  };
-  const onTabKey = (event: KeyboardEvent<HTMLDivElement>) => {
-    const at = TABS.indexOf(tab);
-    const next =
-      event.key === "ArrowRight"
-        ? (at + 1) % TABS.length
-        : event.key === "ArrowLeft"
-          ? (at - 1 + TABS.length) % TABS.length
-          : event.key === "Home"
-            ? 0
-            : event.key === "End"
-              ? TABS.length - 1
-              : -1;
-    if (next < 0) return;
-    event.preventDefault();
-    event.stopPropagation();
-    event.currentTarget.dataset.keys = "";
-    setTab(TABS[next]);
-    tabRefs.current[TABS[next]]?.focus();
-  };
+  // The open list, rendered only while its tab is selected
+  const shown: ReactNode = (
+    <>
+      {failed && (
+        <p className="rounded-2xl bg-danger-subtle px-4 py-3 text-body text-danger-foreground">
+          Couldn&apos;t load the queue: {failed}
+        </p>
+      )}
+      {!queue && !failed && <ListSkeleton />}
+      {queue && tab === "Recent runs" && <Runs queue={queue} />}
+      {queue && tab === "Needs review" && queue.review.length > 1 && (
+        <ApproveAll rows={queue.review} onDone={onRefresh} />
+      )}
+      {queue && tab !== "Recent runs" && (
+        <Rows
+          rows={
+            tab === "Needs review"
+              ? queue.review
+              : tab === "Failed"
+                ? queue.failed
+                : queue.published
+          }
+          empty={
+            tab === "Needs review"
+              ? "Nothing to review."
+              : tab === "Failed"
+                ? "No failed analyses."
+                : "No published analyses yet."
+          }
+          onChange={onRefresh}
+        />
+      )}
+    </>
+  );
 
   return (
     <>
@@ -191,73 +194,23 @@ export function QueueView({
           </p>
         )}
 
-        <div
-          role="tablist"
-          aria-label="Lists"
-          onKeyDown={onTabKey}
-          onPointerDown={unkey}
-          onPointerMove={unkey}
-          className="group/tabs mt-8 flex flex-wrap gap-1.5"
-        >
+        {/* The shared Tabs: one tab stop, ← / → / Home / End marked handled so the dashboard's
+            own arrow handlers leave them be; the row wraps on a narrow screen. mt-7 and the panels' mt-3
+            land the row where the hand-built one sat (32px up, 16px down), past the list's py-1 */}
+        <Tabs value={tab} onValueChange={setTab} className="mt-7">
+          <TabList aria-label="Lists" variant="pill" wrap>
+            {TABS.map((name) => (
+              <Tab key={name} value={name} count={lists[name]}>
+                {name}
+              </Tab>
+            ))}
+          </TabList>
           {TABS.map((name) => (
-            <button
-              key={name}
-              ref={(element) => {
-                tabRefs.current[name] = element;
-              }}
-              id={tabId(name)}
-              type="button"
-              role="tab"
-              aria-selected={tab === name}
-              aria-controls={`${ids}-panel`}
-              tabIndex={tab === name ? 0 : -1}
-              onClick={() => setTab(name)}
-              className="inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-body font-medium text-secondary-foreground transition-[background-color,color] duration-150 ease-out-quint group-data-keys/tabs:transition-none hover:bg-transparent-hover hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-selected:bg-inverted-solid aria-selected:text-on-inverted-foreground"
-            >
-              {name}
-              {lists[name] !== undefined && (
-                <span className="tabular-nums opacity-70">{lists[name]}</span>
-              )}
-            </button>
+            <TabPanel key={name} value={name} className="mt-3">
+              {tab === name && shown}
+            </TabPanel>
           ))}
-        </div>
-
-        <div
-          id={`${ids}-panel`}
-          role="tabpanel"
-          aria-labelledby={tabId(tab)}
-          className="mt-4"
-        >
-          {failed && (
-            <p className="rounded-2xl bg-danger-subtle px-4 py-3 text-body text-danger-foreground">
-              Couldn&apos;t load the queue: {failed}
-            </p>
-          )}
-          {!queue && !failed && <ListSkeleton />}
-          {queue && tab === "Recent runs" && <Runs queue={queue} />}
-          {queue && tab === "Needs review" && queue.review.length > 1 && (
-            <ApproveAll rows={queue.review} onDone={onRefresh} />
-          )}
-          {queue && tab !== "Recent runs" && (
-            <Rows
-              rows={
-                tab === "Needs review"
-                  ? queue.review
-                  : tab === "Failed"
-                    ? queue.failed
-                    : queue.published
-              }
-              empty={
-                tab === "Needs review"
-                  ? "Nothing to review."
-                  : tab === "Failed"
-                    ? "No failed analyses."
-                    : "No published analyses yet."
-              }
-              onChange={onRefresh}
-            />
-          )}
-        </div>
+        </Tabs>
       </div>
     </>
   );

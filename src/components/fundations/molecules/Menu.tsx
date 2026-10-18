@@ -21,6 +21,17 @@
 // in a form is a native <select>; views of the same thing are Tabs; a single action is a Button;
 // anything with a field or more than a line of words is a Dialog. The menu is placed inside its
 // own wrapper, so an ancestor with overflow (a scrolling row, a clipped card) clips it.
+//
+// For a list that grows with the person's data (the Save menu's boards, 2026-10-19): `heading`
+// is a visible title over the items that also names the menu, `scrollable` lets the items scroll
+// past 288px under it, `width="fixed"` holds the menu at 256px whatever the names, and `footer`
+// is a slot fixed below the scrolling items, with its own glide: one MenuItem that may turn into
+// an inline form when chosen (the Save menu's New board). That form is the one place a field sits
+// in a menu: keys typed into it are the field's, Escape still closes the menu. MenuItemCheckbox
+// toggles one thing on or off (a post on a board); `useMenu().close()` closes the menu from inside
+// (the footer's form, on submit). `returnFocus="keyboard"` puts focus back on the trigger only
+// when an item was chosen from the keyboard, for a trigger shown on hover or focus-within (a
+// tile's Save), which focus would keep on screen after the pointer left.
 import Link from "next/link";
 import {
   cloneElement,
@@ -28,6 +39,7 @@ import {
   useContext,
   useEffect,
   useId,
+  useMemo,
   useRef,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
@@ -39,6 +51,7 @@ import { GLIDE_HIGHLIGHT, GLIDE_ROW, usePopover } from "@/components/dashboard/u
 import CaretDown from "@/components/fundations/icons/CaretDown";
 import Check from "@/components/fundations/icons/Check";
 import { cx } from "@/lib/cx";
+import { useGlide } from "@/lib/motion";
 
 // Where the menu opens, and the corner it grows from (the trigger's)
 const placements = {
@@ -46,6 +59,13 @@ const placements = {
   "bottom-end": "top-full right-0 mt-2 origin-top-right",
   "top-start": "bottom-full left-0 mb-2 origin-bottom-left",
   "top-end": "bottom-full right-0 mb-2 origin-bottom-right",
+} as const;
+
+// How wide it is: as wide as its longest item (176 to 288px), or a fixed 256px for a list of the
+// person's own names, which shouldn't make the menu change width (long ones truncate)
+const widths = {
+  content: "w-max min-w-44 max-w-72",
+  fixed: "w-64",
 } as const;
 
 const tones = {
@@ -60,7 +80,8 @@ const ROW =
 
 const ITEMS = '[role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"]';
 
-type MenuContextValue = { close: (returnFocus?: boolean) => void };
+type CloseOptions = { fromKeyboard?: boolean };
+type MenuContextValue = { close: (options?: CloseOptions) => void };
 const MenuContext = createContext<MenuContextValue | null>(null);
 
 type RadioContextValue = { value: string; choose: (value: string) => void };
@@ -81,12 +102,24 @@ function mergeRefs<T>(...refs: (Ref<T> | undefined)[]) {
   };
 }
 
-export type MenuProps = {
+// The menu's name: for screen readers only (label), or a visible title over the items (heading)
+type Naming =
+  | {
+      /** The menu's name for screen readers ("Board actions", "Sort by") */
+      label: string;
+      heading?: never;
+    }
+  | {
+      /** A visible title over the items, outside their scroll, which also names the menu
+       *  ("Save to board") */
+      heading: string;
+      label?: never;
+    };
+
+export type MenuProps = Naming & {
   /** The button that opens it, usually a Button. It's given aria-haspopup, aria-expanded,
    *  aria-controls and the toggle; its own onClick and onKeyDown run first */
   trigger: ReactElement<TriggerProps>;
-  /** The menu's name for screen readers ("Board actions", "Sort by") */
-  label: string;
   /** Which edge of the trigger it lines up with */
   align?: "start" | "end";
   /** Below the trigger, or above it (near the bottom of the screen) */
@@ -97,6 +130,17 @@ export type MenuProps = {
   defaultOpen?: boolean;
   /** Called whenever it opens or closes by itself (the trigger, an item, Escape, a press outside) */
   onOpenChange?: (open: boolean) => void;
+  /** content (default): as wide as the longest item, 176–288px. fixed: 256px, for the person's
+   *  own names (boards), which truncate */
+  width?: keyof typeof widths;
+  /** The items scroll once they pass 288px (a list that grows with the person's data) */
+  scrollable?: boolean;
+  /** Fixed below the items, outside their scroll: one MenuItem, which may turn into an inline
+   *  form when chosen (New board) */
+  footer?: ReactNode;
+  /** After an item is chosen, focus goes back to the trigger: always (default), or only when it
+   *  was chosen from the keyboard (a trigger revealed on hover or focus-within) */
+  returnFocus?: "always" | "keyboard";
   children: ReactNode;
   /** On the wrapper round the trigger and the menu, for layout only */
   className?: string;
@@ -105,17 +149,36 @@ export type MenuProps = {
 export default function Menu({
   trigger,
   label,
+  heading,
   align = "start",
   side = "bottom",
   open,
   defaultOpen = false,
   onOpenChange,
+  width = "content",
+  scrollable = false,
+  footer,
+  returnFocus = "always",
   children,
   className,
 }: MenuProps) {
   const pop = usePopover<HTMLElement>("menu");
   const { glide } = pop;
   const controlled = open !== undefined;
+  const headingId = useId();
+  // The footer has a glide of its own (it sits outside the items' scroll), cleared on close like theirs
+  const footGlide = useGlide();
+  const clearFoot = footGlide.handlers.onPointerLeave;
+  useEffect(() => {
+    if (!pop.open) clearFoot();
+  }, [pop.open, clearFoot]);
+  const { close: popClose } = pop;
+  const menu = useMemo<MenuContextValue>(
+    () => ({
+      close: ({ fromKeyboard = true } = {}) => popClose(returnFocus === "always" || fromKeyboard),
+    }),
+    [popClose, returnFocus],
+  );
 
   // usePopover keeps its own open state, so open / defaultOpen drive it from outside: `asked` is
   // the last value the props asked for (it's only driven when they change), `known` the state the
@@ -192,23 +255,44 @@ export default function Menu({
         <div
           {...pop.contentProps}
           role="menu"
-          aria-label={label}
+          aria-label={heading ? undefined : label}
+          aria-labelledby={heading ? headingId : undefined}
           onKeyDown={onKeyDown}
           className={cx(
-            "absolute z-40 w-max max-w-72 min-w-44 rounded-2xl bg-modal p-1.5 text-primary-foreground shadow-lg outline-hidden",
+            "absolute z-40 rounded-2xl bg-modal p-1.5 text-primary-foreground shadow-lg outline-hidden",
+            widths[width],
             placements[`${side}-${align}`],
             pop.motion,
           )}
         >
-          <div ref={glide.ref} {...glide.handlers} className="relative">
-            <span
-              aria-hidden="true"
-              className={cx(GLIDE_HIGHLIGHT, "rounded-md")}
-              style={glide.highlight.style}
-              data-fresh={glide.highlight.fresh || undefined}
-            />
-            <MenuContext.Provider value={{ close: pop.close }}>{children}</MenuContext.Provider>
-          </div>
+          <MenuContext.Provider value={menu}>
+            {heading && <MenuLabel id={headingId}>{heading}</MenuLabel>}
+            {/* The highlight lives inside the scrolling list, so it scrolls with the rows */}
+            <div
+              ref={glide.ref}
+              {...glide.handlers}
+              className={cx("relative", scrollable && "max-h-72 overflow-y-auto overscroll-contain")}
+            >
+              <span
+                aria-hidden="true"
+                className={cx(GLIDE_HIGHLIGHT, "rounded-md")}
+                style={glide.highlight.style}
+                data-fresh={glide.highlight.fresh || undefined}
+              />
+              {children}
+            </div>
+            {footer && (
+              <div ref={footGlide.ref} {...footGlide.handlers} className="relative">
+                <span
+                  aria-hidden="true"
+                  className={cx(GLIDE_HIGHLIGHT, "rounded-md")}
+                  style={footGlide.highlight.style}
+                  data-fresh={footGlide.highlight.fresh || undefined}
+                />
+                {footer}
+              </div>
+            )}
+          </MenuContext.Provider>
         </div>
       )}
     </div>
@@ -224,6 +308,25 @@ function ItemIcon({ children }: { children: ReactNode }) {
   );
 }
 
+// A picture slot: 28px (a board's cover), which makes the row 44px tall. The picture fills it
+// (size-full) and brings its own radius
+function ItemMedia({ children }: { children: ReactNode }) {
+  return (
+    <span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center">
+      {children}
+    </span>
+  );
+}
+
+/** From inside a menu: `close()` closes it, with focus back on the trigger (unless
+ *  `fromKeyboard: false` and the menu's returnFocus is "keyboard"). For the footer's inline
+ *  form, on submit */
+export function useMenu() {
+  const menu = useContext(MenuContext);
+  if (!menu) throw new Error("useMenu outside Menu");
+  return menu;
+}
+
 export type MenuItemProps = {
   children: ReactNode;
   /** Runs when it's chosen. Call event.preventDefault() to keep the menu open */
@@ -232,6 +335,8 @@ export type MenuItemProps = {
   href?: string;
   /** A 16px Phosphor icon before the words */
   icon?: ReactNode;
+  /** A 28px picture before the words in place of an icon (a board's cover, a plus tile) */
+  media?: ReactNode;
   /** danger: an action that destroys something, in red. The words must say it too */
   tone?: keyof typeof tones;
   /** Shown but can't be chosen, and skipped by the arrow keys */
@@ -240,16 +345,17 @@ export type MenuItemProps = {
 
 /** One action. Choosing it runs onSelect (or follows href), closes the menu and puts focus back
  *  on the trigger */
-export function MenuItem({ children, onSelect, href, icon, tone = "neutral", disabled = false }: MenuItemProps) {
+export function MenuItem({ children, onSelect, href, icon, media, tone = "neutral", disabled = false }: MenuItemProps) {
   const menu = useContext(MenuContext);
   const select = (event: ReactMouseEvent<HTMLElement>) => {
     onSelect?.(event);
-    if (!event.defaultPrevented) menu?.close();
+    // Enter and Space click with no detail: that's the keyboard
+    if (!event.defaultPrevented) menu?.close({ fromKeyboard: event.detail === 0 });
   };
   const classes = cx(ROW, tones[tone], GLIDE_ROW);
   const content = (
     <>
-      {icon && <ItemIcon>{icon}</ItemIcon>}
+      {media ? <ItemMedia>{media}</ItemMedia> : icon && <ItemIcon>{icon}</ItemIcon>}
       <span className="min-w-0 flex-1">{children}</span>
     </>
   );
@@ -324,9 +430,9 @@ export function MenuItemRadio({ value, children, icon, disabled = false }: MenuI
       data-glide-item
       disabled={disabled}
       className={cx(ROW, tones.neutral, GLIDE_ROW)}
-      onClick={() => {
+      onClick={(event) => {
         group?.choose(value);
-        menu?.close();
+        menu?.close({ fromKeyboard: event.detail === 0 });
       }}
     >
       {icon && <ItemIcon>{icon}</ItemIcon>}
@@ -335,6 +441,52 @@ export function MenuItemRadio({ value, children, icon, disabled = false }: MenuI
       <Check className={cx("size-3.5 shrink-0", !checked && "invisible")} />
     </button>
   );
+}
+
+export type MenuItemCheckboxProps = {
+  /** Whether it's on. Always controlled, like the radio group */
+  checked: boolean;
+  /** Called with the new value, then the menu closes; event.preventDefault() keeps it open
+   *  (several things to turn on in a row) */
+  onCheckedChange: (checked: boolean, event: ReactMouseEvent<HTMLElement>) => void;
+  children: ReactNode;
+  icon?: ReactNode;
+  /** A 28px picture before the words in place of an icon (a board's cover) */
+  media?: ReactNode;
+  disabled?: boolean;
+};
+
+/** One thing to turn on or off (a post on a board): a check while it's on, and choosing it flips
+ *  it. Closes the menu like an item, unless onCheckedChange prevents the event. Long words
+ *  truncate (they're the person's own names) */
+export function MenuItemCheckbox({ checked, onCheckedChange, children, icon, media, disabled = false }: MenuItemCheckboxProps) {
+  const menu = useContext(MenuContext);
+  return (
+    <button
+      type="button"
+      role="menuitemcheckbox"
+      aria-checked={checked}
+      tabIndex={-1}
+      data-glide-item
+      disabled={disabled}
+      className={cx(ROW, tones.neutral, GLIDE_ROW)}
+      onClick={(event) => {
+        onCheckedChange(!checked, event);
+        if (!event.defaultPrevented) menu?.close({ fromKeyboard: event.detail === 0 });
+      }}
+    >
+      {media ? <ItemMedia>{media}</ItemMedia> : icon && <ItemIcon>{icon}</ItemIcon>}
+      <span className="min-w-0 flex-1 truncate">{children}</span>
+      {/* Always in place, so the words don't move when it's turned on */}
+      <Check className={cx("size-3.5 shrink-0", !checked && "invisible")} />
+    </button>
+  );
+}
+
+/** A line in place of the items while there's nothing to choose yet ("Loading your boards…").
+ *  Words only: it can't be focused or chosen */
+export function MenuMessage({ children }: { children: ReactNode }) {
+  return <div className="px-2.5 py-2 text-body-sm text-secondary-foreground select-none">{children}</div>;
 }
 
 /** A hairline between groups of items */

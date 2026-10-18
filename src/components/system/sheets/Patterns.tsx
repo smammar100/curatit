@@ -150,13 +150,11 @@ export default function Patterns() {
             text: (
               <>
                 Menus and popovers: <Mono>dashboard/usePopover.ts</Mono>, which the shared{" "}
-                <Mono>fundations/molecules/Menu</Mono> is built on. The dashboard&rsquo;s toast: <Mono>notify()</Mono> from{" "}
-                <Mono>useBoards()</Mono> (<Mono>dashboard/boards.tsx</Mono>); the shared one is{" "}
-                <Mono>fundations/molecules/Toast</Mono>. The theme: <Mono>global/ThemeToggle</Mono> and{" "}
+                <Mono>fundations/molecules/Menu</Mono> is built on. Toasts: <Mono>fundations/molecules/Toast</Mono>, which the dashboard&rsquo;s{" "}
+                <Mono>notify()</Mono> (from <Mono>useBoards()</Mono>) now calls. The theme: <Mono>global/ThemeToggle</Mono> and{" "}
                 <Mono>global/theme.ts</Mono>. The FAQ: <Mono>global/Faq</Mono>. Skeletons: <Mono>dashboard/Skeleton</Mono>.
-                The thinking line: <Mono>ui/thought-line</Mono>. The dialog: <Mono>fundations/molecules/Dialog</Mono>, made from{" "}
-                <Mono>dashboard/NewBoardDialog</Mono>&rsquo;s native <Mono>{"<dialog>"}</Mono> and moved by{" "}
-                <Mono>.dialog-motion</Mono>. Menu, Toast, Dialog and Skeleton each have a sheet of their own as well.
+                The thinking line: <Mono>ui/thought-line</Mono>. The dialog: <Mono>fundations/molecules/Dialog</Mono>, which{" "}
+                <Mono>dashboard/NewBoardDialog</Mono> is now built on, moved by <Mono>.dialog-motion</Mono>. Menu, Toast, Dialog and Skeleton each have a sheet of their own as well.
               </>
             ),
           },
@@ -361,9 +359,8 @@ useEffect(() => {
         title="Toast"
         description={
           <>
-            The dashboard&rsquo;s toast lives inside <Mono>BoardsProvider</Mono> (<Mono>dashboard/boards.tsx</Mono>) and
-            isn&rsquo;t exported: anything under the provider calls <Mono>notify(text, tone)</Mono> from{" "}
-            <Mono>useBoards()</Mono>. The demo copies its classes, its clock and its live region; the real one is fixed 24px
+            The dashboard&rsquo;s toast is the shared one: <Mono>notify(text, tone)</Mono> from{" "}
+            <Mono>useBoards()</Mono> calls <Mono>useToast()</Mono> under the <Mono>ToastProvider</Mono> in the dashboard layout. The demo copies its classes, its clock and its live region; the real one is fixed 24px
             above the bottom of the window, centred. Outside the dashboard, the shared toast is{" "}
             <Mono>fundations/molecules/Toast</Mono> (<Mono>ToastProvider</Mono>, <Mono>useToast</Mono>), on the Toast
             sheet.
@@ -930,8 +927,8 @@ import { faqs } from "@/components/home/faqs";
         description={
           <>
             <Mono>fundations/molecules/Dialog</Mono>: a native <Mono>{"<dialog>"}</Mono> opened with{" "}
-            <Mono>showModal()</Mono> and moved by the shared <Mono>.dialog-motion</Mono> class. It was made from{" "}
-            <Mono>dashboard/NewBoardDialog</Mono> (Create in the dashboard&rsquo;s header), which still wires its own.
+            <Mono>showModal()</Mono> and moved by the shared <Mono>.dialog-motion</Mono> class. <Mono>dashboard/NewBoardDialog</Mono> (Create in the dashboard&rsquo;s header) is built on it, with{" "}
+            <Mono>radius="large"</Mono> and <Mono>titleVariant="quiet"</Mono>.
             Its props are on the Dialog sheet, its timings on the Motion sheet.
           </>
         }
@@ -970,9 +967,9 @@ import { faqs } from "@/components/home/faqs";
                 term: "Two ways",
                 text: (
                   <>
-                    A new dialog is <Mono>{"<Dialog>"}</Mono>, which does everything in the table inside. Wire a native{" "}
-                    <Mono>{"<dialog>"}</Mono> by hand, as NewBoardDialog does, only for content <Mono>{"<Dialog>"}</Mono>{" "}
-                    can&rsquo;t hold (its name set large in the middle).
+                    A new dialog is <Mono>{"<Dialog>"}</Mono>, which does everything in the table inside. Don&rsquo;t wire a native{" "}
+                    <Mono>{"<dialog>"}</Mono> by hand: extend <Mono>{"<Dialog>"}</Mono> instead, as its{" "}
+                    <Mono>radius</Mono> and <Mono>titleVariant</Mono> props were added for the new-board dialog.
                   </>
                 ),
               },
@@ -1003,8 +1000,8 @@ import { faqs } from "@/components/home/faqs";
                   <>
                     Unmount the <Mono>{"<dialog>"}</Mono> to close it (it can&rsquo;t leave), open it with the{" "}
                     <Mono>open</Mono> attribute (not modal: the page stays reachable and Escape does nothing), or let
-                    Escape close it behind React&rsquo;s back. NewBoardDialog&rsquo;s <Mono>rounded-[28px]</Mono> predates
-                    the radius scale: don&rsquo;t copy it.
+                    Escape close it behind React&rsquo;s back. Don&rsquo;t pass a radius class: the 28px corners are{" "}
+                    <Mono>radius="large"</Mono>, for the new-board dialog only.
                   </>
                 ),
               },

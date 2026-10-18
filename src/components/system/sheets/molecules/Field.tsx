@@ -1,11 +1,13 @@
 // /system/field: Field (src/components/fundations/molecules/Field.tsx): its three layouts, each
 // part it adds and what it wires onto the control, and a live form checked at the right moments.
-// A server component, like Field itself; the Switch rows and the form come from
+// FieldGroup, the heading over a set of controls, has its own section. A server component, like
+// Field itself; the Switch rows and the form come from
 // ../../demos/FormDemos.tsx, since they hold state
 import Checkbox from "@/components/fundations/elements/Checkbox";
 import Input from "@/components/fundations/elements/Input";
+import Textarea from "@/components/fundations/elements/Textarea";
 import TextLink from "@/components/fundations/elements/TextLink";
-import Field from "@/components/fundations/molecules/Field";
+import Field, { FieldGroup } from "@/components/fundations/molecules/Field";
 import { emailProblem } from "@/lib/auth";
 import { Code, Flow, Matrix, Mono, Rules, Sheet, SheetHeader, SheetSection, type Theme } from "../../SheetParts";
 import { FormDemo, SettingDemo } from "../../demos/FormDemos";
@@ -139,8 +141,10 @@ export default function FieldSheet() {
             text: (
               <>
                 A control with no visible label (a search pill in a header, a row&rsquo;s select box) takes{" "}
-                <Mono>aria-label</Mono> and no Field. A group of checkboxes or switches with a heading is a{" "}
-                <Mono>{"<fieldset>"}</Mono> with a <Mono>{"<legend>"}</Mono> around inline Fields.
+                <Mono>aria-label</Mono> and no Field. A set of controls under one heading (checkboxes, switches, a list
+                of textareas) is a <Mono>FieldGroup</Mono>: a <Mono>{"<fieldset>"}</Mono> whose{" "}
+                <Mono>{"<legend>"}</Mono> is set as a Field&rsquo;s label, around Fields or controls named with{" "}
+                <Mono>aria-label</Mono>.
               </>
             ),
           },
@@ -241,6 +245,28 @@ export default function FieldSheet() {
                 <SettingDemo label="Share with a link" description="Anyone with the link sees the board and its notes." />
                 <SettingDemo label="Show notes on the shared board" defaultChecked disabled />
               </div>
+            </div>
+          )}
+        </Sheet>
+      </SheetSection>
+
+      <SheetSection
+        title="FieldGroup"
+        description="A heading over several controls: legend, an optional hint under it and an error under the set. Inside, Fields, or bare controls each named with aria-label (Takeaway 1, Takeaway 2), as in the review editor. The legend never greys: one disabled control doesn't disable the question."
+      >
+        <Sheet split>
+          {(theme) => (
+            <div className="flex max-w-sm flex-col gap-8">
+              <FieldGroup legend="Takeaways (3 to 5)">
+                <div className="space-y-2">
+                  {["Name every face the same way.", "Hold the product back until the end."].map((text, i) => (
+                    <Textarea key={i} id={`${theme}-group-${i}`} aria-label={`Takeaway ${i + 1}`} rows={2} defaultValue={text} />
+                  ))}
+                </div>
+              </FieldGroup>
+              <FieldGroup legend="Adaptation ideas (1 to 3)" error="Add at least one adaptation idea.">
+                <Textarea id={`${theme}-group-error`} aria-label="Adaptation idea 1" rows={2} />
+              </FieldGroup>
             </div>
           )}
         </Sheet>

@@ -8,7 +8,8 @@ import Link from "next/link";
 import BrandName from "@/components/home/BrandName";
 import { cx } from "@/lib/cx";
 import { SaveMenu } from "./boards";
-import { Block, GridSkeleton } from "./Skeleton";
+import Skeleton from "@/components/fundations/elements/Skeleton";
+import { GridSkeleton } from "./Skeleton";
 import { useGridSize, type GridSize } from "./prefs";
 import type { DashPost } from "./types";
 
@@ -95,10 +96,10 @@ function Tile({ post, priority, sizes }: { post: DashPost; priority: boolean; si
   return (
     <li className="group relative">
       <Link href={postHref(post.shortCode)} scroll={false} onClick={rememberOpener} className="block">
-        {/* No fill of its own: the shimmering Block is the placeholder, and its alpha tint over
-            another would double */}
+        {/* No fill of its own: the shimmering Skeleton is the placeholder, and its alpha tint over
+            another would double. Square: the tile's own corner clips it */}
         <div className="relative w-full overflow-hidden rounded" style={{ aspectRatio: ratio(post) }}>
-          {!loaded && <Block className="absolute inset-0" />}
+          {!loaded && <Skeleton radius="none" className="absolute inset-0" />}
           <Image
             src={post.cover}
             alt={post.hook}

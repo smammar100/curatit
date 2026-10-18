@@ -34,6 +34,12 @@ import { cx } from "@/lib/cx";
 // In the inline layouts the whole label line takes a click, the gap beside the control included,
 // and on touch screens the row grows to 44px so neighbouring rows' hit areas never overlap.
 // A disabled control greys its label too. `className` is for layout, on the root.
+//
+// FieldGroup (a named export) is the heading over a set of controls: a <fieldset> whose <legend>
+// is set as a Field's label, with an optional hint under it and an error under the set. The
+// controls inside are Fields, or bare controls named with aria-label (a list of textareas,
+// "Takeaway 1", "Takeaway 2"). One question with several controls is a FieldGroup; one control is
+// a Field.
 
 type ControlProps = Pick<AriaAttributes, "aria-describedby" | "aria-labelledby" | "aria-invalid" | "aria-label"> & {
   id?: string;
@@ -164,5 +170,50 @@ function FieldError({ id, children }: { id?: string; children: ReactNode }) {
       <WarningCircle className="mt-px size-3.5 shrink-0" />
       <span className="min-w-0">{children}</span>
     </p>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// FieldGroup: a heading over several controls
+
+export type FieldGroupProps = {
+  /** The group's heading, set as a Field's label */
+  legend: ReactNode;
+  /** The controls: Fields, or bare controls with an aria-label each */
+  children: ReactNode;
+  /** A hint under the legend */
+  description?: ReactNode;
+  /** What's wrong with the set as a whole, under it: red, with an icon */
+  error?: ReactNode;
+  /** Layout only (width, margins, grid placement), on the fieldset */
+  className?: string;
+};
+
+// The legend never greys (unlike a Field's label): one disabled control in a set doesn't disable
+// the question
+const legendClass = "mb-1.5 text-body-sm font-medium text-primary-foreground";
+
+export function FieldGroup({ legend, children, description, error, className }: FieldGroupProps) {
+  const generated = useId();
+  const hintId = description ? `${generated}-hint` : undefined;
+  const errorId = error ? `${generated}-error` : undefined;
+  return (
+    <fieldset
+      aria-describedby={[errorId, hintId].filter(Boolean).join(" ") || undefined}
+      className={cx("min-w-0", className)}
+    >
+      <legend className={legendClass}>{legend}</legend>
+      {description && (
+        <p id={hintId} className={cx(hintClass, "-mt-1 mb-2")}>
+          {description}
+        </p>
+      )}
+      {children}
+      {error && (
+        <div className="mt-1.5">
+          <FieldError id={errorId}>{error}</FieldError>
+        </div>
+      )}
+    </fieldset>
   );
 }

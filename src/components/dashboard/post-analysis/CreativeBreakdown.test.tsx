@@ -66,7 +66,8 @@ afterEach(() => {
 const render = (ui: React.ReactNode) => act(() => root.render(ui));
 const stage = () => container.querySelector('[data-testid="stage"]')!.textContent;
 const within = (id: string) => container.querySelector(`[data-testid="${id}"]`)!;
-const panel = () => container.querySelector("#breakdown-panel")!;
+// The shown view: the shared Tabs gives each view its own panel with a generated id
+const panel = () => container.querySelector('[role="tabpanel"]:not([hidden])')!;
 const tabNames = () => [...container.querySelectorAll('[role="tab"]')].map((t) => t.textContent);
 const tab = (name: string) => [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find((t) => t.textContent === name);
 const button = (scope: Element, label: RegExp) => [...scope.querySelectorAll<HTMLButtonElement>("button")].find((b) => label.test(b.getAttribute("aria-label") ?? b.textContent ?? ""));

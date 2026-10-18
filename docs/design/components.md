@@ -33,7 +33,7 @@ Keep the folder name `fundations` as spelled.
 | Kbd | elements/Kbd.tsx | no | /system/kbd |
 | Separator | elements/Separator.tsx | no | /system/separator |
 | TextLink | elements/TextLink.tsx | no | /system/text-link |
-| Field | molecules/Field.tsx | no | /system/field |
+| Field (+ FieldGroup) | molecules/Field.tsx | no | /system/field |
 | SearchField | molecules/SearchField.tsx | yes | /system/search-field |
 | Tabs (+ TabList, Tab, TabPanel) | molecules/Tabs.tsx | yes | /system/tabs |
 | Notice | molecules/Notice.tsx | no | /system/notice |

@@ -10,15 +10,13 @@ import Link from "next/link";
 import Symbol from "@/components/assets/Symbol";
 // Icons
 import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
-import CaretDown from "@/components/fundations/icons/CaretDown";
 import Plus from "@/components/fundations/icons/Plus";
 import Button from "@/components/fundations/elements/Button";
-import { cx } from "@/lib/cx";
+import Menu, { MenuCaret, MenuItemRadio, MenuRadioGroup } from "@/components/fundations/molecules/Menu";
 import AccountMenu from "./AccountMenu";
 import { useBoards } from "./boards";
 import NewBoardDialog from "./NewBoardDialog";
 import SearchBox from "./SearchBox";
-import { GLIDE_HIGHLIGHT, GLIDE_ROW, usePopover } from "./usePopover";
 
 export const VIEWS = ["For you", "Discover", "Saved"] as const;
 export type View = (typeof VIEWS)[number];
@@ -67,7 +65,9 @@ export default function Header({
             </button>
           ))}
         </nav>
-        <ViewMenu view={view} onChange={onView} className="hidden sm:block lg:hidden" />
+        <div className="hidden sm:block lg:hidden">
+          <ViewMenu view={view} onChange={onView} />
+        </div>
       </div>
 
       <SearchBox query={query} onQuery={onQuery} onSearch={onSearch} className="w-full" />
@@ -101,53 +101,31 @@ export default function Header({
   );
 }
 
-function ViewMenu({ view, onChange, className }: { view: View | null; onChange: (view: View) => void; className?: string }) {
-  const popover = usePopover("menu");
-  const { glide } = popover;
-
+// The feed menu below lg: the shared Menu, with the views as a radio group (a check on the one
+// you're on; none on pages that aren't the feed). The trigger keeps the tabs' type, with the
+// menu's caret, which turns while it's open
+function ViewMenu({ view, onChange }: { view: View | null; onChange: (view: View) => void }) {
   return (
-    <div {...popover.rootProps} className={cx("relative", className)}>
-      <button
-        type="button"
-        aria-haspopup="menu"
-        {...popover.triggerProps}
-        className="relative flex items-center gap-1.5 rounded-sm text-title font-medium text-primary-foreground after:absolute after:-inset-x-2 after:-inset-y-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
-      >
-        {view ?? "Feed"}
-        <CaretDown className={cx("size-3.5 transition-transform duration-200 ease-out-quint motion-reduce:transition-none", popover.open && "rotate-180")} />
-      </button>
-      {popover.mounted && (
-        <div
-          {...popover.contentProps}
-          role="menu"
-          aria-label="Feed"
-          className={cx("absolute left-0 z-40 mt-2 w-44 origin-top-left rounded-2xl bg-modal p-1.5 shadow-lg outline-hidden", popover.motion)}
+    <Menu
+      label="Feed"
+      trigger={
+        <button
+          type="button"
+          className="relative flex items-center gap-1.5 rounded-sm text-title font-medium text-primary-foreground after:absolute after:-inset-x-2 after:-inset-y-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
         >
-          {/* Rows and their highlight are the menu's radius less its padding (12 − 6) */}
-          <div ref={glide.ref} {...glide.handlers} className="relative">
-            <span aria-hidden="true" className={cx(GLIDE_HIGHLIGHT, "rounded-md")} style={glide.highlight.style} data-fresh={glide.highlight.fresh || undefined} />
-            {TABS.map((option) => (
-              <button
-                key={option}
-                type="button"
-                role="menuitemradio"
-                aria-checked={option === view}
-                tabIndex={-1}
-                data-glide-item
-                onClick={() => {
-                  onChange(option);
-                  popover.close();
-                }}
-                className={cx("flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-body text-primary-foreground", GLIDE_ROW)}
-              >
-                {option}
-                {option === view && <span className="size-1.5 rounded-full bg-primary-foreground" aria-hidden="true" />}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+          {view ?? "Feed"}
+          <MenuCaret />
+        </button>
+      }
+    >
+      <MenuRadioGroup<View | ""> value={view ?? ""} onValueChange={(next) => next && onChange(next)}>
+        {TABS.map((option) => (
+          <MenuItemRadio key={option} value={option}>
+            {option}
+          </MenuItemRadio>
+        ))}
+      </MenuRadioGroup>
+    </Menu>
   );
 }
 

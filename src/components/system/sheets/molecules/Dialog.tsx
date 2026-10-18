@@ -36,6 +36,11 @@ const PARTS: { part: string; sub?: string; classes: string[]; note: ReactNode }[
     note: "The top layer: the modal surface, the extra large shadow, 16px corners. 16px from the screen's edges on a phone.",
   },
   {
+    part: "radius",
+    classes: ["default · rounded-3xl (16px)", "large · rounded-[28px]"],
+    note: "Large is the new-board dialog's, kept from its Cosmos prototype: a dialog built round one large field and a full-width pill. Nothing else uses it.",
+  },
+  {
     part: "size",
     classes: ["sm · max-w-sm (384px)", "md · max-w-md (448px)", "lg · max-w-2xl (672px)"],
     note: "A confirmation, a short form (the default), a longer read.",
@@ -47,8 +52,8 @@ const PARTS: { part: string; sub?: string; classes: string[]; note: ReactNode }[
   },
   {
     part: "title",
-    classes: ["<h2> · aria-labelledby", "text-body-base font-medium", "text-primary-foreground"],
-    note: "Inter, 15/24: a dialog's title labels a task, it isn't a page heading, so not the serif.",
+    classes: ["<h2> · aria-labelledby", "text-body-base font-medium", "default · text-primary-foreground", "quiet · text-secondary-foreground"],
+    note: "Inter, 15/24: a dialog's title labels a task, it isn't a page heading, so not the serif. Quiet steps it back to a label when the first field is the subject (New board over the name set large); it still names the dialog.",
   },
   {
     part: "description",
@@ -93,6 +98,8 @@ const PROPS: PropRow[] = [
   { name: "title", values: "string", fallback: "required", note: "A question or a task in a few words: Delete “Launch ideas”?, Rename board." },
   { name: "description", values: "ReactNode", fallback: "–", note: "One or two sentences under the title. Say what happens, not “Are you sure?”." },
   { name: "size", values: '"sm" | "md" | "lg"', fallback: '"md"', note: "384, 448 or 672px wide at most." },
+  { name: "radius", values: '"default" | "large"', fallback: '"default"', note: "16px, or 28px for a dialog built round one large field (the new board). Never a className radius." },
+  { name: "titleVariant", values: '"default" | "quiet"', fallback: '"default"', note: "Quiet: the title in the secondary colour, a label over a field that carries the subject. Still the accessible name." },
   { name: "role", values: '"dialog" | "alertdialog"', fallback: '"dialog"', note: "alertdialog for a decision with consequences: announced as urgent." },
   { name: "children", values: "ReactNode", fallback: "–", note: "The body. A form goes here, its submit button in the footer with form={id}." },
   { name: "footer", values: "ReactNode", fallback: "–", note: "Buttons, the primary last. One primary." },
@@ -128,8 +135,8 @@ export default function DialogSheet() {
                 A message about the page: <Mono>Notice</Mono>. Word that an action worked: <Mono>Toast</Mono> (and
                 an undo beats a confirmation for anything reversible). A choice from a list: <Mono>Menu</Mono>. A few
                 words on a control: <Mono>Tooltip</Mono>. Anything long, worth a link or a Back button, or with more than
-                three fields: its own page. A small confirmation tied to one control can stay inline, as BoardView&rsquo;s
-                Delete does inside its menu.
+                three fields: its own page. A small confirmation tied to one control can be a small popover where its
+                menu was, as BoardView&rsquo;s Delete is (a role=&quot;menu&quot; can&rsquo;t hold a question).
               </>
             ),
           },
@@ -169,8 +176,7 @@ export default function DialogSheet() {
               <>
                 A <Mono>&lt;div&gt;</Mono> modal with <Mono>fixed inset-0</Mono> (no inert page, no focus trap, no
                 Escape, no focus return); a dialog opened on page load or by a timer; a dialog from a dialog; a{" "}
-                <Mono>className</Mono> radius or shadow (the dashboard&rsquo;s <Mono>rounded-[28px]</Mono> predates the
-                scale); &ldquo;Are you sure?&rdquo; as the title (say what will happen).
+                <Mono>className</Mono> radius or shadow (the new board&rsquo;s 28px is <Mono>radius=&quot;large&quot;</Mono>); &ldquo;Are you sure?&rdquo; as the title (say what will happen).
               </>
             ),
           },
@@ -182,7 +188,7 @@ export default function DialogSheet() {
  ├── It's word that something happened → Toast (with Undo if it can be undone)
  ├── It's about the page or a field → Notice, or the field's error, inline
  ├── It's one small confirmation for one control (Delete in a menu)
- │     → inline, in place of the control
+ │     → a small alertdialog popover where the menu was
  ├── It's long, has more than three fields, or deserves a link and Back
  │     → its own page
  ├── It must be decided before going on, with consequences
