@@ -10,7 +10,7 @@ export default function StoreCard({ post }: { post: CollectionEntry<"store"> }) 
   const url = "/store/" + post.id;
   const { title, price, image } = post.data;
   return (
-    <article className="group-hover:opacity-30 hover:opacity-100 peer hover:peer-hover:opacity-30 duration-300 relative">
+    <article className="group-hover:opacity-60 hover:opacity-100 peer hover:peer-hover:opacity-60 transition-opacity duration-150 ease-out-quint relative">
       <Link href={url} title={title} className="absolute inset-0 z-10"></Link>
       <div className="p-8 bg-base-50 rounded-lg">
         <Image

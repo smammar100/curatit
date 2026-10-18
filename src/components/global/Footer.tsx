@@ -126,7 +126,7 @@ export default async function Footer() {
               />
               <Logo className="h-4 w-auto" aria-hidden="true" />
             </Link>
-            <p className="mt-10 max-w-sm font-display text-h4 text-balance lg:mt-16 lg:text-h3">
+            <p className="mt-10 max-w-sm font-display text-h4 font-normal text-balance lg:mt-16 lg:text-h3">
               <span className="text-[color:var(--f-quiet)]">
                 Real brand posts.{" "}
               </span>

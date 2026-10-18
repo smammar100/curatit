@@ -30,11 +30,13 @@ export default function Navigation() {
             >
               <Lockup />
             </Link>
+            {/* On a touch screen each link reaches 44px tall and 8px past its words through an
+                invisible ::after; the gap-6 between them still keeps the areas apart */}
             <div className="flex items-center justify-center gap-6">
               {links.map((link) => (
                 <Link
                   key={link.href}
-                  className="inline-flex min-h-7 items-center gap-1.5 rounded-sm text-body-sm whitespace-nowrap text-secondary-foreground transition-colors duration-150 hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
+                  className="relative inline-flex min-h-7 items-center gap-1.5 rounded-sm text-body-sm whitespace-nowrap text-secondary-foreground transition-colors duration-150 hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus pointer-coarse:after:absolute pointer-coarse:after:-inset-x-2 pointer-coarse:after:-inset-y-2"
                   href={link.href}
                 >
                   {link.text}

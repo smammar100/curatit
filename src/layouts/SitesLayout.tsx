@@ -38,7 +38,8 @@ export default function SitesLayout({
               size="xs"
               variant="default"
               href={frontmatter.live}
-              title={frontmatter.title}
+              aria-label={`Visit ${frontmatter.title}`}
+              title={`Visit ${frontmatter.title}`}
             >
               <ArrowUpRight className="size-4" />
             </Button>

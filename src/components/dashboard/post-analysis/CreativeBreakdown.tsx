@@ -99,7 +99,11 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
     if (offset < 0) pane.scrollTop = Math.max(0, pane.scrollTop + offset);
   }, [view]);
 
-  // ← / → (Home, End) move between tabs, and are marked handled so the stage's arrows leave them be
+  // ← / → (Home, End) move between tabs, and are marked handled so the stage's arrows leave them be.
+  // A key snaps the selection (data-keys on the row turns the tabs' fade off); a pointer brings it back
+  const unkey = (event: { currentTarget: HTMLElement }) => {
+    delete event.currentTarget.dataset.keys;
+  };
   const onTabKey = (event: KeyboardEvent<HTMLDivElement>) => {
     const at = views.findIndex((v) => v.id === view);
     const next =
@@ -107,6 +111,7 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
     if (next < 0) return;
     event.preventDefault();
     event.stopPropagation();
+    event.currentTarget.dataset.keys = "";
     choose(views[next].id);
     tabs.current[views[next].id]?.focus();
   };
@@ -116,7 +121,7 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
       <div ref={top} aria-hidden="true" />
       {/* Sticky over the panel's own padding (px-6 in PostView), so content slides under it */}
       <div className="sticky top-0 z-10 -mx-6 flex flex-wrap items-center justify-between gap-2 bg-white px-6 py-1.5">
-        <div role="tablist" aria-label="Creative breakdown" onKeyDown={onTabKey} className="-mx-1 flex min-w-0 scrollbar-hide gap-1 overflow-x-auto px-1 py-1">
+        <div role="tablist" aria-label="Creative breakdown" onKeyDown={onTabKey} onPointerDown={unkey} onPointerMove={unkey} className="group/tabs -mx-1 flex min-w-0 scrollbar-hide gap-1 overflow-x-auto px-1 py-1">
           {views.map((v) => (
             <button
               key={v.id}
@@ -130,7 +135,7 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
               aria-controls="breakdown-panel"
               tabIndex={view === v.id ? 0 : -1}
               onClick={() => choose(v.id)}
-              className="relative inline-flex h-9 shrink-0 items-center rounded-full px-3.5 text-body font-medium whitespace-nowrap text-base-600 transition-[background-color,color] duration-150 before:absolute before:inset-x-0 before:-inset-y-1 hover:bg-base-50 hover:text-base-900 aria-selected:bg-base-900 aria-selected:text-white"
+              className="relative inline-flex h-9 shrink-0 items-center rounded-full px-3.5 text-body font-medium whitespace-nowrap text-base-600 transition-[background-color,color] duration-150 group-data-keys/tabs:transition-none before:absolute before:inset-x-0 before:-inset-y-1 hover:bg-base-50 hover:text-base-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-selected:bg-base-900 aria-selected:text-white"
             >
               {v.label}
             </button>

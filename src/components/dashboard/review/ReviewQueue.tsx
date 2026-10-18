@@ -4,7 +4,14 @@
 // and failed, for editors. AI drafts wait here until an editor approves them; nothing an AI wrote
 // is public before that. Analyses themselves run on a person's machine (npm run creative -- work),
 // so the queue shows what's waiting for that, not a progress bar.
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { cx } from "@/lib/cx";
@@ -75,6 +82,9 @@ export function QueueView({
   onRefresh: () => void;
 }) {
   const [tab, setTab] = useState<Tab>("Needs review");
+  const tabRefs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({});
+  const ids = useId();
+  const tabId = (name: Tab) => `${ids}-tab-${TABS.indexOf(name)}`;
   const counts = queue?.counts;
   const tiles: [string, number | undefined][] = [
     ["Queued", counts?.pending],
@@ -109,6 +119,33 @@ export function QueueView({
     Failed: queue?.failed.length,
     Published: queue?.published.length,
     "Recent runs": queue?.runs.length,
+  };
+
+  // ← / → (Home, End) move between the lists, as in the post panel's Creative breakdown: only
+  // the open tab is in the tab order, focus follows the key, and the key is marked handled so
+  // the dashboard's own arrow handlers leave it be. A key snaps the selection (data-keys on
+  // the row turns the tabs' fade off) and a pointer brings the fade back
+  const unkey = (event: { currentTarget: HTMLElement }) => {
+    delete event.currentTarget.dataset.keys;
+  };
+  const onTabKey = (event: KeyboardEvent<HTMLDivElement>) => {
+    const at = TABS.indexOf(tab);
+    const next =
+      event.key === "ArrowRight"
+        ? (at + 1) % TABS.length
+        : event.key === "ArrowLeft"
+          ? (at - 1 + TABS.length) % TABS.length
+          : event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? TABS.length - 1
+              : -1;
+    if (next < 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.dataset.keys = "";
+    setTab(TABS[next]);
+    tabRefs.current[TABS[next]]?.focus();
   };
 
   return (
@@ -156,16 +193,25 @@ export function QueueView({
         <div
           role="tablist"
           aria-label="Lists"
-          className="mt-8 flex flex-wrap gap-1.5"
+          onKeyDown={onTabKey}
+          onPointerDown={unkey}
+          onPointerMove={unkey}
+          className="group/tabs mt-8 flex flex-wrap gap-1.5"
         >
           {TABS.map((name) => (
             <button
               key={name}
+              ref={(element) => {
+                tabRefs.current[name] = element;
+              }}
+              id={tabId(name)}
               type="button"
               role="tab"
               aria-selected={tab === name}
+              aria-controls={`${ids}-panel`}
+              tabIndex={tab === name ? 0 : -1}
               onClick={() => setTab(name)}
-              className="inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-body font-medium text-base-600 transition-[background-color,color] duration-150 hover:bg-base-50 hover:text-base-900 aria-selected:bg-base-900 aria-selected:text-white"
+              className="inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-body font-medium text-base-600 transition-[background-color,color] duration-150 group-data-keys/tabs:transition-none hover:bg-base-50 hover:text-base-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-selected:bg-base-900 aria-selected:text-white"
             >
               {name}
               {lists[name] !== undefined && (
@@ -175,7 +221,12 @@ export function QueueView({
           ))}
         </div>
 
-        <div role="tabpanel" aria-label={tab} className="mt-4">
+        <div
+          id={`${ids}-panel`}
+          role="tabpanel"
+          aria-labelledby={tabId(tab)}
+          className="mt-4"
+        >
           {failed && (
             <p className="rounded-2xl bg-danger-50 px-4 py-3 text-body text-danger-700">
               Couldn&apos;t load the queue: {failed}

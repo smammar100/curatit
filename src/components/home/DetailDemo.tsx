@@ -42,7 +42,7 @@ export default function DetailDemo() {
                 setSlide(i);
               }}
               className={cx(
-                "relative block w-full rounded transition-opacity duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400",
+                "relative block w-full rounded transition-opacity duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus",
                 i === slide ? "opacity-100" : "opacity-60 hover:opacity-100",
               )}
             >

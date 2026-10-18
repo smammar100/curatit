@@ -36,7 +36,9 @@ import { SUPPORT_MAILTO } from "@/lib/site";
 import { AuthField, AuthNotice } from "./AuthParts";
 import PasswordField from "./PasswordField";
 
-const linkClass = "font-medium text-accent-500 hover:text-accent-600";
+// The colour holds on hover (5:1 or more on the card in both themes; any accent step that darkens
+// it in light mode dims it in dark mode), and the underline marks the hover
+const linkClass = "font-medium text-brand-foreground underline-offset-2 hover:underline";
 
 function useParam(name: string) {
   const [value, setValue] = useState<string | null>(null);
@@ -70,7 +72,7 @@ function Footer({ children }: { children: ReactNode }) {
     <Text
       tag="p"
       variant="textXS"
-      className="mt-5 text-center font-medium text-base-500"
+      className="mt-5 text-center font-medium text-secondary-foreground"
     >
       {children}
     </Text>
@@ -142,12 +144,18 @@ function useValidation(
   };
 }
 
+// The form's button. While its action runs it shows a spinner and ignores presses (loading:
+// focus stays on it, and the busy words are its name for screen readers); `waiting` is for
+// before it can be used at all, and disables it outright, which also holds back a press made
+// before the page's script has loaded
 function Submit({
   pending,
+  waiting = false,
   idle,
   busy,
 }: {
   pending: boolean;
+  waiting?: boolean;
   idle: string;
   busy: string;
 }) {
@@ -156,9 +164,9 @@ function Submit({
       size="base"
       variant="default"
       type="submit"
-      disabled={pending}
-      aria-disabled={pending}
-      className="w-full disabled:opacity-70"
+      loading={pending}
+      disabled={waiting}
+      className="w-full"
     >
       {pending ? busy : idle}
     </Button>
@@ -205,7 +213,8 @@ export function SignInForm() {
           aside={
             <Link
               href="/forgot-password"
-              className="text-caption-lg font-medium text-secondary-foreground hover:text-brand-foreground"
+              // 16px of text, given 24px to tap without moving the row
+              className="-my-1 py-1 text-caption-lg font-medium text-secondary-foreground hover:text-brand-foreground"
             >
               Forgot password?
             </Link>
@@ -345,8 +354,8 @@ function CheckEmail({ email }: { email: string }) {
           size="base"
           variant="muted"
           type="submit"
-          disabled={pending}
-          className="w-full disabled:opacity-70"
+          loading={pending}
+          className="w-full"
         >
           {pending ? "Sending…" : "Send the link again"}
         </Button>
@@ -468,7 +477,7 @@ export function ConfirmLinkForm() {
         <input type="hidden" name="type" value={link?.type ?? ""} />
         <input type="hidden" name="next" value={link?.next ?? copy.next} />
         {/* Waits for the address to be read, so it never posts an empty token */}
-        <Submit pending={!link || pending} idle={copy.button} busy={link ? copy.busy : copy.button} />
+        <Submit pending={pending} waiting={!link} idle={copy.button} busy={copy.busy} />
       </form>
       <Footer>
         <Link href="/signin" className={linkClass}>

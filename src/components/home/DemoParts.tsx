@@ -1,17 +1,31 @@
 "use client";
 
 // Small pieces of Curatit's UI shared by the How it works illustrations
-import { useEffect, useRef, useState } from "react";
+import {
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type FocusEvent,
+} from "react";
 import { useInView, useReducedMotion } from "framer-motion";
 import Search from "@/components/fundations/icons/Search";
 import { cx } from "@/lib/cx";
 import { briefs } from "./demo";
+import { BelowFold } from "./HydrateOnView";
+import { markSeen, seen } from "./useIntroOnce";
 
 // Shared easing for the illustrations' entrances
 export const easeOut = [0.32, 0.72, 0, 1] as const;
 
 // Intro: the first time an illustration scrolls into view, its pieces arrive one after
-// another. Spread useIntro() on the root motion element and give each piece a variant.
+// another, once per session. Spread useIntro() on the root motion element and give each piece
+// a variant. The server HTML is the finished illustration, and the pieces are hidden to play
+// in only while their section is below the fold as it comes alive (BelowFold in HydrateOnView):
+// a visitor who can already see the cards (a link to How it works, a refresh partway down, a
+// fast fling) never watches them blink out and fade back. Decided once, at the first render,
+// because that's the only time framer-motion reads `initial`.
+const INTRO_KEY = "curatit:how-it-works-intro";
 const introContainer = {
   hidden: {},
   shown: { transition: { staggerChildren: 0.09, delayChildren: 0.1 } },
@@ -31,12 +45,19 @@ export const introFromRight = {
 
 export function useIntro() {
   const reduceMotion = useReducedMotion();
-  return {
-    variants: introContainer,
-    initial: reduceMotion ? (false as const) : "hidden",
-    whileInView: "shown",
-    viewport: { once: true, amount: 0.35 },
-  };
+  const belowFold = useContext(BelowFold);
+  const [armed] = useState(
+    () => !reduceMotion && !seen(INTRO_KEY) && belowFold(),
+  );
+  return armed
+    ? {
+        variants: introContainer,
+        initial: "hidden" as const,
+        whileInView: "shown" as const,
+        viewport: { once: true, amount: 0.35 },
+        onViewportEnter: () => markSeen(INTRO_KEY),
+      }
+    : {};
 }
 
 // Calls onTick every `interval` ms while the illustration is on screen. Stops for good
@@ -64,27 +85,86 @@ export function useLoop<T extends HTMLElement>(
   return { ref, playing, stop: () => setStopped(true) };
 }
 
-// Types `text` out a character at a time whenever it changes (not on first render)
-export function useTyped(text: string, enabled: boolean) {
-  const [count, setCount] = useState(text.length);
-  const previous = useRef(text);
+// Plays a scripted demo on a loop while it's on screen (McpDemo, DnaDemo): `script` lists
+// [ms into the cycle, step], and the server HTML is `rest`, so the first cycle starts `hold` ms
+// before its end. It pauses while the pointer is over the demo, focus is inside it or the tab is
+// hidden, and picks up where it stopped (like SearchReel on /agents); it never runs under
+// reduced motion. A pause that comes during a `busy` step (one that keeps time of its own, like
+// McpDemo's search clock) waits for the next step outside it, so that beat always plays whole.
+// Put `ref` and `handlers` on the demo's root.
+export function useScript<S, T extends HTMLElement = HTMLDivElement>(
+  script: [number, S][],
+  {
+    cycle,
+    hold,
+    rest,
+    busy,
+  }: { cycle: number; hold: number; rest: S; busy?: (step: S) => boolean },
+) {
+  const ref = useRef<T>(null);
+  const inView = useInView(ref, { amount: 0.4 });
+  const reduceMotion = useReducedMotion();
+  const [step, setStep] = useState(rest);
+  const [pointer, setPointer] = useState(false);
+  const [focus, setFocus] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  // How far into the cycle the loop has got, so a pause picks up where it stopped
+  const position = useRef(cycle - hold);
 
   useEffect(() => {
-    if (previous.current === text) return;
-    previous.current = text;
-    if (!enabled) {
-      setCount(text.length);
-      return;
-    }
-    setCount(0);
-    const timer = setInterval(() => {
-      setCount((current) => {
-        if (current >= text.length) clearInterval(timer);
-        return Math.min(current + 1, text.length);
-      });
-    }, 24);
-    return () => clearInterval(timer);
-  }, [text, enabled]);
+    const update = () => setHidden(document.hidden);
+    document.addEventListener("visibilitychange", update);
+    return () => document.removeEventListener("visibilitychange", update);
+  }, []);
+
+  const paused = !inView || pointer || focus || hidden;
+  const playing = !reduceMotion && (!paused || (busy?.(step) ?? false));
+  useEffect(() => {
+    if (!playing) return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const from = position.current;
+    const started = performance.now();
+    const run = (offset: number) => {
+      for (const [at, next] of script) {
+        if (at >= offset)
+          timers.push(setTimeout(() => setStep(next), at - offset));
+      }
+      timers.push(setTimeout(() => run(0), cycle - offset));
+    };
+    run(from);
+    return () => {
+      timers.forEach(clearTimeout);
+      position.current = (from + performance.now() - started) % cycle;
+    };
+  }, [playing, script, cycle]);
+
+  const handlers = {
+    onPointerEnter: () => setPointer(true),
+    onPointerLeave: () => setPointer(false),
+    onFocus: () => setFocus(true),
+    onBlur: (event: FocusEvent<T>) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) setFocus(false);
+    },
+  };
+  return { ref, step, handlers };
+}
+
+// Types `text` out a character at a time whenever it changes (not on first render). The count
+// resets in the same render as the text, so the new text never shows whole for a frame first
+// (nor the results waiting on `done`)
+export function useTyped(text: string, enabled: boolean) {
+  const [count, setCount] = useState(text.length);
+  const [previous, setPrevious] = useState(text);
+  if (previous !== text) {
+    setPrevious(text);
+    setCount(enabled ? 0 : text.length);
+  }
+
+  useEffect(() => {
+    if (count >= text.length) return;
+    const timer = setTimeout(() => setCount((current) => current + 1), 24);
+    return () => clearTimeout(timer);
+  }, [count, text]);
 
   return { typed: text.slice(0, count), done: count >= text.length };
 }
@@ -112,7 +192,7 @@ export function BriefTabs({
           aria-pressed={i === active}
           onClick={() => onChange(i)}
           className={cx(
-            "h-7 flex-1 truncate rounded-md px-2 text-xs font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400",
+            "h-7 flex-1 truncate rounded-md px-2 text-xs font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus",
             i === active
               ? "bg-base-800 text-white"
               : "text-base-600 hover:text-base-900",

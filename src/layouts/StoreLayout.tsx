@@ -37,7 +37,8 @@ export default function StoreLayout({
                 size="xs"
                 variant="default"
                 href={frontmatter.checkout}
-                title={frontmatter.title}
+                aria-label={`Buy ${frontmatter.title}`}
+                title={`Buy ${frontmatter.title}`}
               >
                 <Checkout className="size-4" />
               </Button>

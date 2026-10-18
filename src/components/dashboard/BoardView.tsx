@@ -7,7 +7,7 @@
 // opens up on hover or focus, and "Add a note" appears on hover. The name, description and notes
 // edit in place. Everything comes from BoardsProvider, so changes show at once and are written
 // in the background.
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ComponentProps } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,6 +22,7 @@ import Header from "./Header";
 import { DESCRIPTION_MAX } from "./NewBoardDialog";
 import { Block, GridSkeleton } from "./Skeleton";
 import type { Board, DashPost } from "./types";
+import { GLIDE_HIGHLIGHT, GLIDE_ROW, usePopover } from "./usePopover";
 
 export const boardHref = (id: string) => `/dashboard/b/${id}`;
 export const shareHref = (token: string) => `/s/${token}`;
@@ -309,13 +310,14 @@ function Editable({
   return multiline ? <textarea rows={3} {...shared} className={cx(shared.className, "resize-none")} /> : <input {...shared} />;
 }
 
-// Share: a read-only link anyone can open, made and turned off here
+// Share: a read-only link anyone can open, made and turned off here. Opening it moves focus to its
+// first control; Escape takes focus back to Share.
 function SharePanel({ board }: { board: Board }) {
   const { setSharing, notify } = useBoards();
-  const [open, setOpen] = useState(false);
+  const popover = usePopover("dialog");
   const [copied, setCopied] = useState(false);
-  const ref = usePopover(open, setOpen);
   const origin = useOrigin();
+  const shared = Boolean(board.shareToken);
   const url = board.shareToken ? `${origin}${shareHref(board.shareToken)}` : "";
 
   useEffect(() => {
@@ -323,6 +325,13 @@ function SharePanel({ board }: { board: Board }) {
     const timer = setTimeout(() => setCopied(false), 1500);
     return () => clearTimeout(timer);
   }, [copied]);
+
+  // Making the link or turning it off swaps the panel's controls, taking the focused one away;
+  // focus goes to the new first control rather than falling back to the page
+  const { open, focusIn } = popover;
+  useEffect(() => {
+    if (open && (!document.activeElement || document.activeElement === document.body)) focusIn();
+  }, [open, shared, focusIn]);
 
   const copy = async () => {
     try {
@@ -334,15 +343,16 @@ function SharePanel({ board }: { board: Board }) {
   };
 
   return (
-    <div ref={ref} className="relative">
-      <Pill onClick={() => setOpen((o) => !o)} expanded={open}>
+    <div {...popover.rootProps} className="relative">
+      <Pill aria-haspopup="dialog" {...popover.triggerProps}>
         Share
       </Pill>
-      {open && (
+      {popover.mounted && (
         <div
+          {...popover.contentProps}
           role="dialog"
           aria-label="Share this board"
-          className="absolute top-full right-0 z-30 mt-2 w-80 origin-top-right animate-[menu-in_150ms_cubic-bezier(0.23,1,0.32,1)] rounded-2xl bg-white p-4 text-left shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)] ring-1 ring-edge motion-reduce:animate-none"
+          className={cx("absolute top-full right-0 z-30 mt-2 w-80 origin-top-right rounded-2xl bg-modal p-4 text-left shadow-lg", popover.motion)}
         >
           <p className="text-body font-medium text-base-900">{board.shareToken ? "Anyone with the link can view" : "Share a read-only link"}</p>
           <p className="mt-1 text-body text-pretty text-base-600">
@@ -384,31 +394,37 @@ function SharePanel({ board }: { board: Board }) {
   );
 }
 
-// More: rename, describe, delete (which asks first, with focus on Cancel)
+// More: rename, describe, delete (which asks first, with focus on Cancel; Cancel takes focus back
+// to "Delete board…")
 function MoreMenu({ board, onRename, onDescribe }: { board: Board; onRename: () => void; onDescribe: () => void }) {
   const router = useRouter();
   const { deleteBoard } = useBoards();
-  const [open, setOpen] = useState(false);
+  const popover = usePopover("menu");
+  const { glide, clearGlide } = popover;
   const [confirming, setConfirming] = useState(false);
-  const ref = usePopover(open, (value) => {
-    setOpen(value);
-    if (!value) setConfirming(false);
-  });
-  const item = "flex w-full rounded-xl px-3 py-2 text-left text-body text-base-900 hover:bg-base-50";
+  const backToDelete = useRef(false);
+  // Opening it again starts from the menu, not the question (reset once it has left, so the
+  // question doesn't flip back to the menu while fading out)
+  if (!popover.mounted && confirming) setConfirming(false);
+  // The rows leave for the question and come back after Cancel: no highlight left from before
+  useEffect(() => clearGlide(), [confirming, clearGlide]);
+  const item = cx("flex w-full rounded-xl px-3 py-2 text-left text-body text-base-900", GLIDE_ROW);
 
   return (
-    <div ref={ref} className="relative">
-      <Pill onClick={() => setOpen((o) => !o)} expanded={open} label="More">
+    <div {...popover.rootProps} className="relative">
+      <Pill aria-haspopup="menu" {...popover.triggerProps} label="More">
         <span aria-hidden="true" className="flex gap-[3px]">
           {[0, 1, 2].map((i) => (
             <span key={i} className="size-[3px] rounded-full bg-current" />
           ))}
         </span>
       </Pill>
-      {open && (
+      {popover.mounted && (
         <div
-          role="menu"
-          className="absolute top-full right-0 z-30 mt-2 w-60 origin-top-right animate-[menu-in_150ms_cubic-bezier(0.23,1,0.32,1)] rounded-2xl bg-white p-1.5 text-left shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)] ring-1 ring-edge motion-reduce:animate-none"
+          {...popover.contentProps}
+          role={confirming ? undefined : "menu"}
+          aria-label={confirming ? undefined : "More"}
+          className={cx("absolute top-full right-0 z-30 mt-2 w-60 origin-top-right rounded-2xl bg-modal p-1.5 text-left shadow-lg outline-none", popover.motion)}
         >
           {confirming ? (
             <div className="p-2" role="alertdialog" aria-label={`Delete ${board.name}`}>
@@ -416,7 +432,17 @@ function MoreMenu({ board, onRename, onDescribe }: { board: Board; onRename: () 
               <p className="mt-1 text-body text-pretty text-base-600">The board and its notes go for good. The posts stay in the library.</p>
               <div className="mt-3 flex gap-2">
                 {/* Focus starts on Cancel, so Enter can't delete by accident */}
-                <Button type="button" size="sm" variant="muted" autoFocus onClick={() => setConfirming(false)} className="flex-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="muted"
+                  autoFocus
+                  onClick={() => {
+                    backToDelete.current = true;
+                    setConfirming(false);
+                  }}
+                  className="flex-1"
+                >
                   Cancel
                 </Button>
                 <Button
@@ -434,18 +460,52 @@ function MoreMenu({ board, onRename, onDescribe }: { board: Board; onRename: () 
               </div>
             </div>
           ) : (
-            <>
-              <button type="button" role="menuitem" className={item} onClick={() => (setOpen(false), onRename())}>
+            <div ref={glide.ref} {...glide.handlers} className="relative">
+              <span aria-hidden="true" className={cx(GLIDE_HIGHLIGHT, "rounded-xl")} style={glide.highlight.style} data-fresh={glide.highlight.fresh || undefined} />
+              <button
+                type="button"
+                role="menuitem"
+                tabIndex={-1}
+                data-glide-item
+                className={item}
+                onClick={() => {
+                  popover.close();
+                  onRename();
+                }}
+              >
                 Rename
               </button>
-              <button type="button" role="menuitem" className={item} onClick={() => (setOpen(false), onDescribe())}>
+              <button
+                type="button"
+                role="menuitem"
+                tabIndex={-1}
+                data-glide-item
+                className={item}
+                onClick={() => {
+                  popover.close();
+                  onDescribe();
+                }}
+              >
                 {board.description ? "Edit description" : "Add a description"}
               </button>
-              <div className="mx-3 my-1 h-px bg-base-100" />
-              <button type="button" role="menuitem" className={item} onClick={() => setConfirming(true)}>
+              <div role="separator" className="mx-3 my-1 h-px bg-border-default" />
+              <button
+                ref={(element) => {
+                  if (element && backToDelete.current) {
+                    backToDelete.current = false;
+                    element.focus();
+                  }
+                }}
+                type="button"
+                role="menuitem"
+                tabIndex={-1}
+                data-glide-item
+                className={item}
+                onClick={() => setConfirming(true)}
+              >
                 Delete board…
               </button>
-            </>
+            </div>
           )}
         </div>
       )}
@@ -453,38 +513,18 @@ function MoreMenu({ board, onRename, onDescribe }: { board: Board; onRename: () 
   );
 }
 
-function Pill({ onClick, expanded, label, children }: { onClick: () => void; expanded: boolean; label?: string; children: ReactNode }) {
+// Share and More: a round-ended outline button that opens a popover
+function Pill({ label, children, ...props }: ComponentProps<"button"> & { label?: string }) {
   return (
     <button
       type="button"
-      onClick={onClick}
       aria-label={label}
-      aria-haspopup="true"
-      aria-expanded={expanded}
+      {...props}
       className="flex h-11 min-w-11 items-center justify-center rounded-full px-5 text-subtitle font-medium text-base-900 ring-1 ring-base-200 transition-[background-color,scale] duration-150 hover:bg-base-50 active:scale-[0.96]"
     >
       {children}
     </button>
   );
-}
-
-// Closes a popover on a click outside it or Escape
-function usePopover(open: boolean, setOpen: (open: boolean) => void) {
-  const ref = useRef<HTMLDivElement>(null);
-  const setRef = useRef(setOpen);
-  setRef.current = setOpen;
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (event: PointerEvent) => !ref.current?.contains(event.target as Node) && setRef.current(false);
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setRef.current(false);
-    document.addEventListener("pointerdown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-  return ref;
 }
 
 // The board's empty state: the illustration, what belongs here, and the way to fill it

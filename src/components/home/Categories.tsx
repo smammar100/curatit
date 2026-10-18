@@ -83,7 +83,7 @@ export default function Categories({
       behavior: reduceMotion ? "auto" : "smooth",
     });
   const caret =
-    "absolute top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-base-900 shadow ring-1 ring-base-200 transition-transform duration-150 active:scale-[0.96] hover:bg-base-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400";
+    "absolute top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-base-900 shadow ring-1 ring-base-200 transition-[background-color,scale] duration-150 ease-out-quint motion-safe:active:scale-[0.96] hover:bg-base-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus";
 
   return (
     <section>
@@ -151,8 +151,9 @@ export default function Categories({
                     });
                   }}
                   className={cx(
-                    // The pill is 40px; the pseudo-element brings the hit area to 44px
-                    "relative h-10 shrink-0 touch-manipulation rounded-lg pr-4 pl-3.5 text-sm transition-[color,background-color,transform] duration-150 ease-out before:absolute before:inset-x-0 before:-inset-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400 active:scale-[0.96]",
+                    // The pill is 40px; the pseudo-element brings the hit area to 44px. The press
+                    // is Tailwind's `scale` property, so that's what transitions, not transform
+                    "relative h-10 shrink-0 touch-manipulation rounded-lg pr-4 pl-3.5 text-sm transition-[color,background-color,scale] duration-150 ease-out-quint before:absolute before:inset-x-0 before:-inset-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.96]",
                     selected
                       ? "text-(--tab-ink)"
                       : "text-base-600 hover:bg-(--tab-tint) hover:text-base-900",

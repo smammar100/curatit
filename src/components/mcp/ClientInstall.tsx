@@ -23,6 +23,7 @@ import Button from "@/components/fundations/elements/Button";
 import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
 import TerminalWindow from "@/components/fundations/icons/TerminalWindow";
 import { cx } from "@/lib/cx";
+import Segmented from "@/components/fundations/elements/Segmented";
 import CopyBlock from "./CopyBlock";
 import { SITE_URL } from "@/lib/site";
 import { MCP_URL } from "./tools";
@@ -302,13 +303,21 @@ function CardBody({ card, label, ...rest }: { card: Card; label: string } & HTML
 }
 
 const tile = "grid size-12 place-items-center rounded-xl bg-white text-base-900 ring-1 ring-edge shadow-[0_10px_24px_-12px_rgb(0_0_0/0.3)]";
+// The client marks share one cell and cross-fade; after a change made from the keyboard, and
+// under reduced motion, they swap at once
+const markClass = (shown: boolean, snap: boolean) =>
+  cx(
+    "size-6 [grid-area:1/1]",
+    snap ? "transition-none" : "transition-[opacity,scale] duration-200 ease-out-quint motion-reduce:transition-none",
+    shown ? "opacity-100" : "scale-90 opacity-0",
+  );
 
 // The top of the card: Curatit's mark and the chosen client's in two tiles, joined by a dashed
 // line along which a small post card travels from Curatit to the client (references flowing into
 // your assistant). After the mark pairing on the OAuth consent screen. Decorative: the heading
 // says it in words. The client's mark cross-fades when the tab changes; the card's travel is
 // .mcp-flow-* in global.css (transform and opacity only, still under reduced motion).
-function Connection({ current }: { current: number | null }) {
+function Connection({ current, snap }: { current: number | null; snap: boolean }) {
   return (
     <div className="mb-6 flex items-center justify-center" aria-hidden="true">
       <span className={tile}>
@@ -324,10 +333,10 @@ function Connection({ current }: { current: number | null }) {
             key={client.id}
             path={MARKS[client.mark]}
             style={{ color: MARK_COLORS[client.mark] }}
-            className={cx("size-6 transition-[opacity,scale] duration-200 ease-out [grid-area:1/1]", i === current ? "opacity-100" : "scale-90 opacity-0")}
+            className={markClass(i === current, snap)}
           />
         ))}
-        <TerminalWindow className={cx("size-6 transition-[opacity,scale] duration-200 ease-out [grid-area:1/1]", current === null ? "opacity-100" : "scale-90 opacity-0")} />
+        <TerminalWindow className={markClass(current === null, snap)} />
       </span>
     </div>
   );
@@ -336,6 +345,9 @@ function Connection({ current }: { current: number | null }) {
 export default function ClientInstall() {
   const [current, setCurrent] = useState(0);
   const [mode, setMode] = useState<"mcp" | "rest">("mcp");
+  // Whether the last input in the controls was a key: then the tabs' fill and the card's mark
+  // switch at once, so arrowing along the row never trails (the switch's thumb snaps the same way)
+  const [snap, setSnap] = useState(false);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   // The tab row fades the edge that has more tabs beyond it, only while it does
   const row = useRef<HTMLDivElement>(null);
@@ -372,15 +384,9 @@ export default function ClientInstall() {
     tabs.current[next]?.focus();
   };
 
-  const switchClass = (on: boolean) =>
-    cx(
-      "flex h-8 items-center rounded-full px-3.5 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500",
-      on ? "bg-white text-base-900 ring-1 ring-base-200" : "text-base-500 hover:text-base-900",
-    );
-
   return (
     <div>
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
+      <div onKeyDown={() => setSnap(true)} onPointerDown={() => setSnap(false)} className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
         {/* The tab row scrolls sideways when it doesn't fit, bleeding to the gutter below lg; its
             padding leaves room for the focus ring */}
         <div ref={row} style={{ maskImage: fade }} className="-mx-4 min-h-12 min-w-0 overflow-x-auto px-4 py-1 sm:-mx-8 sm:px-8 lg:-mx-1 lg:flex-1 lg:px-1 scrollbar-hide">
@@ -403,7 +409,10 @@ export default function ClientInstall() {
                     onClick={() => setCurrent(i)}
                     onKeyDown={(event) => onKey(event, i)}
                     className={cx(
-                      "flex h-10 shrink-0 items-center gap-2 rounded-full px-3.5 text-sm font-medium whitespace-nowrap transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500",
+                      "flex h-10 shrink-0 items-center gap-2 rounded-full px-3.5 text-sm font-medium whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500",
+                      // The chosen tab's ring is a box-shadow, so on a click it fades in with the
+                      // fill; from the keyboard both switch at once
+                      snap ? "transition-none" : "transition-[color,background-color,box-shadow] duration-150 ease-out-quint",
                       i === current ? "bg-white text-base-900 ring-1 ring-base-200" : "text-base-500 hover:text-base-900",
                     )}
                   >
@@ -417,20 +426,24 @@ export default function ClientInstall() {
             <p className="flex h-10 items-center text-sm text-base-600">For tools without MCP, and your own scripts.</p>
           )}
         </div>
-        <div role="group" aria-label="Connect over" className="flex w-fit shrink-0 gap-1 rounded-full bg-base-50 p-1 ring-1 ring-base-200">
-          <button type="button" aria-pressed={mode === "mcp"} onClick={() => setMode("mcp")} className={switchClass(mode === "mcp")}>
-            MCP
-          </button>
-          <button type="button" aria-pressed={mode === "rest"} onClick={() => setMode("rest")} className={switchClass(mode === "rest")}>
-            REST
-          </button>
-        </div>
+        <Segmented
+          aria-label="Connect over"
+          size="md"
+          shape="pill"
+          className="w-fit"
+          value={mode}
+          onValueChange={setMode}
+          options={[
+            { value: "mcp", label: "MCP" },
+            { value: "rest", label: "REST" },
+          ]}
+        />
       </div>
 
       {/* The gradient frame; on phones the card fills it with the wash as a border */}
       <div className="mcp-gradient mt-4 flex min-h-[28rem] items-center justify-center rounded-[1.5rem] px-3 py-10 sm:rounded-[2rem] sm:px-10 sm:py-14 lg:min-h-[32rem]">
         <div className="w-full max-w-xl rounded-2xl bg-white p-5 text-left shadow-[0_24px_60px_-20px_rgb(0_0_0/0.25)] sm:p-7 dark:ring-1 dark:ring-edge">
-          <Connection current={mode === "mcp" ? current : null} />
+          <Connection current={mode === "mcp" ? current : null} snap={snap} />
           {CLIENTS.map((client, i) => (
             <CardBody
               key={client.id}

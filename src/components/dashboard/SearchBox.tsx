@@ -5,8 +5,10 @@
 // library first, narrowed to the ones that match as you type, each with its mark; picking one
 // shows that brand alone), its categories and what you saved last. Anything picked there becomes the query. Press / anywhere to focus it. A
 // BorderBeam (border-beam, from Libraries.dev) runs a colourful glow around the pill's edge, which
-// moves to the panel while it's open; it holds still under reduced motion.
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+// moves to the panel while it's open; it holds still under reduced motion. Escape, a click
+// outside or tabbing out of it closes the panel (Escape keeps you in the field), and the panel
+// and the dim fade out a little faster than they came in.
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { BorderBeam } from "border-beam";
 // Icons
@@ -15,6 +17,7 @@ import Search from "@/components/fundations/icons/Search";
 import { useDarkTheme } from "@/components/global/theme";
 import { categoriesWithPosts } from "@/lib/categories";
 import { cx } from "@/lib/cx";
+import { usePresence, useReducedMotion } from "@/lib/motion";
 import { useBoards } from "./boards";
 import { CATEGORY_ICONS } from "./categoryIcons";
 import { compact } from "./search";
@@ -29,20 +32,6 @@ function readRecent(): string[] {
   } catch {
     return [];
   }
-}
-
-// The beam's travelling types don't stop for reduced motion on their own
-const REDUCE = "(prefers-reduced-motion: reduce)";
-function useReducedMotion() {
-  return useSyncExternalStore(
-    (onChange) => {
-      const query = matchMedia(REDUCE);
-      query.addEventListener("change", onChange);
-      return () => query.removeEventListener("change", onChange);
-    },
-    () => matchMedia(REDUCE).matches,
-    () => false,
-  );
 }
 
 export default function SearchBox({
@@ -62,7 +51,12 @@ export default function SearchBox({
   const [recent, setRecent] = useState<string[]>([]);
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Set while Escape puts focus back in the field, so that focus doesn't open the panel again
+  const quiet = useRef(false);
+  // The panel and the dim stay for their exit (gone at once under reduced motion)
+  const panel = usePresence(open, 120);
   const dark = useDarkTheme();
+  // The beam's travelling types don't stop for reduced motion on their own
   const reducedMotion = useReducedMotion();
   // The glow round the pill and, while it's open, the panel
   const beam = { size: "md", colorVariant: "colorful", strength: 0.7, theme: dark ? "dark" : "light", active: !reducedMotion } as const;
@@ -101,8 +95,13 @@ export default function SearchBox({
       const target = event.target as HTMLElement;
       const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable;
       if (event.key === "Escape" && open) {
+        // Closes the panel only: a search field would also clear itself on Escape, which a second
+        // Escape (with the panel shut) still does. Focus comes back to the field from a chip
+        event.preventDefault();
         setOpen(false);
-        inputRef.current?.blur();
+        quiet.current = true;
+        inputRef.current?.focus();
+        quiet.current = false;
       } else if (event.key === "/" && !typing && !event.metaKey && !event.ctrlKey) {
         event.preventDefault();
         inputRef.current?.focus();
@@ -134,8 +133,24 @@ export default function SearchBox({
     <>
       {/* Dims the page while the panel is open; inside the header's stacking context, so the
           field and panel stay above it */}
-      {open && <div aria-hidden="true" className="fixed inset-0 z-10 animate-[fade-in_150ms_ease-out] bg-black/25 motion-reduce:animate-none" />}
-      <div ref={rootRef} className={cx("relative z-20", className)}>
+      {panel.mounted && (
+        <div
+          aria-hidden="true"
+          data-closing={panel.closing || undefined}
+          className="fixed inset-0 z-10 animate-[fade-in_150ms_var(--ease-out-quint)] bg-black/25 motion-reduce:animate-none data-closing:pointer-events-none data-closing:animate-[fade-out_120ms_var(--ease-in-quart)_forwards]"
+        />
+      )}
+      <div
+        ref={rootRef}
+        // Focus moving out of the search (Tab past the last chip, or back before the field) closes
+        // the panel. A blur to nowhere (a click on the panel's own background, the window losing
+        // focus, Safari not focusing a clicked button) leaves it to the click-outside check
+        onBlur={(event) => {
+          const next = event.relatedTarget as Node | null;
+          if (next && !event.currentTarget.contains(next)) setOpen(false);
+        }}
+        className={cx("relative z-20", className)}
+      >
         <form
           role="search"
           onSubmit={(event) => {
@@ -153,8 +168,14 @@ export default function SearchBox({
                 ref={inputRef}
                 type="search"
                 value={query}
-                onChange={(event) => onQuery(event.target.value)}
-                onFocus={() => setOpen(true)}
+                onChange={(event) => {
+                  onQuery(event.target.value);
+                  // Typing opens it again after Escape (a second Escape's clear doesn't)
+                  if (event.target.value) setOpen(true);
+                }}
+                onFocus={() => !quiet.current && setOpen(true)}
+                // After Escape the field keeps focus, so a click is the other way back in
+                onClick={() => setOpen(true)}
                 placeholder="Search brands, categories or ideas"
                 autoComplete="off"
                 className="h-full w-full rounded-full border-0 bg-transparent pr-12 pl-12 text-body pointer-coarse:text-[16px] text-base-900 placeholder-base-500 focus:ring-0 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
@@ -180,9 +201,14 @@ export default function SearchBox({
           </BorderBeam>
         </form>
 
-        {open && (
-          // The beam's wrapper sets position: relative, so the panel is placed by a plain div outside it
-          <div className="absolute inset-x-0 top-full mt-3 origin-top animate-[menu-in_150ms_cubic-bezier(0.23,1,0.32,1)] motion-reduce:animate-none">
+        {panel.mounted && (
+          // The beam's wrapper sets position: relative, so the panel is placed by a plain div
+          // outside it. While it leaves it can't be clicked or tabbed into
+          <div
+            inert={panel.closing || undefined}
+            data-closing={panel.closing || undefined}
+            className="absolute inset-x-0 top-full mt-3 origin-top animate-[menu-in_150ms_var(--ease-out-quint)] motion-reduce:animate-none data-closing:animate-[menu-out_120ms_var(--ease-in-quart)_forwards]"
+          >
             <BorderBeam {...beam} borderRadius={28}>
               <div className="rounded-[28px] bg-white p-6 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.35)] dark:ring-1 dark:ring-edge">
                 {recent.length > 0 && (

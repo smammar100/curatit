@@ -7,9 +7,11 @@ import { cx } from "@/lib/cx";
 // The input, Interfere's (design.interfere.com/input, installed 2026-10-15) at its extra large
 // size: 40px, 13px text, radius 8, a white surface carrying the default shadow in place of a
 // border, the brand ring on focus, the danger ring when the field has a problem. 16px on touch
-// screens so iOS doesn't zoom into it.
+// screens so iOS doesn't zoom into it. border-0 takes off the grey border @tailwindcss/forms
+// gives text fields (blue on focus); outline-hidden keeps an outline in forced-colours mode,
+// where the shadow ring isn't drawn.
 export const inputClass =
-  "block h-10 w-full rounded-lg bg-component-on-container-subtle px-3 text-body-sm text-primary-foreground shadow-sm placeholder:text-tertiary-foreground transition-[box-shadow] duration-150 ease-out focus:z-10 focus:outline-none pointer-coarse:text-[16px]";
+  "block h-10 w-full rounded-lg border-0 bg-component-on-container-subtle px-3 text-body-sm text-primary-foreground shadow-sm placeholder:text-tertiary-foreground transition-[box-shadow] duration-150 ease-out focus:z-10 focus:outline-hidden pointer-coarse:text-[16px]";
 const ringClass = {
   ok: "focus:shadow-[0_0_0_2px_var(--color-brand-border-focus)]",
   error:

@@ -17,7 +17,11 @@
 // configuration it goes into, the new secret written straight into the snippet; one motion, but
 // it duplicated /docs/mcp and put the secret inside text that's easy to paste in the wrong place).
 
-import { useEffect, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useState,
+  type FormEvent,
+} from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/fundations/elements/Button";
 import Check from "@/components/fundations/icons/Check";
@@ -25,6 +29,7 @@ import Copy from "@/components/fundations/icons/Copy";
 import Key from "@/components/fundations/icons/Key";
 import { createClient } from "@/utils/supabase/client";
 import { cx } from "@/lib/cx";
+import Segmented from "@/components/fundations/elements/Segmented";
 import {
   hashToken,
   mintToken,
@@ -391,29 +396,15 @@ function CreatePanel({
           >
             Expires in
           </p>
-          <div
-            role="radiogroup"
+          <Segmented
             aria-labelledby="token-days-label"
-            className="mt-1 flex gap-0.5 rounded-full bg-base-100 p-1"
-          >
-            {EXPIRY_DAYS.map((d) => (
-              <button
-                key={d}
-                type="button"
-                role="radio"
-                aria-checked={d === days}
-                onClick={() => setDays(d)}
-                className={cx(
-                  "h-9 rounded-full px-3 text-caption font-medium whitespace-nowrap transition-[background-color,color] duration-150",
-                  d === days
-                    ? "bg-white text-base-900 shadow-xs"
-                    : "text-base-600 hover:text-base-900",
-                )}
-              >
-                {d} days
-              </button>
-            ))}
-          </div>
+            size="lg"
+            shape="pill"
+            className="mt-1"
+            value={String(days)}
+            onValueChange={(value) => setDays(Number(value))}
+            options={EXPIRY_DAYS.map((d) => ({ value: String(d), label: `${d} days` }))}
+          />
         </div>
       </div>
       <fieldset className="mt-4">

@@ -10,7 +10,7 @@ export default function SiteCard({ post }: { post: CollectionEntry<"sites"> }) {
   const url = "/sites/site/" + post.id;
   const { title, thumbnail } = post.data;
   return (
-    <div className="group-hover:opacity-30 hover:opacity-100 peer hover:peer-hover:opacity-30 duration-300 group">
+    <div className="group-hover:opacity-60 hover:opacity-100 peer hover:peer-hover:opacity-60 transition-opacity duration-150 ease-out-quint group">
       <div className="relative p-8 bg-base-50 rounded-lg">
         <Image
           width={900}

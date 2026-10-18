@@ -16,17 +16,20 @@ import {
 
 const REDUCE = "(prefers-reduced-motion: reduce)";
 
+// One media query for every caller: a long feed mounts a hook per tile, so they share a stable
+// subscribe function and a single MediaQueryList
+let reduceQuery: MediaQueryList | undefined;
+const reduce = () => (reduceQuery ??= matchMedia(REDUCE));
+const subscribeReduce = (onChange: () => void) => {
+  reduce().addEventListener("change", onChange);
+  return () => reduce().removeEventListener("change", onChange);
+};
+const reduceSnapshot = () => reduce().matches;
+const reduceServerSnapshot = () => false;
+
 /** Whether the visitor asked for reduced motion (false while rendering on the server). */
 export function useReducedMotion() {
-  return useSyncExternalStore(
-    (onChange) => {
-      const query = matchMedia(REDUCE);
-      query.addEventListener("change", onChange);
-      return () => query.removeEventListener("change", onChange);
-    },
-    () => matchMedia(REDUCE).matches,
-    () => false,
-  );
+  return useSyncExternalStore(subscribeReduce, reduceSnapshot, reduceServerSnapshot);
 }
 
 type Box = { x: number; y: number; w: number; h: number };
@@ -101,12 +104,11 @@ export function useThumb<T extends HTMLElement = HTMLDivElement>(value: unknown)
  * own focus style (instant, as keyboard feedback should be).
  *
  * Put `ref` and `handlers` on the list (which must be `relative`), mark each row with
- * `data-glide-item`, and render <GlideHighlight> from `highlight` as the list's first child:
+ * `data-glide-item`, and render the highlight as the list's first child. The dashboard's menus
+ * share its classes as GLIDE_HIGHLIGHT (and the rows' as GLIDE_ROW) in dashboard/usePopover.ts:
  *
- *   <span aria-hidden className="pointer-events-none absolute top-0 left-0 rounded-lg
- *     bg-base-50 transition-[translate,height,opacity] duration-150 ease-out-quint
- *     data-fresh:transition-[opacity] motion-reduce:transition-[opacity]"
- *     style={highlight.style} data-fresh={highlight.fresh || undefined} />
+ *   <span aria-hidden className={GLIDE_HIGHLIGHT} style={highlight.style}
+ *     data-fresh={highlight.fresh || undefined} />
  *
  * Rows keep no hover fill of their own while the highlight is in use. The highlight fades in
  * where the pointer enters (no slide from a stale row) and fades out where it leaves.

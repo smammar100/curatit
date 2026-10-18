@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { m, useInView, useReducedMotion } from "framer-motion";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { m } from "framer-motion";
 // Icons
 import Check from "@/components/fundations/icons/Check";
 import Copy from "@/components/fundations/icons/Copy";
 // Components
 import PostCover from "./PostCover";
-import { easeOut } from "./DemoParts";
+import { easeOut, useScript } from "./DemoParts";
 import { dna } from "./demo";
 import { usePost } from "./HomePosts";
 import { cx } from "@/lib/cx";
@@ -19,7 +19,8 @@ import { cx } from "@/lib/cx";
  * Copy brief and the brief slides up. Every label, the strategy and the colours come from the
  * post's published analysis (`dna` in demo.ts); where the pins sit is read off the slide by
  * hand. Motion is transform and opacity only. The annotated slide is what the server renders,
- * what the first view holds, and all that reduced motion shows.
+ * what the first view holds, and all that reduced motion shows. The loop pauses while pointed
+ * at or focused (useScript).
  */
 
 // 0 the slide alone · 1–4 pins · 5 strategy · 6–9 the pointer picks colours 1–4 · 10 they fly to
@@ -50,24 +51,8 @@ const PICK = 6;
 type Point = { x: number; y: number };
 
 export default function DnaDemo() {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { amount: 0.4 });
-  const reduceMotion = useReducedMotion();
-  const [step, setStep] = useState(REST);
+  const { ref, step, handlers } = useScript(SCRIPT, { cycle: CYCLE, hold: FIRST_HOLD, rest: REST });
   const post = usePost(dna.post);
-
-  useEffect(() => {
-    if (!inView || reduceMotion) return;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const run = (offset: number) => {
-      for (const [at, next] of SCRIPT) {
-        if (at >= offset) timers.push(setTimeout(() => setStep(next), at - offset));
-      }
-      timers.push(setTimeout(() => run(0), CYCLE - offset));
-    };
-    run(CYCLE - FIRST_HOLD);
-    return () => timers.forEach(clearTimeout);
-  }, [inView, reduceMotion]);
 
   // Where things are, measured from the stage, so the pointer and the picked colours travel to
   // the right place at any size: the four picking spots, the palette's dots and Copy brief
@@ -109,6 +94,7 @@ export default function DnaDemo() {
   return (
     <div
       ref={ref}
+      {...handlers}
       role="img"
       aria-label={`Demo: ${post.brand.name}'s carousel cover taken apart by Curatit: its hook, layout, kicker and product pinned, its strategy, four colours picked off the slide, then copied as a brief for an AI tool`}
       // At least 4:3 from lg like the MCP demo beside it (a zero-width spacer 75% of the width

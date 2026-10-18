@@ -15,9 +15,15 @@ const variants = {
   danger: "bg-danger-subtle text-danger-foreground",
 };
 const sizes = {
-  sm: "h-4 px-1.5 text-caption-base rounded-sm",
-  md: "h-5 px-1.5 text-caption-lg rounded-sm",
-  lg: "h-6 px-2 text-body-sm rounded-md",
+  sm: "h-4 px-1.5 text-caption-base",
+  md: "h-5 px-1.5 text-caption-lg",
+  lg: "h-6 px-2 text-body-sm",
+};
+// Radius by size; `shape="pill"` takes its place (kept apart so the two never both land)
+const radius = {
+  sm: "rounded-sm",
+  md: "rounded-sm",
+  lg: "rounded-md",
 };
 
 export default function Badge({
@@ -39,7 +45,7 @@ export default function Badge({
         "inline-flex shrink-0 items-center gap-1 whitespace-nowrap",
         variants[variant],
         sizes[size],
-        shape === "pill" && "rounded-full",
+        shape === "pill" ? "rounded-full" : radius[size],
         className,
       )}
       {...rest}

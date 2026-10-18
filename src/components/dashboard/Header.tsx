@@ -4,7 +4,7 @@
 // search pill in the middle, then Create, Saved (a bookmark with the count of saved posts) and
 // the account menu. The feed drives it directly; other dashboard pages pass `onView` /
 // `onSearch` that take you back to the feed.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 // Assets
 import Symbol from "@/components/assets/Symbol";
@@ -17,6 +17,7 @@ import AccountMenu from "./AccountMenu";
 import { useBoards } from "./boards";
 import NewBoardDialog from "./NewBoardDialog";
 import SearchBox from "./SearchBox";
+import { GLIDE_HIGHLIGHT, GLIDE_ROW, usePopover } from "./usePopover";
 
 export const VIEWS = ["For you", "Discover", "Saved"] as const;
 export type View = (typeof VIEWS)[number];
@@ -91,54 +92,48 @@ export default function Header({
 }
 
 function ViewMenu({ view, onChange, className }: { view: View | null; onChange: (view: View) => void; className?: string }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const close = (event: PointerEvent) => !ref.current?.contains(event.target as Node) && setOpen(false);
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", close);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", close);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+  const popover = usePopover("menu");
+  const { glide } = popover;
 
   return (
-    <div ref={ref} className={cx("relative", className)}>
+    <div {...popover.rootProps} className={cx("relative", className)}>
       <button
         type="button"
         aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        {...popover.triggerProps}
         className="flex items-center gap-1.5 text-title font-medium text-base-900"
       >
         {view ?? "Feed"}
-        <CaretDown className={cx("size-3.5 transition-transform duration-200 ease-out", open && "rotate-180")} />
+        <CaretDown className={cx("size-3.5 transition-transform duration-200 ease-out-quint motion-reduce:transition-none", popover.open && "rotate-180")} />
       </button>
-      {open && (
+      {popover.mounted && (
         <div
+          {...popover.contentProps}
           role="menu"
-          className="absolute left-0 z-40 mt-2 w-44 origin-top-left animate-[menu-in_150ms_cubic-bezier(0.23,1,0.32,1)] rounded-2xl bg-white p-1.5 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)] ring-1 ring-edge motion-reduce:animate-none"
+          aria-label="Feed"
+          className={cx("absolute left-0 z-40 mt-2 w-44 origin-top-left rounded-2xl bg-modal p-1.5 shadow-lg outline-none", popover.motion)}
         >
-          {TABS.map((option) => (
-            <button
-              key={option}
-              type="button"
-              role="menuitemradio"
-              aria-checked={option === view}
-              onClick={() => {
-                onChange(option);
-                setOpen(false);
-              }}
-              className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-body text-base-900 hover:bg-base-50"
-            >
-              {option}
-              {option === view && <span className="size-1.5 rounded-full bg-base-900" aria-hidden="true" />}
-            </button>
-          ))}
+          <div ref={glide.ref} {...glide.handlers} className="relative">
+            <span aria-hidden="true" className={cx(GLIDE_HIGHLIGHT, "rounded-xl")} style={glide.highlight.style} data-fresh={glide.highlight.fresh || undefined} />
+            {TABS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                role="menuitemradio"
+                aria-checked={option === view}
+                tabIndex={-1}
+                data-glide-item
+                onClick={() => {
+                  onChange(option);
+                  popover.close();
+                }}
+                className={cx("flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-body text-base-900", GLIDE_ROW)}
+              >
+                {option}
+                {option === view && <span className="size-1.5 rounded-full bg-base-900" aria-hidden="true" />}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

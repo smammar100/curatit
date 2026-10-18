@@ -1,6 +1,12 @@
 "use client";
 
-import { useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+} from "react";
 // Fundation
 import Text from "@/components/fundations/elements/Text";
 import Wrapper from "@/components/fundations/containers/Wrapper";
@@ -18,19 +24,30 @@ import { cx } from "@/lib/cx";
 
 // Where the divider starts (percent from the left); the library is the right side
 const START = 72;
-const GLIDE_MS = 450;
+// A label's glide is something already on screen moving across it, so it eases in and out
+const GLIDE_MS = 400;
+const GLIDE = "duration-400 ease-in-out-quart motion-reduce:transition-none";
 
 export default function ProblemSolution() {
   const [x, setX] = useState(START);
   const stage = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
-  // While a label slides the divider, the clip and the handle tween; dragging is instant
+  // While a label slides the divider, the clip and the divider tween; dragging and the arrow
+  // keys are instant
   const [gliding, setGliding] = useState(false);
+  const glideTimer = useRef(0);
+  const stopGlide = () => {
+    window.clearTimeout(glideTimer.current);
+    setGliding(false);
+  };
   const glideTo = (value: number) => {
     setGliding(true);
     setX(value);
-    window.setTimeout(() => setGliding(false), GLIDE_MS);
+    // A second label pressed mid-glide restarts the clock, so the first can't cut it short
+    window.clearTimeout(glideTimer.current);
+    glideTimer.current = window.setTimeout(() => setGliding(false), GLIDE_MS);
   };
+  useEffect(() => () => window.clearTimeout(glideTimer.current), []);
 
   const place = (event: PointerEvent) => {
     const rect = stage.current?.getBoundingClientRect();
@@ -70,7 +87,7 @@ export default function ProblemSolution() {
             type="button"
             onClick={() => glideTo(100)}
             aria-label="Show the mess only"
-            className="min-h-11 rounded-md px-2 text-base-600 transition-colors duration-150 hover:text-base-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400"
+            className="min-h-11 rounded-md px-2 text-base-600 transition-[color,scale] duration-150 ease-out-quint hover:text-base-900 motion-safe:active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
           >
             <span className="inline-flex h-5 items-center rounded-sm bg-component px-1.5 text-caption-lg">
               Saved posts and screenshots
@@ -80,20 +97,22 @@ export default function ProblemSolution() {
             type="button"
             onClick={() => glideTo(0)}
             aria-label="Show Curatit only"
-            className="min-h-11 rounded-md px-2 transition-transform duration-150 active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400"
+            className="min-h-11 rounded-md px-2 transition-[scale] duration-150 ease-out-quint motion-safe:active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
           >
             <span className="inline-flex h-5 items-center rounded-sm bg-brand-solid px-1.5 text-caption-lg text-on-brand-solid-foreground">
               Curatit
             </span>
           </button>
         </div>
+        {/* overflow-clip, not hidden: a clipped box isn't a scroll container, so focusing the
+            handle while it hangs over an edge (0 or 100) can't scroll the whole stage sideways */}
         <div
           ref={stage}
-          className="relative mt-3 aspect-4/5 overflow-hidden rounded-2xl bg-base-50 select-none sm:aspect-7/5 [touch-action:none]"
+          className="relative mt-3 aspect-4/5 overflow-clip rounded-2xl bg-base-50 select-none sm:aspect-7/5 [touch-action:none]"
           style={{ "--x": `${x}%` } as CSSProperties}
           onPointerDown={(e) => {
             dragging.current = true;
-            setGliding(false);
+            stopGlide();
             e.currentTarget.setPointerCapture(e.pointerId);
             place(e);
           }}
@@ -110,59 +129,71 @@ export default function ProblemSolution() {
           <div
             className={cx(
               "absolute inset-0 bg-base-50",
-              gliding && "transition-[clip-path] duration-450 ease-out",
+              gliding && cx("transition-[clip-path]", GLIDE),
             )}
             style={{ clipPath: "inset(0 0 0 var(--x))" }}
             aria-hidden={x === 100}
           >
             <LibraryWindow className="absolute inset-x-4 top-4 -bottom-4 sm:inset-x-8 sm:top-8 sm:-bottom-8" />
           </div>
+          {/* The divider: its line and handle ride one full-width layer moved by --x (a
+              percentage of the layer's own width is the same percentage of the stage's), so a
+              glide moves a transform, not `left`. The layer lets the pointer through to the
+              stage; the handle takes it */}
           <div
             className={cx(
-              "absolute inset-y-0 w-px bg-accent-600",
-              gliding && "transition-[left] duration-450 ease-out",
+              "pointer-events-none absolute inset-0",
+              gliding && cx("transition-[translate]", GLIDE),
             )}
-            style={{ left: "var(--x)" }}
-            aria-hidden="true"
-          />
-          {/* The divider's handle: a slider for the keyboard, a grip for the pointer */}
-          <button
-            type="button"
-            role="slider"
-            aria-label="Reveal the same brief in Curatit"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={x}
-            aria-valuetext={`${100 - x}% Curatit`}
-            onKeyDown={(e) => {
-              if (e.key === "ArrowRight" || e.key === "ArrowUp")
-                setX((v) => Math.min(100, v + 5));
-              if (e.key === "ArrowLeft" || e.key === "ArrowDown")
-                setX((v) => Math.max(0, v - 5));
-              if (e.key === "Home") setX(0);
-              if (e.key === "End") setX(100);
-            }}
-            className={cx(
-              "absolute top-1/2 flex size-11 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-full bg-accent-600 text-paper shadow active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400",
-              gliding
-                ? "transition-[left,transform] duration-450 ease-out"
-                : "transition-transform duration-150",
-            )}
-            style={{ left: "var(--x)" }}
+            style={{ translate: "var(--x) 0" }}
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="size-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+            <div
+              className="absolute inset-y-0 left-0 w-px bg-accent-600"
               aria-hidden="true"
+            />
+            {/* The divider's handle: a slider for the keyboard, a grip for the pointer */}
+            <button
+              type="button"
+              role="slider"
+              aria-label="Reveal the same brief in Curatit"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={x}
+              aria-valuetext={`${100 - x}% Curatit`}
+              // Instant, even mid-glide, and the keys stay off the page: unhandled, the arrows,
+              // Home and End would scroll it as well
+              onKeyDown={(e) => {
+                const next =
+                  e.key === "ArrowRight" || e.key === "ArrowUp"
+                    ? Math.min(100, x + 5)
+                    : e.key === "ArrowLeft" || e.key === "ArrowDown"
+                      ? Math.max(0, x - 5)
+                      : e.key === "Home"
+                        ? 0
+                        : e.key === "End"
+                          ? 100
+                          : null;
+                if (next === null) return;
+                e.preventDefault();
+                stopGlide();
+                setX(next);
+              }}
+              className="pointer-events-auto absolute top-1/2 left-0 flex size-11 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-full bg-accent-600 text-paper shadow transition-[scale] duration-150 ease-out-quint motion-safe:active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
             >
-              <path d="m9 7-5 5 5 5M15 7l5 5-5 5" />
-            </svg>
-          </button>
+              <svg
+                viewBox="0 0 24 24"
+                className="size-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m9 7-5 5 5 5M15 7l5 5-5 5" />
+              </svg>
+            </button>
+          </div>
         </div>
       </Wrapper>
     </section>

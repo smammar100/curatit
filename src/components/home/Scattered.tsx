@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { cx } from "@/lib/cx";
 import { useMounted } from "@/lib/useMounted";
 import PostCover from "./PostCover";
@@ -16,10 +16,16 @@ import { useIntroOnce } from "./useIntroOnce";
  * at any size and crops at the edges on phones.
  *
  * The scraps pop in one after another the first time the scene scrolls into
- * view, once per session. Reduced motion shows the finished scene.
+ * view, once per session. Reduced motion shows the finished scene, and so does
+ * a scene already on screen when its section comes alive (see useIntroOnce).
  */
 
 const SCENE = { w: 1400, h: 1000 };
+// The scene covers its container through CSS, so the server HTML is already the right size
+// (a ResizeObserver used to set it after mount, and the scene jumped from a guessed 0.6): the
+// larger of the container's width over the scene's and its height over the scene's.
+// tan(atan2(a, b)) is a / b as the plain number `scale` takes; cqw and cqh are the container's
+const COVER = `max(tan(atan2(100cqw, ${SCENE.w}px)), tan(atan2(100cqh, ${SCENE.h}px)))`;
 
 function Cover({ id, className }: { id: string; className?: string }) {
   const post = usePost(id);
@@ -390,19 +396,6 @@ export default function Scattered({ className }: { className?: string }) {
     "curatit:scattered-intro",
   );
 
-  // Scale the scene to cover its container
-  const [scale, setScale] = useState(0.6);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect;
-      setScale(Math.max(width / SCENE.w, height / SCENE.h));
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
   const hidden = intro === "armed";
 
   return (
@@ -411,7 +404,7 @@ export default function Scattered({ className }: { className?: string }) {
       role="img"
       aria-label="References for one brief scattered across saved posts, phone screenshots, chat messages, a spreadsheet of links, a notes page, a design file, a folder, an email thread, open browser tabs and a PDF"
       className={cx(
-        "pointer-events-none select-none overflow-hidden",
+        "pointer-events-none select-none overflow-hidden [container-type:size]",
         className,
       )}
     >
@@ -420,7 +413,8 @@ export default function Scattered({ className }: { className?: string }) {
         style={{
           width: SCENE.w,
           height: SCENE.h,
-          transform: `translate(-50%, -42%) scale(${scale})`,
+          translate: "-50% -42%",
+          scale: COVER,
         }}
       >
         <svg

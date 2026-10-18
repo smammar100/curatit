@@ -3,9 +3,11 @@
 // Making a board, after Cosmos's "New collection": a dialog with the name set large in the middle,
 // a short line saying what the board is for, a switch to share it by link, and Create. It's a
 // native <dialog> (showModal), so focus stays inside, Escape closes it, the page behind can't be
-// reached, and focus goes back to whatever opened it.
+// reached, and focus goes back to whatever opened it. It scales in and fades, and out again a
+// little faster, through the shared .dialog-motion (global.css), still under reduced motion.
 import { useEffect, useId, useRef, useState } from "react";
 import Close from "@/components/fundations/icons/Close";
+import Switch from "@/components/fundations/elements/Switch";
 import { cx } from "@/lib/cx";
 import { NAME_MAX, useBoards } from "./boards";
 
@@ -34,7 +36,8 @@ export default function NewBoardDialog({ open, onClose, firstPost }: { open: boo
     } else if (!open && dialog.open) dialog.close();
   }, [open]);
 
-  const field = "w-full rounded-xl border-0 bg-transparent px-3 text-center text-base-900 transition-colors duration-150 focus:bg-base-50 focus:ring-0 focus:outline-none";
+  // The fills are alpha tints (card, component), so they read on the modal surface in both themes
+  const field = "w-full rounded-xl border-0 bg-transparent px-3 text-center text-base-900 transition-colors duration-150 focus:bg-card focus:ring-0 focus:outline-none";
 
   return (
     <dialog
@@ -49,7 +52,7 @@ export default function NewBoardDialog({ open, onClose, firstPost }: { open: boo
       onClose={() => open && onClose()}
       // A click on the dimmed page behind (the dialog's own box, outside the card) closes it
       onClick={(event) => event.target === event.currentTarget && onClose()}
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-[28px] border-0 bg-white p-0 text-base-900 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.4)] backdrop:bg-black/40 backdrop:backdrop-blur-sm open:animate-[menu-in_200ms_cubic-bezier(0.23,1,0.32,1)] open:backdrop:animate-[fade-in_200ms_ease-out] motion-reduce:open:animate-none dark:ring-1 dark:ring-edge"
+      className="dialog-motion m-auto w-[calc(100%-2rem)] max-w-md rounded-[28px] border-0 bg-modal p-0 text-base-900 shadow-xl backdrop:bg-black/40 backdrop:backdrop-blur-sm"
     >
       <form
         className="p-6"
@@ -69,7 +72,7 @@ export default function NewBoardDialog({ open, onClose, firstPost }: { open: boo
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="-mr-2 flex size-10 items-center justify-center rounded-full text-base-900 transition-[background-color,scale] duration-150 hover:bg-base-50 active:scale-[0.96]"
+            className="-mr-2 flex size-10 items-center justify-center rounded-full text-base-900 transition-[background-color,scale] duration-150 hover:bg-card active:scale-[0.96]"
           >
             <Close className="size-4" />
           </button>
@@ -113,39 +116,32 @@ export default function NewBoardDialog({ open, onClose, firstPost }: { open: boo
         </div>
 
         <div className="flex items-center justify-between gap-4">
-          <span id={`${id}-share`}>
-            <span className="block text-subtitle font-medium text-base-900">Share with a link</span>
-            <span className="block text-body text-base-500">Anyone with the link can view it, read-only</span>
-          </span>
-          <Switch on={shared} onChange={setShared} labelledBy={`${id}-share`} />
+          {/* The words are the switch's label, so a tap on them flips it too */}
+          <label htmlFor={`${id}-switch`} className="min-w-0 flex-1 select-none">
+            <span id={`${id}-share`} className="block text-subtitle font-medium text-base-900">
+              Share with a link
+            </span>
+            <span id={`${id}-share-note`} className="block text-body text-base-500">
+              Anyone with the link can view it, read-only
+            </span>
+          </label>
+          <Switch
+            id={`${id}-switch`}
+            checked={shared}
+            onCheckedChange={setShared}
+            aria-labelledby={`${id}-share`}
+            aria-describedby={`${id}-share-note`}
+          />
         </div>
 
         <button
           type="submit"
           disabled={!name.trim()}
-          className="mt-6 h-12 w-full rounded-full bg-base-900 text-subtitle font-medium text-white transition-[background-color,scale] duration-150 hover:bg-base-800 active:scale-[0.96] disabled:bg-base-100 disabled:text-base-500"
+          className="mt-6 h-12 w-full rounded-full bg-base-900 text-subtitle font-medium text-white transition-[background-color,scale] duration-150 hover:bg-base-800 active:scale-[0.96] disabled:bg-component disabled:text-base-500"
         >
           Create board
         </button>
       </form>
     </dialog>
-  );
-}
-
-function Switch({ on, onChange, labelledBy }: { on: boolean; onChange: (on: boolean) => void; labelledBy: string }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-labelledby={labelledBy}
-      onClick={() => onChange(!on)}
-      className={cx(
-        "relative flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 transition-colors duration-150 before:absolute before:-inset-2",
-        on ? "bg-base-900" : "bg-base-200",
-      )}
-    >
-      <span className={cx("size-6 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out motion-reduce:transition-none", on && "translate-x-5")} />
-    </button>
   );
 }

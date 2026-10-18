@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  createContext,
   startTransition,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -69,6 +71,16 @@ function whenEngaged(callback: () => void): () => void {
   return () => waiting.delete(callback);
 }
 
+// Whether the section is still wholly below the fold, asked by an intro as it first renders
+// (useIntro in DemoParts; 2026-10-18). The server HTML is the finished state, so an intro may
+// only hide its pieces to play them in while nobody can see them: a section already on screen
+// as it comes alive (a link to it, a refresh partway down, a fling past the margin ahead, a tab
+// into it) stays as it is instead of blinking out and fading back. A function rather than a
+// value, because the render can wait on the section's code (see islands.tsx) while the visitor
+// keeps scrolling, so it's measured at the last moment. False on the server and outside a
+// HydrateOnView, where nothing may hide.
+export const BelowFold = createContext<() => boolean>(() => false);
+
 export default function HydrateOnView({
   children,
   ahead = false,
@@ -96,6 +108,14 @@ export default function HydrateOnView({
   // there has been one, the section is always laid out for real
   const [pinned, setPinned] = useState(0);
   const scrollTarget = useRef<string | null>(null);
+  // For BelowFold: measured on the wrapper, which still holds the server HTML (and its place)
+  // while the section's first client render runs. There's no wrapper yet after a client-side
+  // navigation, where nothing has been on screen, so an intro may hide its pieces
+  const belowFold = useCallback(() => {
+    if (typeof window === "undefined") return false;
+    const element = ref.current;
+    return !element || element.getBoundingClientRect().top >= window.innerHeight;
+  }, []);
 
   useEffect(() => {
     const element = ref.current;
@@ -214,9 +234,11 @@ export default function HydrateOnView({
 
   const className = pinned ? "[content-visibility:visible]" : SKIPPABLE;
   if (typeof window === "undefined" || show) {
+    // The provider sits inside the wrapper, so both branches keep the same <div> and React
+    // reuses the server's node instead of replacing it
     return (
       <div ref={ref} className={className}>
-        {children}
+        <BelowFold.Provider value={belowFold}>{children}</BelowFold.Provider>
       </div>
     );
   }

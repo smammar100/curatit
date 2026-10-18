@@ -13,7 +13,7 @@ import { AuthField } from "./AuthParts";
 
 const LEVELS = [
   { label: "", fill: "", text: "" },
-  { label: "Weak", fill: "bg-danger-500", text: "text-danger-600" },
+  { label: "Weak", fill: "bg-danger-500", text: "text-danger-foreground" },
   { label: "Fair", fill: "bg-warning-500", text: "text-warning-700" },
   { label: "Good", fill: "bg-success-400", text: "text-success-700" },
   { label: "Strong", fill: "bg-success-600", text: "text-success-700" },
@@ -136,7 +136,7 @@ export default function PasswordField({
               key={rule.id}
               className={cx(
                 "flex items-center gap-1.5 text-xs transition-colors duration-150 motion-reduce:transition-none",
-                ok ? "text-base-900" : "text-base-500",
+                ok ? "text-base-900" : "text-secondary-foreground",
               )}
             >
               <span

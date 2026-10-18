@@ -13,6 +13,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import SearchSparkle from "@/components/fundations/icons/SearchSparkle";
 import { cx } from "@/lib/cx";
+import { useReducedMotion } from "@/lib/motion";
 import { useMounted } from "@/lib/useMounted";
 import type { ExampleSearch } from "./searchExamples";
 
@@ -30,6 +31,7 @@ export default function SearchReel({
   const [paused, setPaused] = useState(false);
   // Covers are requested only after mount, so the first results stay out of the first paint
   const mounted = useMounted();
+  const reduced = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   const search = searches[active];
 
@@ -75,9 +77,10 @@ export default function SearchReel({
     return () => clearTimeout(timer);
   });
 
+  // Under reduced motion a picked query shows whole rather than typing out
   function choose(i: number) {
     setActive(i);
-    setTyped(0);
+    setTyped(reduced ? (searches[i]?.query.length ?? 0) : 0);
   }
 
   if (!search) return null;
@@ -92,7 +95,7 @@ export default function SearchReel({
     >
       {/* The query, typed */}
       <p
-        className="flex min-h-12 items-center gap-3 font-display text-h5 text-base-900 md:text-h4 lg:text-h3"
+        className="flex min-h-12 items-center gap-3 font-display text-h5 font-normal text-base-900 md:text-h4 lg:text-h3"
         aria-live="off"
       >
         <SearchSparkle
@@ -122,14 +125,16 @@ export default function SearchReel({
             className="search-reel-tile group relative w-60 shrink-0 rounded-2xl bg-base-50 p-5 sm:w-72 sm:p-6 lg:w-80"
             style={{ animationDelay: `${i * 70}ms` }}
           >
-            <div className="relative aspect-4/5 overflow-hidden rounded bg-base-100 shadow ring-1 ring-base-900/5">
+            {/* The cover zooms in a touch under the pointer, inside its clipped frame (isolate
+                keeps Safari clipping the rounded corners while it scales) */}
+            <div className="relative isolate aspect-4/5 overflow-hidden rounded bg-base-100 shadow ring-1 ring-base-900/5">
               {mounted && (
                 <Image
                   src={result.cover}
                   alt=""
                   fill
                   sizes="(min-width: 1024px) 272px, (min-width: 640px) 240px, 200px"
-                  className="object-cover"
+                  className="object-cover transition-[scale] duration-300 ease-out-quint motion-safe:group-hover:scale-[1.03]"
                 />
               )}
             </div>

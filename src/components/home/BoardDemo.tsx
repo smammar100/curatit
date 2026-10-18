@@ -39,7 +39,7 @@ export default function BoardDemo() {
           aria-label="Example share link"
           onFocus={(event) => event.currentTarget.select()}
           className={cx(
-            "block h-9 min-w-0 flex-1 rounded-md border border-transparent px-3 text-xs shadow-sm ring-1 transition-colors duration-150 focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none",
+            "block h-9 min-w-0 flex-1 rounded-md border border-transparent px-3 text-xs shadow-sm ring-1 transition-[color,background-color,border-color,box-shadow] duration-150 focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none",
             copied
               ? "bg-accent-50 text-base-900 ring-accent-200"
               : "bg-white text-base-600 ring-base-200",
@@ -55,7 +55,16 @@ export default function BoardDemo() {
           }}
           className="shrink-0"
         >
-          {copied ? "Copied" : "Copy example link"}
+          {/* Both labels share one cell, so the button keeps its width (and the link field
+              its own) when it says Copied; the hidden one is out of the button's name */}
+          <span className="grid">
+            <span className={cx("[grid-area:1/1]", copied && "invisible")}>
+              Copy example link
+            </span>
+            <span className={cx("[grid-area:1/1]", !copied && "invisible")}>
+              Copied
+            </span>
+          </span>
         </Button>
       </m.div>
       <m.div variants={introItem} className="mt-5">
