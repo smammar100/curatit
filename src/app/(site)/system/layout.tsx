@@ -29,10 +29,18 @@ export default function SystemLayout({ children }: { children: ReactNode }) {
           </div>
           <ThemeModeSwitch />
         </div>
-        <div className="mt-10 shadow-[inset_0_-1px_0_var(--color-border-default)]">
-          <SystemNav />
+        {/* Below lg the topics are one row that scrolls sideways; from lg a sticky sidebar */}
+        <div className="mt-10 shadow-[inset_0_-1px_0_var(--color-border-default)] lg:hidden">
+          <SystemNav layout="row" />
         </div>
-        <div className="mt-10">{children}</div>
+        <div className="mt-10 lg:mt-14 lg:grid lg:grid-cols-[11rem_minmax(0,1fr)] lg:gap-12">
+          <aside className="hidden lg:block">
+            <div className="sticky top-28 max-h-[calc(100dvh-8rem)] overflow-y-auto pb-8 [scrollbar-width:none]">
+              <SystemNav layout="sidebar" />
+            </div>
+          </aside>
+          <div className="min-w-0">{children}</div>
+        </div>
       </Wrapper>
     </section>
   );

@@ -29,7 +29,10 @@ dashboard's 28px dialog and account menu).
 | `shadow-xl` | Dialogs, the auth card, large floating cards |
 
 Each has its own dark treatment (drops fade, an inner highlight takes over), so **never** add
-`dark:ring-*` to stand in for a shadow and never write `shadow-[…]`.
+`dark:ring-*` to stand in for a shadow and never write `shadow-[…]` for depth. The one arbitrary
+shadow allowed is a selection line, not depth: `shadow-[inset_0_-2px_0_currentColor]`, the 2px
+underline under the selected tab (Tabs' underline variant, the `/system` nav), because
+`border-b-2` would shift the row's layout.
 
 ## Borders and elevation
 

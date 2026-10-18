@@ -9,7 +9,7 @@ component, not the call site.
 | --- | --- | --- |
 | Atoms: one element, one job | `src/components/fundations/elements/` | Button, Badge, Text, Input, Textarea, Checkbox, Switch, Segmented, Avatar, Spinner, Skeleton, Kbd, Separator, TextLink |
 | Molecules: atoms composed into a pattern | `src/components/fundations/molecules/` | Field, SearchField, Notice, Card, EmptyState, Menu, Dialog, Tooltip, Tabs, Toast |
-| Icons | `src/components/fundations/icons/` | Phosphor bold paths on `Icon.tsx` |
+| Icons | `src/components/fundations/icons/` | Phosphor bold paths on `Icon.tsx` (Info, CircleNotch, …) |
 | Layout | `src/components/fundations/containers/` | Wrapper |
 | Motion hooks | `src/lib/motion.ts` | useReducedMotion, useThumb, useGlide, usePresence |
 
@@ -35,13 +35,13 @@ Keep the folder name `fundations` as spelled.
 | TextLink | elements/TextLink.tsx | no | /system/text-link |
 | Field | molecules/Field.tsx | no | /system/field |
 | SearchField | molecules/SearchField.tsx | yes | /system/search-field |
+| Tabs (+ TabList, Tab, TabPanel) | molecules/Tabs.tsx | yes | /system/tabs |
 | Notice | molecules/Notice.tsx | no | /system/notice |
-| Card | molecules/Card.tsx | no | /system/card |
+| Card (+ CardMedia, CardTitle, CardMeta, CardDescription) | molecules/Card.tsx | no | /system/card |
 | EmptyState | molecules/EmptyState.tsx | no | /system/empty-state |
 | Menu | molecules/Menu.tsx | yes | /system/menu |
 | Dialog | molecules/Dialog.tsx | yes | /system/dialog |
 | Tooltip | molecules/Tooltip.tsx | yes | /system/tooltip |
-| Tabs | molecules/Tabs.tsx | yes | /system/tabs |
 | Toast | molecules/Toast.tsx | yes | /system/toast |
 | CopyBlock | components/mcp/CopyBlock.tsx | yes | /system/code |
 

@@ -6,7 +6,8 @@ and component rendered in both themes); its sources are `src/components/system/s
 
 **Character.** A gallery: the posts are the colour, everything around them is neutral grey and
 quiet. Serif headings (Hedvig Letters Serif, one regular weight), Inter for everything else.
-Terracotta is an event: hovers, focus rings, links and the accent button, nothing else.
+Terracotta is an event: hovers, focus rings, links and the accent button, nothing else
+(one named exception: Avatar initials sit on `bg-brand-subtle`).
 
 ## The layers
 
