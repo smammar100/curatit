@@ -168,7 +168,9 @@
   --color-on-brand-subtle-foreground: var(--color-accent-700);
   --color-brand-border-default: color-mix(in oklab, var(--color-accent-500) 40%, transparent);
   --color-brand-border-subtle: color-mix(in oklab, var(--color-accent-500) 30%, transparent);
-  --color-brand-border-focus: color-mix(in oklab, var(--color-accent-500) 60%, transparent);
+  /* The focus ring: solid accent-500, 3.6:1 on white and 5:1 on the dark page (at 60% it was
+     2.1:1, under the 3:1 a focus indicator needs; 2026-10-18) */
+  --color-brand-border-focus: var(--color-accent-500);
   /* Positive / warning / danger */
   --color-positive-solid: var(--color-success-600);
   --color-positive-subtle: color-mix(in oklab, var(--color-success-600) 10%, transparent);
@@ -251,6 +253,13 @@
   --text-caption-xs: 0.5rem;
   --text-caption-xs--line-height: 0.75rem;
   --font-weight-semimedium: 450;
+  /* Easing (2026-10-18, emil-animations): one set for the whole site. ease-out-quint for things
+     entering or responding (menus, toasts, hovers, presses, a sliding thumb), ease-in-out-quart
+     for something already on screen moving to a new place (the divider gliding), ease-in-quart
+     for exits. Tailwind's own ease-out is too weak to read as a curve */
+  --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-in-quart: cubic-bezier(0.5, 0, 0.75, 0);
   --font-mono: ui-monospace, "Cascadia Code", "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
   /* Loading skeletons (components/dashboard/Skeleton.tsx): a band of light crossing the block */
   --animate-shimmer: shimmer 1.6s ease-in-out infinite;
@@ -271,7 +280,8 @@
       transform: translateY(-50%);
     }
   }
-  /* Dashboard toast and menus: a short rise and fade in (exits are instant) */
+  /* Dashboard toast and menus: a short rise and fade in, and (2026-10-18) a shorter fade out,
+     held by usePresence in src/lib/motion.ts, so a menu leaves rather than vanishing */
   @keyframes toast-in {
     from {
       opacity: 0;
@@ -287,6 +297,30 @@
   @keyframes fade-in {
     from {
       opacity: 0;
+    }
+  }
+  @keyframes menu-out {
+    to {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+  }
+  @keyframes toast-out {
+    to {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+  /* Content that opens in place (an FAQ answer): a short drop into place */
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
     }
   }
   @keyframes wall-up {
@@ -473,6 +507,11 @@
    lines and running text wraps "pretty", which keeps a last line from being one short word.
    Both are base styles, so a utility on the element still wins */
 @layer base {
+  /* Hedvig ships one weight; never let the browser fake a bold serif (2026-10-18). Inter is
+     variable, so it has every weight and loses nothing */
+  html {
+    font-synthesis-weight: none;
+  }
   h1, h2, h3, h4, h5, h6 {
     text-wrap: balance;
   }
@@ -480,11 +519,53 @@
     text-wrap: pretty;
   }
 }
-/* While the theme switches, nothing tweens: every colour would otherwise animate on its own clock */
-[data-theme-switching] *,
+/* While the theme switches, nothing tweens: every colour would otherwise animate on its own clock.
+   The theme switch's own icons (data-theme-icon) are the exception: they cross-fade */
+[data-theme-switching] *:not([data-theme-icon]),
 [data-theme-switching] *::before,
 [data-theme-switching] *::after {
   transition: none !important;
+}
+/* A native <dialog> that scales in from 0.97 and fades, and leaves faster than it came
+   (2026-10-18). The exit keeps the dialog in the top layer while it plays (overlay and display,
+   allow-discrete); browsers without that (Firefox) close it at once, which is fine */
+.dialog-motion,
+.dialog-motion::backdrop {
+  transition-property: opacity, scale, overlay, display;
+  transition-duration: 140ms;
+  transition-timing-function: var(--ease-in-quart);
+  transition-behavior: allow-discrete;
+}
+.dialog-motion {
+  opacity: 0;
+  scale: 0.97;
+}
+.dialog-motion::backdrop {
+  opacity: 0;
+}
+.dialog-motion[open] {
+  scale: 1;
+}
+.dialog-motion[open],
+.dialog-motion[open]::backdrop {
+  opacity: 1;
+  transition-duration: 200ms;
+  transition-timing-function: var(--ease-out-quint);
+}
+@starting-style {
+  .dialog-motion[open] {
+    opacity: 0;
+    scale: 0.97;
+  }
+  .dialog-motion[open]::backdrop {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dialog-motion,
+  .dialog-motion::backdrop {
+    transition: none;
+  }
 }
 /* Prose colours come from the site's tokens, so markdown pages flip with the theme */
 .prose {
