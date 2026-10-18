@@ -6,6 +6,7 @@
 import type { ColourView, DecisionView, EvidenceTarget, Insight, IntegrityStatus, IntegrityView, PublicAnalysis, SlideDetail, VisualSection } from "./publicView";
 import type { CreativeDna, SlideObservation } from "./schema";
 import { term, type Dimension } from "./taxonomy";
+import { proseKey, uniqueProse } from "./editorialQuality";
 
 export * from "./publicView";
 
@@ -332,7 +333,11 @@ export function toPublicAnalysis(analysis: AnalysisRecord, slideRows: SlideRecor
     return same.length || varies.length ? { same, varies } : null;
   })();
 
-  const caveats = texts(d.constraints_or_uncertainties);
+  // Quality uncertainties belong to editor review, never a fallback public paragraph.
+  const caveats = uniqueProse(texts(d.constraints_or_uncertainties), [
+    ...list(d.integrity_notes).map((n) => text(record(n).note) ?? ""),
+    ...list(d.creative_decisions).map((n) => text(record(n).watch_out) ?? ""),
+  ]);
   const expected = analysis.expected_slides ?? count;
   const decisions = list(d.creative_decisions)
     .map(record)
@@ -390,6 +395,7 @@ export function toPublicAnalysis(analysis: AnalysisRecord, slideRows: SlideRecor
         const mapped = typeof x.status === "string" ? (status[x.status] ?? null) : null;
         return aspect && note && mapped ? [{ aspect, status: mapped, note, evidence: parseEvidence(x.evidence, count) }] : [];
       })
+      .filter((note, i, notes) => notes.findIndex((other) => proseKey(other.note) === proseKey(note.note)) === i)
       // Concerns first, then what can't be checked, then plain observations
       .sort((a, b) => ORDER.indexOf(a.status) - ORDER.indexOf(b.status)),
     formula: prose(d.creative_formula),
@@ -404,7 +410,7 @@ export function toPublicAnalysis(analysis: AnalysisRecord, slideRows: SlideRecor
     slides,
     takeaways: texts(d.takeaways).map((s) => oneBased(s, count, numbering)),
     adaptations: texts(d.adaptation_ideas).map((s) => oneBased(s, count, numbering)),
-    caveats: (caveats.length ? caveats : texts(record(d.quality).uncertainties)).map((s) => oneBased(s, count, numbering)),
+    caveats: caveats.map((s) => oneBased(s, count, numbering)),
     complete: analysis.image_analysis_complete === true && analysis.processed_slides === expected && expected === count && slides.every(Boolean),
   };
 }

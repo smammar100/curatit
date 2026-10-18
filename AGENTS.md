@@ -186,3 +186,15 @@ Run at repo root:
 - Changelog (theme): https://lexingtonthemes.com/changelog/carbon  
 - Support: https://lexingtonthemes.com/legal/support/  
 - Bundle: https://lexingtonthemes.com  
+
+## Creative analysis editorial quality (2026-10-17)
+
+Read `docs/creative-analysis-prompt.md` before writing, repairing or batch-importing creative
+analyses. Inspect every image for new visual analyses. Do not insert a generic “cannot verify”
+warning per post or copy caveats between integrity checks, public constraints and internal
+quality fields. Sensitive industry alone does not justify a check; preserve concrete evidence
+issues and visible limitations. The executable prompt is `2026.10.17-1`; the validator rejects
+verification-only boilerplate and exact public duplicates. `quality.uncertainties` is internal
+and must never be used as fallback public prose. Preserve immutable history and concurrent
+edits. The October 17 cleanup is an editorial repair of existing approved content; the 20 new
+image-reviewed analyses remain drafts until editor approval.
