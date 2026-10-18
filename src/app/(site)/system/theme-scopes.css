@@ -205,6 +205,7 @@
   --color-border-subtle: var(--gray-a2);
   --color-border-strong: var(--gray-a6);
   --color-border-inverted: var(--i-border-inverted);
+  --shadow: 0 0 0 0.5px var(--shadow-inner-1) inset, 0 0 0 0.5px var(--shadow-drop-1), 0 1px 1px -1px var(--shadow-drop-2), 0 1px 2px 0 var(--shadow-drop-3);
   --shadow-2xs: 0 0 0 1px var(--shadow-border-color);
   --shadow-xs: 0 0 0 1px var(--shadow-border-color);
   --shadow-sm: 0 0 0 0.5px var(--shadow-inner-1) inset, 0 0 0 0.5px var(--shadow-drop-1), 0 1px 1px -1px var(--shadow-drop-2), 0 1px 2px 0 var(--shadow-drop-3);

@@ -176,7 +176,7 @@ export default function Colour() {
                 ["accent", ACCENT],
               ].map(([name, scale]) => (
                 <div key={name as string}>
-                  <Mono className="text-primary-foreground">{name}</Mono>
+                  <Mono tone="primary">{name}</Mono>
                   <div className="mt-2 grid grid-cols-6 gap-2 sm:grid-cols-11">
                     {(scale as string[]).map((cls) => (
                       <div key={cls} className="flex flex-col gap-1.5">

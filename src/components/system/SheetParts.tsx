@@ -208,9 +208,28 @@ export function Flow({ tree }: { tree: string }) {
   );
 }
 
-/** Monospace token or class name */
-export function Mono({ children, className }: { children: ReactNode; className?: string }) {
-  return <code className={cx("font-mono text-caption-lg text-secondary-foreground", className)}>{children}</code>;
+/** Monospace token or class name. `tone` sets its colour (never a text-* class in className:
+ *  cx doesn't merge, so two colours would both land) */
+export function Mono({
+  children,
+  className,
+  tone = "secondary",
+}: {
+  children: ReactNode;
+  className?: string;
+  tone?: "primary" | "secondary";
+}) {
+  return (
+    <code
+      className={cx(
+        "font-mono text-caption-lg",
+        tone === "primary" ? "text-primary-foreground" : "text-secondary-foreground",
+        className,
+      )}
+    >
+      {children}
+    </code>
+  );
 }
 
 /** A colour sample with a hairline, so white on white still shows */

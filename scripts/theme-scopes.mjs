@@ -70,7 +70,7 @@ export function buildThemeScopes(source) {
   }
   // Aliases: @theme tokens built from other properties, re-declared so they resolve in the scope
   const aliases = [...theme].filter(
-    ([name, value]) => /var\(--/.test(value) && /^--(color|shadow)-/.test(name),
+    ([name, value]) => /var\(--/.test(value) && /^--(color-|shadow)/.test(name),
   );
 
   const block = (selector, entries) =>
