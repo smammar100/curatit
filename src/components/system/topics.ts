@@ -13,6 +13,7 @@ export const TOPICS = [
   { slug: "layout", title: "Layout", group: "Foundations", blurb: "Wrapper widths, the page gutter and the rhythm between sections." },
   { slug: "button", title: "Button", group: "Components", blurb: "Every variant, size and state, as a button and as a link." },
   { slug: "badge", title: "Badge", group: "Components", blurb: "Small labels: variants, sizes and when a badge isn't the answer." },
+  { slug: "controls", title: "Controls", group: "Components", blurb: "The segmented control and the switch: one choice from a few, and on or off." },
   { slug: "input", title: "Input", group: "Components", blurb: "Text fields, their notes and errors, the password meter and the form notice." },
   { slug: "code", title: "Code", group: "Components", blurb: "Snippets with a copy button, dark and light." },
   { slug: "patterns", title: "Patterns", group: "Components", blurb: "The theme switch, the FAQ, loading skeletons and the agent's thinking line." },
