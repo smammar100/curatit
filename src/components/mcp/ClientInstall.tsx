@@ -6,15 +6,21 @@
 // the chosen client's steps under a small connection illustration. Changing tab swaps the card's
 // content; every client's steps are in the HTML and only the chosen one shows. Tabs follow the
 // ARIA pattern: ← / → move between them, Home and End jump.
-// Only the four most-used clients have a tab (2026-10-15, at the person's request: Gemini CLI,
-// Windsurf and Claude Desktop were taken out; the connect guide at /docs/mcp still covers Claude
-// Desktop). The token stays in the environment wherever the client can read it from there.
+// Claude and ChatGPT come first (2026-10-18, at the owner's request: most Curatit members aren't
+// developers and the token-and-terminal steps lost them). Both sign in with the visitor's Curatit
+// account through OAuth, so their steps are copy a link, add it, sign in, ask: no token, no code.
+// Both were connected that way and in use when this was written (their sessions in
+// auth.sessions). The developer tools follow, after a hairline in the tab row, still with a
+// personal access token; the token stays in the environment wherever the client reads it there.
+// (2026-10-15: Gemini CLI, Windsurf and Claude Desktop were taken out; the Claude tab now covers
+// the desktop app, since connectors added in Claude show up there too.)
 
-import { useEffect, useRef, useState, type HTMLAttributes, type KeyboardEvent, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type HTMLAttributes, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
 import ClientMark, { MARK_COLORS, MARKS } from "@/components/assets/ClientMarks";
 import Symbol from "@/components/assets/Symbol";
 import Button from "@/components/fundations/elements/Button";
+import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
 import TerminalWindow from "@/components/fundations/icons/TerminalWindow";
 import { cx } from "@/lib/cx";
 import CopyBlock from "./CopyBlock";
@@ -23,40 +29,124 @@ import { MCP_URL } from "./tools";
 
 const TOKEN_HREF = "/dashboard/settings/tokens";
 
-type Step = { title: string; body: ReactNode; code?: string; token?: boolean };
+type Step = {
+  title: string;
+  body: ReactNode;
+  code?: string;
+  /** What the copy button names, when it isn't the client's configuration */
+  codeLabel?: string;
+  token?: boolean;
+  /** A button that opens the place in the client where the next move happens */
+  open?: { label: string; href: string };
+};
 type Card = { title: string; intro: ReactNode; steps: Step[]; testing?: boolean };
-type Client = Card & { id: string; name: string; mark: keyof typeof MARKS };
+type Client = Card & { id: string; name: string; mark: keyof typeof MARKS; developer?: boolean };
 
 const code = "font-mono text-[13px] text-base-900";
+const ui = "font-medium text-base-900";
 const link = "underline decoration-base-300 underline-offset-2 transition-colors duration-150 hover:text-accent-600";
+
+// The chat apps' first step: the one thing to copy
+const linkStep: Step = {
+  title: "Copy Curatit's link",
+  body: "You'll paste it in the next step.",
+  code: MCP_URL,
+  codeLabel: "Curatit's link",
+};
 
 // The first step for every client that uses a personal access token; `keep` says where it goes
 const tokenStep = (keep: ReactNode): Step => ({
   title: "Create a token",
   body: (
     <>
-      Sign in and make one in API tokens. It&apos;s shown once; {keep}
+      Sign in to Curatit and create one under API tokens. It&apos;s shown only once, so {keep}
     </>
   ),
   token: true,
 });
 const envToken = (
   <>
-    put it in your environment as <code className={code}>CURATIT_ACCESS_TOKEN</code>.
+    save it as an environment variable named <code className={code}>CURATIT_ACCESS_TOKEN</code>.
   </>
 );
 const askStep: Step = {
   title: "Ask for references",
-  body: "Try: Find three finance carousels that launch a feature, with their sources. Every answer comes back with real Instagram links.",
+  body: "Try: Find three finance carousels that launch a feature. Every answer comes with the posts' Instagram links.",
 };
 
 const CLIENTS: Client[] = [
   {
+    id: "claude",
+    name: "Claude",
+    mark: "claude",
+    title: "Add Curatit to Claude",
+    intro: "About a minute, no code: paste one link and sign in with your Curatit account. It works on Claude's free plan too.",
+    steps: [
+      linkStep,
+      {
+        title: "Add it to Claude",
+        body: (
+          <>
+            In Claude, open <span className={ui}>Customize → Connectors</span> and click <span className={ui}>Add custom connector</span>. Name it Curatit,
+            paste the link and click <span className={ui}>Add</span>.
+          </>
+        ),
+        open: { label: "Open Claude's connectors", href: "https://claude.ai/customize/connectors" },
+      },
+      {
+        title: "Sign in",
+        body: (
+          <>
+            Click <span className={ui}>Connect</span>, sign in to Curatit and choose <span className={ui}>Allow</span>. If Claude asks which OAuth client to
+            use, pick <span className={ui}>Register automatically</span>.
+          </>
+        ),
+      },
+      {
+        title: "Ask for ideas",
+        body: "In a new chat, try: Find three finance carousels that launch a feature. You get real posts with their Instagram links.",
+      },
+    ],
+  },
+  {
+    id: "chatgpt",
+    name: "ChatGPT",
+    mark: "chatgpt",
+    title: "Add Curatit to ChatGPT",
+    intro: "No code: paste one link and sign in with Curatit. Some ChatGPT plans can't add apps; if you don't see the option, use Claude.",
+    steps: [
+      linkStep,
+      {
+        title: "Add it to ChatGPT",
+        body: (
+          <>
+            Open <span className={ui}>Plugins</span> in ChatGPT, click <span className={ui}>+</span> and choose <span className={ui}>Add custom MCP server</span>.
+            Name it Curatit, paste the link under Connection and choose OAuth.
+          </>
+        ),
+        open: { label: "Open ChatGPT Plugins", href: "https://chatgpt.com/plugins" },
+      },
+      {
+        title: "Sign in",
+        body: (
+          <>
+            Accept the warning, click <span className={ui}>Create as a plugin</span>, then sign in to Curatit and choose <span className={ui}>Allow</span>.
+          </>
+        ),
+      },
+      {
+        title: "Ask for ideas",
+        body: "In a new chat, type @, pick Curatit, then ask: Find three finance carousels that launch a feature.",
+      },
+    ],
+  },
+  {
     id: "claude-code",
     name: "Claude Code",
     mark: "claudeCode",
+    developer: true,
     title: "Add Curatit to Claude Code",
-    intro: "One command in your terminal. Your shell fills the token in, and Claude Code keeps it in its own config (~/.claude.json), so treat that file like the token.",
+    intro: "For developers. One command in your terminal; your shell fills the token in. Claude Code keeps it in ~/.claude.json, so treat that file like the token.",
     steps: [
       tokenStep(envToken),
       { title: "Add the server", body: "Run this in your terminal:", code: `claude mcp add --transport http curatit ${MCP_URL} --header "Authorization: Bearer $CURATIT_ACCESS_TOKEN"` },
@@ -67,8 +157,9 @@ const CLIENTS: Client[] = [
     id: "cursor",
     name: "Cursor",
     mark: "cursor",
+    developer: true,
     title: "Add Curatit to Cursor",
-    intro: "One entry in your project's MCP settings. Cursor fills the token in from your environment.",
+    intro: "For developers. One entry in your project's MCP settings; Cursor fills the token in from your environment.",
     steps: [
       tokenStep(envToken),
       {
@@ -94,10 +185,11 @@ const CLIENTS: Client[] = [
     id: "vscode",
     name: "VS Code & Copilot",
     mark: "vscode",
+    developer: true,
     title: "Add Curatit to VS Code",
-    intro: "One file in your workspace, for GitHub Copilot's agent mode. VS Code asks for the token once and keeps it for you.",
+    intro: "For developers. One file in your workspace, for GitHub Copilot's agent mode. VS Code asks for the token once and keeps it for you.",
     steps: [
-      tokenStep("VS Code asks for it the first time it connects."),
+      tokenStep("keep it to hand: VS Code asks for it the first time it connects."),
       {
         title: "Add the server",
         body: (
@@ -119,19 +211,6 @@ const CLIENTS: Client[] = [
 }`,
       },
       askStep,
-    ],
-  },
-  {
-    id: "chatgpt",
-    name: "ChatGPT",
-    mark: "chatgpt",
-    testing: true,
-    title: "Add Curatit to ChatGPT",
-    intro: "ChatGPT signs in with your Curatit account instead of a token. This path is still being tested: if it fails, use one of the other clients for now.",
-    steps: [
-      { title: "Turn on developer mode", body: "In ChatGPT, open Settings → Connectors → Advanced and switch on Developer mode." },
-      { title: "Create the connector", body: "Choose Create, name it Curatit, paste the server address and pick OAuth for authentication.", code: MCP_URL },
-      { title: "Sign in and allow", body: "ChatGPT opens Curatit's sign-in. Allow it, and the six tools appear in your chats." },
     ],
   },
 ];
@@ -191,12 +270,27 @@ function CardBody({ card, label, ...rest }: { card: Card; label: string } & HTML
               <p className="mt-0.5 text-sm text-pretty text-base-600">{step.body}</p>
               {step.code && (
                 <div className="mt-3">
-                  <CopyBlock code={step.code} label={label} tone="light" />
+                  <CopyBlock code={step.code} label={step.codeLabel ?? label} tone="light" />
                 </div>
               )}
               {step.token && (
                 <Button isLink size="sm" variant="default" href={TOKEN_HREF} className="mt-3 w-fit">
                   Get a token
+                </Button>
+              )}
+              {step.open && (
+                <Button
+                  isLink
+                  size="sm"
+                  variant="secondary"
+                  href={step.open.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  rightIcon={<ArrowUpRight className="size-3.5" aria-hidden="true" />}
+                  className="mt-3 w-fit"
+                >
+                  {step.open.label}
+                  <span className="sr-only"> (opens in a new tab)</span>
                 </Button>
               )}
             </div>
@@ -291,29 +385,32 @@ export default function ClientInstall() {
             padding leaves room for the focus ring */}
         <div ref={row} style={{ maskImage: fade }} className="-mx-4 min-h-12 min-w-0 overflow-x-auto px-4 py-1 sm:-mx-8 sm:px-8 lg:-mx-1 lg:flex-1 lg:px-1 scrollbar-hide">
           {mode === "mcp" ? (
-            <div role="tablist" aria-label="Your AI tool" className="flex w-max gap-1">
+            <div role="tablist" aria-label="Your AI tool" className="flex w-max items-center gap-1">
               {CLIENTS.map((client, i) => (
-                <button
-                  key={client.id}
-                  ref={(el) => {
-                    tabs.current[i] = el;
-                  }}
-                  type="button"
-                  role="tab"
-                  id={`install-tab-${client.id}`}
-                  aria-selected={i === current}
-                  aria-controls={`install-panel-${client.id}`}
-                  tabIndex={i === current ? 0 : -1}
-                  onClick={() => setCurrent(i)}
-                  onKeyDown={(event) => onKey(event, i)}
-                  className={cx(
-                    "flex h-10 shrink-0 items-center gap-2 rounded-full px-3.5 text-sm font-medium whitespace-nowrap transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500",
-                    i === current ? "bg-white text-base-900 ring-1 ring-base-200" : "text-base-500 hover:text-base-900",
-                  )}
-                >
-                  <ClientMark path={MARKS[client.mark]} style={{ color: MARK_COLORS[client.mark] }} className="size-4 shrink-0" aria-hidden="true" />
-                  {client.name}
-                </button>
+                <Fragment key={client.id}>
+                  {/* A hairline sets the developer tools apart from the chat apps */}
+                  {client.developer && !CLIENTS[i - 1]?.developer && <span className="mx-2 h-5 w-px shrink-0 bg-base-200" aria-hidden="true" />}
+                  <button
+                    ref={(el) => {
+                      tabs.current[i] = el;
+                    }}
+                    type="button"
+                    role="tab"
+                    id={`install-tab-${client.id}`}
+                    aria-selected={i === current}
+                    aria-controls={`install-panel-${client.id}`}
+                    tabIndex={i === current ? 0 : -1}
+                    onClick={() => setCurrent(i)}
+                    onKeyDown={(event) => onKey(event, i)}
+                    className={cx(
+                      "flex h-10 shrink-0 items-center gap-2 rounded-full px-3.5 text-sm font-medium whitespace-nowrap transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500",
+                      i === current ? "bg-white text-base-900 ring-1 ring-base-200" : "text-base-500 hover:text-base-900",
+                    )}
+                  >
+                    <ClientMark path={MARKS[client.mark]} style={{ color: MARK_COLORS[client.mark] }} className="size-4 shrink-0" aria-hidden="true" />
+                    {client.name}
+                  </button>
+                </Fragment>
               ))}
             </div>
           ) : (
@@ -349,12 +446,12 @@ export default function ClientInstall() {
         </div>
       </div>
       <p className="mt-4 text-sm text-pretty text-base-600">
-        Another MCP client? Point it at <code className={`${code} break-all`}>{MCP_URL}</code> (Streamable HTTP) with your token in an{" "}
-        <code className={code}>Authorization: Bearer</code> header. The{" "}
+        Another AI tool? Give it the same link, <code className={`${code} break-all`}>{MCP_URL}</code>: it signs in with your Curatit account, or sends your
+        token in an <code className={code}>Authorization: Bearer</code> header. More in the{" "}
         <Link href="/docs/mcp" className={link}>
           connect guide
-        </Link>{" "}
-        covers Claude Desktop too.
+        </Link>
+        .
       </p>
     </div>
   );

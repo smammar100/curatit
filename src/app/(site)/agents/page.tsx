@@ -215,7 +215,7 @@ export default async function AgentsPage() {
                 {[
                   "Post anything, or change your account.",
                   "See your boards.",
-                  "Keep working once its token expires or is revoked. Tokens last 30 to 365 days.",
+                  "Keep working once you disconnect it or revoke its token. Tokens last 30 to 365 days.",
                 ].map((line) => (
                   <li key={line} className="flex gap-3">
                     <Close
@@ -239,8 +239,7 @@ export default async function AgentsPage() {
           <div className="mt-4 flex flex-col gap-3 rounded-2xl bg-base-50 p-5 sm:flex-row sm:items-center lg:p-6">
             <Badge className="w-fit">Beta</Badge>
             <p className="text-sm text-pretty text-base-600">
-              Things may change while we test it, and the ChatGPT connector is
-              still being tried out.{" "}
+              Things may change while we test it.{" "}
               <a href={SUPPORT_MAILTO} className={linkClass}>
                 Tell us what breaks
               </a>
@@ -263,11 +262,11 @@ export default async function AgentsPage() {
               </span>
             </Text>
             <div className="mt-8 flex flex-wrap justify-center gap-2">
-              <Button isLink size="base" variant="default" href={TOKEN_HREF}>
-                Get a token
+              <Button isLink size="base" variant="default" href="#install">
+                Connect your assistant
               </Button>
-              <Button isLink size="base" variant="muted" href="#install">
-                See how to install
+              <Button isLink size="base" variant="muted" href={TOKEN_HREF}>
+                Get a token
               </Button>
             </div>
           </div>
