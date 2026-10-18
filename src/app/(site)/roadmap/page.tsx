@@ -104,14 +104,14 @@ export default async function RoadmapPage() {
       <section>
         <Wrapper variant="standard" className="page-start">
           <div className="max-w-2xl">
-            <Text tag="h1" variant="displayLG" className="text-base-900 text-balance">
+            <Text tag="h1" variant="h1" className="text-balance text-primary-foreground">
               Roadmap
             </Text>
-            <Text className="mt-6 text-pretty text-base-600">
+            <Text className="mt-6 text-pretty text-secondary-foreground">
               What&apos;s been built, what&apos;s being built and what&apos;s next, on one line. Curatit is built in the open: every update links to the
               change that made it.
             </Text>
-            <Text variant="textSM" className="mt-4 text-base-500">
+            <Text variant="bodySM" className="mt-4 text-secondary-foreground">
               {updates} updates across {days.length} days of building. Scroll over the line to travel along it.
             </Text>
           </div>
@@ -128,24 +128,32 @@ export default async function RoadmapPage() {
 
       <section aria-labelledby="coming">
         <Wrapper variant="standard" className="section-y">
-          <Text tag="h2" id="coming" variant="displaySM" className="text-base-900">
+          <Text tag="h2" id="coming" variant="h3" className="text-primary-foreground">
             What&apos;s coming
           </Text>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {STAGES.map(({ stage, note }) => (
-              <section key={stage} aria-labelledby={`stage-${stage}`} className="rounded-2xl bg-base-50 p-5 lg:p-6">
+              <section key={stage} aria-labelledby={`stage-${stage}`} className="rounded-2xl bg-card p-5 lg:p-6">
                 <div className="flex items-baseline justify-between gap-3">
-                  <h3 id={`stage-${stage}`} className="text-base font-medium text-base-900">
+                  <Text tag="h3" id={`stage-${stage}`} className="font-medium text-primary-foreground">
                     {stage}
-                  </h3>
-                  <p className="text-xs text-base-500">{note}</p>
+                  </Text>
+                  <Text variant="captionLG" className="text-secondary-foreground">
+                    {note}
+                  </Text>
                 </div>
                 <ul className="mt-5 space-y-3">
                   {ROADMAP.filter((item) => item.stage === stage).map((item) => (
-                    <li key={item.title} className="rounded-xl bg-white p-4 shadow-xs ring-1 ring-edge">
-                      <p className="text-xs font-medium tracking-wide text-base-500 uppercase">{item.area}</p>
-                      <p className="mt-1 text-sm font-medium text-base-900">{item.title}</p>
-                      <p className="mt-1 text-sm text-pretty text-base-600">{item.detail}</p>
+                    <li key={item.title} className="rounded-xl bg-container p-4 shadow-xs ring-1 ring-edge">
+                      <Text variant="captionLG" className="font-medium tracking-wider text-secondary-foreground uppercase">
+                        {item.area}
+                      </Text>
+                      <Text variant="bodySM" className="mt-1 font-medium text-primary-foreground">
+                        {item.title}
+                      </Text>
+                      <Text variant="bodySM" className="mt-1 text-pretty text-secondary-foreground">
+                        {item.detail}
+                      </Text>
                     </li>
                   ))}
                 </ul>

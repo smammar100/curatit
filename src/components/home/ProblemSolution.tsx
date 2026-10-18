@@ -66,28 +66,28 @@ export default function ProblemSolution() {
     <section className="section-y">
       <Wrapper variant="standard">
         <div className="text-balance max-w-3xl mx-auto text-center">
-          <Text tag="h2" variant="displayLG" className="text-base-900">
-            <span className="block text-base-500">
+          <Text tag="h2" variant="h1" className="text-primary-foreground">
+            <span className="block text-secondary-foreground">
               Stop hunting for examples.
             </span>
             <span className="block">Start with Curatit&apos;s collection.</span>
           </Text>
           <Text
             tag="p"
-            variant="textBase"
-            className="text-base-600 mt-4 max-w-xl mx-auto"
+            variant="body"
+            className="text-secondary-foreground mt-4 max-w-xl mx-auto"
           >
             No more digging through saved posts and screenshots. Search for the
             post you need and save what's useful.
           </Text>
         </div>
         {/* The two sides named above the stage, so nothing sits on the scene itself */}
-        <div className="mt-10 flex items-center justify-between text-xs font-medium lg:mt-14">
+        <div className="mt-10 flex items-center justify-between text-caption-lg font-medium lg:mt-14">
           <button
             type="button"
             onClick={() => glideTo(100)}
             aria-label="Show the mess only"
-            className="min-h-11 rounded-md px-2 text-base-600 transition-[color,scale] duration-150 ease-out-quint hover:text-base-900 motion-safe:active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
+            className="min-h-11 rounded-md px-2 text-secondary-foreground transition-[color,scale] duration-150 ease-out-quint hover:text-primary-foreground motion-safe:active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
           >
             <span className="inline-flex h-5 items-center rounded-sm bg-component px-1.5 text-caption-lg">
               Saved posts and screenshots
@@ -108,7 +108,7 @@ export default function ProblemSolution() {
             handle while it hangs over an edge (0 or 100) can't scroll the whole stage sideways */}
         <div
           ref={stage}
-          className="relative mt-3 aspect-4/5 overflow-clip rounded-2xl bg-base-50 select-none sm:aspect-7/5 [touch-action:none]"
+          className="relative mt-3 aspect-4/5 overflow-clip rounded-2xl bg-card select-none sm:aspect-7/5 [touch-action:none]"
           style={{ "--x": `${x}%` } as CSSProperties}
           onPointerDown={(e) => {
             dragging.current = true;
@@ -125,10 +125,12 @@ export default function ProblemSolution() {
           }}
         >
           <Scattered className="absolute inset-0" />
-          {/* The library, on the same mat, clipped to the right of the divider */}
+          {/* The library, on the same mat, clipped to the right of the divider. The layer has to
+              hide the mess under it, and bg-card is a tint, so it's the page's colour with the
+              mat's tint over it (::before): the stage's own colour, opaque, in both themes */}
           <div
             className={cx(
-              "absolute inset-0 bg-base-50",
+              "absolute inset-0 bg-page before:absolute before:inset-0 before:bg-card",
               gliding && cx("transition-[clip-path]", GLIDE),
             )}
             style={{ clipPath: "inset(0 0 0 var(--x))" }}
@@ -148,7 +150,7 @@ export default function ProblemSolution() {
             style={{ translate: "var(--x) 0" }}
           >
             <div
-              className="absolute inset-y-0 left-0 w-px bg-accent-600"
+              className="absolute inset-y-0 left-0 w-px bg-brand-solid"
               aria-hidden="true"
             />
             {/* The divider's handle: a slider for the keyboard, a grip for the pointer */}
@@ -178,7 +180,7 @@ export default function ProblemSolution() {
                 stopGlide();
                 setX(next);
               }}
-              className="pointer-events-auto absolute top-1/2 left-0 flex size-11 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-full bg-accent-600 text-paper shadow transition-[scale] duration-150 ease-out-quint motion-safe:active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
+              className="pointer-events-auto absolute top-1/2 left-0 flex size-11 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-full bg-brand-solid text-on-brand-solid-foreground shadow transition-[scale] duration-150 ease-out-quint motion-safe:active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
             >
               <svg
                 viewBox="0 0 24 24"

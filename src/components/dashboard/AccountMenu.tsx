@@ -22,6 +22,7 @@ import Sun from "@/components/fundations/icons/Sun";
 import { getThemeMode, setThemeMode, type ThemeMode } from "@/components/global/theme";
 import { SUPPORT_MAILTO } from "@/lib/site";
 import { cx } from "@/lib/cx";
+import Badge from "@/components/fundations/elements/Badge";
 import Segmented from "@/components/fundations/elements/Segmented";
 import { signOut } from "@/app/auth/actions";
 import { resetAnalytics } from "@/lib/analytics";
@@ -46,7 +47,8 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
     setTheme(mode);
   };
 
-  const item = cx("flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-subtitle font-medium text-base-900", GLIDE_ROW);
+  // Rows (and their highlight) are the panel's radius less its padding: 28 − 12 = 16
+  const item = cx("flex w-full items-center justify-between gap-3 rounded-3xl px-3 py-2.5 text-left text-subtitle font-medium text-primary-foreground", GLIDE_ROW);
 
   return (
     <div {...popover.rootProps} className="relative flex items-center">
@@ -56,8 +58,8 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
         aria-label="Account menu"
         {...popover.triggerProps}
         className={cx(
-          "flex rounded-full ring-offset-2 ring-offset-white transition-[box-shadow,scale] duration-150 hover:ring-2 hover:ring-base-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-base-900 active:scale-[0.96]",
-          popover.open && "ring-2 ring-base-300 hover:ring-base-300",
+          "flex rounded-full ring-offset-2 ring-offset-page transition-[box-shadow,scale] duration-150 ease-out-quint hover:ring-2 hover:ring-border-strong focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.96]",
+          popover.open && "ring-2 ring-border-strong",
         )}
       >
         <Avatar className="size-11 text-body" />
@@ -71,13 +73,13 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
           <div className="flex items-center justify-between gap-3 px-3 py-2.5">
             <div className="min-w-0">
               {/* A non-breaking space holds each line's height until the session is read */}
-              <p className="truncate text-subtitle font-medium text-base-900">{user?.name ?? " "}</p>
-              <p className="truncate text-body text-base-500">{user?.email ?? " "}</p>
+              <p className="truncate text-subtitle font-medium text-primary-foreground">{user?.name ?? " "}</p>
+              <p className="truncate text-body text-secondary-foreground">{user?.email ?? " "}</p>
             </div>
             <Avatar />
           </div>
           <div ref={glide.ref} {...glide.handlers} className="relative">
-            <span aria-hidden="true" className={cx(GLIDE_HIGHLIGHT, "rounded-xl")} style={glide.highlight.style} data-fresh={glide.highlight.fresh || undefined} />
+            <span aria-hidden="true" className={cx(GLIDE_HIGHLIGHT, "rounded-3xl")} style={glide.highlight.style} data-fresh={glide.highlight.fresh || undefined} />
             <button
               type="button"
               data-glide-item
@@ -89,7 +91,7 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
             >
               <span className="flex items-center gap-2">
                 Saved posts
-                <span className="rounded-md bg-component px-1.5 py-0.5 text-caption font-medium text-base-600 tabular-nums">{savedCount}</span>
+                <Badge className="font-medium tabular-nums">{savedCount}</Badge>
               </span>
               <BookmarkSimple className="size-5" />
             </button>
@@ -122,7 +124,7 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
           <div className="mx-3 my-2 h-px bg-border-default" />
 
           <div className="flex items-center justify-between px-3 py-2">
-            <span className="text-subtitle font-medium text-base-900">Theme</span>
+            <span className="text-subtitle font-medium text-primary-foreground">Theme</span>
             <Segmented
               aria-label="Theme"
               iconOnly
@@ -139,7 +141,7 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
             />
           </div>
           <div className="flex items-center justify-between px-3 py-2">
-            <span className="text-subtitle font-medium text-base-900">Grid size</span>
+            <span className="text-subtitle font-medium text-primary-foreground">Grid size</span>
             <Segmented
               aria-label="Grid size"
               iconOnly

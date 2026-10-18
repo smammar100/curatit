@@ -15,6 +15,7 @@
 // start into view. One slide index in PostView drives the stage, ← / →, the bar and every slide
 // link, so they never disagree; a single image has no slide links at all (it's always on screen).
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import CaretDown from "@/components/fundations/icons/CaretDown";
 import Check from "@/components/fundations/icons/Check";
 import Copy from "@/components/fundations/icons/Copy";
 import Eye from "@/components/fundations/icons/Eye";
@@ -120,7 +121,7 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
     <div>
       <div ref={top} aria-hidden="true" />
       {/* Sticky over the panel's own padding (px-6 in PostView), so content slides under it */}
-      <div className="sticky top-0 z-10 -mx-6 flex flex-wrap items-center justify-between gap-2 bg-white px-6 py-1.5">
+      <div className="sticky top-0 z-10 -mx-6 flex flex-wrap items-center justify-between gap-2 bg-modal px-6 py-1.5">
         <div role="tablist" aria-label="Creative breakdown" onKeyDown={onTabKey} onPointerDown={unkey} onPointerMove={unkey} className="group/tabs -mx-1 flex min-w-0 scrollbar-hide gap-1 overflow-x-auto px-1 py-1">
           {views.map((v) => (
             <button
@@ -135,7 +136,7 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
               aria-controls="breakdown-panel"
               tabIndex={view === v.id ? 0 : -1}
               onClick={() => choose(v.id)}
-              className="relative inline-flex h-9 shrink-0 items-center rounded-full px-3.5 text-body font-medium whitespace-nowrap text-base-600 transition-[background-color,color] duration-150 group-data-keys/tabs:transition-none before:absolute before:inset-x-0 before:-inset-y-1 hover:bg-base-50 hover:text-base-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-selected:bg-base-900 aria-selected:text-white"
+              className="relative inline-flex h-9 shrink-0 items-center rounded-full px-3.5 text-body font-medium whitespace-nowrap text-secondary-foreground transition-[background-color,color] duration-150 ease-out-quint group-data-keys/tabs:transition-none before:absolute before:inset-x-0 before:-inset-y-1 hover:bg-transparent-hover hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-selected:bg-inverted-solid aria-selected:text-on-inverted-foreground"
             >
               {v.label}
             </button>
@@ -149,7 +150,7 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
         {view === "visual" && <VisualDna analysis={analysis} stage={stage} videos={videos} />}
       </div>
 
-      <p className="mt-5 text-micro text-pretty text-base-400">
+      <p className="mt-5 text-micro text-pretty text-secondary-foreground">
         AI-written from every slide, checked by Curatit&apos;s editors.{!analysis.complete && " Some slides have no record, so this may be incomplete."}
       </p>
     </div>
@@ -172,8 +173,8 @@ function Breakdown({ analysis, stage }: { analysis: PublicAnalysis; stage: Stage
 
   return (
     <div>
-      <p className="text-subtitle font-medium text-balance text-base-900">{analysis.headline}</p>
-      {analysis.summary && <p className="mt-1.5 text-body text-pretty text-base-600">{analysis.summary}</p>}
+      <p className="text-subtitle font-medium text-balance text-primary-foreground">{analysis.headline}</p>
+      {analysis.summary && <p className="mt-1.5 text-body text-pretty text-secondary-foreground">{analysis.summary}</p>}
       <Chips analysis={analysis} />
 
       {decisions.length > 0 ? (
@@ -192,9 +193,9 @@ function Breakdown({ analysis, stage }: { analysis: PublicAnalysis; stage: Stage
             <ul className="mt-2 space-y-3">
               {analysis.mechanisms.map((insight, i) => (
                 <li key={i}>
-                  <p className="text-body text-pretty text-base-800">{insight.text}</p>
+                  <p className="text-body text-pretty text-primary-foreground">{insight.text}</p>
                   <p className="mt-1 flex flex-wrap items-baseline gap-x-2.5 text-caption">
-                    <span className="text-base-500">{insight.kind === "interpretation" ? "Interpretation" : "Observed"}</span>
+                    <span className="text-secondary-foreground">{insight.kind === "interpretation" ? "Interpretation" : "Observed"}</span>
                     <Evidence evidence={insight.evidence} stage={stage} />
                   </p>
                 </li>
@@ -207,13 +208,13 @@ function Breakdown({ analysis, stage }: { analysis: PublicAnalysis; stage: Stage
       {analysis.integrity.length > 0 && <DataChecks checks={analysis.integrity} stage={stage} />}
 
       {folds && (
-        <div className="mt-5 divide-y divide-base-100 border-y border-base-100">
+        <div className="mt-5 divide-y divide-border-default border-y border-border-default">
           {!decisions.length && (
             <Fold title="Why it might work" count={analysis.hypotheses.length}>
               <ul className="space-y-3 pb-4">
                 {analysis.hypotheses.map((hypothesis, i) => (
                   <li key={i}>
-                    <p className="text-body text-pretty text-base-700">{hypothesis.text}</p>
+                    <p className="text-body text-pretty text-secondary-foreground">{hypothesis.text}</p>
                     <p className="mt-1 text-caption">
                       <Evidence evidence={hypothesis.evidence} stage={stage} />
                     </p>
@@ -223,7 +224,7 @@ function Breakdown({ analysis, stage }: { analysis: PublicAnalysis; stage: Stage
             </Fold>
           )}
           <Fold title="Caveats" count={analysis.caveats.length}>
-            <List items={analysis.caveats} className="mt-0 pb-4 text-base-600" />
+            <List items={analysis.caveats} className="mt-0 pb-4" />
           </Fold>
         </div>
       )}
@@ -237,9 +238,9 @@ function Chips({ analysis }: { analysis: PublicAnalysis }) {
   return (
     <dl className="mt-3 flex flex-wrap gap-1.5">
       {items.map((trait) => (
-        <div key={trait.label} className="flex h-7 max-w-full min-w-0 items-center gap-1.5 rounded-full bg-base-50 px-2.5 text-caption">
-          <dt className="shrink-0 text-base-500">{trait.label}</dt>
-          <dd className="truncate font-medium text-base-900" title={trait.value}>
+        <div key={trait.label} className="flex h-7 max-w-full min-w-0 items-center gap-1.5 rounded-full bg-card px-2.5 text-caption">
+          <dt className="shrink-0 text-secondary-foreground">{trait.label}</dt>
+          <dd className="truncate font-medium text-primary-foreground" title={trait.value}>
             {trait.value}
           </dd>
         </div>
@@ -257,14 +258,14 @@ function DecisionCard({ n, decision, open, onToggle, stage }: { n: number; decis
   const where = [stage.carousel ? slideList(decision.evidence) : null, decision.evidence.some((target) => target.kind === "caption") ? "Caption" : null].filter(Boolean).join(" · ");
   const here = stage.carousel && decision.evidence.some((target) => target.kind === "slide" && target.index === stage.index);
   return (
-    <li className={cx("rounded-xl transition-[background-color] duration-150", open ? "bg-base-50" : "hover:bg-base-50")}>
-      <button type="button" aria-expanded={open} aria-controls={id} onClick={onToggle} className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left">
-        <span className="mt-px w-5 shrink-0 text-caption text-base-400 tabular-nums">{String(n).padStart(2, "0")}</span>
+    <li className={cx("rounded-xl transition-[background-color] duration-150 ease-out-quint", open ? "bg-card" : "hover:bg-card")}>
+      <button type="button" aria-expanded={open} aria-controls={id} onClick={onToggle} className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus">
+        <span className="mt-px w-5 shrink-0 text-caption text-tertiary-foreground tabular-nums">{String(n).padStart(2, "0")}</span>
         <span className="min-w-0 flex-1">
-          <span className="block text-body font-medium text-pretty text-base-900">{decision.title}</span>
+          <span className="block text-body font-medium text-pretty text-primary-foreground">{decision.title}</span>
           {where && (
-            <span className={cx("mt-0.5 flex items-center gap-1.5 text-caption tabular-nums", here ? "text-base-900" : "text-base-500")}>
-              {here && <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-base-900" />}
+            <span className={cx("mt-0.5 flex items-center gap-1.5 text-caption tabular-nums", here ? "text-primary-foreground" : "text-secondary-foreground")}>
+              {here && <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-primary-foreground" />}
               {where}
               {here && <span className="sr-only">, on screen</span>}
             </span>
@@ -274,13 +275,13 @@ function DecisionCard({ n, decision, open, onToggle, stage }: { n: number; decis
       </button>
       {open && (
         <div id={id} className="px-3 pb-3 pl-11">
-          <p className="text-body text-pretty text-base-700">{decision.explanation}</p>
+          <p className="text-body text-pretty text-secondary-foreground">{decision.explanation}</p>
           <button
             type="button"
             aria-expanded={reasoning}
             aria-controls={`${id}-reasoning`}
             onClick={() => setReasoning((value) => !value)}
-            className="relative mt-1.5 flex h-8 items-center gap-1 text-caption font-medium text-base-700 transition-[color] duration-150 before:absolute before:-inset-x-2 before:-inset-y-1.5 hover:text-base-900"
+            className="relative mt-1.5 flex h-8 items-center gap-1 text-caption font-medium text-secondary-foreground transition-[color] duration-150 ease-out-quint before:absolute before:-inset-x-2 before:-inset-y-1.5 hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
           >
             {reasoning ? "Hide the reasoning" : "Show the reasoning"}
             <Chevron open={reasoning} />
@@ -298,7 +299,7 @@ function DecisionCard({ n, decision, open, onToggle, stage }: { n: number; decis
                   <dt className="sr-only">Evidence</dt>
                   <dd>
                     <Evidence evidence={decision.evidence} stage={stage} />
-                    {decision.confidence === "low" && <span className="ml-2.5 text-base-500">Low confidence</span>}
+                    {decision.confidence === "low" && <span className="ml-2.5 text-secondary-foreground">Low confidence</span>}
                   </dd>
                 </div>
               )}
@@ -313,8 +314,8 @@ function DecisionCard({ n, decision, open, onToggle, stage }: { n: number; decis
 function Field({ label, strong, children }: { label: string; strong?: boolean; children: ReactNode }) {
   return (
     <div>
-      <dt className="text-micro text-base-500">{label}</dt>
-      <dd className={cx("mt-0.5 text-body text-pretty", strong ? "font-medium text-base-900" : "text-base-700")}>{children}</dd>
+      <dt className="text-micro text-secondary-foreground">{label}</dt>
+      <dd className={cx("mt-0.5 text-body text-pretty", strong ? "font-medium text-primary-foreground" : "text-secondary-foreground")}>{children}</dd>
     </div>
   );
 }
@@ -333,10 +334,10 @@ function DataChecks({ checks, stage }: { checks: IntegrityView[]; stage: Stage }
         aria-expanded={open}
         aria-controls="checks-list"
         onClick={() => setOpen((value) => !value)}
-        className="mt-2 flex w-full items-center justify-between gap-3 rounded-xl bg-base-50 px-3 py-2.5 text-left transition-[background-color] duration-150 hover:bg-base-100"
+        className="mt-2 flex w-full items-center justify-between gap-3 rounded-xl bg-card px-3 py-2.5 text-left transition-[background-color] duration-150 ease-out-quint hover:bg-transparent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
       >
-        <span className="text-body text-pretty text-base-900">{integritySummary(checks)}</span>
-        <span className="flex shrink-0 items-center gap-1.5 text-caption text-base-500">
+        <span className="text-body text-pretty text-primary-foreground">{integritySummary(checks)}</span>
+        <span className="flex shrink-0 items-center gap-1.5 text-caption text-secondary-foreground">
           {open ? "Hide" : "Show"}
           <Chevron open={open} />
         </span>
@@ -348,13 +349,13 @@ function DataChecks({ checks, stage }: { checks: IntegrityView[]; stage: Stage }
               const Icon = STATUS_ICON[check.status];
               return (
                 <li key={i} className="flex gap-2.5">
-                  <Icon size="sm" aria-hidden="true" className={cx("mt-0.5 shrink-0", check.status === "concern" ? "text-base-900" : "text-base-400")} />
+                  <Icon size="sm" aria-hidden="true" className={cx("mt-0.5 shrink-0", check.status === "concern" ? "text-primary-foreground" : "text-tertiary-foreground")} />
                   <div className="min-w-0">
                     <p className="flex flex-wrap items-baseline gap-x-2 text-body">
-                      <span className="font-medium text-base-900">{check.aspect}</span>
-                      <span className={cx("text-caption", check.status === "concern" ? "font-medium text-base-900" : "text-base-500")}>{STATUS_LABEL[check.status]}</span>
+                      <span className="font-medium text-primary-foreground">{check.aspect}</span>
+                      <span className={cx("text-caption", check.status === "concern" ? "font-medium text-primary-foreground" : "text-secondary-foreground")}>{STATUS_LABEL[check.status]}</span>
                     </p>
-                    <p className="mt-0.5 text-body text-pretty text-base-700">{check.note}</p>
+                    <p className="mt-0.5 text-body text-pretty text-secondary-foreground">{check.note}</p>
                     {stage.carousel && check.evidence.some((target) => target.kind === "slide") && (
                       <p className="mt-1 text-caption">
                         <Evidence evidence={check.evidence} stage={stage} />
@@ -365,7 +366,7 @@ function DataChecks({ checks, stage }: { checks: IntegrityView[]; stage: Stage }
               );
             })}
           </ul>
-          <p className="mt-3 text-micro text-pretty text-base-400">Read from the post itself. No figure here was checked against its sources.</p>
+          <p className="mt-3 text-micro text-pretty text-secondary-foreground">Read from the post itself. No figure here was checked against its sources.</p>
         </div>
       )}
     </section>
@@ -380,12 +381,12 @@ function VisualDna({ analysis, stage, videos }: { analysis: PublicAnalysis; stag
       {analysis.visual.map((section) => (
         <section key={section.key} className="mt-6 first:mt-0">
           <Subhead>{section.title}</Subhead>
-          {section.insight && <p className="mt-1.5 text-body text-pretty text-base-800">{section.insight}</p>}
+          {section.insight && <p className="mt-1.5 text-body text-pretty text-primary-foreground">{section.insight}</p>}
           {section.key === "colour" && analysis.colours.length > 0 && <Swatches colours={analysis.colours} />}
           {section.chips.length > 0 && (
             <ul className="mt-2 flex flex-wrap gap-1.5">
               {section.chips.map((chip) => (
-                <li key={chip} className="rounded-full bg-base-50 px-2.5 py-1 text-caption text-base-800">
+                <li key={chip} className="rounded-full bg-card px-2.5 py-1 text-caption text-primary-foreground">
                   {chip}
                 </li>
               ))}
@@ -394,7 +395,7 @@ function VisualDna({ analysis, stage, videos }: { analysis: PublicAnalysis; stag
           {section.key === "branding" && analysis.consistency && <Consistency consistency={analysis.consistency} stage={stage} />}
           {stage.carousel && section.key !== "branding" && section.evidence.length > 0 && (
             <p className="mt-1.5 text-caption">
-              <span className="mr-2 text-base-500">Seen on</span>
+              <span className="mr-2 text-secondary-foreground">Seen on</span>
               <Evidence evidence={section.evidence} stage={stage} />
             </p>
           )}
@@ -404,7 +405,7 @@ function VisualDna({ analysis, stage, videos }: { analysis: PublicAnalysis; stag
         <section className="mt-6">
           <Subhead>Sequence</Subhead>
           <Sequence analysis={analysis} stage={stage} videos={videos} />
-          {analysis.sequence.arc && <p className="mt-2 text-body text-pretty text-base-700">{analysis.sequence.arc}</p>}
+          {analysis.sequence.arc && <p className="mt-2 text-body text-pretty text-secondary-foreground">{analysis.sequence.arc}</p>}
         </section>
       )}
     </div>
@@ -429,18 +430,18 @@ function Swatches({ colours }: { colours: ColourView[] }) {
               type="button"
               onClick={() => copy(colour.hex)}
               aria-label={`Copy ${colour.hex}${colour.role ? `, ${colour.role}` : ""}`}
-              className="group flex w-full items-center gap-2.5 rounded-xl bg-base-50 p-1.5 pr-2.5 text-left transition-[background-color] duration-150 hover:bg-base-100"
+              className="group flex w-full items-center gap-2.5 rounded-xl bg-card p-1.5 pr-2.5 text-left transition-[background-color] duration-150 ease-out-quint hover:bg-transparent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
             >
               <span aria-hidden="true" className="size-8 shrink-0 rounded-lg outline-1 -outline-offset-1 outline-edge" style={{ background: colour.hex }} />
               <span className="min-w-0 flex-1">
                 {colour.role && (
-                  <span className="block truncate text-caption text-base-900" title={colour.role}>
+                  <span className="block truncate text-caption text-primary-foreground" title={colour.role}>
                     {colour.role}
                   </span>
                 )}
-                <span className="block font-mono text-micro text-base-500 uppercase">{colour.hex}</span>
+                <span className="block font-mono text-micro text-secondary-foreground uppercase">{colour.hex}</span>
               </span>
-              <span aria-hidden="true" className="shrink-0 text-base-400 transition-[color] duration-150 group-hover:text-base-700">
+              <span aria-hidden="true" className="shrink-0 text-tertiary-foreground transition-[color] duration-150 ease-out-quint group-hover:text-secondary-foreground">
                 {copied === colour.hex ? <Check size="xs" /> : <Copy size="xs" />}
               </span>
             </button>
@@ -460,13 +461,13 @@ function Consistency({ consistency, stage }: { consistency: NonNullable<PublicAn
     <div className="mt-2.5 space-y-1.5 text-caption">
       {consistency.same.length > 0 && (
         <p>
-          <span className="mr-2 text-base-500">Same on every slide</span>
-          <span className="text-base-900">{consistency.same.join(", ")}</span>
+          <span className="mr-2 text-secondary-foreground">Same on every slide</span>
+          <span className="text-primary-foreground">{consistency.same.join(", ")}</span>
         </p>
       )}
       {consistency.varies.map((change) => (
         <p key={change.label}>
-          <span className="mr-2 text-base-500">{change.label} changes on</span>
+          <span className="mr-2 text-secondary-foreground">{change.label} changes on</span>
           <Evidence evidence={change.evidence} stage={stage} />
         </p>
       ))}
@@ -483,8 +484,8 @@ function Sequence({ analysis, stage, videos }: { analysis: PublicAnalysis; stage
   const changes = analysis.slides[index]?.changes ?? [];
   return (
     <div className="mt-2">
-      <p className="text-right text-micro text-base-500 tabular-nums">
-        {index + 1} / {roles.length} · <span className="text-base-900">{roles[index] ?? "Slide"}</span>
+      <p className="text-right text-micro text-secondary-foreground tabular-nums">
+        {index + 1} / {roles.length} · <span className="text-primary-foreground">{roles[index] ?? "Slide"}</span>
         {videos[index] && " · video cover"}
       </p>
       <div role="group" aria-label="Slides" className="mt-1.5 flex gap-1">
@@ -496,17 +497,17 @@ function Sequence({ analysis, stage, videos }: { analysis: PublicAnalysis; stage
             aria-label={`Slide ${i + 1}${role ? `: ${role}` : ""}`}
             title={role ?? undefined}
             onClick={() => onSlide(i)}
-            className="group relative h-6 min-w-0 flex-1 before:absolute before:inset-x-0 before:-inset-y-2.5"
+            className="group relative h-6 min-w-0 flex-1 before:absolute before:inset-x-0 before:-inset-y-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
           >
-            <span className={cx("block h-1.5 w-full rounded-full transition-[background-color] duration-150", i === index ? "bg-base-900" : role !== usual ? "bg-base-400 group-hover:bg-base-500" : "bg-base-200 group-hover:bg-base-300")} />
+            <span className={cx("block h-1.5 w-full rounded-full transition-[background-color] duration-150 ease-out-quint", i === index ? "bg-primary-foreground" : role !== usual ? "bg-tertiary-foreground group-hover:bg-secondary-foreground" : "bg-component-active group-hover:bg-border-strong")} />
           </button>
         ))}
       </div>
-      {analysis.sequence.formula && <p className="mt-1 text-caption text-pretty text-base-600">{analysis.sequence.formula}</p>}
+      {analysis.sequence.formula && <p className="mt-1 text-caption text-pretty text-secondary-foreground">{analysis.sequence.formula}</p>}
       {changes.length > 0 && (
         <div className="mt-2 text-caption">
-          <p className="text-base-500">Changes from slide {index}</p>
-          <ul className="mt-0.5 text-base-800">
+          <p className="text-secondary-foreground">Changes from slide {index}</p>
+          <ul className="mt-0.5 text-primary-foreground">
             {changes.map((change) => (
               <li key={change}>{change}</li>
             ))}
@@ -550,7 +551,7 @@ function CopyBrief({ analysis, source }: { analysis: PublicAnalysis; source: Bri
         type="button"
         onClick={copy}
         title="Copy a Markdown prompt to reconstruct this post from its reference images"
-        className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-base-50 pr-3 pl-3.5 text-body font-medium whitespace-nowrap text-base-900 transition-[background-color,scale] duration-150 hover:bg-base-100 active:scale-[0.96]"
+        className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-card pr-3 pl-3.5 text-body font-medium whitespace-nowrap text-primary-foreground transition-[background-color,scale] duration-150 ease-out-quint hover:bg-transparent-hover motion-safe:active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
       >
         {state === "copied" ? "Copied" : state === "failed" ? "Couldn't copy" : "Copy brief"}
         {state === "copied" ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
@@ -566,7 +567,7 @@ function CopyBrief({ analysis, source }: { analysis: PublicAnalysis; source: Bri
 
 function Subhead({ id, children }: { id?: string; children: ReactNode }) {
   return (
-    <h3 id={id} className="mt-6 text-caption font-medium text-base-500 first:mt-0">
+    <h3 id={id} className="mt-6 text-caption font-medium text-secondary-foreground first:mt-0">
       {children}
     </h3>
   );
@@ -574,10 +575,10 @@ function Subhead({ id, children }: { id?: string; children: ReactNode }) {
 
 function List({ items, numbered, className }: { items: string[]; numbered?: boolean; className?: string }) {
   return (
-    <ol className={cx("mt-2 space-y-2 text-body text-pretty text-base-800", className)}>
+    <ol className={cx("mt-2 space-y-2 text-body text-pretty text-primary-foreground", className)}>
       {items.map((item, i) => (
         <li key={i} className="flex gap-2.5">
-          <span className="w-3 shrink-0 text-base-400 tabular-nums">{numbered ? i + 1 : "–"}</span>
+          <span className="w-3 shrink-0 text-tertiary-foreground tabular-nums">{numbered ? i + 1 : "–"}</span>
           {item}
         </li>
       ))}
@@ -589,9 +590,9 @@ function Fold({ title, count, children }: { title: string; count: number; childr
   if (!count) return null;
   return (
     <details className="group">
-      <summary className="flex h-11 cursor-pointer list-none items-center justify-between text-body font-medium text-base-900 [&::-webkit-details-marker]:hidden">
+      <summary className="flex h-11 cursor-pointer list-none items-center justify-between text-body font-medium text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus [&::-webkit-details-marker]:hidden">
         {title}
-        <span className="flex items-center gap-2 text-caption font-normal text-base-500 tabular-nums">
+        <span className="flex items-center gap-2 text-caption font-normal text-secondary-foreground tabular-nums">
           {count}
           <Chevron open={false} group />
         </span>
@@ -601,15 +602,12 @@ function Fold({ title, count, children }: { title: string; count: number; childr
   );
 }
 
+// Phosphor's caret, as in the dashboard header's menu trigger
 function Chevron({ open, group }: { open: boolean; group?: boolean }) {
   return (
-    <svg
-      viewBox="0 0 16 16"
-      aria-hidden="true"
-      className={cx("mt-0.5 size-3.5 shrink-0 text-base-400 transition-transform duration-200 ease-out motion-reduce:transition-none", open && "rotate-180", group && "group-open:rotate-180")}
-    >
-      <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <CaretDown
+      className={cx("mt-0.5 size-3.5 shrink-0 text-tertiary-foreground transition-transform duration-200 ease-out-quint motion-reduce:transition-none", open && "rotate-180", group && "group-open:rotate-180")}
+    />
   );
 }
 
@@ -637,12 +635,12 @@ function Evidence({ evidence, stage }: { evidence: EvidenceTarget[]; stage: Stag
             type="button"
             aria-pressed={group.target.index === stage.index}
             onClick={() => group.target.kind === "slide" && stage.onSlide(group.target.index)}
-            className="relative font-medium text-base-700 underline decoration-base-300 underline-offset-2 transition-[color,text-decoration-color] duration-150 before:absolute before:-inset-x-1 before:-inset-y-2 hover:text-base-900 hover:decoration-base-500 aria-pressed:text-base-900 aria-pressed:decoration-base-900"
+            className="relative font-medium text-secondary-foreground underline decoration-border-strong underline-offset-2 transition-[color,text-decoration-color] duration-150 ease-out-quint before:absolute before:-inset-x-1 before:-inset-y-2 hover:text-primary-foreground hover:decoration-tertiary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-pressed:text-primary-foreground aria-pressed:decoration-primary-foreground"
           >
             {group.label}
           </button>
         ) : (
-          <span key={group.label} className="text-base-500">
+          <span key={group.label} className="text-secondary-foreground">
             {group.label}
           </span>
         ),

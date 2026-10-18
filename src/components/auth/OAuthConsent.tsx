@@ -110,7 +110,7 @@ export default function OAuthConsent() {
         className="mb-6 flex items-center justify-center gap-3"
         aria-hidden="true"
       >
-        <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-base-100 ring-1 ring-edge">
+        <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-component ring-1 ring-edge">
           {details?.client.logo_uri ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -119,34 +119,33 @@ export default function OAuthConsent() {
               className="size-full object-cover"
             />
           ) : (
-            <Plugs className="size-5 text-base-500" />
+            <Plugs className="size-5 text-tertiary-foreground" />
           )}
         </span>
         <span className="flex items-center gap-1">
-          <span className="h-px w-5 bg-base-300" />
-          <span className="flex size-5 items-center justify-center rounded-full bg-base-900 text-white">
+          <span className="h-px w-5 bg-border-strong" />
+          <span className="flex size-5 items-center justify-center rounded-full bg-inverted-solid text-on-inverted-foreground">
             <Check className="size-3" />
           </span>
-          <span className="h-px w-5 bg-base-300" />
+          <span className="h-px w-5 bg-border-strong" />
         </span>
-        <span className="flex size-12 items-center justify-center rounded-full bg-base-100 ring-1 ring-edge">
-          <Symbol className="size-6 text-base-900" />
+        <span className="flex size-12 items-center justify-center rounded-full bg-component ring-1 ring-edge">
+          <Symbol
+            className="size-6 text-primary-foreground"
+            aria-hidden="true"
+          />
         </span>
       </div>
 
+      {/* The auth card's title, the same size as the sign-in and sign-up pages' */}
       <Text
         tag="h1"
-        variant="displaySM"
-        className="text-center text-balance text-base-900"
+        variant="h5"
+        className="text-center text-balance text-primary-foreground"
       >
-        {details ? (
-          <>
-            <span className="font-normal">{app}</span> wants to use Curatit as
-            you
-          </>
-        ) : (
-          "Allow access to Curatit?"
-        )}
+        {details
+          ? `${app} wants to use Curatit as you`
+          : "Allow access to Curatit?"}
       </Text>
 
       {error && (
@@ -155,39 +154,51 @@ export default function OAuthConsent() {
         </div>
       )}
       {!details && !error && (
-        <p className="mt-4 text-center text-sm text-base-600">
+        <Text
+          tag="p"
+          variant="bodySM"
+          className="mt-4 text-center text-secondary-foreground"
+        >
           Checking the request…
-        </p>
+        </Text>
       )}
 
       {details && (
         <>
           <div className="mt-6 rounded-xl bg-card p-4 shadow-xs">
-            <p className="text-xs font-medium tracking-wide text-base-500 uppercase">
+            <Text
+              tag="p"
+              variant="captionLG"
+              className="font-medium tracking-wider text-secondary-foreground uppercase"
+            >
               Allowing lets it
-            </p>
+            </Text>
             <ul className="mt-2 space-y-1.5">
               {ALLOWS.map((line) => (
                 <li
                   key={line}
-                  className="flex items-start gap-2 text-sm text-base-900"
+                  className="flex items-start gap-2 text-body-sm text-primary-foreground"
                 >
-                  <Check className="mt-1 size-3.5 shrink-0 text-base-500" />
+                  <Check className="mt-1 size-3.5 shrink-0 text-tertiary-foreground" />
                   {line}
                 </li>
               ))}
             </ul>
-            <p className="mt-4 text-xs font-medium tracking-wide text-base-500 uppercase">
+            <Text
+              tag="p"
+              variant="captionLG"
+              className="mt-4 font-medium tracking-wider text-secondary-foreground uppercase"
+            >
               It can never
-            </p>
+            </Text>
             <ul className="mt-2 space-y-1.5">
               {NEVER.map((line) => (
                 <li
                   key={line}
-                  className="flex items-start gap-2 text-sm text-base-600"
+                  className="flex items-start gap-2 text-body-sm text-secondary-foreground"
                 >
                   <span
-                    className="mt-2 size-1 shrink-0 rounded-full bg-base-400"
+                    className="mt-2 size-1 shrink-0 rounded-full bg-tertiary-foreground"
                     aria-hidden="true"
                   />
                   {line}
@@ -203,7 +214,8 @@ export default function OAuthConsent() {
               variant="default"
               className="flex-1"
               onClick={() => decide("approve")}
-              disabled={busy !== null}
+              loading={busy === "approve"}
+              disabled={busy === "deny"}
             >
               {busy === "approve" ? "Allowing…" : `Allow ${app}`}
             </Button>
@@ -213,36 +225,41 @@ export default function OAuthConsent() {
               variant="muted"
               className="flex-1"
               onClick={() => decide("deny")}
-              disabled={busy !== null}
+              loading={busy === "deny"}
+              disabled={busy === "approve"}
             >
               {busy === "deny" ? "Denying…" : "Deny"}
             </Button>
           </div>
 
-          <dl className="mt-5 space-y-1 text-xs text-base-500">
+          <dl className="mt-5 space-y-1 text-caption-lg text-secondary-foreground">
             <div className="flex justify-between gap-4">
               <dt>Signed in as</dt>
-              <dd className="truncate text-base-900">
+              <dd className="truncate text-primary-foreground">
                 {details.user.email ?? "you"}
               </dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt>Then goes to</dt>
-              <dd className="truncate text-base-900">
+              <dd className="truncate text-primary-foreground">
                 {safeHost(details.redirect_uri)}
               </dd>
             </div>
             {appHost && (
               <div className="flex justify-between gap-4">
                 <dt>App website</dt>
-                <dd className="truncate text-base-900">{appHost}</dd>
+                <dd className="truncate text-primary-foreground">{appHost}</dd>
               </div>
             )}
           </dl>
-          <p className="mt-4 text-center text-xs text-pretty text-base-500">
+          <Text
+            tag="p"
+            variant="captionLG"
+            className="mt-4 text-center text-pretty text-secondary-foreground"
+          >
             Access lasts until you revoke it from your account. Curatit never
             shares your password with the app.
-          </p>
+          </Text>
         </>
       )}
     </div>

@@ -25,10 +25,10 @@ export default function SitesLayout({
         <Wrapper variant="standard" className="page-start">
           <div className="flex flex-wrap justify-between gap-4">
             <div className="max-w-xl text-balance">
-              <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900 capitalize">
+              <Text tag="h1" variant="h1" className="text-primary-foreground capitalize">
                 {frontmatter.title}
               </Text>
-              <Text tag="p" variant="textSM" className="text-base-600 mt-4">
+              <Text tag="p" variant="bodySM" className="text-secondary-foreground mt-4">
                 {frontmatter.description}
               </Text>
             </div>
@@ -44,7 +44,7 @@ export default function SitesLayout({
               <ArrowUpRight className="size-4" />
             </Button>
           </div>
-          <div className="p-8 bg-base-50 rounded-lg mt-12">
+          <div className="p-8 bg-card rounded-2xl mt-12">
             <Image
               width={1400}
               height={1400}
@@ -55,16 +55,16 @@ export default function SitesLayout({
               className="size-full aspect-8/5 object-top rounded shadow"
             />
           </div>
-          <dl className="mt-4 divide-y divide-base-100">
+          <dl className="mt-4 divide-y divide-border-default">
             {frontmatter.details?.map((details) => (
               <div key={details.label} className="flex itmes-center gap-2 justify-between py-2">
                 <dt>
-                  <Text tag="h3" variant="textSM" className="text-base-900 font-medium">
+                  <Text tag="h3" variant="bodySM" className="text-primary-foreground font-medium">
                     {details.label}
                   </Text>
                 </dt>
                 <dd>
-                  <Text tag="p" variant="textSM" className="text-base-600">
+                  <Text tag="p" variant="bodySM" className="text-secondary-foreground">
                     {details.value}
                   </Text>
                 </dd>
@@ -76,7 +76,7 @@ export default function SitesLayout({
       <section>
         <Wrapper variant="standard" className="section-y">
           <div className="flex flex-wrap gap-4 justify-between items-center">
-            <Text tag="h2" variant="displaySM" className="text-base-900 font-display font-thin">
+            <Text tag="h2" variant="h3" className="text-primary-foreground">
               Latest additions
             </Text>
             <Button isLink size="sm" variant="muted" href="/sites">

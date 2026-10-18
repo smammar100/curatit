@@ -24,10 +24,10 @@ export default function CreativeDnaSection() {
       <Wrapper variant="standard" className="section-y">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="text-balance lg:col-span-5">
-            <Text tag="h2" variant="displayLG" className="text-base-900">
+            <Text tag="h2" variant="h1" className="text-primary-foreground">
               Every post, taken apart.
             </Text>
-            <Text tag="p" variant="textBase" className="text-base-600 mt-4">
+            <Text tag="p" variant="body" className="mt-4 text-secondary-foreground">
               See the hook, layout and colours of a post, then hand them to your
               AI as a brief.
             </Text>

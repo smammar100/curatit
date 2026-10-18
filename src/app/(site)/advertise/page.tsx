@@ -5,7 +5,7 @@ import Wrapper from "@/components/fundations/containers/Wrapper";
 // Data
 const packages = [
   {
-    name: "Website Feature",
+    name: "Website feature",
     price: "$999",
     features: [
       { label: "Homepage placement", value: "7 days live" },
@@ -16,7 +16,7 @@ const packages = [
       "A bespoke write-up on Curatit that shows your product in context. Great for launches that need instant credibility.",
   },
   {
-    name: "Newsletter Ad",
+    name: "Newsletter ad",
     price: "$1,299",
     features: [
       { label: "Audience", value: "7,800+ subscribers" },
@@ -33,38 +33,38 @@ export default function AdvertisePage() {
     <section>
       <Wrapper variant="standard" className="page-start">
         <div className="text-center max-w-3xl mx-auto text-balance">
-          <Text tag="h1" variant="displayLG" className="text-base-900 text-center">
+          <Text tag="h1" variant="h1" className="text-primary-foreground text-center">
             Put your launch in front of the Curatit crowd
           </Text>
-          <Text tag="p" variant="textBase" className="text-base-600 mt-4">
+          <Text tag="p" variant="body" className="text-secondary-foreground mt-4">
             Reach designers and developers actively looking for production-grade inspiration. Choose
             a package or build a custom campaign.
           </Text>
         </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-12">
           {packages.map((pkg) => (
-            <div key={pkg.name} className="flex flex-col h-full justify-between bg-base-50 rounded-lg p-8 ">
+            <div key={pkg.name} className="flex flex-col h-full justify-between bg-card rounded-lg p-8">
               <div className="flex flex-col gap-8">
                 <div className="space-y-3">
-                  <Text tag="p" variant="displaySM" className="text-base-900 text-balance">
+                  <Text tag="p" variant="h3" className="text-primary-foreground text-balance">
                     {pkg.name}
                   </Text>
-                  <Text tag="p" variant="textSM" className="text-base-600">
+                  <Text tag="p" variant="bodySM" className="text-secondary-foreground">
                     {pkg.description}
                   </Text>
                 </div>
                 <div>
-                  <Text tag="p" variant="displayLG" className="text-base-900">
+                  <Text tag="p" variant="h1" className="text-primary-foreground">
                     {pkg.price}
                   </Text>
                 </div>
-                <ul className="divide-y divide-base-200 mt-4">
+                <ul className="divide-y divide-border-strong mt-4">
                   {pkg.features.map((item) => (
-                    <li key={item.label} className="flex items-center justify-between py-3 text-base-800">
-                      <Text tag="span" variant="textBase" className="text-base-800">
+                    <li key={item.label} className="flex items-center justify-between py-3 text-primary-foreground">
+                      <Text tag="span" variant="body" className="text-primary-foreground">
                         {item.label}
                       </Text>
-                      <Text tag="span" variant="textSM" className="text-base-500">
+                      <Text tag="span" variant="bodySM" className="text-secondary-foreground">
                         {item.value}
                       </Text>
                     </li>

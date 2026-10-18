@@ -21,6 +21,7 @@ import Close from "@/components/fundations/icons/Close";
 import Play from "@/components/fundations/icons/Play";
 import SealCheck from "@/components/fundations/icons/SealCheck";
 // Components
+import Button from "@/components/fundations/elements/Button";
 import type { PublicAnalysis } from "@/lib/creative/publicView";
 import type { PostDetail } from "@/lib/posts";
 import { cx } from "@/lib/cx";
@@ -108,14 +109,14 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
         type="button"
         onClick={close}
         aria-label="Close"
-        className="absolute top-5 right-5 z-10 flex size-11 items-center justify-center rounded-full bg-black/50 text-white transition-[background-color,scale] duration-150 hover:bg-white/20 active:scale-[0.96] lg:bg-white/10"
+        className="absolute top-5 right-5 z-10 flex size-11 items-center justify-center rounded-full bg-black/50 text-paper transition-[background-color,scale] duration-150 ease-out-quint hover:bg-paper/20 motion-safe:active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus lg:bg-paper/10 lg:hover:bg-paper/20"
       >
         <Close className="size-4" />
       </button>
       {previous && <StepLink side="left" shortCode={previous.shortCode} />}
       {next && <StepLink side="right" shortCode={next.shortCode} />}
 
-      <article className="relative grid h-full max-h-[54rem] w-full max-w-[76rem] grid-cols-[minmax(0,1fr)] overflow-y-auto rounded-[28px] bg-white shadow-2xl lg:grid-cols-[minmax(0,1fr)_27rem] lg:overflow-hidden">
+      <article className="relative grid h-full max-h-[54rem] w-full max-w-[76rem] grid-cols-[minmax(0,1fr)] overflow-y-auto rounded-[28px] bg-modal shadow-xl lg:grid-cols-[minmax(0,1fr)_27rem] lg:overflow-hidden">
         {/* The post */}
         <div className="relative flex h-[62dvh] items-center justify-center bg-black p-6 sm:p-10 lg:h-auto">
           <div className="relative h-full max-h-full max-w-full" style={{ aspectRatio: r }}>
@@ -129,7 +130,7 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
               className="object-contain"
             />
           </div>
-          <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-1.5 text-caption text-white">
+          <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-1.5 text-caption text-paper">
             {count > 1 && (
               <p className="rounded-full bg-black/60 px-2.5 py-1 tabular-nums" aria-live="polite">
                 {index + 1} / {count}
@@ -154,21 +155,21 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
         {/* The panel */}
         <div className="flex flex-col lg:min-h-0">
           <header className="flex items-center gap-3.5 px-6 pt-6 pb-5">
-            <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-base-100 text-title font-medium text-base-700 outline-1 -outline-offset-1 outline-edge">
+            <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-component text-title font-medium text-secondary-foreground outline-1 -outline-offset-1 outline-edge">
               {post.brand.logo ? <Image src={post.brand.logo} alt="" fill sizes="48px" className="object-cover" /> : post.brand.name[0]}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="flex items-center gap-1.5 text-title font-medium text-base-900">
+              <p className="flex items-center gap-1.5 text-title font-medium text-primary-foreground">
                 <span className="truncate">{post.brand.name}</span>
                 {post.verified && <SealCheck className="size-4 shrink-0" aria-label="Verified" />}
               </p>
-              <p className="mt-0.5 truncate text-body text-base-500">
+              <p className="mt-0.5 truncate text-body text-secondary-foreground">
                 {post.handle && <>@{post.handle} · </>}
                 {/* The main category, then any extra ones; each opens Discover on it */}
                 {post.categories.map((category, i) => (
                   <span key={category.slug}>
                     {i > 0 && " · "}
-                    <Link href={feedHref("Discover", "", category.slug)} className="hover:text-base-900">
+                    <Link href={feedHref("Discover", "", category.slug)} className="hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus">
                       {category.name}
                     </Link>
                   </span>
@@ -179,7 +180,7 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
               href={post.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-base-50 pr-3 pl-3.5 text-body font-medium text-base-900 transition-[background-color,scale] duration-150 hover:bg-base-100 active:scale-[0.96]"
+              className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-card pr-3 pl-3.5 text-body font-medium text-primary-foreground transition-[background-color,scale] duration-150 ease-out-quint hover:bg-transparent-hover motion-safe:active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
             >
               Instagram
               <ArrowUpRight className="size-3.5" />
@@ -187,7 +188,7 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
           </header>
 
           <div className="px-6 pb-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
-            <h1 id="post-title" className="font-display text-display font-light text-pretty text-base-900">
+            <h1 id="post-title" className="font-display text-display font-light text-pretty text-primary-foreground">
               {caption.title}
             </h1>
             {/* The rest of the caption reads on from the title (2026-10-13, at the person's request;
@@ -197,7 +198,7 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
                 <Caption paragraphs={caption.body} />
               </div>
             )}
-            <p className="mt-3 text-body text-base-500">Posted {day.format(new Date(post.postedAt))}</p>
+            <p className="mt-3 text-body text-secondary-foreground">Posted {day.format(new Date(post.postedAt))}</p>
             <Section title="Observed engagement">
               <ObservedEngagement likes={post.likes} comments={post.comments} category={post.category} />
             </Section>
@@ -215,7 +216,7 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
             ) : (
               <>
                 <Section title="Creative breakdown">
-                  <p className="text-body text-pretty text-base-500">Not available for this post yet.</p>
+                  <p className="text-body text-pretty text-secondary-foreground">Not available for this post yet.</p>
                 </Section>
               </>
             )}
@@ -224,7 +225,7 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
             </Section>
           </div>
 
-          <footer className="sticky bottom-0 border-t border-base-100 bg-white p-4">
+          <footer className="sticky bottom-0 border-t border-border-default bg-modal p-4">
             <SaveForm post={post} />
           </footer>
         </div>
@@ -244,7 +245,7 @@ function StepLink({ side, shortCode }: { side: "left" | "right"; shortCode: stri
       scroll={false}
       aria-label={side === "left" ? "Previous post" : "Next post"}
       className={cx(
-        "absolute top-1/2 hidden size-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition-[background-color,scale] duration-150 hover:bg-white/20 active:scale-[0.96] lg:flex",
+        "absolute top-1/2 hidden size-12 -translate-y-1/2 items-center justify-center rounded-full bg-paper/10 text-paper transition-[background-color,scale] duration-150 ease-out-quint hover:bg-paper/20 motion-safe:active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus lg:flex",
         side === "left" ? "left-5" : "right-5",
       )}
     >
@@ -262,7 +263,7 @@ function SlideButton({ side, disabled, onClick }: { side: "left" | "right"; disa
       disabled={disabled}
       onClick={onClick}
       className={cx(
-        "absolute top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-base-900 transition-[opacity,scale] duration-150 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-0",
+        "absolute top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-modal/90 text-primary-foreground transition-[opacity,scale] duration-150 ease-out-quint motion-safe:active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus disabled:pointer-events-none disabled:opacity-0",
         side === "left" ? "left-4" : "right-4",
       )}
     >
@@ -276,7 +277,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
     // No rule between sections (2026-10-13, at the person's request): the space and the small
     // grey heading set each one apart
     <section className="mt-8">
-      <h2 className="mb-3 text-caption font-medium text-base-500">{title}</h2>
+      <h2 className="mb-3 text-caption font-medium text-secondary-foreground">{title}</h2>
       {children}
     </section>
   );
@@ -327,7 +328,7 @@ function Caption({ paragraphs }: { paragraphs: string[] }) {
   if (!paragraphs.length) return null;
   return (
     <div>
-      <div ref={ref} className={cx("space-y-3 text-subtitle text-pretty text-base-700", !open && "line-clamp-3")}>
+      <div ref={ref} className={cx("space-y-3 text-subtitle text-pretty text-secondary-foreground", !open && "line-clamp-3")}>
         {paragraphs.map((paragraph, i) => (
           <p key={i} className="whitespace-pre-line">
             {linkify(paragraph)}
@@ -335,7 +336,7 @@ function Caption({ paragraphs }: { paragraphs: string[] }) {
         ))}
       </div>
       {(clipped || open) && (
-        <button type="button" onClick={() => setOpen((o) => !o)} className="mt-2 text-body font-medium text-base-900 hover:underline">
+        <button type="button" onClick={() => setOpen((o) => !o)} className="mt-2 text-body font-medium text-primary-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus">
           {open ? "Show less" : "Show more"}
         </button>
       )}
@@ -354,7 +355,7 @@ function linkify(text: string): ReactNode[] {
     out.push(text.slice(last, match.index));
     const href = handle ? `https://www.instagram.com/${handle}/` : `https://www.instagram.com/explore/tags/${encodeURIComponent(tag)}/`;
     out.push(
-      <a key={match.index} href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-base-900 underline-offset-2 hover:underline">
+      <a key={match.index} href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-primary-foreground underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus">
         {token}
       </a>,
     );
@@ -368,32 +369,35 @@ function linkify(text: string): ReactNode[] {
 function BoardsOn({ post }: { post: PostDetail }) {
   const { boards, status, remove } = useBoards();
   const on = boards.filter((b) => b.items.some((item) => item.post === post.shortCode));
-  if (status === "loading") return <p className="text-body text-base-500">Loading your boards…</p>;
+  if (status === "loading") return <p className="text-body text-secondary-foreground">Loading your boards…</p>;
   return (
     <>
-      <p className="text-body text-base-500">{on.length ? `On ${on.length === 1 ? "1 board" : `${on.length} boards`}` : "Not on a board yet"}</p>
+      <p className="text-body text-secondary-foreground">{on.length ? `On ${on.length === 1 ? "1 board" : `${on.length} boards`}` : "Not on a board yet"}</p>
       {on.length > 0 && (
         <ul className="mt-3 space-y-2">
           {on.map((b) => (
-            <li key={b.id} className="flex items-center gap-3 rounded-xl p-2 ring-1 ring-base-200">
-              <Link href={boardHref(b.id)} className="flex min-w-0 flex-1 items-center gap-3 rounded-lg hover:text-accent-600">
+            <li key={b.id} className="flex items-center gap-3 rounded-xl p-2 ring-1 ring-border-default">
+              <Link href={boardHref(b.id)} className="flex min-w-0 flex-1 items-center gap-3 rounded-lg hover:text-brand-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus">
                 <BoardThumb board={b} className="size-9" />
                 <div className="min-w-0">
                   <p className="truncate text-body font-medium">{b.name}</p>
-                  <p className="text-caption text-base-500 tabular-nums">
+                  <p className="text-caption text-secondary-foreground tabular-nums">
                     {b.items.length} {b.items.length === 1 ? "post" : "posts"}
                     {b.shareToken && " · Shared"}
                   </p>
                 </div>
               </Link>
-              <button
-                type="button"
+              <Button
+                variant="transparent"
+                size="sm"
+                shape="pill"
+                iconOnly
                 onClick={() => remove(post.shortCode, b.id)}
                 aria-label={`Remove from ${b.name}`}
-                className="relative flex size-8 shrink-0 items-center justify-center rounded-full text-base-500 transition-[background-color,color,scale] duration-150 before:absolute before:-inset-1 hover:bg-base-50 hover:text-base-900 active:scale-[0.96]"
+                className="before:absolute before:-inset-1"
               >
                 <Close className="size-3.5" />
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
@@ -420,6 +424,7 @@ function SaveForm({ post }: { post: PostDetail }) {
       className="flex gap-2"
       onSubmit={(event) => {
         event.preventDefault();
+        if (inChosen && !naming) return;
         if (naming) {
           const trimmed = name.trim();
           if (!trimmed) return;
@@ -437,14 +442,14 @@ function SaveForm({ post }: { post: PostDetail }) {
             onChange={(event) => setName(event.target.value)}
             maxLength={NAME_MAX}
             placeholder={boards.length ? "Name the new board" : "Name your first board"}
-            className="h-12 w-full rounded-full border-0 bg-base-50 pr-10 pl-5 text-body pointer-coarse:text-[16px] text-base-900 placeholder:text-base-400 focus:ring-2 focus:ring-base-300"
+            className="h-12 w-full rounded-full border-0 bg-card pr-10 pl-5 text-body pointer-coarse:text-[16px] text-primary-foreground placeholder:text-tertiary-foreground transition-[box-shadow] duration-150 ease-out-quint focus:ring-2 focus:ring-brand-border-focus focus:outline-hidden"
           />
           {boards.length > 0 && (
             <button
               type="button"
               onClick={() => setChoice(null)}
               aria-label="Back to your boards"
-              className="absolute top-1/2 right-2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-base-500 hover:bg-base-100 hover:text-base-900"
+              className="absolute top-1/2 right-2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-secondary-foreground transition-[background-color,color] duration-150 ease-out-quint hover:bg-transparent-hover hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
             >
               <Close className="size-3.5" />
             </button>
@@ -457,7 +462,7 @@ function SaveForm({ post }: { post: PostDetail }) {
             value={status === "loading" ? "" : board}
             disabled={status === "loading"}
             onChange={(event) => setChoice(event.target.value)}
-            className="h-12 w-full truncate rounded-full border-0 bg-base-50 pr-10 pl-5 text-body pointer-coarse:text-[16px] text-base-900 focus:ring-2 focus:ring-base-300 disabled:text-base-500"
+            className="h-12 w-full truncate rounded-full border-0 bg-card pr-10 pl-5 text-body pointer-coarse:text-[16px] text-primary-foreground transition-[box-shadow] duration-150 ease-out-quint focus:ring-2 focus:ring-brand-border-focus focus:outline-hidden disabled:text-secondary-foreground"
           >
             {status === "loading" && <option value="">Loading boards…</option>}
             {boards.map((b) => (
@@ -469,13 +474,25 @@ function SaveForm({ post }: { post: PostDetail }) {
           </select>
         </label>
       )}
-      <button
-        type="submit"
-        disabled={status === "loading" || (naming ? !name.trim() : inChosen)}
-        className="h-12 shrink-0 rounded-full bg-base-900 px-6 text-subtitle font-medium text-white transition-[background-color,scale] duration-150 hover:bg-base-800 active:scale-[0.96] disabled:bg-base-100 disabled:text-base-500"
-      >
-        {inChosen && !naming ? "Saved" : "Save"}
-      </button>
+      {/* "Saved" is a confirmation, not a dead control: it stays legible on a quiet grey fill
+          and is only aria-disabled (the submit above ignores it); loading and an empty name
+          still disable Save outright */}
+      {inChosen && !naming ? (
+        <Button
+          type="submit"
+          variant="none"
+          size="xl"
+          shape="pill"
+          aria-disabled
+          className="bg-component text-secondary-foreground aria-disabled:cursor-default"
+        >
+          Saved
+        </Button>
+      ) : (
+        <Button type="submit" size="xl" shape="pill" disabled={status === "loading" || (naming && !name.trim())}>
+          Save
+        </Button>
+      )}
     </form>
   );
 }

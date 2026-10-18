@@ -46,10 +46,12 @@ export default async function VisionPage() {
   return (
     <>
       <section className="px-4 pt-16 lg:pt-20">
-        <div className="vision-night overflow-clip rounded-[1.5rem] sm:rounded-[2rem]">
+        {/* Inside the panel the base-* and white classes are how it inverts: .vision-night
+            redefines them, not the semantic tokens, so they stay here (SelectionGraph too) */}
+        <div className="vision-night overflow-clip rounded-5xl sm:rounded-[2rem]">
           <Wrapper variant="standard" className="pt-12 pb-20 lg:pt-20 lg:pb-28">
             <div className="mx-auto max-w-2xl text-center">
-              <Text tag="h1" variant="displayLG" className="text-base-900 text-balance">
+              <Text tag="h1" variant="h1" className="text-base-900 text-balance">
                 Taste you can learn from.
               </Text>
               {/* A note from the founder, in his own voice, signed below */}
@@ -75,15 +77,15 @@ export default async function VisionPage() {
               <Signature className="w-64 text-base-900 sm:w-80" />
               <div className="mt-8 flex items-center gap-3 text-left">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-base-900">{FOUNDER.name}</p>
-                  <p className="text-sm text-base-600">{FOUNDER.title}</p>
+                  <p className="text-body-sm font-medium text-base-900">{FOUNDER.name}</p>
+                  <p className="text-body-sm text-base-600">{FOUNDER.title}</p>
                 </div>
                 <a
                   href={FOUNDER.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`${FOUNDER.name} on LinkedIn (opens in a new tab)`}
-                  className="ml-2 flex size-11 shrink-0 items-center justify-center rounded-full text-base-500 ring-1 ring-base-200 transition-[color,background-color] duration-150 hover:bg-base-100 hover:text-base-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-500"
+                  className="ml-2 flex size-11 shrink-0 items-center justify-center rounded-full text-base-500 ring-1 ring-base-200 transition-[color,background-color] duration-150 ease-out-quint hover:bg-base-100 hover:text-base-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-500"
                 >
                   <LinkedinLogo className="size-4" />
                 </a>
@@ -103,7 +105,7 @@ export default async function VisionPage() {
         <Wrapper variant="standard" className="section-y">
           <div className="mx-auto max-w-2xl text-center">
             {posts.length > 0 && (
-              <Text tag="h2" variant="displaySM" className="text-balance text-base-900">
+              <Text tag="h2" variant="h3" className="text-balance text-primary-foreground">
                 {posts.length} posts from {brands} brands so far, and more every week.
               </Text>
             )}

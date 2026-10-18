@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Button from "@/components/fundations/elements/Button";
 import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
 import CaretLeft from "@/components/fundations/icons/CaretLeft";
 import CaretRight from "@/components/fundations/icons/CaretRight";
@@ -30,16 +31,16 @@ import DnaEditor from "./DnaEditor";
 import {
   ago,
   EvidenceChip,
+  fieldClass,
+  fieldParts,
   Frame,
   label,
   money,
   Notice,
   Pill,
-  quietButton,
   reviewHref,
   Section,
   seconds,
-  solidButton,
   sourceLabel,
   StatusPill,
   useBusy,
@@ -74,7 +75,7 @@ export default function ReviewPost({ postId }: { postId: string }) {
     content = (
       <div
         aria-hidden="true"
-        className="mt-6 h-[70vh] max-w-6xl animate-pulse rounded-3xl bg-base-50"
+        className="mt-6 h-[70vh] max-w-6xl animate-pulse rounded-3xl bg-card motion-reduce:animate-none"
       />
     );
   else if (data === null)
@@ -198,7 +199,7 @@ export function PostReviewView({
           <div className="flex min-h-9 items-center justify-between gap-3">
             <Link
               href={reviewHref()}
-              className="text-caption font-medium whitespace-nowrap text-base-500 hover:text-base-900"
+              className="text-caption font-medium whitespace-nowrap text-secondary-foreground transition-colors duration-150 ease-out-quint hover:text-primary-foreground"
             >
               ← Review queue
             </Link>
@@ -214,15 +215,17 @@ export function PostReviewView({
               }
             />
           </div>
-          <p className="mt-3 flex flex-wrap items-center gap-x-2 text-caption text-base-500">
-            <span className="font-medium text-base-700">{post.brand}</span>
+          <p className="mt-3 flex flex-wrap items-center gap-x-2 text-caption text-secondary-foreground">
+            <span className="font-medium text-primary-foreground">
+              {post.brand}
+            </span>
             <span>{post.category}</span>
             <span>{post.format}</span>
             <a
               href={post.url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-0.5 hover:text-accent-600"
+              className="inline-flex items-center gap-0.5 transition-colors duration-150 ease-out-quint hover:text-brand-foreground"
             >
               {post.short_code} on Instagram <ArrowUpRight className="size-3" />
             </a>
@@ -230,7 +233,7 @@ export function PostReviewView({
           <h1
             ref={title}
             tabIndex={-1}
-            className="mt-1 font-display text-display font-light text-balance text-base-900 outline-none"
+            className="mt-1 font-display text-display font-light text-balance text-primary-foreground outline-none"
           >
             {dna?.concept ?? "Not analysed yet"}
           </h1>
@@ -274,73 +277,80 @@ export function PostReviewView({
 
           {/* Decisions */}
           {version && !editing && (
-            <div className="mt-5 rounded-2xl bg-base-50 p-3">
+            <div className="mt-5 rounded-2xl bg-card p-3">
               <div className="flex flex-wrap gap-2">
                 {(!isCurrent ||
                   analysis?.review_status !== "approved" ||
                   !analysis.published_at) && (
-                  <button
-                    type="button"
-                    className={solidButton}
+                  <Button
+                    variant="default"
+                    size="sm"
+                    shape="pill"
                     disabled={!!busy}
                     onClick={() => decide("approve", true)}
                   >
                     {busy === "approve-publish"
                       ? "Publishing…"
                       : "Approve and publish"}
-                  </button>
+                  </Button>
                 )}
                 {(!isCurrent || analysis?.review_status !== "approved") && (
-                  <button
-                    type="button"
-                    className={quietButton}
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    shape="pill"
                     disabled={!!busy}
                     onClick={() => decide("approve")}
                   >
                     {busy === "approve" ? "Approving…" : "Approve"}
-                  </button>
+                  </Button>
                 )}
-                <button
-                  type="button"
-                  className={quietButton}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  shape="pill"
                   disabled={!!busy}
                   onClick={() => (setDone(null), setEditing(true))}
                 >
                   Edit
-                </button>
+                </Button>
                 {version.review_decision !== "rejected" && (
-                  <button
-                    type="button"
-                    className={quietButton}
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    shape="pill"
                     disabled={!!busy}
                     onClick={() => decide("reject")}
                   >
                     {busy === "reject" ? "Rejecting…" : "Reject"}
-                  </button>
+                  </Button>
                 )}
                 {isCurrent && analysis?.review_status !== "needs_review" && (
-                  <button
-                    type="button"
-                    className={quietButton}
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    shape="pill"
                     disabled={!!busy}
                     onClick={() => decide("reopen")}
                   >
                     Reopen
-                  </button>
+                  </Button>
                 )}
                 {isCurrent && analysis?.published_at && (
-                  <button
-                    type="button"
-                    className={quietButton}
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    shape="pill"
                     disabled={!!busy}
                     onClick={() => decide("unpublish")}
                   >
                     Unpublish
-                  </button>
+                  </Button>
                 )}
-                <button
-                  type="button"
-                  className={quietButton}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  shape="pill"
                   disabled={!!busy}
                   title="Queue a fresh analysis; it lands as a proposal next to this one"
                   onClick={() => {
@@ -358,7 +368,7 @@ export function PostReviewView({
                   }}
                 >
                   {busy === "reprocess" ? "Queuing…" : "Analyse again"}
-                </button>
+                </Button>
               </div>
               <label className="mt-3 block">
                 <span className="sr-only">
@@ -369,15 +379,17 @@ export function PostReviewView({
                   onChange={(e) => setNote(e.target.value)}
                   maxLength={2000}
                   placeholder="Note for the history (optional)"
-                  className="h-9 w-full rounded-full border-0 bg-white px-4 text-body pointer-coarse:text-[16px] text-base-900 ring-1 ring-base-200 placeholder:text-base-400 focus:ring-2 focus:ring-base-300"
+                  className={fieldClass}
                 />
               </label>
               {error && (
-                <p className="mt-2 text-caption text-danger-600">{error}</p>
+                <p className="mt-2 text-caption text-danger-foreground">
+                  {error}
+                </p>
               )}
               <div role="status">
                 {done?.versionId === version.id && !busy && (
-                  <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-body text-base-700">
+                  <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-body text-secondary-foreground">
                     <span className="inline-flex items-center gap-1.5">
                       <Check className="size-3.5 shrink-0" />
                       {done.text}
@@ -385,7 +397,7 @@ export function PostReviewView({
                     {walk.next && (
                       <Link
                         href={reviewHref(walk.next.id)}
-                        className="relative font-medium text-base-900 before:absolute before:-inset-x-1 before:-inset-y-3 hover:text-accent-600"
+                        className="relative font-medium text-primary-foreground transition-colors duration-150 ease-out-quint before:absolute before:-inset-x-1 before:-inset-y-3 hover:text-brand-foreground"
                       >
                         Next: {walk.next.label} →
                       </Link>
@@ -406,7 +418,7 @@ export function PostReviewView({
                     type="button"
                     aria-pressed={v.id === versionId}
                     onClick={() => (setVersionId(v.id), setEditing(false))}
-                    className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-caption font-medium text-base-700 ring-1 ring-base-200 hover:bg-base-50 aria-pressed:bg-base-900 aria-pressed:text-white aria-pressed:ring-base-900"
+                    className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-caption font-medium text-secondary-foreground ring-1 ring-border-default transition-[background-color,color,box-shadow] duration-150 ease-out-quint hover:bg-transparent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-pressed:bg-inverted-solid aria-pressed:text-on-inverted-foreground aria-pressed:ring-inverted-solid"
                   >
                     v{v.version_no} ·{" "}
                     {v.source === "ai"
@@ -422,12 +434,15 @@ export function PostReviewView({
                 ))}
               </div>
               {data.versions.length > 1 && version && (
-                <label className="mt-3 flex items-center gap-2 text-caption text-base-500">
+                <label className="mt-3 flex items-center gap-2 text-caption text-secondary-foreground">
                   Compare with
                   <select
                     value={compareId ?? ""}
                     onChange={(e) => setCompareId(e.target.value || null)}
-                    className="h-8 rounded-full border-0 bg-base-50 py-0 pr-8 pl-3 text-caption pointer-coarse:text-[16px] text-base-900 ring-1 ring-base-200 focus:ring-2 focus:ring-base-300"
+                    className={cx(
+                      "h-8 rounded-lg py-0 pr-8 pl-3 text-caption",
+                      fieldParts,
+                    )}
                   >
                     <option value="">nothing</option>
                     {data.versions
@@ -473,10 +488,10 @@ export function PostReviewView({
             <p
               id="review-caption"
               className={cx(
-                "rounded-2xl px-3.5 py-3 text-body whitespace-pre-line text-base-700",
+                "rounded-2xl px-3.5 py-3 text-body whitespace-pre-line text-secondary-foreground",
                 focus === "caption"
-                  ? "bg-base-100 ring-2 ring-base-900"
-                  : "bg-base-50",
+                  ? "bg-component ring-2 ring-primary-foreground"
+                  : "bg-card",
               )}
             >
               {post.caption ? (
@@ -485,7 +500,7 @@ export function PostReviewView({
                   quotes={dna ? quotesFor(dna, "caption") : []}
                 />
               ) : (
-                <span className="text-base-500">No caption.</span>
+                <span className="text-secondary-foreground">No caption.</span>
               )}
             </p>
           </Section>
@@ -559,7 +574,7 @@ function ReviewNav({
       aria-label="Posts in this list"
       className="flex shrink-0 items-center gap-2"
     >
-      <p className="text-caption whitespace-nowrap text-base-500 tabular-nums">
+      <p className="text-caption whitespace-nowrap text-secondary-foreground tabular-nums">
         <span className="max-sm:hidden">{walk.list} · </span>
         {index >= 0
           ? `${index + 1} of ${count}`
@@ -583,32 +598,36 @@ function Step({
   const Caret = direction === "previous" ? CaretLeft : CaretRight;
   const name = direction === "previous" ? "Previous post" : "Next post";
   const shortcut = direction === "previous" ? "K" : "J";
-  // 36px to look at, 44px to hit
-  const look =
-    "relative flex size-9 items-center justify-center rounded-full before:absolute before:-inset-1 before:rounded-full";
+  // 40px to look at, 44px to hit
+  const hit = "before:absolute before:-inset-0.5 before:rounded-full";
   if (!to || blocked)
     return (
       <span
         aria-hidden="true"
         title={to ? (blocked ?? undefined) : undefined}
-        className={cx(look, "text-base-300")}
+        className={cx(
+          hit,
+          "relative flex size-10 items-center justify-center rounded-full text-disabled-foreground",
+        )}
       >
         <Caret className="size-4" />
       </span>
     );
   return (
-    <Link
+    <Button
+      isLink
       href={reviewHref(to.id)}
+      variant="secondary"
+      size="base"
+      shape="pill"
+      iconOnly
       aria-label={`${name}: ${to.label}`}
       aria-keyshortcuts={shortcut}
       title={`${to.label} (${shortcut})`}
-      className={cx(
-        look,
-        "bg-base-50 text-base-900 ring-1 ring-base-200 transition-[background-color,scale] duration-150 hover:bg-base-100 active:scale-[0.96]",
-      )}
+      className={hit}
     >
       <Caret className="size-4" />
-    </Link>
+    </Button>
   );
 }
 
@@ -641,7 +660,7 @@ function SlideViewer({
 
   return (
     <aside className="min-w-0 lg:sticky lg:top-27 lg:max-h-[calc(100dvh-7.5rem)] lg:self-start lg:overflow-y-auto lg:overscroll-contain lg:pb-2">
-      <div className="relative aspect-4/5 overflow-hidden rounded-3xl bg-base-100">
+      <div className="relative aspect-4/5 overflow-hidden rounded-3xl bg-component">
         {images[slide] && (
           <Image
             src={images[slide]}
@@ -653,7 +672,7 @@ function SlideViewer({
           />
         )}
         <p
-          className="absolute top-3 left-3 rounded-full bg-black/60 px-2.5 py-1 text-caption text-white tabular-nums"
+          className="absolute top-3 left-3 rounded-full bg-black/60 px-2.5 py-1 text-caption text-paper tabular-nums"
           aria-live="polite"
         >
           Position {slide} · slide {slide + 1} of {images.length}
@@ -663,7 +682,7 @@ function SlideViewer({
             type="button"
             aria-label="Previous slide"
             onClick={() => onSlide(slide - 1)}
-            className="absolute top-1/2 left-3 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 active:scale-[0.96]"
+            className="absolute top-1/2 left-3 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-paper transition-[background-color,scale] duration-150 ease-out-quint hover:bg-black/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.97]"
           >
             <CaretLeft className="size-4" />
           </button>
@@ -673,7 +692,7 @@ function SlideViewer({
             type="button"
             aria-label="Next slide"
             onClick={() => onSlide(slide + 1)}
-            className="absolute top-1/2 right-3 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 active:scale-[0.96]"
+            className="absolute top-1/2 right-3 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-paper transition-[background-color,scale] duration-150 ease-out-quint hover:bg-black/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.97]"
           >
             <CaretRight className="size-4" />
           </button>
@@ -681,7 +700,7 @@ function SlideViewer({
       </div>
       {images.length > 1 && (
         <div
-          className="mt-2 flex scrollbar-hide gap-1.5 overflow-x-auto"
+          className="mt-1 -mb-1 flex scrollbar-hide gap-1.5 overflow-x-auto py-1"
           role="group"
           aria-label="Slides"
         >
@@ -692,7 +711,7 @@ function SlideViewer({
               aria-label={`Position ${i}`}
               aria-pressed={i === slide}
               onClick={() => onSlide(i)}
-              className="relative aspect-4/5 w-11 shrink-0 overflow-hidden rounded-lg opacity-60 ring-base-900 transition-opacity hover:opacity-100 aria-pressed:opacity-100 aria-pressed:ring-2"
+              className="relative aspect-4/5 w-11 shrink-0 overflow-hidden rounded-lg opacity-60 ring-primary-foreground transition-opacity duration-150 ease-out-quint hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-border-focus aria-pressed:opacity-100 aria-pressed:ring-2"
             >
               <Image
                 src={src}
@@ -701,7 +720,7 @@ function SlideViewer({
                 sizes="44px"
                 className="object-cover"
               />
-              <span className="absolute right-0.5 bottom-0.5 rounded bg-black/60 px-1 text-micro text-white tabular-nums">
+              <span className="absolute right-0.5 bottom-0.5 rounded bg-black/60 px-1 text-micro text-paper tabular-nums">
                 {i}
               </span>
             </button>
@@ -709,13 +728,13 @@ function SlideViewer({
         </div>
       )}
       {observation ? (
-        <div className="mt-3 rounded-2xl bg-base-50 px-3.5 py-3 text-body text-base-700">
-          <p className="text-caption text-base-500">
+        <div className="mt-3 rounded-2xl bg-card px-3.5 py-3 text-body text-secondary-foreground">
+          <p className="text-caption text-secondary-foreground">
             Read off position {slide} · {label("slide_role", observation.role)}{" "}
             · {observation.confidence} confidence
           </p>
           {observation.visible_text?.headline && (
-            <p className="mt-2 font-medium text-base-900">
+            <p className="mt-2 font-medium text-primary-foreground">
               “{observation.visible_text.headline}”
             </p>
           )}
@@ -756,8 +775,8 @@ function SlideViewer({
               ] as const
             ).map(([k, v]) => (
               <div key={k} className="contents">
-                <dt className="text-base-500">{k}</dt>
-                <dd className="text-base-800">{v}</dd>
+                <dt className="text-secondary-foreground">{k}</dt>
+                <dd className="text-primary-foreground">{v}</dd>
               </div>
             ))}
           </dl>
@@ -778,7 +797,7 @@ function SlideViewer({
           )}
         </div>
       ) : (
-        <p className="mt-3 rounded-2xl bg-base-50 px-3.5 py-3 text-caption text-base-500">
+        <p className="mt-3 rounded-2xl bg-card px-3.5 py-3 text-caption text-secondary-foreground">
           No record of this slide in the selected version.
         </p>
       )}
@@ -807,7 +826,10 @@ function Highlight({ text, quotes }: { text: string; quotes: string[] }) {
     if (start < at) continue;
     parts.push(
       text.slice(at, start),
-      <mark key={start} className="rounded bg-base-200 text-base-900">
+      <mark
+        key={start}
+        className="rounded bg-component-active text-primary-foreground"
+      >
         {text.slice(start, end)}
       </mark>,
     );
@@ -867,24 +889,26 @@ function DnaView({
       <Section title="Summary">
         {/* Creative Intelligence 3.0: the strategy line the post page leads with */}
         {dna.strategy_headline && (
-          <p className="text-subtitle font-medium text-pretty text-base-900">
+          <p className="text-subtitle font-medium text-pretty text-primary-foreground">
             {dna.strategy_headline}
           </p>
         )}
         {dna.strategy_summary && (
-          <p className="mt-1 text-body text-pretty text-base-700">
+          <p className="mt-1 text-body text-pretty text-secondary-foreground">
             {dna.strategy_summary}
           </p>
         )}
         <p
           className={cx(
-            "text-pretty text-base-800",
+            "text-pretty text-primary-foreground",
             dna.strategy_headline ? "mt-3 text-body" : "text-subtitle",
           )}
         >
           {dna.creative_summary}
         </p>
-        <p className="mt-2 text-body text-base-600">{dna.content_intent}</p>
+        <p className="mt-2 text-body text-secondary-foreground">
+          {dna.content_intent}
+        </p>
       </Section>
 
       {/* Creative Intelligence 2.1 and 3.0: what the post page leads with, so it's reviewed first */}
@@ -895,19 +919,19 @@ function DnaView({
           <ol className="space-y-4">
             {dna.creative_decisions.map((d, i) => (
               <li key={i} className="text-body">
-                <p className="font-medium text-pretty text-base-900">
-                  <span className="mr-2 font-mono text-micro text-base-400">
+                <p className="font-medium text-pretty text-primary-foreground">
+                  <span className="mr-2 font-mono text-micro text-tertiary-foreground">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   {d.title}{" "}
                   <Refs refs={d.evidence} focus={focus} onShow={onShow} />
                   {d.confidence !== "high" && (
-                    <span className="ml-2 text-caption font-normal text-base-500">
+                    <span className="ml-2 text-caption font-normal text-secondary-foreground">
                       {d.confidence} confidence
                     </span>
                   )}
                 </p>
-                <dl className="mt-1.5 grid gap-x-3 gap-y-1 text-base-700 sm:grid-cols-[7.5rem_1fr]">
+                <dl className="mt-1.5 grid gap-x-3 gap-y-1 text-secondary-foreground sm:grid-cols-[7.5rem_1fr]">
                   {(
                     [
                       ["Explanation", d.explanation],
@@ -922,7 +946,9 @@ function DnaView({
                     .filter(([, value]) => value)
                     .map(([name, value]) => (
                       <div key={name} className="contents">
-                        <dt className="text-caption text-base-500">{name}</dt>
+                        <dt className="text-caption text-secondary-foreground">
+                          {name}
+                        </dt>
                         <dd className="text-pretty">{value}</dd>
                       </div>
                     ))}
@@ -931,26 +957,32 @@ function DnaView({
             ))}
           </ol>
           {dna.creative_formula && (
-            <p className="mt-4 text-body text-base-700">
-              <span className="mr-2 text-caption text-base-500">Formula</span>
+            <p className="mt-4 text-body text-secondary-foreground">
+              <span className="mr-2 text-caption text-secondary-foreground">
+                Formula
+              </span>
               {dna.creative_formula}
             </p>
           )}
           {dna.application && (
-            <dl className="mt-3 grid gap-x-3 gap-y-1 text-body text-base-700 sm:grid-cols-[7.5rem_1fr]">
-              <dt className="text-caption text-base-500">When to use</dt>
+            <dl className="mt-3 grid gap-x-3 gap-y-1 text-body text-secondary-foreground sm:grid-cols-[7.5rem_1fr]">
+              <dt className="text-caption text-secondary-foreground">
+                When to use
+              </dt>
               <dd className="text-pretty">
                 {dna.application.when_to_use.join(" · ")}
               </dd>
-              <dt className="text-caption text-base-500">When not to</dt>
+              <dt className="text-caption text-secondary-foreground">
+                When not to
+              </dt>
               <dd className="text-pretty">
                 {dna.application.when_not_to_use.join(" · ")}
               </dd>
             </dl>
           )}
           {dna.copywriting && (
-            <p className="mt-3 text-body text-pretty text-base-700">
-              <span className="mr-2 text-caption text-base-500">
+            <p className="mt-3 text-body text-pretty text-secondary-foreground">
+              <span className="mr-2 text-caption text-secondary-foreground">
                 Copywriting
               </span>
               {dna.copywriting}
@@ -969,8 +1001,8 @@ function DnaView({
                   className="size-4 rounded outline-1 -outline-offset-1 outline-edge"
                   style={{ background: c.hex }}
                 />
-                <span className="text-base-900">{c.role}</span>
-                <span className="font-mono text-micro text-base-500 uppercase">
+                <span className="text-primary-foreground">{c.role}</span>
+                <span className="font-mono text-micro text-secondary-foreground uppercase">
                   {c.hex}
                 </span>
               </li>
@@ -983,13 +1015,13 @@ function DnaView({
         <Section title="Data checks">
           <ul className="space-y-2 text-body">
             {dna.integrity_notes.map((n, i) => (
-              <li key={i} className="text-pretty text-base-800">
+              <li key={i} className="text-pretty text-primary-foreground">
                 <span
                   className={cx(
                     "mr-2 text-caption",
                     n.status === "concern" || n.status === "potential_concern"
-                      ? "font-medium text-danger-600"
-                      : "text-base-500",
+                      ? "font-medium text-danger-foreground"
+                      : "text-secondary-foreground",
                   )}
                 >
                   {STATUS_WORDS[n.status] ?? n.status}
@@ -1004,8 +1036,8 @@ function DnaView({
 
       <Section title="Classification">
         <dl className="grid gap-x-4 gap-y-2 text-body sm:grid-cols-[10rem_1fr]">
-          <dt className="text-base-500">Primary archetype</dt>
-          <dd className="text-base-900">
+          <dt className="text-secondary-foreground">Primary archetype</dt>
+          <dd className="text-primary-foreground">
             {label("archetype", dna.primary_archetype.slug)}{" "}
             <Refs
               refs={dna.primary_archetype.evidence}
@@ -1013,8 +1045,8 @@ function DnaView({
               onShow={onShow}
             />
           </dd>
-          <dt className="text-base-500">Also</dt>
-          <dd className="text-base-900">
+          <dt className="text-secondary-foreground">Also</dt>
+          <dd className="text-primary-foreground">
             {dna.secondary_archetypes.length
               ? dna.secondary_archetypes.map((s) => (
                   <span key={s.slug} className="mr-3 inline-block">
@@ -1024,8 +1056,8 @@ function DnaView({
                 ))
               : "—"}
           </dd>
-          <dt className="text-base-500">Objective</dt>
-          <dd className="text-base-900">
+          <dt className="text-secondary-foreground">Objective</dt>
+          <dd className="text-primary-foreground">
             {label("objective", dna.marketing_objective.slug)}{" "}
             <Refs
               refs={dna.marketing_objective.evidence}
@@ -1033,19 +1065,19 @@ function DnaView({
               onShow={onShow}
             />
           </dd>
-          <dt className="text-base-500">Hook</dt>
-          <dd className="text-base-900">
+          <dt className="text-secondary-foreground">Hook</dt>
+          <dd className="text-primary-foreground">
             {label("hook_technique", dna.hook.technique)}
             {dna.hook.observed_text && (
-              <span className="text-base-600">
+              <span className="text-secondary-foreground">
                 {" "}
                 · “{dna.hook.observed_text}” ({dna.hook.location})
               </span>
             )}
             <Refs refs={dna.hook.evidence} focus={focus} onShow={onShow} />
           </dd>
-          <dt className="text-base-500">Copy</dt>
-          <dd className="text-base-900">
+          <dt className="text-secondary-foreground">Copy</dt>
+          <dd className="text-primary-foreground">
             {dna.copy_strategy.tone.map((t) => label("tone", t)).join(", ")} ·{" "}
             {dna.copy_strategy.persuasion
               .map((p) => label("persuasion", p))
@@ -1053,8 +1085,8 @@ function DnaView({
             · call to action:{" "}
             {label("cta", dna.copy_strategy.cta).toLowerCase()}
           </dd>
-          <dt className="text-base-500">Visual system</dt>
-          <dd className="text-base-900">
+          <dt className="text-secondary-foreground">Visual system</dt>
+          <dd className="text-primary-foreground">
             {[
               ...dna.visual_system.composition.map((s) => label("layout", s)),
               ...dna.visual_system.typography.map((s) =>
@@ -1062,7 +1094,7 @@ function DnaView({
               ),
               ...dna.visual_system.imagery.map((s) => label("imagery", s)),
             ].join(", ")}
-            <span className="block text-base-600">
+            <span className="block text-secondary-foreground">
               {dna.visual_system.text_hierarchy}
             </span>
             {dna.visual_notes &&
@@ -1077,8 +1109,10 @@ function DnaView({
                 ] as const
               ).map((key) =>
                 dna.visual_notes?.[key] ? (
-                  <span key={key} className="mt-1 block text-base-600">
-                    <span className="text-caption text-base-500">{key}:</span>{" "}
+                  <span key={key} className="mt-1 block text-secondary-foreground">
+                    <span className="text-caption text-secondary-foreground">
+                      {key}:
+                    </span>{" "}
                     {dna.visual_notes[key]}
                   </span>
                 ) : null,
@@ -1090,7 +1124,7 @@ function DnaView({
       <Section
         title={`Narrative · ${label("narrative_pattern", dna.narrative.pattern)}`}
       >
-        <p className="text-body text-pretty text-base-700">
+        <p className="text-body text-pretty text-secondary-foreground">
           {dna.narrative.arc}
         </p>
         <ol className="mt-2 flex flex-wrap gap-1.5">
@@ -1099,9 +1133,9 @@ function DnaView({
               <button
                 type="button"
                 onClick={() => onShow(`slide:${s.position}`)}
-                className="inline-flex h-7 items-center gap-1 rounded-full bg-base-50 px-2.5 text-caption text-base-700 ring-1 ring-base-200 hover:bg-base-100"
+                className="inline-flex h-7 items-center gap-1 rounded-full bg-card px-2.5 text-caption text-secondary-foreground ring-1 ring-border-default transition-colors duration-150 ease-out-quint hover:bg-transparent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
               >
-                <span className="font-mono text-micro text-base-500">
+                <span className="font-mono text-micro text-secondary-foreground">
                   {s.position}
                 </span>{" "}
                 {label("slide_role", s.role)}
@@ -1112,7 +1146,7 @@ function DnaView({
       </Section>
 
       <Section title="Why it might work (hypotheses)">
-        <ul className="space-y-2 text-body text-base-800">
+        <ul className="space-y-2 text-body text-primary-foreground">
           {dna.creative_rationale.map((r, i) => (
             <li key={i} className="text-pretty">
               {r.hypothesis}{" "}
@@ -1120,10 +1154,12 @@ function DnaView({
             </li>
           ))}
         </ul>
-        <ul className="mt-3 space-y-1 text-body text-base-600">
+        <ul className="mt-3 space-y-1 text-body text-secondary-foreground">
           {dna.attention_mechanisms.map((m, i) => (
             <li key={i}>
-              <span className="text-caption text-base-500">{m.kind}:</span>{" "}
+              <span className="text-caption text-secondary-foreground">
+                {m.kind}:
+              </span>{" "}
               {m.statement}{" "}
               <Refs refs={m.evidence} focus={focus} onShow={onShow} />
             </li>
@@ -1132,15 +1168,15 @@ function DnaView({
       </Section>
 
       <Section title="Takeaways">
-        <ol className="list-decimal space-y-1 pl-5 text-body text-base-800 marker:text-base-400">
+        <ol className="list-decimal space-y-1 pl-5 text-body text-primary-foreground marker:text-tertiary-foreground">
           {dna.takeaways.map((t) => (
             <li key={t}>{t}</li>
           ))}
         </ol>
-        <p className="mt-3 text-caption text-base-500">
+        <p className="mt-3 text-caption text-secondary-foreground">
           Adapting the principle
         </p>
-        <ul className="mt-1 space-y-1 text-body text-base-700">
+        <ul className="mt-1 space-y-1 text-body text-secondary-foreground">
           {dna.adaptation_ideas.map((t) => (
             <li key={t}>{t}</li>
           ))}
@@ -1148,7 +1184,7 @@ function DnaView({
       </Section>
 
       <Section title="Evidence">
-        <ul className="space-y-1.5 text-body text-base-700">
+        <ul className="space-y-1.5 text-body text-secondary-foreground">
           {dna.evidence.map((e, i) => (
             <li key={i} className="flex items-baseline gap-2">
               <EvidenceChip
@@ -1159,7 +1195,10 @@ function DnaView({
               <span>
                 {e.observation}
                 {e.quote && (
-                  <span className="text-base-500"> · “{e.quote}”</span>
+                  <span className="text-secondary-foreground">
+                    {" "}
+                    · “{e.quote}”
+                  </span>
                 )}
               </span>
             </li>
@@ -1171,12 +1210,12 @@ function DnaView({
         dna.constraints_or_uncertainties.length > 0 ||
         dna.quality.uncertainties.length > 0) && (
         <Section title="Look at before approving">
-          <ul className="space-y-1 text-body text-base-700">
+          <ul className="space-y-1 text-body text-secondary-foreground">
             {warnings.map((w, i) => (
               <li key={`w${i}`}>
                 {w.message}
                 {w.path && (
-                  <span className="font-mono text-micro text-base-500">
+                  <span className="font-mono text-micro text-secondary-foreground">
                     {" "}
                     {w.path}
                   </span>
@@ -1193,7 +1232,7 @@ function DnaView({
         </Section>
       )}
 
-      <p className="mt-6 text-caption text-base-500">
+      <p className="mt-6 text-caption text-secondary-foreground">
         v{version.version_no} · {version.model_id ?? "edited"} · prompt{" "}
         {version.prompt_version ?? "—"} · taxonomy {version.taxonomy_version} ·{" "}
         {ago(version.created_at)}
@@ -1238,29 +1277,29 @@ function Diff({ a, b }: { a: Version; b: Version }) {
   ).filter(([, x, y]) => x !== y);
   if (!rows.length)
     return (
-      <p className="mt-3 text-caption text-base-500">
+      <p className="mt-3 text-caption text-secondary-foreground">
         v{a.version_no} and v{b.version_no} say the same.
       </p>
     );
   return (
-    <div className="mt-3 overflow-hidden rounded-2xl ring-1 ring-base-200">
-      <div className="grid grid-cols-[8rem_1fr_1fr] gap-px bg-base-100 text-body">
-        <div className="bg-white px-3 py-2 text-caption text-base-500" />
-        <div className="bg-white px-3 py-2 text-caption font-medium text-base-700">
+    <div className="mt-3 overflow-hidden rounded-2xl ring-1 ring-border-default">
+      <div className="grid grid-cols-[8rem_1fr_1fr] gap-px bg-border-default text-body">
+        <div className="bg-container px-3 py-2 text-caption text-secondary-foreground" />
+        <div className="bg-container px-3 py-2 text-caption font-medium text-primary-foreground">
           v{a.version_no} (shown)
         </div>
-        <div className="bg-white px-3 py-2 text-caption font-medium text-base-700">
+        <div className="bg-container px-3 py-2 text-caption font-medium text-primary-foreground">
           v{b.version_no}
         </div>
         {rows.map(([name, x, y]) => (
           <div key={name} className="contents">
-            <div className="bg-white px-3 py-2 text-caption text-base-500">
+            <div className="bg-container px-3 py-2 text-caption text-secondary-foreground">
               {name}
             </div>
-            <div className="bg-white px-3 py-2 whitespace-pre-line text-base-900">
+            <div className="bg-container px-3 py-2 whitespace-pre-line text-primary-foreground">
               {x || "—"}
             </div>
-            <div className="bg-white px-3 py-2 whitespace-pre-line text-base-600">
+            <div className="bg-container px-3 py-2 whitespace-pre-line text-secondary-foreground">
               {y || "—"}
             </div>
           </div>
@@ -1275,10 +1314,12 @@ function History({ data }: { data: PostReview }) {
     return null;
   return (
     <Section title="History">
-      <ul className="space-y-1 text-caption text-base-600">
+      <ul className="space-y-1 text-caption text-secondary-foreground">
         {data.events.map((e) => (
           <li key={e.id}>
-            <span className="text-base-500">{ago(e.created_at)}</span> ·{" "}
+            <span className="text-secondary-foreground">
+              {ago(e.created_at)}
+            </span> ·{" "}
             {e.action.replace("_", " ")}
             {e.version_id &&
               ` v${data.versions.find((v) => v.id === e.version_id)?.version_no ?? "?"}`}
@@ -1290,10 +1331,13 @@ function History({ data }: { data: PostReview }) {
             key={r.id}
             className={cx(
               (r.status === "failed" || r.status === "invalid") &&
-                "text-danger-600",
+                "text-danger-foreground",
             )}
           >
-            <span className="text-base-500">{ago(r.started_at)}</span> · run{" "}
+            <span className="text-secondary-foreground">
+              {ago(r.started_at)}
+            </span>{" "}
+            · run{" "}
             {r.status}
             {r.failure_kind &&
               r.status !== "succeeded" &&
@@ -1315,9 +1359,12 @@ function History({ data }: { data: PostReview }) {
           .map((j) => (
             <li
               key={j.id}
-              className={cx(j.state === "failed" && "text-danger-600")}
+              className={cx(j.state === "failed" && "text-danger-foreground")}
             >
-              <span className="text-base-500">{ago(j.created_at)}</span> · job{" "}
+              <span className="text-secondary-foreground">
+                {ago(j.created_at)}
+              </span>{" "}
+              · job{" "}
               {j.state} ({j.reason}, attempt {j.attempts} of {j.max_attempts})
               {j.last_error && ` · ${j.last_failure_kind}: ${j.last_error}`}
             </li>

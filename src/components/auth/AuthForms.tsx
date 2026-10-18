@@ -37,8 +37,11 @@ import { AuthField, AuthNotice } from "./AuthParts";
 import PasswordField from "./PasswordField";
 
 // The colour holds on hover (5:1 or more on the card in both themes; any accent step that darkens
-// it in light mode dims it in dark mode), and the underline marks the hover
-const linkClass = "font-medium text-brand-foreground underline-offset-2 hover:underline";
+// it in light mode dims it in dark mode), and the underline marks the hover. The focus ring is
+// the site's, as on the navigation's links
+const focusRing =
+  "rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus";
+const linkClass = `font-medium text-brand-foreground underline-offset-2 hover:underline ${focusRing}`;
 
 function useParam(name: string) {
   const [value, setValue] = useState<string | null>(null);
@@ -71,7 +74,7 @@ function Footer({ children }: { children: ReactNode }) {
   return (
     <Text
       tag="p"
-      variant="textXS"
+      variant="captionLG"
       className="mt-5 text-center font-medium text-secondary-foreground"
     >
       {children}
@@ -214,7 +217,7 @@ export function SignInForm() {
             <Link
               href="/forgot-password"
               // 16px of text, given 24px to tap without moving the row
-              className="-my-1 py-1 text-caption-lg font-medium text-secondary-foreground hover:text-brand-foreground"
+              className={`-my-1 py-1 text-caption-lg font-medium text-secondary-foreground transition-colors duration-150 ease-out-quint hover:text-brand-foreground ${focusRing}`}
             >
               Forgot password?
             </Link>
@@ -305,7 +308,7 @@ export function SignUpForm() {
 
 // Under the email on sign-up when the address already has an account: sign in, or write to us
 function EmailTaken() {
-  const link = "font-medium underline underline-offset-2";
+  const link = `font-medium underline underline-offset-2 ${focusRing}`;
   return (
     <span>
       {authMessage("email_exists")}{" "}
@@ -332,7 +335,7 @@ function CheckEmail({ email }: { email: string }) {
     <>
       <Heading title="Check your email">
         We sent a link to{" "}
-        <span className="font-medium text-base-900">{email}</span>. Open it in
+        <span className="font-medium text-primary-foreground">{email}</span>. Open it in
         this browser to finish signing up.
       </Heading>
       <form
@@ -346,9 +349,14 @@ function CheckEmail({ email }: { email: string }) {
         <Next />
         {state.error && <AuthNotice>{state.error}</AuthNotice>}
         {resent && !pending && !state.error && (
-          <p role="status" className="text-center text-sm text-base-600">
+          <Text
+            tag="p"
+            variant="bodySM"
+            role="status"
+            className="text-center text-secondary-foreground"
+          >
             Sent again. It can take a minute to arrive.
-          </p>
+          </Text>
         )}
         <Button
           size="base"
@@ -381,7 +389,7 @@ export function ForgotPasswordForm() {
       <>
         <Heading title="Check your email">
           If there&apos;s an account for{" "}
-          <span className="font-medium text-base-900">{state.sent}</span>, a
+          <span className="font-medium text-primary-foreground">{state.sent}</span>, a
           link to choose a new password is on its way. Open it in this browser.
         </Heading>
         <Footer>
@@ -515,7 +523,7 @@ export function ResetPasswordForm() {
                 {" "}
                 <Link
                   href="/forgot-password"
-                  className="font-medium underline underline-offset-2"
+                  className={`font-medium underline underline-offset-2 ${focusRing}`}
                 >
                   Get a new link
                 </Link>

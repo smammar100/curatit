@@ -39,7 +39,7 @@ export const revalidate = 3600;
 const TOKEN_HREF = "/dashboard/settings/tokens";
 
 const linkClass =
-  "underline decoration-base-300 underline-offset-2 transition-colors duration-150 hover:text-accent-600";
+  "underline decoration-border-strong underline-offset-2 transition-colors duration-150 ease-out-quint hover:text-brand-foreground";
 
 export default async function AgentsPage() {
   // If the library can't be reached, the example searches are left out (SearchReel renders nothing without them)
@@ -74,19 +74,19 @@ export default async function AgentsPage() {
         <Wrapper variant="standard" className="page-start">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-end lg:gap-8">
             <div className="lg:col-span-7">
-              <p className="flex items-center gap-2 text-sm text-base-600">
+              <p className="flex items-center gap-2 text-body-sm text-secondary-foreground">
                 Curatit MCP
                 <Badge>Beta</Badge>
               </p>
               <Text
                 tag="h1"
-                variant="displayLG"
-                className="mt-4 text-balance text-base-900"
+                variant="h1"
+                className="mt-4 text-balance text-primary-foreground"
               >
                 Bring Curatit to your AI assistant
               </Text>
             </div>
-            <Text className="text-pretty text-base-600 lg:col-span-5 lg:pb-1">
+            <Text className="text-pretty text-secondary-foreground lg:col-span-5 lg:pb-1">
               Search real brand posts, read their editor-approved breakdowns and
               build briefs from inside Claude, Cursor, VS Code or ChatGPT. Every
               answer comes with its source.
@@ -105,16 +105,16 @@ export default async function AgentsPage() {
             <Text
               tag="h2"
               id="why"
-              variant="displayLG"
-              className="text-balance text-base-900"
+              variant="h1"
+              className="text-balance text-primary-foreground"
             >
               <span className="block">Finding references took hours.</span>
               <span className="block">Now it&apos;s one question.</span>
             </Text>
             <Text
               tag="p"
-              variant="textBase"
-              className="mt-4 max-w-xl text-pretty text-base-600"
+              variant="body"
+              className="mt-4 max-w-xl text-pretty text-secondary-foreground"
             >
               Ask in plain words and get real brand posts back, not descriptions
               of ones that don&apos;t exist.
@@ -128,13 +128,13 @@ export default async function AgentsPage() {
           <ul className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
             {benefits.map((benefit) => (
               <li key={benefit.title}>
-                <span className="flex size-9 items-center justify-center rounded-full bg-base-50 text-base-900 ring-1 ring-edge">
+                <span className="flex size-9 items-center justify-center rounded-full bg-card text-primary-foreground ring-1 ring-border-default">
                   {benefit.icon}
                 </span>
-                <h3 className="mt-4 text-base font-medium text-base-900">
+                <h3 className="mt-4 text-body-base font-medium text-primary-foreground">
                   {benefit.title}
                 </h3>
-                <p className="mt-1 text-sm text-pretty text-base-600">
+                <p className="mt-1 text-body-sm text-pretty text-secondary-foreground">
                   {benefit.body}
                 </p>
               </li>
@@ -151,14 +151,14 @@ export default async function AgentsPage() {
               <Text
                 tag="h2"
                 id="tools"
-                variant="displaySM"
-                className="text-balance text-base-900"
+                variant="h3"
+                className="text-balance text-primary-foreground"
               >
                 Six read-only tools
               </Text>
               <Text
-                variant="textSM"
-                className="mt-3 max-w-xs text-pretty text-base-600"
+                variant="bodySM"
+                className="mt-3 max-w-xs text-pretty text-secondary-foreground"
               >
                 Your assistant picks the one it needs. None of them can change
                 anything.
@@ -167,13 +167,13 @@ export default async function AgentsPage() {
             <ul className="grid grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2 lg:col-span-8">
               {TOOLS.map((tool) => (
                 <li key={tool.name}>
-                  <h3 className="text-sm font-medium text-base-900">
+                  <h3 className="text-body-sm font-medium text-primary-foreground">
                     {tool.title}
                   </h3>
-                  <p className="mt-1 text-sm text-pretty text-base-500">
+                  <p className="mt-1 text-body-sm text-pretty text-secondary-foreground">
                     {tool.does}
                   </p>
-                  <p className="mt-2 font-mono text-xs break-all text-base-400">
+                  <p className="mt-2 font-mono text-caption-lg break-all text-secondary-foreground">
                     {tool.name}
                   </p>
                 </li>
@@ -187,11 +187,11 @@ export default async function AgentsPage() {
       <section aria-label="What your tool can and can't do">
         <Wrapper variant="standard" className="section-y">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="rounded-2xl bg-white p-5 ring-1 ring-edge lg:p-6">
-              <h3 className="text-base font-medium text-base-900">
+            <div className="rounded-2xl bg-container p-5 shadow-xs lg:p-6">
+              <h3 className="text-body-base font-medium text-primary-foreground">
                 What your tool can do
               </h3>
-              <ul className="mt-4 space-y-3 text-sm text-pretty text-base-600">
+              <ul className="mt-4 space-y-3 text-body-sm text-pretty text-secondary-foreground">
                 {[
                   `Read what you can read: the library's ${count}published posts and their editor-approved analyses.`,
                   "Answer with real Instagram links, so every reference can be opened.",
@@ -199,7 +199,7 @@ export default async function AgentsPage() {
                 ].map((line) => (
                   <li key={line} className="flex gap-3">
                     <Check
-                      className="mt-0.5 size-4 shrink-0 text-base-900"
+                      className="mt-0.5 size-4 shrink-0 text-primary-foreground"
                       aria-hidden="true"
                     />
                     {line}
@@ -207,11 +207,11 @@ export default async function AgentsPage() {
                 ))}
               </ul>
             </div>
-            <div className="rounded-2xl bg-white p-5 ring-1 ring-edge lg:p-6">
-              <h3 className="text-base font-medium text-base-900">
+            <div className="rounded-2xl bg-container p-5 shadow-xs lg:p-6">
+              <h3 className="text-body-base font-medium text-primary-foreground">
                 What it can&apos;t do
               </h3>
-              <ul className="mt-4 space-y-3 text-sm text-pretty text-base-600">
+              <ul className="mt-4 space-y-3 text-body-sm text-pretty text-secondary-foreground">
                 {[
                   "Post anything, or change your account.",
                   "See your boards.",
@@ -219,14 +219,14 @@ export default async function AgentsPage() {
                 ].map((line) => (
                   <li key={line} className="flex gap-3">
                     <Close
-                      className="mt-0.5 size-4 shrink-0 text-base-500"
+                      className="mt-0.5 size-4 shrink-0 text-tertiary-foreground"
                       aria-hidden="true"
                     />
                     {line}
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 text-sm text-base-600">
+              <p className="mt-4 text-body-sm text-secondary-foreground">
                 Make and revoke tokens in{" "}
                 <Link href={TOKEN_HREF} className={linkClass}>
                   API tokens
@@ -236,9 +236,9 @@ export default async function AgentsPage() {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-col gap-3 rounded-2xl bg-base-50 p-5 sm:flex-row sm:items-center lg:p-6">
+          <div className="mt-4 flex flex-col gap-3 rounded-2xl bg-card p-5 sm:flex-row sm:items-center lg:p-6">
             <Badge className="w-fit">Beta</Badge>
-            <p className="text-sm text-pretty text-base-600">
+            <p className="text-body-sm text-pretty text-secondary-foreground">
               Things may change while we test it.{" "}
               <a href={SUPPORT_MAILTO} className={linkClass}>
                 Tell us what breaks
@@ -253,11 +253,11 @@ export default async function AgentsPage() {
       <section aria-labelledby="start">
         <Wrapper variant="standard" className="section-y">
           <div className="mx-auto max-w-2xl text-center text-balance">
-            <Text tag="h2" id="start" variant="displayMD" className="">
-              <span className="block text-base-500">
+            <Text tag="h2" id="start" variant="h2">
+              <span className="block text-secondary-foreground">
                 Your next brief starts in a chat.
               </span>
-              <span className="block text-base-900">
+              <span className="block text-primary-foreground">
                 Bring the library with you.
               </span>
             </Text>

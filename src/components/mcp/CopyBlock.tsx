@@ -19,7 +19,7 @@ const tones = {
   },
   // Wraps rather than scrolls: a narrow card would otherwise hide most of a command
   light: {
-    pre: "bg-base-50 text-base-900 ring-1 ring-border-default whitespace-pre-wrap [overflow-wrap:anywhere]",
+    pre: "bg-card text-primary-foreground ring-1 ring-border-default whitespace-pre-wrap [overflow-wrap:anywhere]",
     button:
       "text-secondary-foreground hover:bg-component-hover hover:text-primary-foreground focus-visible:outline-brand-border-focus",
   },
@@ -50,7 +50,7 @@ export default function CopyBlock({ code, label, tone = "dark" }: { code: string
   };
   return (
     <div className="relative">
-      <pre className={cx("overflow-x-auto rounded-lg px-4 py-3.5 pr-14 font-mono text-[13px] leading-relaxed", tones[tone].pre)}>
+      <pre className={cx("overflow-x-auto rounded-lg px-4 py-3.5 pr-14 font-mono text-body-sm leading-relaxed", tones[tone].pre)}>
         <code>{code}</code>
       </pre>
       <button
@@ -58,7 +58,7 @@ export default function CopyBlock({ code, label, tone = "dark" }: { code: string
         onClick={copy}
         aria-label={copied ? `Copied ${label}` : `Copy ${label}`}
         className={cx(
-          "absolute top-2 right-2 flex size-9 items-center justify-center rounded-md transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2",
+          "absolute top-2 right-2 flex size-9 items-center justify-center rounded-md transition-colors duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-2",
           tones[tone].button,
         )}
       >

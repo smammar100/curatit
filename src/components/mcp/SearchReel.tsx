@@ -11,6 +11,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import Text from "@/components/fundations/elements/Text";
 import SearchSparkle from "@/components/fundations/icons/SearchSparkle";
 import { cx } from "@/lib/cx";
 import { useReducedMotion } from "@/lib/motion";
@@ -94,12 +95,13 @@ export default function SearchReel({
       onBlur={() => setPaused(false)}
     >
       {/* The query, typed */}
-      <p
-        className="flex min-h-12 items-center gap-3 font-display text-h5 font-normal text-base-900 md:text-h4 lg:text-h3"
+      <Text
+        variant="h3"
+        className="flex min-h-12 items-center gap-3 text-primary-foreground"
         aria-live="off"
       >
         <SearchSparkle
-          className="size-6 shrink-0 text-base-900 lg:size-7"
+          className="size-6 shrink-0 lg:size-7"
           aria-hidden="true"
         />
         <span className="sr-only">Search: </span>
@@ -107,11 +109,11 @@ export default function SearchReel({
         <span
           aria-hidden="true"
           className={cx(
-            "-ml-2 h-[0.9em] w-px bg-base-900",
+            "-ml-2 h-[0.9em] w-px bg-primary-foreground",
             done && "search-reel-caret",
           )}
         />
-      </p>
+      </Text>
 
       {/* The results: a row that runs off the right edge (the section clips it) */}
       <ul
@@ -122,12 +124,12 @@ export default function SearchReel({
         {search.results.map((result, i) => (
           <li
             key={result.shortCode}
-            className="search-reel-tile group relative w-60 shrink-0 rounded-2xl bg-base-50 p-5 sm:w-72 sm:p-6 lg:w-80"
+            className="search-reel-tile group relative w-60 shrink-0 rounded-2xl bg-card p-5 sm:w-72 sm:p-6 lg:w-80"
             style={{ animationDelay: `${i * 70}ms` }}
           >
             {/* The cover zooms in a touch under the pointer, inside its clipped frame (isolate
                 keeps Safari clipping the rounded corners while it scales) */}
-            <div className="relative isolate aspect-4/5 overflow-hidden rounded bg-base-100 shadow ring-1 ring-base-900/5">
+            <div className="relative isolate aspect-4/5 overflow-hidden rounded bg-component shadow ring-1 ring-border-default">
               {mounted && (
                 <Image
                   src={result.cover}
@@ -139,7 +141,7 @@ export default function SearchReel({
               )}
             </div>
             {/* The brand's mark on the tile's corner, like an app icon */}
-            <div className="absolute top-3 left-3 size-12 overflow-hidden rounded-xl bg-white shadow ring-1 ring-base-900/5 sm:size-14">
+            <div className="absolute top-3 left-3 size-12 overflow-hidden rounded-xl bg-container shadow ring-1 ring-border-default sm:size-14">
               {mounted && result.logo ? (
                 <Image
                   src={result.logo}
@@ -154,7 +156,7 @@ export default function SearchReel({
               href={result.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute inset-0 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400"
+              className="absolute inset-0 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
             >
               <span className="sr-only">
                 Open this {result.brand} post on Instagram (opens in a new tab)
@@ -177,10 +179,10 @@ export default function SearchReel({
             aria-pressed={i === active}
             onClick={() => choose(i)}
             className={cx(
-              "min-h-10 rounded-sm text-sm transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400",
+              "min-h-10 rounded-sm text-body-sm transition-colors duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus",
               i === active
-                ? "text-base-900"
-                : "text-base-500 hover:text-base-900",
+                ? "text-primary-foreground underline underline-offset-4"
+                : "text-secondary-foreground hover:text-primary-foreground",
             )}
           >
             {option.query}

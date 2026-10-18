@@ -23,10 +23,14 @@ import {
   type FormEvent,
 } from "react";
 import { useRouter } from "next/navigation";
+import Badge from "@/components/fundations/elements/Badge";
 import Button from "@/components/fundations/elements/Button";
+import Checkbox from "@/components/fundations/elements/Checkbox";
+import Input from "@/components/fundations/elements/Input";
 import Check from "@/components/fundations/icons/Check";
 import Copy from "@/components/fundations/icons/Copy";
 import Key from "@/components/fundations/icons/Key";
+import WarningCircle from "@/components/fundations/icons/WarningCircle";
 import { createClient } from "@/utils/supabase/client";
 import { cx } from "@/lib/cx";
 import Segmented from "@/components/fundations/elements/Segmented";
@@ -153,7 +157,7 @@ export default function ApiTokens() {
   const live = tokens?.filter((token) => !isDead(statusOf(token))).length ?? 0;
 
   return (
-    <div className="min-h-dvh bg-white">
+    <div className="min-h-dvh bg-page">
       <Header
         view={null}
         onView={(view) => router.push(feedHref(view))}
@@ -164,10 +168,10 @@ export default function ApiTokens() {
       <main className="w-full max-w-5xl px-4 pt-4 pb-24 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-display text-display font-light text-base-900">
+            <h1 className="font-display text-display font-light text-primary-foreground">
               API tokens
             </h1>
-            <p className="mt-1 max-w-prose text-pretty text-base-600">
+            <p className="mt-1 max-w-prose text-pretty text-secondary-foreground">
               A token lets an MCP client or the Curatit bridge use the library
               as you. It&apos;s shown once; anything with it can read what you
               can.
@@ -198,28 +202,29 @@ export default function ApiTokens() {
 
         <section className="mt-8">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-title font-medium text-base-900">
+            <h2 className="text-title font-medium text-primary-foreground">
               Your tokens
             </h2>
             {tokens && tokens.length > 0 && (
-              <p className="text-caption text-base-500 tabular-nums">
+              <p className="text-caption text-secondary-foreground tabular-nums">
                 {live} active · {tokens.length - live} inactive
               </p>
             )}
           </div>
           {loadError && (
-            <p role="alert" className="mt-3 text-caption text-danger-600">
+            <p role="alert" className="mt-3 flex items-start gap-1.5 text-caption text-danger-foreground">
+              <WarningCircle className="mt-px size-3.5 shrink-0" />
               {loadError}
             </p>
           )}
           {tokens === null && !loadError ? (
-            <p className="mt-3 text-caption text-base-600">Loading…</p>
+            <p className="mt-3 text-caption text-secondary-foreground">Loading…</p>
           ) : tokens && tokens.length === 0 ? (
-            <div className="mt-3 rounded-2xl bg-base-50 px-6 py-14 text-center">
-              <p className="text-subtitle font-medium text-base-900">
+            <div className="mt-3 rounded-2xl bg-card px-6 py-14 text-center">
+              <p className="text-subtitle font-medium text-primary-foreground">
                 No tokens yet
               </p>
-              <p className="mx-auto mt-1 max-w-sm text-caption text-base-600">
+              <p className="mx-auto mt-1 max-w-sm text-caption text-secondary-foreground">
                 Make one for each app you connect, so you can revoke them one at
                 a time.
               </p>
@@ -236,10 +241,10 @@ export default function ApiTokens() {
               )}
             </div>
           ) : tokens ? (
-            <div className="mt-3 overflow-x-auto rounded-2xl ring-1 ring-base-200">
+            <div className="mt-3 overflow-x-auto rounded-2xl ring-1 ring-border-default">
               <table className="w-full min-w-[40rem] border-collapse text-left">
                 <thead>
-                  <tr className="text-micro font-medium tracking-wide text-base-500 uppercase">
+                  <tr className="text-micro font-medium tracking-wider text-secondary-foreground uppercase">
                     <th className="px-4 py-3 font-medium">Name</th>
                     <th className="px-4 py-3 font-medium">Scopes</th>
                     <th className="px-4 py-3 font-medium">Expires</th>
@@ -290,34 +295,36 @@ function Reveal({
   return (
     <section
       aria-live="polite"
-      className="mt-6 rounded-2xl bg-base-50 p-5 ring-1 ring-base-200"
+      className="mt-6 rounded-2xl bg-card p-5 ring-1 ring-border-default"
     >
       <div className="flex items-start gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-base-900 ring-1 ring-edge">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-container text-primary-foreground ring-1 ring-edge">
           <Key className="size-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-title font-medium text-base-900">Keep it safe</p>
-          <p className="mt-0.5 text-caption text-base-600">
-            This is your token for <span className="text-base-900">{name}</span>
+          <p className="text-title font-medium text-primary-foreground">Keep it safe</p>
+          <p className="mt-0.5 text-caption text-secondary-foreground">
+            This is your token for <span className="text-primary-foreground">{name}</span>
             . Copy it now; it won&apos;t be shown again.
           </p>
           <div className="mt-3 flex items-center gap-2">
-            <code className="min-w-0 flex-1 rounded-lg bg-white px-3 py-2.5 font-mono text-caption leading-relaxed break-all text-base-900 ring-1 ring-base-200 select-all">
+            <code className="min-w-0 flex-1 rounded-lg bg-container px-3 py-2.5 font-mono text-caption leading-relaxed break-all text-primary-foreground ring-1 ring-border-default select-all">
               {secret}
             </code>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="lg"
+              shape="pill"
+              iconOnly
               onClick={copy}
               aria-label={copied ? "Copied" : "Copy token"}
-              className="flex size-11 shrink-0 items-center justify-center rounded-full text-base-900 ring-1 ring-base-200 transition-[background-color,scale] duration-150 hover:bg-base-50 active:scale-[0.96]"
             >
               {copied ? (
                 <Check className="size-4" />
               ) : (
                 <Copy className="size-4" />
               )}
-            </button>
+            </Button>
             <span role="status" className="sr-only">
               {copied ? "Copied" : ""}
             </span>
@@ -367,18 +374,19 @@ function CreatePanel({
   return (
     <form
       onSubmit={submit}
-      className="mt-6 rounded-2xl bg-white p-5 ring-1 ring-base-200"
+      className="mt-6 rounded-2xl bg-container p-5 shadow-xs"
     >
       <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
           <label
             htmlFor="token-name"
-            className="text-caption font-medium text-base-600"
+            className="text-caption font-medium text-secondary-foreground"
           >
             Name
           </label>
-          <input
+          <Input
             id="token-name"
+            size="lg"
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -386,13 +394,13 @@ function CreatePanel({
             placeholder="The app or machine it's for"
             autoComplete="off"
             spellCheck={false}
-            className="mt-1 block h-11 w-full rounded-lg bg-white px-3 text-body text-base-900 ring-1 ring-base-200 placeholder:text-base-400 focus:ring-2 focus:ring-base-400 focus:outline-none pointer-coarse:text-[16px]"
+            className="mt-1"
           />
         </div>
         <div>
           <p
             id="token-days-label"
-            className="text-caption font-medium text-base-600"
+            className="text-caption font-medium text-secondary-foreground"
           >
             Expires in
           </p>
@@ -408,7 +416,7 @@ function CreatePanel({
         </div>
       </div>
       <fieldset className="mt-4">
-        <legend className="text-caption font-medium text-base-600">
+        <legend className="text-caption font-medium text-secondary-foreground">
           Scopes
         </legend>
         <div className="mt-1 grid gap-2 sm:grid-cols-2">
@@ -418,27 +426,26 @@ function CreatePanel({
               <label
                 key={scope}
                 className={cx(
-                  "flex cursor-pointer items-start gap-3 rounded-xl bg-white p-3 ring-1 transition-colors duration-150",
-                  on ? "ring-base-900" : "ring-base-200 hover:ring-base-300",
+                  "flex cursor-pointer items-start gap-3 rounded-xl bg-component-on-container-subtle p-3 ring-1 transition-shadow duration-150 ease-out-quint",
+                  on ? "ring-primary-foreground" : "ring-border-default hover:ring-border-strong",
                 )}
               >
-                <input
-                  type="checkbox"
+                {/* The card is its label, so a tap anywhere on it flips the box */}
+                <Checkbox
+                  size="sm"
                   checked={on}
-                  onChange={(e) =>
+                  onCheckedChange={(checked) =>
                     setScopes((s) =>
-                      e.target.checked
-                        ? [...s, scope]
-                        : s.filter((x) => x !== scope),
+                      checked ? [...s, scope] : s.filter((x) => x !== scope),
                     )
                   }
-                  className="mt-0.5 size-4 rounded border-base-300 text-accent-600 focus:ring-base-400"
+                  className="mt-0.5"
                 />
                 <span className="min-w-0">
-                  <span className="block text-subtitle font-medium text-base-900">
+                  <span className="block text-subtitle font-medium text-primary-foreground">
                     {SCOPE_WORDS[scope].short}
                   </span>
-                  <span className="block text-caption text-base-600">
+                  <span className="block text-caption text-secondary-foreground">
                     {SCOPE_WORDS[scope].long}
                   </span>
                 </span>
@@ -448,7 +455,8 @@ function CreatePanel({
         </div>
       </fieldset>
       {error && (
-        <p role="alert" className="mt-3 text-caption text-danger-600">
+        <p role="alert" className="mt-3 flex items-start gap-1.5 text-caption text-danger-foreground">
+          <WarningCircle className="mt-px size-3.5 shrink-0" />
           {error}
         </p>
       )}
@@ -471,31 +479,28 @@ function Row({ token, onRevoke }: { token: TokenRow; onRevoke: () => void }) {
   return (
     <tr
       className={cx(
-        "border-t border-base-100 text-body",
-        dead && "text-base-500",
+        "border-t border-border-default text-body",
+        dead && "text-secondary-foreground",
       )}
     >
       <td className="max-w-[22rem] px-4 py-3">
         <p
           className={cx(
             "truncate font-medium",
-            dead ? "text-base-500" : "text-base-900",
+            dead ? "text-secondary-foreground" : "text-primary-foreground",
           )}
           title={token.name}
         >
           {token.name}
         </p>
-        <p className="font-mono text-micro text-base-500">{token.prefix}…</p>
+        <p className="font-mono text-micro text-secondary-foreground">{token.prefix}…</p>
       </td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-1">
           {token.scopes.map((scope) => (
-            <span
-              key={scope}
-              className="rounded-md bg-base-100 px-1.5 py-0.5 font-mono text-micro text-base-700"
-            >
+            <Badge key={scope} size="sm" className="font-mono">
               {scope.replace("curatit:", "")}
-            </span>
+            </Badge>
           ))}
         </div>
       </td>
@@ -505,7 +510,7 @@ function Row({ token, onRevoke }: { token: TokenRow; onRevoke: () => void }) {
         ) : status === "expired" ? (
           `Expired ${when(token.expires_at)}`
         ) : status === "expiring" ? (
-          <span className="text-accent-700">
+          <span className="text-on-brand-subtle-foreground">
             in {days === 1 ? "1 day" : `${days} days`}
           </span>
         ) : (

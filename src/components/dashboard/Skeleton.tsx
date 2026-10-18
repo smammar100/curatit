@@ -13,7 +13,7 @@ export function Block({ className, style }: { className?: string; style?: CSSPro
     <div
       aria-hidden="true"
       className={cx(
-        "animate-shimmer bg-base-100 bg-[linear-gradient(100deg,transparent_35%,var(--color-shimmer)_50%,transparent_65%)] bg-size-[200%_100%] motion-reduce:animate-none",
+        "animate-shimmer bg-component bg-[linear-gradient(100deg,transparent_35%,var(--color-shimmer)_50%,transparent_65%)] bg-size-[200%_100%] motion-reduce:animate-none",
         className,
       )}
       style={style}
@@ -53,7 +53,7 @@ export function HeaderSkeleton() {
   return (
     <div aria-hidden="true" className="grid h-23 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 sm:gap-4 sm:px-6 lg:grid-cols-[1fr_minmax(0,36rem)_1fr] lg:gap-8">
       <div className="flex items-center gap-6">
-        <Symbol className="size-8 text-base-900" />
+        <Symbol className="size-8 text-primary-foreground" />
         <div className="hidden items-center gap-6 lg:flex">
           <Block className="h-4 w-16 rounded-full" />
           <Block className="h-4 w-14 rounded-full" />
@@ -72,12 +72,12 @@ export function HeaderSkeleton() {
 }
 
 // A post on its way, in the shape PostView opens in: the dimmed page, the dark stage on the
-// left and the panel's lines on the right
+// left and the panel's lines on the right. The dim and the stage stay black in both themes
 export function PostSkeleton() {
   return (
     <div role="status" aria-label="Loading post" className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-10 lg:px-24">
       <div aria-hidden="true" className="absolute inset-0 bg-black/55 backdrop-blur-sm" />
-      <div className="relative grid h-full max-h-[54rem] w-full max-w-[76rem] grid-cols-[minmax(0,1fr)] grid-rows-[62dvh_1fr] overflow-hidden rounded-[28px] bg-white shadow-2xl lg:grid-cols-[minmax(0,1fr)_27rem] lg:grid-rows-1">
+      <div className="relative grid h-full max-h-[54rem] w-full max-w-[76rem] grid-cols-[minmax(0,1fr)] grid-rows-[62dvh_1fr] overflow-hidden rounded-[28px] bg-modal shadow-xl lg:grid-cols-[minmax(0,1fr)_27rem] lg:grid-rows-1">
         <div className="bg-black" />
         <div className="flex flex-col p-6">
           <div className="flex items-center gap-3.5">

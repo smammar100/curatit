@@ -9,7 +9,7 @@ export default function Faq({ faqs }: { faqs: { question: string; answer: string
     <section>
       <Wrapper variant="standard" className="section-y">
         <div className="text-center">
-          <Text tag="h2" variant="displayLG" className="text-base-900">
+          <Text tag="h2" variant="h1" className="text-primary-foreground">
             Frequently asked questions
           </Text>
         </div>
@@ -17,14 +17,14 @@ export default function Faq({ faqs }: { faqs: { question: string; answer: string
           <div>
             {faqs.map((faq) => (
               <details key={faq.question} className="group">
-                <summary className="flex w-full cursor-pointer items-center justify-between gap-4 rounded-sm py-4 text-left text-body-base font-medium text-primary-foreground select-none transition-colors duration-150 hover:text-brand-foreground focus-visible:text-brand-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus sm:px-8 [&::-webkit-details-marker]:hidden">
+                <summary className="flex w-full cursor-pointer items-center justify-between gap-4 rounded-sm py-4 text-left text-body-base font-medium text-primary-foreground select-none transition-colors duration-150 ease-out-quint hover:text-brand-foreground focus-visible:text-brand-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus sm:px-8 [&::-webkit-details-marker]:hidden">
                   {faq.question}
                   <Plus className="size-4 shrink-0 transition-[rotate] duration-200 ease-out-quint group-open:-rotate-45 motion-reduce:transition-none" />
                 </summary>
                 {/* motion-safe rather than motion-reduce:animate-none, which group-open's
                     selector would outrank */}
-                <div className="py-4 sm:px-8 motion-safe:group-open:animate-[rise-in_200ms_var(--ease-out-quint)]">
-                  <Text tag="p" variant="textSM" className="text-base-600">
+                <div className="py-4 sm:px-8 motion-safe:group-open:animate-rise-in">
+                  <Text tag="p" variant="bodySM" className="text-secondary-foreground">
                     {faq.answer}
                   </Text>
                 </div>

@@ -18,22 +18,22 @@ export const countLabel = (value: number | null | undefined) => (value == null |
 
 export default function ObservedEngagement({ likes, comments, category }: { likes: number | null; comments: number | null; category?: { name: string; slug: string } }) {
   const card = (label: string, Glyph: (props: IconProps) => ReactNode, value: ReactNode, valueClass: string) => (
-    <div key={label} className="flex min-w-0 flex-col gap-0.5 rounded-2xl bg-base-50 px-3 py-3">
-      <dt className="flex min-w-0 items-center gap-1.5 text-caption text-base-500">
+    <div key={label} className="flex min-w-0 flex-col gap-0.5 rounded-2xl bg-card px-3 py-3">
+      <dt className="flex min-w-0 items-center gap-1.5 text-caption text-secondary-foreground">
         <Glyph className="size-3.5 shrink-0" aria-hidden="true" />
         <span className="truncate">{label}</span>
       </dt>
       <dd className={valueClass}>{value}</dd>
     </div>
   );
-  const count = (value: number | null) => (value == null ? "text-body text-base-500" : "text-title font-medium text-base-900 tabular-nums");
+  const count = (value: number | null) => (value == null ? "text-body text-secondary-foreground" : "text-title font-medium text-primary-foreground tabular-nums");
   return (
     // The category's column is a little wider, so its longest name ("Travel & Transportation")
     // wraps between words onto two lines and never breaks inside one
     <dl className={category ? "grid grid-cols-[1fr_1fr_1.25fr] gap-2" : "grid grid-cols-2 gap-2"}>
       {card("Likes", Heart, countLabel(likes), count(likes))}
       {card("Comments", ChatCircle, countLabel(comments), count(comments))}
-      {category && card("Category", CATEGORY_ICONS[category.slug] ?? SquaresFour, category.name, "text-subtitle font-medium text-balance text-base-900")}
+      {category && card("Category", CATEGORY_ICONS[category.slug] ?? SquaresFour, category.name, "text-subtitle font-medium text-balance text-primary-foreground")}
     </dl>
   );
 }

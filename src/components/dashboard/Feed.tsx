@@ -101,7 +101,7 @@ export default function Feed() {
   const waiting = (view === "Saved" && status === "loading") || (view === "For you" && (profileStatus === "loading" || (onFeed && unset)));
 
   return (
-    <div className="min-h-dvh bg-white">
+    <div className="min-h-dvh bg-page">
       {/* Only this reads the address during render, so only it waits for the browser */}
       <Suspense fallback={null}>
         <AddressSync onAddress={fromAddress} />
@@ -115,7 +115,7 @@ export default function Feed() {
           <GridSkeleton label={view === "Saved" ? "Loading your saved posts" : "Loading your feed"} />
         ) : shown.length ? (
           <>
-            {view === "Saved" && !query && boards.length > 0 && <h2 className="mb-5 text-title font-medium text-base-900">All saved posts</h2>}
+            {view === "Saved" && !query && boards.length > 0 && <h2 className="mb-5 text-title font-medium text-primary-foreground">All saved posts</h2>}
             <Grid posts={shown} />
           </>
         ) : (
@@ -133,8 +133,8 @@ function Empty({ view, query, onClear, onBrowse }: { view: View; query: string; 
     return (
       <div className="mx-auto flex max-w-sm flex-col items-center py-16 text-center">
         <SavedArt />
-        <p className="mt-8 text-title font-medium text-base-900">Your swipe file is empty</p>
-        <p className="mt-2 text-body text-pretty text-base-600">See a carousel that stops your thumb, or a launch you wish you’d made? Hit Save. It waits here for your next brief.</p>
+        <p className="mt-8 text-title font-medium text-primary-foreground">Your swipe file is empty</p>
+        <p className="mt-2 text-body text-pretty text-secondary-foreground">See a carousel that stops your thumb, or a launch you wish you’d made? Hit Save. It waits here for your next brief.</p>
         <Button size="sm" variant="default" onClick={onBrowse} className="mt-6 w-fit">
           Start your swipe file
         </Button>
@@ -144,9 +144,9 @@ function Empty({ view, query, onClear, onBrowse }: { view: View; query: string; 
   // A search that found nothing
   return (
     <div className="mx-auto max-w-sm py-24 text-center">
-      <p className="text-subtitle font-medium text-base-900">{`Nothing matches ‘${query}’`}</p>
-      <p className="mt-2 text-body text-base-600">Try a format or a goal instead, like ‘carousel’ or ‘launch’.</p>
-      <button type="button" onClick={onClear} className="mt-6 text-body font-medium text-accent-600 hover:text-accent-500">
+      <p className="text-subtitle font-medium text-primary-foreground">{`Nothing matches ‘${query}’`}</p>
+      <p className="mt-2 text-body text-secondary-foreground">Try a format or a goal instead, like ‘carousel’ or ‘launch’.</p>
+      <button type="button" onClick={onClear} className="mt-6 rounded-sm text-body font-medium text-brand-foreground underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus">
         Clear search
       </button>
     </div>

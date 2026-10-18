@@ -97,14 +97,14 @@ export default function PasswordField({
           {[1, 2, 3, 4].map((step) => (
             <span
               key={step}
-              className="h-1 overflow-hidden rounded-full bg-base-100"
+              className="h-1 overflow-hidden rounded-full bg-component"
             >
               <span
                 className={cx(
-                  "block h-full origin-left rounded-full transition-[scale,background-color] duration-200 ease-out motion-reduce:transition-none",
+                  "block h-full origin-left rounded-full transition-[scale,background-color] duration-200 ease-out-quint motion-reduce:transition-none",
                   step <= level
                     ? cx(fill, "scale-x-100")
-                    : "scale-x-0 bg-base-300",
+                    : "scale-x-0 bg-border-strong",
                 )}
                 // The fill sweeps left to right as the level climbs
                 style={{ transitionDelay: `${(step - 1) * 40}ms` }}
@@ -115,7 +115,7 @@ export default function PasswordField({
         <p
           aria-live="polite"
           className={cx(
-            "w-12 text-right text-xs font-medium transition-colors duration-200 motion-reduce:transition-none",
+            "w-12 text-right text-caption-lg font-medium transition-colors duration-200 ease-out-quint motion-reduce:transition-none",
             text,
           )}
         >
@@ -135,8 +135,8 @@ export default function PasswordField({
             <li
               key={rule.id}
               className={cx(
-                "flex items-center gap-1.5 text-xs transition-colors duration-150 motion-reduce:transition-none",
-                ok ? "text-base-900" : "text-secondary-foreground",
+                "flex items-center gap-1.5 text-caption-lg transition-colors duration-150 ease-out-quint motion-reduce:transition-none",
+                ok ? "text-primary-foreground" : "text-secondary-foreground",
               )}
             >
               <span
@@ -146,7 +146,7 @@ export default function PasswordField({
                 {ok ? (
                   <Check className="size-3" />
                 ) : (
-                  <span className="size-1 rounded-full bg-base-400" />
+                  <span className="size-1 rounded-full bg-tertiary-foreground" />
                 )}
               </span>
               <span className="sr-only">{ok ? "Done: " : "Needs: "}</span>

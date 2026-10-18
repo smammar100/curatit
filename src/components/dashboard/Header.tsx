@@ -12,6 +12,7 @@ import Symbol from "@/components/assets/Symbol";
 import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
 import CaretDown from "@/components/fundations/icons/CaretDown";
 import Plus from "@/components/fundations/icons/Plus";
+import Button from "@/components/fundations/elements/Button";
 import { cx } from "@/lib/cx";
 import AccountMenu from "./AccountMenu";
 import { useBoards } from "./boards";
@@ -43,10 +44,14 @@ export default function Header({
   const savedCount = useMemo(() => new Set(boards.flatMap((board) => board.items.map((item) => item.post))).size, [boards]);
 
   return (
-    <header className="sticky top-0 z-30 grid h-23 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 bg-white px-4 sm:gap-4 sm:px-6 lg:grid-cols-[1fr_minmax(0,36rem)_1fr] lg:gap-8">
+    <header className="sticky top-0 z-30 grid h-23 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 bg-page px-4 sm:gap-4 sm:px-6 lg:grid-cols-[1fr_minmax(0,36rem)_1fr] lg:gap-8">
       <div className="flex items-center gap-6">
-        <Link href="/dashboard" aria-label="Your feed" className="text-base-900">
-          <Symbol className="size-8" />
+        <Link
+          href="/dashboard"
+          aria-label="Your feed"
+          className="rounded-sm text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus"
+        >
+          <Symbol className="size-8" aria-hidden="true" />
         </Link>
         {/* Tabs on wide screens, a menu below that */}
         <nav aria-label="Feed" className="hidden items-center gap-6 lg:flex">
@@ -56,7 +61,7 @@ export default function Header({
               type="button"
               aria-current={option === view ? "page" : undefined}
               onClick={() => onView(option)}
-              className="text-title font-medium whitespace-nowrap text-base-500 transition-colors duration-150 hover:text-base-900 aria-[current=page]:text-base-900"
+              className="rounded-sm text-title font-medium whitespace-nowrap text-secondary-foreground transition-colors duration-150 ease-out-quint hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-[current=page]:text-primary-foreground"
             >
               {option}
             </button>
@@ -69,22 +74,27 @@ export default function Header({
 
       <div className="flex items-center justify-end gap-2">
         <CreateBoard />
-        {/* Saved: filled while you're on it (or on one of your boards), with the count */}
-        <button
-          type="button"
+        {/* Saved: filled while you're on it (or on one of your boards), with the count. Filled is
+            the primary button's solid, without the secondary one's shadow */}
+        <Button
+          variant="secondary"
+          size="lg"
+          shape="pill"
+          iconOnly
           onClick={() => onView("Saved")}
           aria-label={savedCount ? `Saved, ${savedCount} ${savedCount === 1 ? "post" : "posts"}` : "Saved"}
           aria-current={view === "Saved" ? "page" : undefined}
           title="Saved"
-          className="relative flex size-11 shrink-0 items-center justify-center rounded-full text-base-900 ring-1 ring-base-200 transition-[background-color,color,scale] duration-150 hover:bg-base-50 active:scale-[0.96] aria-[current=page]:bg-base-900 aria-[current=page]:text-white aria-[current=page]:ring-base-900"
+          className="aria-[current=page]:bg-inverted-solid aria-[current=page]:text-on-inverted-foreground aria-[current=page]:shadow-none"
         >
           <BookmarkSimple className="size-4.5" />
+          {/* The count: the brand's solid, cut out of the header by a ring of the page's colour */}
           {savedCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-600 px-1 text-micro font-medium text-paper tabular-nums ring-2 ring-white">
+            <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-solid px-1 text-micro font-medium text-on-brand-solid-foreground tabular-nums ring-2 ring-page">
               {savedCount}
             </span>
           )}
-        </button>
+        </Button>
         <AccountMenu savedCount={savedCount} onShowSaved={() => onView("Saved")} />
       </div>
     </header>
@@ -101,7 +111,7 @@ function ViewMenu({ view, onChange, className }: { view: View | null; onChange: 
         type="button"
         aria-haspopup="menu"
         {...popover.triggerProps}
-        className="flex items-center gap-1.5 text-title font-medium text-base-900"
+        className="flex items-center gap-1.5 rounded-sm text-title font-medium text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
       >
         {view ?? "Feed"}
         <CaretDown className={cx("size-3.5 transition-transform duration-200 ease-out-quint motion-reduce:transition-none", popover.open && "rotate-180")} />
@@ -111,10 +121,11 @@ function ViewMenu({ view, onChange, className }: { view: View | null; onChange: 
           {...popover.contentProps}
           role="menu"
           aria-label="Feed"
-          className={cx("absolute left-0 z-40 mt-2 w-44 origin-top-left rounded-2xl bg-modal p-1.5 shadow-lg outline-none", popover.motion)}
+          className={cx("absolute left-0 z-40 mt-2 w-44 origin-top-left rounded-2xl bg-modal p-1.5 shadow-lg outline-hidden", popover.motion)}
         >
+          {/* Rows and their highlight are the menu's radius less its padding (12 − 6) */}
           <div ref={glide.ref} {...glide.handlers} className="relative">
-            <span aria-hidden="true" className={cx(GLIDE_HIGHLIGHT, "rounded-xl")} style={glide.highlight.style} data-fresh={glide.highlight.fresh || undefined} />
+            <span aria-hidden="true" className={cx(GLIDE_HIGHLIGHT, "rounded-md")} style={glide.highlight.style} data-fresh={glide.highlight.fresh || undefined} />
             {TABS.map((option) => (
               <button
                 key={option}
@@ -127,10 +138,10 @@ function ViewMenu({ view, onChange, className }: { view: View | null; onChange: 
                   onChange(option);
                   popover.close();
                 }}
-                className={cx("flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-body text-base-900", GLIDE_ROW)}
+                className={cx("flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-body text-primary-foreground", GLIDE_ROW)}
               >
                 {option}
-                {option === view && <span className="size-1.5 rounded-full bg-base-900" aria-hidden="true" />}
+                {option === view && <span className="size-1.5 rounded-full bg-primary-foreground" aria-hidden="true" />}
               </button>
             ))}
           </div>
@@ -140,21 +151,26 @@ function ViewMenu({ view, onChange, className }: { view: View | null; onChange: 
   );
 }
 
-// Create: opens the new board dialog
+// Create: opens the new board dialog. Just the plus below md, where it keeps a near-round 12px
+// either side; the label joins it from md. Button lg's own px-4 is overridden on purpose
+// (12px below md, 20px from md, as before): the breakpoint variants sort after the base
+// utility, so they always win
 function CreateBoard() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button
-        type="button"
+      <Button
+        variant="secondary"
+        size="lg"
+        shape="pill"
         onClick={() => setOpen(true)}
         aria-label="Create a board"
         aria-haspopup="dialog"
-        className="flex h-11 items-center gap-1.5 rounded-full px-3 text-title font-medium text-base-900 ring-1 ring-base-200 transition-[background-color,scale] duration-150 hover:bg-base-50 active:scale-[0.96] md:px-5"
+        leftIcon={<Plus className="size-4.5" />}
+        className="max-md:px-3 md:px-5"
       >
-        <Plus className="size-4.5" />
         <span className="hidden md:inline">Create</span>
-      </button>
+      </Button>
       <NewBoardDialog open={open} onClose={() => setOpen(false)} />
     </>
   );

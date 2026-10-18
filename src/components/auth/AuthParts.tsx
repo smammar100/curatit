@@ -8,14 +8,18 @@ import { cx } from "@/lib/cx";
 // size: 40px, 13px text, radius 8, a white surface carrying the default shadow in place of a
 // border, the brand ring on focus, the danger ring when the field has a problem. 16px on touch
 // screens so iOS doesn't zoom into it. border-0 takes off the grey border @tailwindcss/forms
-// gives text fields (blue on focus); outline-hidden keeps an outline in forced-colours mode,
-// where the shadow ring isn't drawn.
+// gives text fields (blue on focus), and focus:ring-0 the 1px blue ring it draws on focus, which
+// sat over the brand ring and turned it purple; outline-hidden keeps an outline in forced-colours
+// mode, where the shadow ring isn't drawn.
 export const inputClass =
-  "block h-10 w-full rounded-lg border-0 bg-component-on-container-subtle px-3 text-body-sm text-primary-foreground shadow-sm placeholder:text-tertiary-foreground transition-[box-shadow] duration-150 ease-out focus:z-10 focus:outline-hidden pointer-coarse:text-[16px]";
+  "block h-10 w-full rounded-lg border-0 bg-component-on-container-subtle px-3 text-body-sm text-primary-foreground shadow-sm placeholder:text-tertiary-foreground transition-[box-shadow] duration-150 ease-out-quint focus:z-10 focus:ring-0 focus:outline-hidden pointer-coarse:text-[16px]";
 const ringClass = {
   ok: "focus:shadow-[0_0_0_2px_var(--color-brand-border-focus)]",
+  // Keyed off aria-invalid (which AuthField sets with the error) so the ring is a variant: a
+  // plain class came earlier in the stylesheet than shadow-sm and lost to it, so the red ring
+  // only showed on focus. The shared Input's fieldClass does the same
   error:
-    "shadow-[0_0_0_1px_var(--color-danger-border-default)] focus:shadow-[0_0_0_2px_var(--color-danger-border-default)]",
+    "aria-invalid:shadow-[0_0_0_1px_var(--color-danger-border-default)] aria-invalid:focus:shadow-[0_0_0_2px_var(--color-danger-border-default)]",
 };
 
 // A labelled input; `aside` sits at the label's right, like "Forgot password?". `error` is a

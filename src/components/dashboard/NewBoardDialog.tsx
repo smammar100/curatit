@@ -7,6 +7,7 @@
 // little faster, through the shared .dialog-motion (global.css), still under reduced motion.
 import { useEffect, useId, useRef, useState } from "react";
 import Close from "@/components/fundations/icons/Close";
+import Button from "@/components/fundations/elements/Button";
 import Switch from "@/components/fundations/elements/Switch";
 import { cx } from "@/lib/cx";
 import { NAME_MAX, useBoards } from "./boards";
@@ -36,8 +37,9 @@ export default function NewBoardDialog({ open, onClose, firstPost }: { open: boo
     } else if (!open && dialog.open) dialog.close();
   }, [open]);
 
-  // The fills are alpha tints (card, component), so they read on the modal surface in both themes
-  const field = "w-full rounded-xl border-0 bg-transparent px-3 text-center text-base-900 transition-colors duration-150 focus:bg-card focus:ring-0 focus:outline-none";
+  // The fills are alpha tints (card, component), so they read on the modal surface in both themes.
+  // Each field sets its own text colour (cx doesn't merge, so a second one here would fight it)
+  const field = "w-full rounded-xl border-0 bg-transparent px-3 text-center transition-colors duration-150 ease-out-quint focus:bg-card focus:ring-0 focus:outline-hidden";
 
   return (
     <dialog
@@ -52,7 +54,7 @@ export default function NewBoardDialog({ open, onClose, firstPost }: { open: boo
       onClose={() => open && onClose()}
       // A click on the dimmed page behind (the dialog's own box, outside the card) closes it
       onClick={(event) => event.target === event.currentTarget && onClose()}
-      className="dialog-motion m-auto w-[calc(100%-2rem)] max-w-md rounded-[28px] border-0 bg-modal p-0 text-base-900 shadow-xl backdrop:bg-black/40 backdrop:backdrop-blur-sm"
+      className="dialog-motion m-auto w-[calc(100%-2rem)] max-w-md rounded-[28px] border-0 bg-modal p-0 text-primary-foreground shadow-xl backdrop:bg-black/40 backdrop:backdrop-blur-sm"
     >
       <form
         className="p-6"
@@ -65,17 +67,12 @@ export default function NewBoardDialog({ open, onClose, firstPost }: { open: boo
         }}
       >
         <div className="flex items-center justify-between">
-          <h2 id={`${id}-title`} className="text-title font-medium text-base-500">
+          <h2 id={`${id}-title`} className="text-title font-medium text-secondary-foreground">
             New board
           </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="-mr-2 flex size-10 items-center justify-center rounded-full text-base-900 transition-[background-color,scale] duration-150 hover:bg-card active:scale-[0.96]"
-          >
+          <Button variant="transparent" size="base" shape="pill" iconOnly onClick={onClose} aria-label="Close" className="-mr-2">
             <Close className="size-4" />
-          </button>
+          </Button>
         </div>
 
         <div className="space-y-2 py-10">
@@ -91,7 +88,7 @@ export default function NewBoardDialog({ open, onClose, firstPost }: { open: boo
             maxLength={NAME_MAX}
             placeholder="Board name"
             autoComplete="off"
-            className={cx(field, "py-1 font-display text-display font-light placeholder:text-base-300")}
+            className={cx(field, "py-1 font-display text-display font-light text-primary-foreground placeholder:text-tertiary-foreground")}
           />
           <label htmlFor={`${id}-about`} className="sr-only">
             Short description
@@ -111,17 +108,17 @@ export default function NewBoardDialog({ open, onClose, firstPost }: { open: boo
             }}
             maxLength={DESCRIPTION_MAX}
             placeholder="What’s this board for? (optional)"
-            className={cx(field, "resize-none py-2 text-body pointer-coarse:text-[16px] text-pretty text-base-600 placeholder:text-base-400")}
+            className={cx(field, "resize-none py-2 text-body pointer-coarse:text-[16px] text-pretty text-secondary-foreground placeholder:text-tertiary-foreground")}
           />
         </div>
 
         <div className="flex items-center justify-between gap-4">
           {/* The words are the switch's label, so a tap on them flips it too */}
           <label htmlFor={`${id}-switch`} className="min-w-0 flex-1 select-none">
-            <span id={`${id}-share`} className="block text-subtitle font-medium text-base-900">
+            <span id={`${id}-share`} className="block text-subtitle font-medium text-primary-foreground">
               Share with a link
             </span>
-            <span id={`${id}-share-note`} className="block text-body text-base-500">
+            <span id={`${id}-share-note`} className="block text-body text-secondary-foreground">
               Anyone with the link can view it, read-only
             </span>
           </label>
@@ -134,13 +131,9 @@ export default function NewBoardDialog({ open, onClose, firstPost }: { open: boo
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={!name.trim()}
-          className="mt-6 h-12 w-full rounded-full bg-base-900 text-subtitle font-medium text-white transition-[background-color,scale] duration-150 hover:bg-base-800 active:scale-[0.96] disabled:bg-component disabled:text-base-500"
-        >
+        <Button type="submit" variant="default" size="xl" shape="pill" disabled={!name.trim()} className="mt-6 w-full">
           Create board
-        </button>
+        </Button>
       </form>
     </dialog>
   );

@@ -11,6 +11,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { BorderBeam } from "border-beam";
+import Button from "@/components/fundations/elements/Button";
 // Icons
 import Close from "@/components/fundations/icons/Close";
 import Search from "@/components/fundations/icons/Search";
@@ -137,7 +138,7 @@ export default function SearchBox({
         <div
           aria-hidden="true"
           data-closing={panel.closing || undefined}
-          className="fixed inset-0 z-10 animate-[fade-in_150ms_var(--ease-out-quint)] bg-black/25 motion-reduce:animate-none data-closing:pointer-events-none data-closing:animate-[fade-out_120ms_var(--ease-in-quart)_forwards]"
+          className="fixed inset-0 z-10 animate-fade-in bg-black/25 motion-reduce:animate-none data-closing:pointer-events-none data-closing:animate-fade-out"
         />
       )}
       <div
@@ -159,10 +160,14 @@ export default function SearchBox({
           }}
         >
           {/* The radius is given rather than read from the pill: rounded-full computes to an
-              effectively infinite radius, which the beam can't draw */}
+              effectively infinite radius, which the beam can't draw. The pill is a field: the
+              fields' surface and default shadow, and their 2px brand ring while the input has focus (not
+              the Clear button, which draws its own).
+              The beam's wrapper clips everything outside the pill (overflow: hidden), so only the
+              shadow's inner part shows, and the ring is drawn inside */}
           <BorderBeam {...beam} active={beam.active && !open} borderRadius={26}>
-            <label className="relative flex h-13 items-center rounded-full bg-white ring-1 ring-base-200 transition-[box-shadow] duration-150 focus-within:ring-base-300">
-              <Search className="pointer-events-none absolute left-5 size-4.5 text-base-500" />
+            <label className="relative flex h-13 items-center rounded-full bg-component-on-container-subtle shadow-sm transition-[box-shadow] duration-150 ease-out-quint has-[input:focus]:shadow-[inset_0_0_0_2px_var(--color-brand-border-focus)]">
+              <Search className="pointer-events-none absolute left-5 size-4.5 text-tertiary-foreground" />
               <span className="sr-only">Search the library</span>
               <input
                 ref={inputRef}
@@ -178,22 +183,27 @@ export default function SearchBox({
                 onClick={() => setOpen(true)}
                 placeholder="Search brands, categories or ideas"
                 autoComplete="off"
-                className="h-full w-full rounded-full border-0 bg-transparent pr-12 pl-12 text-body pointer-coarse:text-[16px] text-base-900 placeholder-base-500 focus:ring-0 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+                className="h-full w-full rounded-full border-0 bg-transparent pr-12 pl-12 text-body pointer-coarse:text-[16px] text-primary-foreground placeholder:text-tertiary-foreground focus:ring-0 focus:outline-hidden [&::-webkit-search-cancel-button]:hidden"
               />
               {query ? (
-                <button
-                  type="button"
-                  aria-label="Clear search"
-                  onClick={() => {
-                    onQuery("");
-                    inputRef.current?.focus();
-                  }}
-                  className="absolute right-3 flex size-8 items-center justify-center rounded-full text-base-500 hover:bg-base-50 hover:text-base-900"
-                >
-                  <Close className="size-3.5" />
-                </button>
+                // Placed by a plain span: Button is relative itself
+                <span className="absolute right-3 flex">
+                  <Button
+                    variant="transparent"
+                    size="sm"
+                    shape="pill"
+                    iconOnly
+                    aria-label="Clear search"
+                    onClick={() => {
+                      onQuery("");
+                      inputRef.current?.focus();
+                    }}
+                  >
+                    <Close className="size-3.5" />
+                  </Button>
+                </span>
               ) : (
-                <kbd className="pointer-events-none absolute right-4 hidden h-6 min-w-6 items-center justify-center rounded-md px-1.5 font-sans text-caption text-base-500 ring-1 ring-base-200 md:flex">
+                <kbd className="pointer-events-none absolute right-4 hidden h-6 min-w-6 items-center justify-center rounded-md px-1.5 font-sans text-caption text-secondary-foreground ring-1 ring-border-strong md:flex">
                   /
                 </kbd>
               )}
@@ -207,16 +217,18 @@ export default function SearchBox({
           <div
             inert={panel.closing || undefined}
             data-closing={panel.closing || undefined}
-            className="absolute inset-x-0 top-full mt-3 origin-top animate-[menu-in_150ms_var(--ease-out-quint)] motion-reduce:animate-none data-closing:animate-[menu-out_120ms_var(--ease-in-quart)_forwards]"
+            className="absolute inset-x-0 top-full mt-3 origin-top animate-menu-in motion-reduce:animate-none data-closing:animate-menu-out"
           >
             <BorderBeam {...beam} borderRadius={28}>
-              <div className="rounded-[28px] bg-white p-6 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.35)] dark:ring-1 dark:ring-edge">
+              {/* A large floating panel: the modal surface and the extra large shadow (the beam's
+                  wrapper clips its drops, so what shows is the dark theme's inner highlight) */}
+              <div className="rounded-[28px] bg-modal p-6 shadow-xl">
                 {recent.length > 0 && (
                   <Section title="Recent" onClear={clearRecent}>
                     <Row>
                       {recent.map((item) => (
                         <Chip key={item} onClick={() => pick(item)}>
-                          <Search className="size-4 shrink-0 text-base-500" />
+                          <Search className="size-4 shrink-0 text-tertiary-foreground" />
                           {item}
                         </Chip>
                       ))}
@@ -228,7 +240,7 @@ export default function SearchBox({
                     <Row>
                       {brands.map((brand) => (
                         <Chip key={brand.slug} onClick={() => pick(brand.name)}>
-                          <span className="relative size-6 shrink-0 overflow-hidden rounded-full bg-base-100 outline-1 -outline-offset-1 outline-edge">
+                          <span className="relative size-6 shrink-0 overflow-hidden rounded-full bg-component outline-1 -outline-offset-1 outline-edge">
                             {brand.logo && <Image src={brand.logo} alt="" fill sizes="24px" className="object-cover" />}
                           </span>
                           {brand.name}
@@ -257,7 +269,7 @@ export default function SearchBox({
                             type="button"
                             aria-label={`Posts from ${post.brand.name}`}
                             onClick={() => pick(post.brand.name)}
-                            className="relative block aspect-4/5 w-full overflow-hidden rounded-lg bg-base-100 outline-1 -outline-offset-1 outline-edge transition-[filter] duration-150 hover:brightness-95"
+                            className="relative block aspect-4/5 w-full overflow-hidden rounded-lg bg-component outline-1 -outline-offset-1 outline-edge transition-[filter] duration-150 ease-out-quint hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
                           >
                             <Image src={post.cover} alt="" fill sizes="120px" className="object-cover" />
                           </button>
@@ -279,9 +291,13 @@ function Section({ title, onClear, children }: { title: string; onClear?: () => 
   return (
     <section className="mt-6 first:mt-0">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-subtitle font-medium text-base-900">{title}</h2>
+        <h2 className="text-subtitle font-medium text-primary-foreground">{title}</h2>
         {onClear && (
-          <button type="button" onClick={onClear} className="text-body text-base-500 hover:text-base-900">
+          <button
+            type="button"
+            onClick={onClear}
+            className="rounded-sm text-body text-secondary-foreground transition-colors duration-150 ease-out-quint hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
+          >
             Clear
           </button>
         )}
@@ -301,7 +317,7 @@ function Chip({ onClick, children }: { onClick: () => void; children: ReactNode 
     <button
       type="button"
       onClick={onClick}
-      className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-base-50 px-4 text-body font-medium whitespace-nowrap text-base-900 transition-[background-color,scale] duration-150 hover:bg-base-100 active:scale-[0.96]"
+      className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-card px-4 text-body font-medium whitespace-nowrap text-primary-foreground transition-[background-color,scale] duration-150 ease-out-quint hover:bg-transparent-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.96]"
     >
       {children}
     </button>

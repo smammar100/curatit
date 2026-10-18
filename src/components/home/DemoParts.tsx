@@ -9,6 +9,7 @@ import {
   type FocusEvent,
 } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
+import Segmented from "@/components/fundations/elements/Segmented";
 import Search from "@/components/fundations/icons/Search";
 import { cx } from "@/lib/cx";
 import { briefs } from "./demo";
@@ -169,7 +170,16 @@ export function useTyped(text: string, enabled: boolean) {
   return { typed: text.slice(0, count), done: count >= text.length };
 }
 
-// The example briefs as a segmented control that always fits one row
+// The example briefs as the shared segmented control, stretched across the card with the options
+// sharing its width (`[&>button]` reaches the options and leaves the thumb alone, and its selector
+// outranks Segmented's own px-3 rather than relying on stylesheet order). They keep 8px padding,
+// as they had before, so the row still fits a 240px card (a 320px phone, a 1024px window). Until
+// Segmented has a stretch option of its own
+const briefOptions = briefs.map((option, i) => ({
+  value: String(i),
+  label: option.label,
+}));
+
 export function BriefTabs({
   active,
   onChange,
@@ -180,28 +190,14 @@ export function BriefTabs({
   className?: string;
 }) {
   return (
-    <div
-      role="group"
+    <Segmented
       aria-label="Try a brief"
-      className={cx("flex gap-0.5 rounded-lg bg-base-100 p-0.5", className)}
-    >
-      {briefs.map((option, i) => (
-        <button
-          key={option.label}
-          type="button"
-          aria-pressed={i === active}
-          onClick={() => onChange(i)}
-          className={cx(
-            "h-7 flex-1 truncate rounded-md px-2 text-xs font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus",
-            i === active
-              ? "bg-base-800 text-white"
-              : "text-base-600 hover:text-base-900",
-          )}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
+      tone="inverted"
+      options={briefOptions}
+      value={String(active)}
+      onValueChange={(value) => onChange(Number(value))}
+      className={cx("w-full [&>button]:flex-1 [&>button]:px-2", className)}
+    />
   );
 }
 
@@ -218,17 +214,17 @@ export function QueryField({
   return (
     <div
       className={cx(
-        "flex h-9 items-center gap-2 rounded-md bg-white px-3 text-xs ring-1 ring-base-200 shadow-sm",
+        "flex h-9 items-center gap-2 rounded-md bg-component-on-container-subtle px-3 text-caption-lg ring-1 ring-border-default shadow-sm",
         className,
       )}
     >
-      <Search className="size-3.5 shrink-0 text-base-400" />
+      <Search className="size-3.5 shrink-0 text-tertiary-foreground" />
       <span className="sr-only">Brief:</span>
-      <span className="truncate text-base-900">{query}</span>
+      <span className="truncate text-primary-foreground">{query}</span>
       {typing && (
         <span
           aria-hidden="true"
-          className="-ml-1.5 h-3.5 w-px shrink-0 bg-base-900"
+          className="-ml-1.5 h-3.5 w-px shrink-0 bg-primary-foreground"
         />
       )}
     </div>
@@ -245,7 +241,7 @@ export function Tag({
   return (
     <span
       className={cx(
-        "rounded-md bg-white px-2 py-1 text-xs text-base-900 ring-1 ring-base-200",
+        "rounded-md bg-component-on-container-subtle px-2 py-1 text-caption-lg text-primary-foreground ring-1 ring-border-default",
         className,
       )}
     >

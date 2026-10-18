@@ -17,10 +17,10 @@ export default function BlogPage() {
     <section>
       <Wrapper variant="standard" className="page-start">
         <div className="text-balance max-w-xl">
-          <Text tag="h1" variant="displayLG" className="text-base-900">
+          <Text tag="h1" variant="h1" className="text-primary-foreground">
             Magazine
           </Text>
-          <Text tag="p" variant="textBase" className="text-base-600 mt-4">
+          <Text tag="p" variant="body" className="text-secondary-foreground mt-4">
             You will find here the latest trends in the world of web development, design, and
             technology.
           </Text>

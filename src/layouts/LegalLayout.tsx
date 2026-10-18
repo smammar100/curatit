@@ -16,10 +16,10 @@ export default function LegalLayout({
       <Wrapper variant="standard" className="page-start">
         <div className="flex flex-col gap-12 lg:flex-row">
           <div className="text-balance lg:w-1/3">
-            <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
+            <Text tag="h1" variant="h1" className="text-primary-foreground">
               {frontmatter.page}
             </Text>
-            <Text tag="p" variant="textBase" className="text-base-600 mt-4">
+            <Text tag="p" variant="body" className="text-secondary-foreground mt-4">
               Last upadated on {frontmatter.pubDate.toString().slice(0, 10)}
             </Text>
           </div>

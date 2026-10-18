@@ -78,7 +78,7 @@ function pickCovers(posts: LibraryPost[]) {
 }
 
 const linkClass =
-  "inline-flex min-h-10 items-center rounded-sm text-pretty text-[color:var(--f-body)] transition-colors duration-150 ease-out hover:text-[color:var(--f-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--f-focus)] pointer-coarse:min-h-11";
+  "inline-flex min-h-10 items-center rounded-sm text-pretty text-[color:var(--f-body)] transition-colors duration-150 ease-out-quint hover:text-[color:var(--f-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--f-focus)] pointer-coarse:min-h-11";
 const cell = "border-[color:var(--f-line)] p-6 sm:p-8";
 
 function FooterLink({
@@ -108,7 +108,7 @@ export default async function Footer() {
   const strip = Array.from({ length: REPEAT }, () => covers).flat();
 
   return (
-    <footer className="mt-12 bg-white px-4 lg:mt-16 pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <footer className="mt-12 bg-page px-4 lg:mt-16 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="footer-panel relative isolate overflow-clip rounded-4xl sm:rounded-5xl">
         <div className="grid grid-cols-2 lg:grid-cols-12">
           {/* The logo and the statement */}
@@ -146,13 +146,13 @@ export default async function Footer() {
               aria-label={group.title}
               className={`${cell} border-b lg:col-span-3 lg:border-b-0 ${i === 0 ? "border-r" : ""}`}
             >
-              <p className="text-xs/5 font-medium text-[color:var(--f-quiet)]">
+              <p className="text-caption-lg/5 font-medium text-[color:var(--f-quiet)]">
                 {group.title}
               </p>
               <ul className="mt-1">
                 {group.links.map((link) => (
                   <li key={link.href}>
-                    <FooterLink href={link.href} className="text-sm">
+                    <FooterLink href={link.href} className="text-body-sm">
                       {link.label}
                     </FooterLink>
                   </li>
@@ -196,13 +196,13 @@ export default async function Footer() {
         <DeferredImages selector=".footer-strip img" />
 
         <div className="flex flex-wrap items-center justify-between gap-x-6 px-6 py-5 sm:px-8">
-          <p className="text-xs/5 text-[color:var(--f-quiet)]">
+          <p className="text-caption-lg/5 text-[color:var(--f-quiet)]">
             © 2026 Curatit
           </p>
           <ul className="flex gap-x-5" aria-label="Legal">
             {LEGAL.map((link) => (
               <li key={link.href}>
-                <FooterLink href={link.href} className="text-xs">
+                <FooterLink href={link.href} className="text-caption-lg">
                   {link.label}
                 </FooterLink>
               </li>

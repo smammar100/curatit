@@ -19,6 +19,7 @@ import { Fragment, useEffect, useRef, useState, type HTMLAttributes, type Keyboa
 import Link from "next/link";
 import ClientMark, { MARK_COLORS, MARKS } from "@/components/assets/ClientMarks";
 import Symbol from "@/components/assets/Symbol";
+import Badge from "@/components/fundations/elements/Badge";
 import Button from "@/components/fundations/elements/Button";
 import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
 import TerminalWindow from "@/components/fundations/icons/TerminalWindow";
@@ -43,9 +44,10 @@ type Step = {
 type Card = { title: string; intro: ReactNode; steps: Step[]; testing?: boolean };
 type Client = Card & { id: string; name: string; mark: keyof typeof MARKS; developer?: boolean };
 
-const code = "font-mono text-[13px] text-base-900";
-const ui = "font-medium text-base-900";
-const link = "underline decoration-base-300 underline-offset-2 transition-colors duration-150 hover:text-accent-600";
+// A step under the 13px prose it sits in, since the mono face reads larger
+const code = "font-mono text-caption-lg text-primary-foreground";
+const ui = "font-medium text-primary-foreground";
+const link = "underline decoration-border-strong underline-offset-2 transition-colors duration-150 ease-out-quint hover:text-brand-foreground";
 
 // The chat apps' first step: the one thing to copy
 const linkStep: Step = {
@@ -253,22 +255,22 @@ function CardBody({ card, label, ...rest }: { card: Card; label: string } & HTML
   return (
     <section {...rest}>
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-base font-medium text-base-900">{card.title}</h2>
-        {card.testing && <span className="rounded-md bg-base-50 px-2 py-0.5 text-xs text-base-600 ring-1 ring-base-200">In testing</span>}
+        <h2 className="text-body-base font-medium text-primary-foreground">{card.title}</h2>
+        {card.testing && <Badge>In testing</Badge>}
       </div>
-      <p className="mt-1 text-sm text-pretty text-base-600">{card.intro}</p>
+      <p className="mt-1 text-body-sm text-pretty text-secondary-foreground">{card.intro}</p>
       <ol className="mt-6 space-y-5">
         {card.steps.map((step, n) => (
           <li key={step.title} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-3">
-            <span className="flex size-6 items-center justify-center rounded-full bg-base-50 text-xs font-medium text-base-900 tabular-nums ring-1 ring-base-200" aria-hidden="true">
+            <span className="flex size-6 items-center justify-center rounded-full bg-card text-caption-lg font-medium text-primary-foreground tabular-nums ring-1 ring-border-default" aria-hidden="true">
               {n + 1}
             </span>
             <div className="min-w-0">
-              <h3 className="text-sm/6 font-medium text-base-900">
+              <h3 className="text-body-sm/6 font-medium text-primary-foreground">
                 <span className="sr-only">Step {n + 1}: </span>
                 {step.title}
               </h3>
-              <p className="mt-0.5 text-sm text-pretty text-base-600">{step.body}</p>
+              <p className="mt-0.5 text-body-sm text-pretty text-secondary-foreground">{step.body}</p>
               {step.code && (
                 <div className="mt-3">
                   <CopyBlock code={step.code} label={step.codeLabel ?? label} tone="light" />
@@ -302,7 +304,9 @@ function CardBody({ card, label, ...rest }: { card: Card; label: string } & HTML
   );
 }
 
-const tile = "grid size-12 place-items-center rounded-xl bg-white text-base-900 ring-1 ring-edge shadow-[0_10px_24px_-12px_rgb(0_0_0/0.3)]";
+// The marks' tiles match the card, so the hairline (edge, as round the OAuth consent screen's
+// marks) is what shows them on the dark site, where the shadow loses its drop
+const tile = "grid size-12 place-items-center rounded-xl bg-container text-primary-foreground ring-1 ring-edge shadow-lg";
 // The client marks share one cell and cross-fade; after a change made from the keyboard, and
 // under reduced motion, they swap at once
 const markClass = (shown: boolean, snap: boolean) =>
@@ -324,8 +328,8 @@ function Connection({ current, snap }: { current: number | null; snap: boolean }
         <Symbol className="size-6" />
       </span>
       <span className="mcp-flow relative mx-2 flex h-12 w-20 items-center [--flow:4.25rem] sm:w-24 sm:[--flow:5.25rem]">
-        <span className="h-px w-full border-t border-dashed border-base-300" />
-        <span className="mcp-flow-card absolute top-1/2 left-0 -mt-[7px] h-3.5 w-3 rounded-[3px] bg-base-900 ring-2 ring-white" />
+        <span className="h-px w-full border-t border-dashed border-border-strong" />
+        <span className="mcp-flow-card absolute top-1/2 left-0 -mt-[7px] h-3.5 w-3 rounded-sm bg-primary-foreground ring-2 ring-container" />
       </span>
       <span className={tile}>
         {CLIENTS.map((client, i) => (
@@ -395,7 +399,7 @@ export default function ClientInstall() {
               {CLIENTS.map((client, i) => (
                 <Fragment key={client.id}>
                   {/* A hairline sets the developer tools apart from the chat apps */}
-                  {client.developer && !CLIENTS[i - 1]?.developer && <span className="mx-2 h-5 w-px shrink-0 bg-base-200" aria-hidden="true" />}
+                  {client.developer && !CLIENTS[i - 1]?.developer && <span className="mx-2 h-5 w-px shrink-0 bg-border-strong" aria-hidden="true" />}
                   <button
                     ref={(el) => {
                       tabs.current[i] = el;
@@ -409,11 +413,11 @@ export default function ClientInstall() {
                     onClick={() => setCurrent(i)}
                     onKeyDown={(event) => onKey(event, i)}
                     className={cx(
-                      "flex h-10 shrink-0 items-center gap-2 rounded-full px-3.5 text-sm font-medium whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500",
+                      "flex h-10 shrink-0 items-center gap-2 rounded-full px-3.5 text-body-sm font-medium whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus",
                       // The chosen tab's ring is a box-shadow, so on a click it fades in with the
                       // fill; from the keyboard both switch at once
                       snap ? "transition-none" : "transition-[color,background-color,box-shadow] duration-150 ease-out-quint",
-                      i === current ? "bg-white text-base-900 ring-1 ring-base-200" : "text-base-500 hover:text-base-900",
+                      i === current ? "bg-component-on-container-subtle text-primary-foreground ring-1 ring-border-strong" : "text-secondary-foreground hover:text-primary-foreground",
                     )}
                   >
                     <ClientMark path={MARKS[client.mark]} style={{ color: MARK_COLORS[client.mark] }} className="size-4 shrink-0" aria-hidden="true" />
@@ -423,7 +427,7 @@ export default function ClientInstall() {
               ))}
             </div>
           ) : (
-            <p className="flex h-10 items-center text-sm text-base-600">For tools without MCP, and your own scripts.</p>
+            <p className="flex h-10 items-center text-body-sm text-secondary-foreground">For tools without MCP, and your own scripts.</p>
           )}
         </div>
         <Segmented
@@ -441,8 +445,8 @@ export default function ClientInstall() {
       </div>
 
       {/* The gradient frame; on phones the card fills it with the wash as a border */}
-      <div className="mcp-gradient mt-4 flex min-h-[28rem] items-center justify-center rounded-[1.5rem] px-3 py-10 sm:rounded-[2rem] sm:px-10 sm:py-14 lg:min-h-[32rem]">
-        <div className="w-full max-w-xl rounded-2xl bg-white p-5 text-left shadow-[0_24px_60px_-20px_rgb(0_0_0/0.25)] sm:p-7 dark:ring-1 dark:ring-edge">
+      <div className="mcp-gradient mt-4 flex min-h-[28rem] items-center justify-center rounded-5xl px-3 py-10 sm:rounded-[2rem] sm:px-10 sm:py-14 lg:min-h-[32rem]">
+        <div className="w-full max-w-xl rounded-2xl bg-container p-5 text-left shadow-xl sm:p-7">
           <Connection current={mode === "mcp" ? current : null} snap={snap} />
           {CLIENTS.map((client, i) => (
             <CardBody
@@ -458,7 +462,7 @@ export default function ClientInstall() {
           <CardBody card={REST} label="the REST example" aria-label="Call Curatit over HTTP" hidden={mode !== "rest"} />
         </div>
       </div>
-      <p className="mt-4 text-sm text-pretty text-base-600">
+      <p className="mt-4 text-body-sm text-pretty text-secondary-foreground">
         Another AI tool? Give it the same link, <code className={`${code} break-all`}>{MCP_URL}</code>: it signs in with your Curatit account, or sends your
         token in an <code className={code}>Authorization: Bearer</code> header. More in the{" "}
         <Link href="/docs/mcp" className={link}>

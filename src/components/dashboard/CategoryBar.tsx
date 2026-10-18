@@ -40,8 +40,8 @@ export default function CategoryBar({ posts, value, onChange }: { posts: DashPos
   const mask = `linear-gradient(to right, ${more.left ? "transparent" : "black"}, black ${FADE}, black calc(100% - ${FADE}), ${more.right ? "transparent" : "black"})`;
   const item = (on: boolean) =>
     cx(
-      "flex h-11 shrink-0 items-center gap-2 rounded-full pr-5 pl-4 text-title font-medium whitespace-nowrap transition-[background-color,color] duration-150",
-      on ? "bg-base-100 text-base-900" : "text-base-500 hover:text-base-900",
+      "flex h-11 shrink-0 items-center gap-2 rounded-full pr-5 pl-4 text-title font-medium whitespace-nowrap transition-[background-color,color] duration-150 ease-out-quint focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-border-focus",
+      on ? "bg-component text-primary-foreground" : "text-secondary-foreground hover:text-primary-foreground",
     );
   // The selected category's pill: a pale tint of its hue with the icon and name in a deep shade
   // of it (6.3:1 or more in both themes), through light-dark() as inline colours do here

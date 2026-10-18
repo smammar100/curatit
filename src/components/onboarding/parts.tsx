@@ -39,10 +39,10 @@ export function categoriesOf(posts: DashPost[]): Category[] {
 export function Heading({ ref, id, title, sub, align = "center" }: { ref?: Ref<HTMLHeadingElement>; id?: string; title: string; sub?: string; align?: "center" | "left" }) {
   return (
     <div className={cx("text-balance", align === "center" && "text-center")}>
-      <h1 ref={ref} id={id} tabIndex={-1} className="font-display text-display font-light text-base-900 outline-none">
+      <h1 ref={ref} id={id} tabIndex={-1} className="font-display text-display font-light text-primary-foreground outline-none">
         {title}
       </h1>
-      {sub && <p className="mt-2 text-subtitle text-base-600">{sub}</p>}
+      {sub && <p className="mt-2 text-subtitle text-secondary-foreground">{sub}</p>}
     </div>
   );
 }
@@ -52,7 +52,7 @@ export function Progress({ step, total, className }: { step: number; total: numb
   return (
     <div role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={step + 1} aria-label={`Step ${step + 1} of ${total}`} className={cx("flex gap-1.5", className)}>
       {Array.from({ length: total }, (_, i) => (
-        <span key={i} className={cx("h-1 flex-1 rounded-full transition-colors duration-300", i <= step ? "bg-base-900" : "bg-base-200")} />
+        <span key={i} className={cx("h-1 flex-1 rounded-full transition-colors duration-150 ease-out-quint", i <= step ? "bg-inverted-solid" : "bg-border-strong")} />
       ))}
     </div>
   );
@@ -65,8 +65,8 @@ export function Chip({ on, onClick, children, className }: { on: boolean; onClic
       aria-pressed={on}
       onClick={onClick}
       className={cx(
-        "flex h-11 items-center gap-2 rounded-full px-4 text-body font-medium whitespace-nowrap transition-[background-color,color,scale] duration-150 active:scale-[0.96]",
-        on ? "bg-base-900 text-white" : "bg-base-50 text-base-900 hover:bg-base-100",
+        "flex h-11 items-center gap-2 rounded-full px-4 text-body font-medium whitespace-nowrap transition-[background-color,color,scale] duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.96]",
+        on ? "bg-inverted-solid text-on-inverted-foreground" : "bg-card text-primary-foreground hover:bg-transparent-hover",
         className,
       )}
     >
@@ -75,8 +75,9 @@ export function Chip({ on, onClick, children, className }: { on: boolean; onClic
   );
 }
 
+// The dashboard's grey pill field: a hairline at rest, the 2px brand ring on focus
 const field =
-  "h-12 w-full rounded-full border-0 bg-base-50 px-5 text-subtitle pointer-coarse:text-[16px] text-base-900 placeholder:text-base-400 ring-1 ring-base-200 transition-[box-shadow] duration-150 focus:ring-2 focus:ring-accent-500 focus:outline-none";
+  "h-12 w-full rounded-full border-0 bg-card px-5 text-subtitle pointer-coarse:text-[16px] text-primary-foreground placeholder:text-tertiary-foreground ring-1 ring-border-default transition-[box-shadow] duration-150 ease-out-quint focus:ring-2 focus:ring-brand-border-focus focus:outline-hidden";
 
 // The name, then what they do as one tap. The name takes focus on arrival, except on touch
 // (the keyboard would jump up); Enter in it submits the step.
@@ -93,7 +94,7 @@ export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: 
         <input ref={ref} type="text" name="name" value={value.name} onChange={(e) => onChange({ name: e.target.value })} placeholder="Your name" autoComplete="given-name" maxLength={60} className={field} />
       </label>
       <div>
-        <p id={groupLabel} className="mb-2 text-caption font-medium text-base-600">
+        <p id={groupLabel} className="mb-2 text-caption font-medium text-secondary-foreground">
           And you’re a…
         </p>
         <div role="group" aria-labelledby={groupLabel} className="flex flex-wrap gap-1.5">
@@ -109,7 +110,7 @@ export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: 
 }
 
 export const Tick = ({ className }: { className?: string }) => (
-  <span className={cx("flex size-5 items-center justify-center rounded-full bg-base-900 text-white shadow-sm", className)}>
+  <span className={cx("flex size-5 items-center justify-center rounded-full bg-inverted-solid text-on-inverted-foreground shadow-sm", className)}>
     <Check className="size-3" />
   </span>
 );
@@ -121,16 +122,17 @@ export function BrandGrid({ brands, value, onChange, className }: { brands: Bran
       {brands.map((b) => {
         const on = value.includes(b.slug);
         return (
-          <button key={b.slug} type="button" aria-pressed={on} onClick={() => onChange(toggle(value, b.slug))} className="group flex min-w-0 flex-col items-center gap-1.5 rounded-xl p-2 transition-[background-color,scale] duration-150 hover:bg-base-50 active:scale-[0.96]">
-            <span className={cx("relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-base-100 outline-1 -outline-offset-1 outline-edge transition-[box-shadow] duration-150", on && "ring-2 ring-base-900 ring-offset-2 ring-offset-white")}>
+          <button key={b.slug} type="button" aria-pressed={on} onClick={() => onChange(toggle(value, b.slug))} className="group flex min-w-0 flex-col items-center gap-1.5 rounded-xl p-2 transition-[background-color,scale] duration-150 ease-out-quint hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.96]">
+            <span className={cx("relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-component outline-1 -outline-offset-1 outline-edge transition-[box-shadow] duration-150 ease-out-quint", on && "ring-2 ring-primary-foreground ring-offset-2 ring-offset-page")}>
               {b.logo && <Image src={b.logo} alt="" fill sizes="44px" className="object-cover" />}
+              {/* A scrim over the logo, dark in both themes */}
               {on && (
-                <span className="absolute inset-0 flex items-center justify-center bg-base-900/55 text-white">
-                  <Check className="size-4" />
+                <span className="absolute inset-0 flex items-center justify-center bg-standout/55 text-on-standout-primary-foreground">
+                  <Check size="sm" />
                 </span>
               )}
             </span>
-            <span className={cx("line-clamp-2 w-full text-center text-caption leading-tight", on ? "font-medium text-base-900" : "text-base-600")}>{b.name}</span>
+            <span className={cx("line-clamp-2 w-full text-center text-caption leading-tight", on ? "font-medium text-primary-foreground" : "text-secondary-foreground")}>{b.name}</span>
           </button>
         );
       })}
@@ -139,7 +141,8 @@ export function BrandGrid({ brands, value, onChange, className }: { brands: Bran
 }
 
 // Posts to tap, as a grid of 4:5 tiles; once `max` are picked the rest step back. `ground` is
-// the surface they sit on, so the picked ring's gap matches it
+// the surface they sit on, so the picked ring's gap matches it: the page, or the welcome wall's
+// solid base-50 (a ring offset must be solid, or the ring shows through the gap)
 export function TasteGrid({ posts, value, onChange, max, ground = "white", className }: { posts: DashPost[]; value: string[]; onChange: (next: string[]) => void; max: number; ground?: "white" | "grey"; className?: string }) {
   return (
     <div className={cx("grid gap-2", className)}>
@@ -155,9 +158,9 @@ export function TasteGrid({ posts, value, onChange, max, ground = "white", class
             disabled={full}
             onClick={() => onChange(toggle(value, p.shortCode))}
             className={cx(
-              "relative block aspect-4/5 w-full overflow-hidden rounded-lg bg-base-100 outline-1 -outline-offset-1 outline-edge transition-[opacity,scale,box-shadow] duration-150 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-base-900 active:scale-[0.97]",
-              on && "ring-2 ring-base-900 ring-offset-2",
-              on && (ground === "grey" ? "ring-offset-base-50" : "ring-offset-white"),
+              "relative block aspect-4/5 w-full overflow-hidden rounded-lg bg-component outline-1 -outline-offset-1 outline-edge transition-[opacity,scale,box-shadow] duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.97]",
+              on && "ring-2 ring-primary-foreground ring-offset-2",
+              on && (ground === "grey" ? "ring-offset-base-50" : "ring-offset-page"),
               full && "opacity-40",
             )}
           >
@@ -186,7 +189,7 @@ export function Collage({ posts, className }: { posts: DashPost[]; className?: s
       {columns.map((column, c) => (
         <div key={c} className="flex flex-col gap-3">
           {column.map(({ post, i }) => (
-            <div key={post.shortCode} className="welcome-rise relative overflow-hidden rounded-lg bg-base-100 outline-1 -outline-offset-1 outline-edge" style={{ aspectRatio: ratio(post), animationDelay: `${i * 30}ms` }}>
+            <div key={post.shortCode} className="welcome-rise relative overflow-hidden rounded-lg bg-component outline-1 -outline-offset-1 outline-edge" style={{ aspectRatio: ratio(post), animationDelay: `${i * 30}ms` }}>
               <Image src={post.cover} alt="" fill sizes="240px" className="object-cover" />
             </div>
           ))}
@@ -202,7 +205,7 @@ export function LearnedChips({ posts, taste, max = 5, className }: { posts: Dash
   return (
     <ul className={cx("flex flex-wrap gap-1.5", className)} aria-label="What your picks say">
       {chips.map((chip) => (
-        <li key={chip} className="welcome-chip rounded-full bg-base-50 px-3 py-1.5 text-caption font-medium whitespace-nowrap text-base-900">
+        <li key={chip} className="welcome-chip rounded-full bg-card px-3 py-1.5 text-caption font-medium whitespace-nowrap text-primary-foreground">
           {chip}
         </li>
       ))}
@@ -216,8 +219,8 @@ export function Ring({ value, max, className }: { value: number; max: number; cl
   const c = 2 * Math.PI * r;
   return (
     <svg viewBox="0 0 28 28" aria-hidden="true" className={cx("size-7 -rotate-90", className)}>
-      <circle cx="14" cy="14" r={r} fill="none" strokeWidth="3" className="stroke-base-200" />
-      <circle cx="14" cy="14" r={r} fill="none" strokeWidth="3" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(1, value / max))} className="stroke-base-900 transition-[stroke-dashoffset] duration-300 ease-out" />
+      <circle cx="14" cy="14" r={r} fill="none" strokeWidth="3" className="stroke-border-strong" />
+      <circle cx="14" cy="14" r={r} fill="none" strokeWidth="3" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(1, value / max))} className="stroke-inverted-solid transition-[stroke-dashoffset] duration-300 ease-out-quint motion-reduce:transition-none" />
     </svg>
   );
 }
@@ -232,7 +235,7 @@ export function Done({ posts, draft, headingRef }: { posts: DashPost[]; draft: D
         {top.map((p, i) => (
           <span
             key={p.shortCode}
-            className="welcome-rise relative -mx-2 aspect-4/5 w-16 overflow-hidden sm:w-20 rounded-lg bg-base-100 shadow-[0_10px_24px_-12px_rgb(0_0_0/0.45)] outline-1 -outline-offset-1 outline-edge"
+            className="welcome-rise relative -mx-2 aspect-4/5 w-16 overflow-hidden sm:w-20 rounded-lg bg-component shadow-xl outline-1 -outline-offset-1 outline-edge"
             style={{ rotate: `${(i - 2.5) * 7}deg`, translate: `0 ${Math.abs(i - 2.5) * 5}px`, animationDelay: `${i * 60}ms` }}
           >
             <Image src={p.cover} alt="" fill sizes="80px" className="object-cover" />

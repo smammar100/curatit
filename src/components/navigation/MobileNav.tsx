@@ -61,9 +61,9 @@ function menuTimes(count: number) {
 
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// On touch screens the 28px buttons get an invisible 44px target, a ::before reaching past their
-// edges. The two in the bar sit 8px apart, so each takes 4px of the gap and the rest outwards.
-const tallTarget = "relative pointer-coarse:before:absolute pointer-coarse:before:-inset-y-2 pointer-coarse:before:inset-x-0";
+// On touch screens Button's xs size already reaches 44px tall (its own ::after); the two icon
+// buttons in the bar also reach 44px wide through a ::before past their edges. They sit 8px apart,
+// so each takes 4px of the gap and the rest outwards.
 const themeTarget = "relative pointer-coarse:before:absolute pointer-coarse:before:-inset-y-2 pointer-coarse:before:-right-1 pointer-coarse:before:-left-3";
 const menuTarget = "relative pointer-coarse:before:absolute pointer-coarse:before:-inset-y-2 pointer-coarse:before:-right-3 pointer-coarse:before:-left-1";
 
@@ -213,10 +213,10 @@ export default function MobileNav() {
     )),
     <Wrapper key="account" variant="standard" className="pt-8 pb-4">
       <div className="flex items-center gap-2">
-        <Button isLink size="xs" variant="transparent" href="/signin" className={cx("shrink-0", tallTarget)}>
+        <Button isLink size="xs" variant="transparent" href="/signin" className="shrink-0">
           Sign in
         </Button>
-        <Button isLink size="xs" variant="default" href="/signup" className={cx("shrink-0", tallTarget)}>
+        <Button isLink size="xs" variant="default" href="/signup" className="shrink-0">
           Create account
         </Button>
       </div>
@@ -226,10 +226,14 @@ export default function MobileNav() {
   return (
     <>
       <nav ref={navRef} className="fixed inset-x-0 top-0 z-40 md:hidden">
-        <div className="relative z-10 bg-white">
+        <div className="relative z-10 bg-page">
           <Wrapper variant="standard" className="py-3">
             <div className="flex items-center justify-between">
-              <Link href="/" aria-label="Go to homepage">
+              <Link
+                href="/"
+                aria-label="Go to homepage"
+                className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus"
+              >
                 <Lockup />
               </Link>
               <div className="flex items-center gap-2">

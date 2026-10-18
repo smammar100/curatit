@@ -9,6 +9,8 @@
 // written: writes to a board wait for its creation.
 import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import Image from "next/image";
+// Fundations
+import Button from "@/components/fundations/elements/Button";
 // Icons
 import Check from "@/components/fundations/icons/Check";
 import Plus from "@/components/fundations/icons/Plus";
@@ -323,10 +325,8 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
             onPointerEnter={() => setPointedAt(toast.id)}
             onPointerLeave={() => setPointedAt(null)}
             className={cx(
-              "flex max-w-sm items-center gap-2 rounded-lg bg-base-900 px-4 py-2.5 text-body text-white shadow-lg motion-reduce:animate-none",
-              toastClosing
-                ? "pointer-events-none animate-[toast-out_120ms_var(--ease-in-quart)_forwards]"
-                : "pointer-events-auto animate-[toast-in_180ms_var(--ease-out-quint)]",
+              "flex max-w-sm items-center gap-2 rounded-lg bg-inverted-solid px-4 py-2.5 text-body text-on-inverted-foreground shadow-lg motion-reduce:animate-none",
+              toastClosing ? "pointer-events-none animate-toast-out" : "pointer-events-auto animate-toast-in",
             )}
           >
             {toast.tone === "error" ? <WarningCircle className="size-4 shrink-0" /> : <Check className="size-3.5 shrink-0" />}
@@ -367,7 +367,7 @@ export function NewBoardForm({
         tabIndex={menuItem ? -1 : undefined}
         onClick={() => setOpen(true)}
         className={cx(
-          "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-body text-base-900 hover:bg-transparent-hover focus-visible:bg-transparent-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-border-focus active:bg-transparent-hover",
+          "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-body text-primary-foreground hover:bg-transparent-hover focus-visible:bg-transparent-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-border-focus active:bg-transparent-hover",
           className,
         )}
       >
@@ -378,9 +378,12 @@ export function NewBoardForm({
       </button>
     );
   }
+  // The field and Create are 32px (the small Button) and the form's padding brings it to the
+  // 44px of the row it replaces. The field is the inputs' recipe (inputClass in auth/AuthParts) at
+  // that size
   return (
     <form
-      className={cx("flex gap-1.5 p-1", className)}
+      className={cx("flex gap-1.5 p-1.5", className)}
       onSubmit={(event) => {
         event.preventDefault();
         const keyboard = fromKeyboard.current;
@@ -397,19 +400,20 @@ export function NewBoardForm({
           onChange={(event) => setName(event.target.value)}
           maxLength={NAME_MAX}
           placeholder="Board name"
-          className="h-9 w-full rounded-md border-0 bg-white px-3 text-body text-base-900 ring-1 ring-base-200 placeholder:text-base-400 focus:ring-2 focus:ring-accent-100 focus:outline-none"
+          className="h-8 w-full rounded-lg border-0 bg-component-on-container-subtle px-3 text-body text-primary-foreground shadow-sm placeholder:text-tertiary-foreground transition-[box-shadow] duration-150 ease-out-quint focus:shadow-[0_0_0_2px_var(--color-brand-border-focus)] focus:ring-0 focus:outline-hidden pointer-coarse:text-[16px]"
         />
       </label>
-      <button
+      <Button
         type="submit"
+        size="sm"
+        variant="default"
         disabled={!name.trim()}
         onClick={(event) => {
           fromKeyboard.current = event.detail === 0;
         }}
-        className="h-9 shrink-0 rounded-md bg-base-900 px-3 text-body font-medium text-white transition-[background-color,scale] duration-150 hover:bg-base-800 active:scale-[0.96] disabled:bg-disabled disabled:text-disabled-foreground"
       >
         Create
-      </button>
+      </Button>
     </form>
   );
 }
@@ -428,29 +432,31 @@ export function SaveMenu({ post, tone = "plain", className }: { post: string; to
 
   return (
     <div {...popover.rootProps} className={cx("relative", className)}>
-      <button
-        type="button"
+      {/* On a cover it's a label like the tile's brand: the page's colour (white, near-black in
+          dark), nearly opaque, with the default shadow, so it reads over any image */}
+      <Button
         aria-haspopup="menu"
         {...popover.triggerProps}
-        className={cx(
-          "flex h-8 items-center gap-1.5 rounded-lg px-3 text-caption font-medium transition-[background-color,scale] duration-150 active:scale-[0.96]",
-          tone === "overlay" ? "bg-white/95 text-base-900 shadow-sm hover:bg-white" : "bg-base-50 text-base-900 hover:bg-base-100",
-        )}
+        size="sm"
+        variant={tone === "overlay" ? "none" : "muted"}
+        leftIcon={savedIn ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
+        className={tone === "overlay" ? "bg-page/95 text-primary-foreground shadow-sm hover:bg-page" : undefined}
       >
-        {savedIn ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
         {savedIn ? "Saved" : "Save"}
-      </button>
+      </Button>
+      {/* The dashboard's menu: rounded-2xl p-1.5, so its rows and their highlight are rounded-md
+          (12 − 6) */}
       {popover.mounted && (
         <div
           {...popover.contentProps}
           role="menu"
           aria-labelledby={labelId}
-          className={cx("absolute right-0 z-20 mt-1.5 w-64 origin-top-right rounded-lg bg-modal p-1.5 shadow-lg outline-none", popover.motion)}
+          className={cx("absolute right-0 z-20 mt-1.5 w-64 origin-top-right rounded-2xl bg-modal p-1.5 shadow-lg outline-hidden", popover.motion)}
         >
-          <p id={labelId} className="px-2.5 pt-1.5 pb-2 text-caption font-medium text-base-500">
+          <p id={labelId} className="px-2.5 pt-1.5 pb-2 text-caption font-medium text-secondary-foreground">
             Save to board
           </p>
-          {status === "loading" && <p className="px-2.5 py-2 text-body text-base-500">Loading your boards…</p>}
+          {status === "loading" && <p className="px-2.5 py-2 text-body text-secondary-foreground">Loading your boards…</p>}
           <div ref={glide.ref} {...glide.handlers} className="relative max-h-72 overflow-y-auto">
             <span aria-hidden="true" className={cx(GLIDE_HIGHLIGHT, "rounded-md")} style={glide.highlight.style} data-fresh={glide.highlight.fresh || undefined} />
             {boards.map((board) => {
@@ -468,11 +474,11 @@ export function SaveMenu({ post, tone = "plain", className }: { post: string; to
                     else save(post, board.id);
                     popover.close(event.detail === 0);
                   }}
-                  className={cx("flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-body text-base-900", GLIDE_ROW)}
+                  className={cx("flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-body text-primary-foreground", GLIDE_ROW)}
                 >
                   <BoardThumb board={board} className="size-7" />
                   <span className="min-w-0 flex-1 truncate">{board.name}</span>
-                  {inBoard && <Check className="size-3.5 shrink-0 text-base-500" />}
+                  {inBoard && <Check className="size-3.5 shrink-0 text-secondary-foreground" />}
                 </button>
               );
             })}

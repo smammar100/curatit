@@ -5,18 +5,17 @@
 // and saved as a new version, so the AI's original stays in the history. Slide roles edited here
 // update both the narrative and the slide records.
 import { useMemo, useState } from "react";
+import Button from "@/components/fundations/elements/Button";
 import { cx } from "@/lib/cx";
 import { CreativeDna, type SlideObservation } from "@/lib/creative/schema";
 import { DIMENSIONS, TAXONOMY_VERSION, type Dimension } from "@/lib/creative/taxonomy";
 import { validateDna, type Issue } from "@/lib/creative/validate";
 import { track } from "@/lib/analytics";
 import { saveEdit, type Version } from "./data";
-import { quietButton, Section, solidButton, useBusy } from "./parts";
+import { areaClass as area, fieldClass as field, Section, selectClass as select, useBusy } from "./parts";
 
-const field =
-  "w-full rounded-2xl border-0 bg-base-50 px-3.5 py-2.5 text-body pointer-coarse:text-[16px] text-base-900 ring-1 ring-base-200 placeholder:text-base-400 focus:ring-2 focus:ring-base-300";
-const select =
-  "h-9 rounded-full border-0 bg-base-50 py-0 pr-8 pl-3.5 text-body pointer-coarse:text-[16px] text-base-900 ring-1 ring-base-200 focus:ring-2 focus:ring-base-300";
+// Field labels and legends: the caption role, medium, in the secondary ink
+const caption = "text-caption font-medium text-secondary-foreground";
 
 function Options({ dimension }: { dimension: Dimension }) {
   return (
@@ -54,25 +53,25 @@ function ArchetypeOptions() {
 function List({ label, items, min, max, onChange, rows = 2 }: { label: string; items: string[]; min: number; max: number; onChange: (items: string[]) => void; rows?: number }) {
   return (
     <fieldset>
-      <legend className="mb-2 text-caption font-medium text-base-500">
+      <legend className={cx("mb-2", caption)}>
         {label} ({min} to {max})
       </legend>
       <div className="space-y-2">
         {items.map((item, i) => (
           <div key={i} className="flex items-start gap-2">
-            <textarea aria-label={`${label} ${i + 1}`} rows={rows} value={item} onChange={(e) => onChange(items.map((x, j) => (j === i ? e.target.value : x)))} className={field} />
+            <textarea aria-label={`${label} ${i + 1}`} rows={rows} value={item} onChange={(e) => onChange(items.map((x, j) => (j === i ? e.target.value : x)))} className={area} />
             {items.length > min && (
-              <button type="button" aria-label={`Remove ${label.toLowerCase()} ${i + 1}`} onClick={() => onChange(items.filter((_, j) => j !== i))} className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-full text-base-500 hover:bg-base-50 hover:text-base-900">
+              <Button variant="transparent" size="base" shape="pill" iconOnly aria-label={`Remove ${label.toLowerCase()} ${i + 1}`} onClick={() => onChange(items.filter((_, j) => j !== i))}>
                 ×
-              </button>
+              </Button>
             )}
           </div>
         ))}
       </div>
       {items.length < max && (
-        <button type="button" onClick={() => onChange([...items, ""])} className="mt-2 text-caption font-medium text-base-600 hover:text-base-900">
+        <Button variant="transparent" size="xxs" onClick={() => onChange([...items, ""])} className="mt-2 -ml-2">
           + Add
-        </button>
+        </Button>
       )}
     </fieldset>
   );
@@ -150,40 +149,40 @@ export default function DnaEditor({
       <Section title={`Editing v${version.version_no} (saved as a new version)`}>
         <div className="space-y-4">
           <label className="block">
-            <span className="mb-1.5 block text-caption font-medium text-base-500">Concept</span>
+            <span className={cx("mb-1.5 block", caption)}>Concept</span>
             <input value={dna.concept} maxLength={160} onChange={(e) => set({ concept: e.target.value })} className={field} />
           </label>
           {/* Creative Intelligence 3.0: the line the post page leads with */}
           {dna.strategy_headline !== undefined && (
             <>
               <label className="block">
-                <span className="mb-1.5 block text-caption font-medium text-base-500">Strategy headline (8 to 14 words)</span>
+                <span className={cx("mb-1.5 block", caption)}>Strategy headline (8 to 14 words)</span>
                 <input value={dna.strategy_headline} maxLength={110} onChange={(e) => set({ strategy_headline: e.target.value })} className={field} />
               </label>
               <label className="block">
-                <span className="mb-1.5 block text-caption font-medium text-base-500">Strategy summary (one or two sentences)</span>
-                <textarea rows={2} value={dna.strategy_summary ?? ""} maxLength={280} onChange={(e) => set({ strategy_summary: e.target.value })} className={field} />
+                <span className={cx("mb-1.5 block", caption)}>Strategy summary (one or two sentences)</span>
+                <textarea rows={2} value={dna.strategy_summary ?? ""} maxLength={280} onChange={(e) => set({ strategy_summary: e.target.value })} className={area} />
               </label>
             </>
           )}
           <label className="block">
-            <span className="mb-1.5 block text-caption font-medium text-base-500">Summary</span>
-            <textarea rows={4} value={dna.creative_summary} maxLength={600} onChange={(e) => set({ creative_summary: e.target.value })} className={field} />
+            <span className={cx("mb-1.5 block", caption)}>Summary</span>
+            <textarea rows={4} value={dna.creative_summary} maxLength={600} onChange={(e) => set({ creative_summary: e.target.value })} className={area} />
           </label>
           <label className="block">
-            <span className="mb-1.5 block text-caption font-medium text-base-500">Intent</span>
+            <span className={cx("mb-1.5 block", caption)}>Intent</span>
             <input value={dna.content_intent} maxLength={280} onChange={(e) => set({ content_intent: e.target.value })} className={field} />
           </label>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-1.5 block text-caption font-medium text-base-500">Primary archetype</span>
+              <span className={cx("mb-1.5 block", caption)}>Primary archetype</span>
               <select value={dna.primary_archetype.slug} onChange={(e) => set({ primary_archetype: { ...dna.primary_archetype, slug: e.target.value as CreativeDna["primary_archetype"]["slug"] } })} className={cx(select, "w-full")}>
                 <ArchetypeOptions />
               </select>
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-caption font-medium text-base-500">Objective</span>
+              <span className={cx("mb-1.5 block", caption)}>Objective</span>
               <select value={dna.marketing_objective.slug} onChange={(e) => set({ marketing_objective: { ...dna.marketing_objective, slug: e.target.value as CreativeDna["marketing_objective"]["slug"] } })} className={cx(select, "w-full")}>
                 <Options dimension="objective" />
               </select>
@@ -191,7 +190,7 @@ export default function DnaEditor({
           </div>
 
           <fieldset>
-            <legend className="mb-1.5 text-caption font-medium text-base-500">Secondary archetypes (up to 3)</legend>
+            <legend className={cx("mb-1.5", caption)}>Secondary archetypes (up to 3)</legend>
             <div className="flex flex-wrap gap-2">
               {[0, 1, 2].map((i) => (
                 <select
@@ -216,34 +215,34 @@ export default function DnaEditor({
 
           <div className="grid gap-3 sm:grid-cols-[auto_1fr]">
             <label className="block">
-              <span className="mb-1.5 block text-caption font-medium text-base-500">Hook technique</span>
+              <span className={cx("mb-1.5 block", caption)}>Hook technique</span>
               <select value={dna.hook.technique} onChange={(e) => set({ hook: { ...dna.hook, technique: e.target.value as CreativeDna["hook"]["technique"] } })} className={select}>
                 <Options dimension="hook_technique" />
               </select>
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-caption font-medium text-base-500">Hook as written (exactly)</span>
+              <span className={cx("mb-1.5 block", caption)}>Hook as written (exactly)</span>
               <input value={dna.hook.observed_text ?? ""} maxLength={240} onChange={(e) => set({ hook: { ...dna.hook, observed_text: e.target.value || null } })} className={field} />
             </label>
           </div>
 
           <div>
             <label className="block">
-              <span className="mb-1.5 block text-caption font-medium text-base-500">Narrative pattern</span>
+              <span className={cx("mb-1.5 block", caption)}>Narrative pattern</span>
               <select value={dna.narrative.pattern} onChange={(e) => set({ narrative: { ...dna.narrative, pattern: e.target.value as CreativeDna["narrative"]["pattern"] } })} className={select}>
                 <Options dimension="narrative_pattern" />
               </select>
             </label>
             <label className="mt-3 block">
-              <span className="mb-1.5 block text-caption font-medium text-base-500">Arc</span>
-              <textarea rows={2} value={dna.narrative.arc} maxLength={400} onChange={(e) => set({ narrative: { ...dna.narrative, arc: e.target.value } })} className={field} />
+              <span className={cx("mb-1.5 block", caption)}>Arc</span>
+              <textarea rows={2} value={dna.narrative.arc} maxLength={400} onChange={(e) => set({ narrative: { ...dna.narrative, arc: e.target.value } })} className={area} />
             </label>
             <fieldset className="mt-3">
-              <legend className="mb-1.5 text-caption font-medium text-base-500">Slide roles (by position)</legend>
+              <legend className={cx("mb-1.5", caption)}>Slide roles (by position)</legend>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {dna.narrative.slide_roles.map((s, i) => (
                   <label key={s.position} className="flex items-center gap-2">
-                    <span className="w-5 text-right font-mono text-micro text-base-500">{s.position}</span>
+                    <span className="w-5 text-right font-mono text-micro text-secondary-foreground">{s.position}</span>
                     <select
                       aria-label={`Role of position ${s.position}`}
                       value={s.role}
@@ -261,7 +260,7 @@ export default function DnaEditor({
           </div>
 
           <fieldset>
-            <legend className="mb-2 text-caption font-medium text-base-500">Why it might work (2 to 4 hypotheses; evidence kept)</legend>
+            <legend className={cx("mb-2", caption)}>Why it might work (2 to 4 hypotheses; evidence kept)</legend>
             <div className="space-y-2">
               {dna.creative_rationale.map((r, i) => (
                 <textarea
@@ -271,7 +270,7 @@ export default function DnaEditor({
                   value={r.hypothesis}
                   maxLength={320}
                   onChange={(e) => set({ creative_rationale: dna.creative_rationale.map((x, j) => (j === i ? { ...x, hypothesis: e.target.value } : x)) })}
-                  className={field}
+                  className={area}
                 />
               ))}
             </div>
@@ -284,33 +283,33 @@ export default function DnaEditor({
         {(problems.length > 0 || verdict.warnings.length > 0) && (
           <div className="mt-4 space-y-1 text-caption">
             {problems.map((p, i) => (
-              <p key={`e${i}`} className="text-danger-600">
+              <p key={`e${i}`} className="text-danger-foreground">
                 {p.message}
                 {p.path && <span className="font-mono"> ({p.path})</span>}
               </p>
             ))}
             {verdict.warnings.map((w, i) => (
-              <p key={`w${i}`} className="text-base-600">
+              <p key={`w${i}`} className="text-secondary-foreground">
                 Check: {w.message}
               </p>
             ))}
           </div>
         )}
-        {error && <p className="mt-3 text-caption text-danger-600">{error}</p>}
+        {error && <p className="mt-3 text-caption text-danger-foreground">{error}</p>}
 
         <div className="mt-5 flex flex-wrap gap-2">
-          <button type="button" className={solidButton} disabled={!!busy} onClick={() => save(true, true)}>
+          <Button variant="default" size="sm" shape="pill" disabled={!!busy} onClick={() => save(true, true)}>
             {busy === "publish" ? "Publishing…" : "Save, approve and publish"}
-          </button>
-          <button type="button" className={quietButton} disabled={!!busy} onClick={() => save(true, false)}>
+          </Button>
+          <Button variant="secondary" size="sm" shape="pill" disabled={!!busy} onClick={() => save(true, false)}>
             {busy === "approve" ? "Saving…" : "Save and approve"}
-          </button>
-          <button type="submit" className={quietButton} disabled={!!busy}>
+          </Button>
+          <Button type="submit" variant="secondary" size="sm" shape="pill" disabled={!!busy}>
             {busy === "save" ? "Saving…" : "Save for review"}
-          </button>
-          <button type="button" className={quietButton} disabled={!!busy} onClick={onCancel}>
+          </Button>
+          <Button variant="secondary" size="sm" shape="pill" disabled={!!busy} onClick={onCancel}>
             Cancel
-          </button>
+          </Button>
         </div>
       </Section>
     </form>

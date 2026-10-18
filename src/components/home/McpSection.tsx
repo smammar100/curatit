@@ -15,10 +15,10 @@ export default function McpSection() {
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="text-balance lg:col-span-5">
             <Badge>Beta</Badge>
-            <Text tag="h2" variant="displayLG" className="text-base-900 mt-6">
+            <Text tag="h2" variant="h1" className="mt-6 text-primary-foreground">
               Find references in your AI assistant.
             </Text>
-            <Text tag="p" variant="textBase" className="text-base-600 mt-4">
+            <Text tag="p" variant="body" className="mt-4 text-secondary-foreground">
               Search Curatit and read post breakdowns from Claude, Cursor, VS
               Code or ChatGPT.
             </Text>
@@ -32,7 +32,7 @@ export default function McpSection() {
               aria-label="Clients it works with"
             >
               {clientMarks.map((mark) => (
-                <li key={mark.name} className="text-base-900">
+                <li key={mark.name} className="text-primary-foreground">
                   <ClientMark
                     path={mark.path}
                     className="size-9"

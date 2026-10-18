@@ -36,12 +36,13 @@ const ITEMS = '[role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbo
 const CONTROLS =
   'input:not([disabled]), button:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
 
-// In with menu-in, out with menu-out, faster; neither under reduced motion (where usePresence
-// unmounts at once anyway)
-const ENTER = "animate-[menu-in_150ms_var(--ease-out-quint)] motion-reduce:animate-none";
-const EXIT = "pointer-events-none animate-[menu-out_120ms_var(--ease-in-quart)_forwards] motion-reduce:animate-none";
+// In with menu-in, out with menu-out, faster (the shared animate-menu-in / animate-menu-out
+// utilities in global.css); neither under reduced motion (where usePresence unmounts at once anyway)
+const ENTER = "animate-menu-in motion-reduce:animate-none";
+const EXIT = "pointer-events-none animate-menu-out motion-reduce:animate-none";
 
-// The gliding hover highlight in a menu's list (useGlide in src/lib/motion.ts); add the rows' radius
+// The gliding hover highlight in a menu's list (useGlide in src/lib/motion.ts); add the rows' radius,
+// which is the menu's less its padding (rounded-md in a rounded-2xl p-1.5 menu: 12 − 6)
 export const GLIDE_HIGHLIGHT =
   "pointer-events-none absolute top-0 left-0 bg-transparent-hover transition-[translate,height,opacity] duration-150 ease-out-quint data-fresh:transition-[opacity] motion-reduce:transition-[opacity]";
 // A row under that highlight: no hover fill of its own (the highlight is it), a fill for a press

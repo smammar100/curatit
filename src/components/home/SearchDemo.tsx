@@ -48,7 +48,7 @@ export default function SearchDemo() {
       </m.div>
       <m.ul
         variants={introItem}
-        className="mt-4 min-h-0 flex-1 divide-y divide-base-200 overflow-hidden"
+        className="mt-4 min-h-0 flex-1 divide-y divide-border-default overflow-hidden"
         aria-live={playing ? "off" : "polite"}
       >
         {posts.map((post, i) => {

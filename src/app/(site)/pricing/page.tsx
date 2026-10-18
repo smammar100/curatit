@@ -64,13 +64,13 @@ export default function PricingPage() {
       <section>
         <Wrapper variant="standard" className="page-start">
           <div className="text-balance max-w-3xl mx-auto text-center">
-            <Text tag="h1" variant="displayLG" className="text-base-900">
+            <Text tag="h1" variant="h1" className="text-primary-foreground">
               Free while we&apos;re in beta.
             </Text>
             <Text
               tag="p"
-              variant="textBase"
-              className="text-base-600 mt-4 max-w-xl mx-auto"
+              variant="body"
+              className="text-secondary-foreground mt-4 max-w-xl mx-auto"
             >
               The whole library, breakdowns, boards and sharing. Team plans come
               later.
@@ -81,20 +81,20 @@ export default function PricingPage() {
               <div className="space-y-3">
                 <Text
                   tag="p"
-                  variant="displaySM"
-                  className="text-base-900 text-balance"
+                  variant="h3"
+                  className="text-primary-foreground text-balance"
                 >
                   Free
                 </Text>
-                <Text tag="p" variant="textSM" className="text-base-600">
+                <Text tag="p" variant="bodySM" className="text-secondary-foreground">
                   For anyone making social content for brands. Everything in
                   Curatit, for one person.
                 </Text>
               </div>
-              <Text tag="p" variant="displayLG" className="text-base-900 mt-8">
+              <Text tag="p" variant="h1" className="text-primary-foreground mt-8">
                 $0
               </Text>
-              <ul className="divide-y divide-base-200 mt-4">
+              <ul className="divide-y divide-border-default mt-4">
                 {included.map((item) => (
                   <li
                     key={item.label}
@@ -102,15 +102,15 @@ export default function PricingPage() {
                   >
                     <Text
                       tag="span"
-                      variant="textBase"
-                      className="shrink-0 text-base-800"
+                      variant="body"
+                      className="shrink-0 text-primary-foreground"
                     >
                       {item.label}
                     </Text>
                     <Text
                       tag="span"
-                      variant="textSM"
-                      className="text-right text-base-500"
+                      variant="bodySM"
+                      className="text-right text-secondary-foreground"
                     >
                       {item.value}
                     </Text>

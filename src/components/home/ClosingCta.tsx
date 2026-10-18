@@ -28,7 +28,7 @@ export default function ClosingCta({ posts }: { posts: LibraryPost[] }) {
   const right = tiles.filter((_, i) => i % 2 === 1);
 
   return (
-    <section className="overflow-hidden bg-white">
+    <section className="overflow-hidden bg-page">
       <Wrapper variant="standard" className="section-y">
         <div className="flex flex-col items-center gap-12 lg:flex-row lg:justify-center lg:gap-16 xl:gap-24">
           <LogoReel
@@ -44,20 +44,16 @@ export default function ClosingCta({ posts }: { posts: LibraryPost[] }) {
             className="hidden lg:block"
           />
           <div className="text-balance max-w-2xl text-center">
-            <Text
-              tag="h2"
-              variant="displayLG"
-              className=""
-            >
-              <span className="block text-base-500">Find references</span>
-              <span className="block text-base-900">
+            <Text tag="h2" variant="h1">
+              <span className="block text-secondary-foreground">Find references</span>
+              <span className="block text-primary-foreground">
                 for your next social post.
               </span>
             </Text>
             <Text
               tag="p"
-              variant="textBase"
-              className="text-base-600 mt-4 max-w-xl mx-auto"
+              variant="body"
+              className="text-secondary-foreground mt-4 max-w-xl mx-auto"
             >
               Search real brand posts, save useful examples, and share your
               shortlist.
@@ -70,7 +66,7 @@ export default function ClosingCta({ posts }: { posts: LibraryPost[] }) {
                 View pricing
               </Button>
             </div>
-            <Text tag="p" variant="textXS" className="mt-10 text-base-500">
+            <Text tag="p" variant="captionLG" className="mt-10 text-secondary-foreground">
               Examples from brands in the library
             </Text>
           </div>

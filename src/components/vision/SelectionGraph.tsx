@@ -8,8 +8,9 @@
 // walk. The drift and the flow run on requestAnimationFrame straight into the DOM (no React
 // renders per frame), only while the graph is on screen and the tab is visible; a Pause button
 // under it stops all of it (WCAG 2.2.2), and under reduced motion everything holds still on the
-// first post. It works with three to five posts: the walk only visits the ones there are.
-// Original work, made for Curatit.
+// first post. It works with three to five posts: the walk only visits the ones there are. It's
+// drawn inside the page's .vision-night panel, so its colours are the base-* and white classes
+// the panel redefines (the semantic tokens don't flip there). Original work, made for Curatit.
 import Image from "next/image";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Pause from "@/components/fundations/icons/Pause";
@@ -215,7 +216,7 @@ export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
             y2={NODES[b].y}
             vectorEffect="non-scaling-stroke"
             strokeWidth={1}
-            className={cx("transition-[stroke] duration-500", a === active || b === active ? "stroke-base-500" : "stroke-base-200")}
+            className={cx("transition-[stroke] duration-500 ease-in-out-quart", a === active || b === active ? "stroke-base-500" : "stroke-base-200")}
           />
         ))}
         {!still &&
@@ -253,7 +254,7 @@ export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
               viewBox="0 0 100 100"
               aria-hidden="true"
               className={cx(
-                "vision-reticle absolute top-1/2 left-1/2 aspect-square w-[118%] -translate-x-1/2 -translate-y-1/2 overflow-visible transition-opacity duration-500",
+                "vision-reticle absolute top-1/2 left-1/2 aspect-square w-[118%] -translate-x-1/2 -translate-y-1/2 overflow-visible transition-opacity duration-500 ease-in-out-quart",
                 selected ? "opacity-100" : "opacity-0",
               )}
             >
@@ -264,14 +265,14 @@ export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
                 d={FRAME}
                 vectorEffect="non-scaling-stroke"
                 strokeWidth={1}
-                className={cx("fill-white transition-[stroke] duration-500", selected ? "stroke-base-900" : "stroke-base-300")}
+                className={cx("fill-white transition-[stroke] duration-500 ease-in-out-quart", selected ? "stroke-base-900" : "stroke-base-300")}
               />
             </svg>
             <div
               className={cx(
                 // The cover cut to the frame's own hexagon, inset so the two read as one shape
                 "absolute top-1/2 left-1/2 aspect-6/5 w-[80%] -translate-x-1/2 -translate-y-1/2 overflow-hidden bg-base-100",
-                "transition-[scale,opacity] duration-500 ease-out motion-reduce:transition-none",
+                "transition-[scale,opacity] duration-500 ease-in-out-quart motion-reduce:transition-none",
                 selected ? "scale-105 opacity-100" : "opacity-80",
               )}
               style={{ clipPath: `url(#${clip})` }}
@@ -299,7 +300,7 @@ export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
         onClick={() => setPaused((value) => !value)}
         aria-pressed={paused}
         aria-label={paused ? "Play the animation" : "Pause the animation"}
-        className="absolute right-0 bottom-0 flex size-11 items-center justify-center rounded-full text-base-500 ring-1 ring-base-200 transition-[color,background-color] duration-150 hover:bg-base-100 hover:text-base-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-500"
+        className="absolute right-0 bottom-0 flex size-11 items-center justify-center rounded-full text-base-500 ring-1 ring-base-200 transition-[color,background-color] duration-150 ease-out-quint hover:bg-base-100 hover:text-base-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-500"
       >
         {paused ? <Play className="size-4" /> : <Pause className="size-4" />}
       </button>
@@ -350,7 +351,7 @@ function Readout({
       aria-hidden="true"
       className={cx(
         // Sized from the graph's own width, never under 9px; below 40rem only the selected one shows
-        "absolute top-[-8%] font-mono text-[clamp(9px,1.05cqw,11px)] leading-tight whitespace-nowrap tabular-nums transition-[color,opacity] duration-500 @max-[40rem]:not-data-[on]:opacity-0",
+        "absolute top-[-8%] font-mono text-[clamp(9px,1.05cqw,11px)] leading-tight whitespace-nowrap tabular-nums transition-[color,opacity] duration-500 ease-in-out-quart @max-[40rem]:not-data-[on]:opacity-0",
         left ? "right-[86%] text-right" : "left-[86%]",
         selected ? "text-base-900" : "text-base-400",
       )}
