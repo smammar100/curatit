@@ -17,6 +17,20 @@ const record = (dna: unknown, count: number, overrides: Partial<AnalysisRecord> 
 });
 const rows = (slides: SlideObservation[], version = CURRENT): SlideRecord[] => slides.map((observation) => ({ version_id: version, position: observation.position, observation }));
 
+it("shows public caveats once and never exposes internal quality notes", () => {
+  const dna = clone(FIXTURE_DNA);
+  const note = "The survey footnote omits the sample size.";
+  dna.integrity_notes = [{ aspect: "Sample", status: "cannot_verify", note, evidence: ["slide:0"] }];
+  dna.integrity_notes.push({ ...dna.integrity_notes[0] });
+  dna.constraints_or_uncertainties = [note, "The final frame is blank.", "The final frame is blank!"];
+  dna.quality.uncertainties = ["Internal editorial review pending"];
+  const result = toPublicAnalysis(record(dna, 3), rows(FIXTURE_PERCEPTION.slides), 3)!;
+  expect(result.caveats).toEqual(["The final frame is blank."]);
+  expect(result.integrity).toHaveLength(1);
+  dna.constraints_or_uncertainties = [];
+  expect(toPublicAnalysis(record(dna, 3), rows(FIXTURE_PERCEPTION.slides), 3)!.caveats).toEqual([]);
+});
+
 describe("parseEvidence and evidenceGroups", () => {
   it("maps zero-based slide refs to the image they name, and names them from one", () => {
     const targets = parseEvidence(["slide:6", "slide:0", "caption"], 7);

@@ -50,6 +50,27 @@ describe("validatePerception", () => {
 });
 
 describe("validateDna", () => {
+  it.each(["Cannot check the data.", "Claims cannot be verified.", "We can't verify the figures."])("rejects generic filler: %s", (note) => {
+    const dna = clone(FIXTURE_DNA);
+    dna.constraints_or_uncertainties = [note];
+    expect(codes(validateDna(dna, post).errors)).toContain("verification_boilerplate");
+  });
+  it("rejects repeated public caveats and generic verification filler", () => {
+    const dna = clone(FIXTURE_DNA);
+    const note = "Product availability and prices are not independently verified.";
+    dna.integrity_notes = [{ aspect: "Availability", status: "cannot_verify", note, evidence: ["slide:0"] }];
+    dna.constraints_or_uncertainties = [note];
+    const errors = codes(validateDna(dna, post).errors);
+    expect(errors).toContain("verification_boilerplate");
+    expect(errors).toContain("duplicate_caveat");
+  });
+
+  it("preserves a concrete missing chart source", () => {
+    const dna = clone(FIXTURE_DNA);
+    dna.integrity_notes = [{ aspect: "Sample", status: "cannot_verify", note: "The survey percentage has no sample size or fieldwork date in its footnote.", evidence: ["slide:0"] }];
+    dna.constraints_or_uncertainties = [];
+    expect(codes(validateDna(dna, post).errors)).not.toContain("verification_boilerplate");
+  });
   it("checks a creative decision's evidence like any other", () => {
     const dna = clone(FIXTURE_DNA);
     dna.creative_decisions![0].evidence = ["slide:7"];

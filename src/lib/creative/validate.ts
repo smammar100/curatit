@@ -7,6 +7,7 @@
 // were available"), which a designer would read. Errors mean the output can't be stored as a valid draft;
 // warnings mean it can, flagged for review.
 import { distance, rgbOf } from "./colours";
+import { isVerificationBoilerplate, proseKey } from "./editorialQuality";
 import type { CreativeDna, EvidenceRef, Perception } from "./schema";
 
 export type Issue = { code: string; message: string; path?: string };
@@ -217,6 +218,17 @@ export function validateDna(dna: CreativeDna, post: PostInput, perception?: Perc
   // Decisions are distinct (one technique each, no two about the same thing), and a chart or a
   // number on a slide gets its integrity checked
   const decisions = dna.creative_decisions ?? [];
+  const editorialNotes: [string, string][] = [
+    ...(dna.integrity_notes ?? []).map((note, i): [string, string] => [note.note, `integrity_notes.${i}.note`]),
+    ...dna.constraints_or_uncertainties.map((note, i): [string, string] => [note, `constraints_or_uncertainties.${i}`]),
+  ];
+  const seenNotes = new Set<string>();
+  for (const [note, path] of editorialNotes) {
+    if (isVerificationBoilerplate(note)) verdict.errors.push({ code: "verification_boilerplate", message: "Replace generic verification language with a concrete visible issue, or omit the note", path });
+    const key = proseKey(note);
+    if (seenNotes.has(key)) verdict.errors.push({ code: "duplicate_caveat", message: "This note already appears in the analysis; keep it in one section only", path });
+    seenNotes.add(key);
+  }
   decisions.forEach((d, i) => {
     if (decisions.slice(0, i).some((e) => overlap(d.title, e.title) >= 0.75 || overlap(d.principle, e.principle) >= 0.8)) {
       verdict.warnings.push({ code: "duplicate_decision", message: `Decision ${i + 1} repeats an earlier one`, path: `creative_decisions.${i}` });
