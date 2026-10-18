@@ -83,10 +83,15 @@ export function useThumb<T extends HTMLElement = HTMLDivElement>(value: unknown)
       keyboard.current = false;
     },
   };
+  // Makes the next change snap too: for a change that isn't the visitor's (a saved choice
+  // restored after mount), which would otherwise slide on load
+  const snapNext = useCallback(() => {
+    keyboard.current = true;
+  }, []);
   const style: CSSProperties | undefined = box
     ? { width: box.w, height: box.h, translate: `${box.x}px ${box.y}px` }
     : undefined;
-  return { ref, handlers, style, snap: box?.snap ?? true, ready: box !== null };
+  return { ref, handlers, style, snap: box?.snap ?? true, ready: box !== null, snapNext };
 }
 
 /**

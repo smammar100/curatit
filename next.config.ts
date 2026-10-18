@@ -36,7 +36,15 @@ const nextConfig: NextConfig = {
   },
   // The About page became Vision (2026-10-12); old links still land
   async redirects() {
-    return [{ source: "/about", destination: "/vision", permanent: true }];
+    return [
+      { source: "/about", destination: "/vision", permanent: true },
+      // The template's styleguide pages, replaced by the design system (2026-10-18)
+      { source: "/system/overview", destination: "/system", permanent: true },
+      { source: "/system/colors", destination: "/system/colour", permanent: true },
+      { source: "/system/typography", destination: "/system/type", permanent: true },
+      { source: "/system/buttons", destination: "/system/button", permanent: true },
+      { source: "/system/links", destination: "/system/button", permanent: true },
+    ];
   },
   async rewrites() {
     if (!supabaseUrl) return [];
