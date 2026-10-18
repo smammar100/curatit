@@ -925,9 +925,39 @@ img[data-fade] {
 img[data-fade="in"] {
   opacity: 1;
 }
+/* The hero corridor's tiles breathe while their covers are on the way (2026-10-18: an empty grey
+   tile read as broken, and a cover's first trip through the image optimiser can take a second or
+   two). Opacity only, on a layer of its own, so it stays on the compositor while the corridor
+   moves; a tile stops as soon as its image is in, and holds still under reduced motion */
+.corridor-tile::after {
+  content: "";
+  position: absolute;
+  /* 1px in, so the tile's inset hairline still shows */
+  inset: 1px;
+  border-radius: inherit;
+  background: var(--color-shimmer);
+  opacity: 0;
+  pointer-events: none;
+  animation: tile-wait 1.2s var(--ease-in-out-quart) infinite alternate;
+}
+.corridor-tile:nth-child(even)::after {
+  animation-delay: -0.6s;
+}
+.corridor-tile:has(> img[data-fade="in"])::after {
+  display: none;
+}
+@keyframes tile-wait {
+  to {
+    opacity: 0.8;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   img[data-fade] {
     transition: none;
+  }
+  .corridor-tile::after {
+    animation: none;
+    opacity: 0.4;
   }
 }
 
