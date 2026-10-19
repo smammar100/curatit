@@ -38,6 +38,7 @@ import {
   useBusy,
 } from "./parts";
 import { saveWalk, walkOf } from "./walk";
+import { ReviewArt } from "../EmptyArt";
 
 const TABS = ["Needs review", "Failed", "Published", "Recent runs"] as const;
 type List = (typeof TABS)[number];
@@ -152,7 +153,7 @@ export function QueueView({
 
   return (
     <>
-      <div className="max-w-5xl">
+      <div>
         <h1 className="font-display text-display font-light text-primary-foreground">
           Analysis review
         </h1>
@@ -346,6 +347,16 @@ function ApproveAll({
   );
 }
 
+// An empty list: the cleared-queue drawing over one line saying which list is empty
+function Empty({ children }: { children: ReactNode }) {
+  return (
+    <div className="rounded-2xl bg-card px-4 pt-10 pb-8 text-center">
+      <ReviewArt className="mx-auto mb-5 w-56" />
+      <p className="text-body text-secondary-foreground">{children}</p>
+    </div>
+  );
+}
+
 function ListSkeleton() {
   return (
     <ul aria-hidden="true" className="space-y-2">
@@ -368,12 +379,7 @@ function Rows({
   empty: string;
   onChange: () => void;
 }) {
-  if (!rows.length)
-    return (
-      <p className="rounded-2xl bg-card px-4 py-6 text-center text-body text-secondary-foreground">
-        {empty}
-      </p>
-    );
+  if (!rows.length) return <Empty>{empty}</Empty>;
   return (
     <ul className="space-y-2">
       {rows.map((row) => (
@@ -466,12 +472,7 @@ function Row({ row, onChange }: { row: QueueRow; onChange: () => void }) {
 }
 
 function Runs({ queue }: { queue: Queue }) {
-  if (!queue.runs.length)
-    return (
-      <p className="rounded-2xl bg-card px-4 py-6 text-center text-body text-secondary-foreground">
-        No runs yet.
-      </p>
-    );
+  if (!queue.runs.length) return <Empty>No runs yet.</Empty>;
   return (
     <div className="overflow-x-auto rounded-2xl ring-1 ring-border-default">
       <table className="w-full min-w-[40rem] text-left text-body">

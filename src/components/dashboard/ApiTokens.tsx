@@ -44,6 +44,7 @@ import { SCOPES, type Scope } from "@/lib/mcp/config";
 import { track } from "@/lib/analytics";
 import { feedHref } from "./Feed";
 import Header from "./Header";
+import { TokensArt } from "./EmptyArt";
 
 type TokenRow = {
   id: string;
@@ -165,7 +166,7 @@ export default function ApiTokens() {
         onQuery={setQuery}
         onSearch={(text) => router.push(feedHref("For you", text))}
       />
-      <main className="w-full max-w-5xl px-4 pt-4 pb-24 sm:px-6">
+      <main className="w-full px-4 pt-4 pb-24 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-display font-light text-primary-foreground">
@@ -220,7 +221,8 @@ export default function ApiTokens() {
           {tokens === null && !loadError ? (
             <p className="mt-3 text-caption text-secondary-foreground">Loading…</p>
           ) : tokens && tokens.length === 0 ? (
-            <div className="mt-3 rounded-2xl bg-card px-6 py-14 text-center">
+            <div className="mt-3 rounded-2xl bg-card px-6 py-12 text-center">
+              <TokensArt className="mx-auto mb-6 w-60" />
               <p className="text-subtitle font-medium text-primary-foreground">
                 No tokens yet
               </p>
