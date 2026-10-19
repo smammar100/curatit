@@ -660,6 +660,172 @@
   }
 }
 
+/* The empty-state drawings on the API tokens and review pages (dashboard/EmptyArt): a short intro,
+   once, each piece starting at its own --d. Transform, opacity and stroke offsets only */
+.empty-art-rise,
+.empty-art-fan,
+.empty-art-slide,
+.empty-art-pop,
+.empty-art-stamp,
+.empty-art-grow,
+.empty-art-shadow {
+  transform-box: fill-box;
+  animation-delay: var(--d, 0ms);
+  animation-fill-mode: both;
+}
+
+.empty-art-rise {
+  transform-origin: 50% 100%;
+  animation-name: empty-art-rise;
+  animation-duration: 560ms;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes empty-art-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.94);
+  }
+}
+
+/* From behind the front card: tucked in and straight, then fanned to their angle */
+.empty-art-fan {
+  transform-origin: 50% 100%;
+  animation-name: empty-art-fan;
+  animation-duration: 620ms;
+  animation-timing-function: cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+.empty-art-fan[data-side="left"] {
+  --from: translate(30px, 26px) rotate(9deg);
+}
+
+.empty-art-fan[data-side="right"] {
+  --from: translate(-30px, 26px) rotate(-9deg);
+}
+
+@keyframes empty-art-fan {
+  from {
+    opacity: 0;
+    transform: var(--from);
+  }
+}
+
+.empty-art-slide {
+  animation-name: empty-art-slide;
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes empty-art-slide {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+
+.empty-art-pop {
+  transform-origin: 50% 50%;
+  animation-name: empty-art-pop;
+  animation-duration: 340ms;
+  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes empty-art-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+/* The front row's check lands harder than the rest */
+.empty-art-stamp {
+  transform-origin: 50% 50%;
+  animation-name: empty-art-stamp;
+  animation-duration: 460ms;
+  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes empty-art-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+  60% {
+    opacity: 1;
+  }
+}
+
+.empty-art-grow {
+  transform-origin: 0 50%;
+  animation-name: empty-art-grow;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes empty-art-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.empty-art-shadow {
+  transform-origin: 50% 50%;
+  animation-name: empty-art-shadow;
+  animation-duration: 560ms;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes empty-art-shadow {
+  from {
+    opacity: 0;
+    transform: scaleX(0.4);
+  }
+}
+
+/* A tick drawn on: the path is about 15 units long */
+.empty-art-draw {
+  stroke-dasharray: 16;
+  animation: empty-art-draw 300ms ease-out var(--d, 0ms) both;
+}
+
+@keyframes empty-art-draw {
+  from {
+    stroke-dashoffset: 16;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* The dashed card's border marches once, then rests */
+.empty-art-march {
+  animation: empty-art-march 1100ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@keyframes empty-art-march {
+  from {
+    stroke-dashoffset: 40;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .empty-art-rise,
+  .empty-art-fan,
+  .empty-art-slide,
+  .empty-art-pop,
+  .empty-art-stamp,
+  .empty-art-grow,
+  .empty-art-shadow,
+  .empty-art-draw,
+  .empty-art-march {
+    animation: none;
+  }
+}
+
 /* The welcome flow (onboarding/Welcome): a step's content, and each tile of a re-sorted wall,
    arrives with a short rise; a chip of what the taps say pops in */
 .welcome-rise {
