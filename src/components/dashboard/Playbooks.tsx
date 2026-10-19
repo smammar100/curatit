@@ -2,12 +2,11 @@
 
 // The top of For you (2026-10-20): the library's playbooks, then the wall of posts underneath
 // (Feed). The breakdowns file every post under a type of post (Relatable humour, Community
-// prompt, Collaboration…) and the hook it opens with; this shows the types as a sideways row of
-// collection cards (three covers in one strip, the name, how many posts from how many brands) and
-// the hooks as two rows of chips, each with a small cover. Picking either searches for it
-// (typeNamed / hookNamed in search.ts), and the grid shows the result. Laid out after Cosmos's
-// Explore (its curated collections and trending searches) at the owner's request, after a first
-// build where every type was a full row of posts.
+// prompt, Collaboration…); this shows the types as a sideways row of collection cards (three
+// covers in one strip, the name, how many posts from how many brands). Picking one searches for
+// it (typeNamed in search.ts), and the grid shows the result. Laid out after Cosmos's Explore (its
+// curated collections) at the owner's request, after a first build where every type was a full
+// row of posts. A row of hook chips under the cards was built and taken out at the owner's request.
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Button from "@/components/fundations/elements/Button";
@@ -16,11 +15,10 @@ import CaretRight from "@/components/fundations/icons/CaretRight";
 import { spread } from "./forYou";
 import type { DashPost } from "./types";
 
-// What a type or hook needs to be offered: enough posts from enough brands to be a pattern
+// What a type of post needs to get a card: enough posts from enough brands to be a pattern
 // rather than one brand's habit
 const MIN_POSTS = 4;
 const MIN_BRANDS = 2;
-const MAX_HOOKS = 16;
 
 type Group = { name: string; posts: DashPost[]; brands: number };
 
@@ -33,11 +31,10 @@ function groupsOf(posts: DashPost[], key: (post: DashPost) => string | null | un
 
 export default function Playbooks({ posts, onPick }: { posts: DashPost[]; onPick: (query: string) => void }) {
   const types = useMemo(() => groupsOf(posts, (post) => post.breakdown?.type), [posts]);
-  const hooks = useMemo(() => groupsOf(posts, (post) => post.breakdown?.hook).slice(0, MAX_HOOKS), [posts]);
   if (!types.length) return null;
 
   return (
-    <div className="mb-12 flex flex-col gap-10 lg:mb-14">
+    <div className="mb-12 lg:mb-14">
       <section aria-labelledby="playbooks-types">
         <Scroller
           heading={
@@ -57,34 +54,6 @@ export default function Playbooks({ posts, onPick }: { posts: DashPost[]; onPick
           ))}
         </Scroller>
       </section>
-      {hooks.length > 0 && (
-        <section aria-labelledby="playbooks-hooks">
-          <h2 id="playbooks-hooks" className="mb-3 text-title font-medium text-primary-foreground">
-            Search by hook
-          </h2>
-          {/* Two rows that scroll sideways together */}
-          <ul className="scrollbar-hide -mx-4 grid grid-flow-col grid-rows-2 justify-start gap-2 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
-            {hooks.map((group) => (
-              <li key={group.name}>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  shape="pill"
-                  onClick={() => onPick(group.name)}
-                  leftIcon={
-                    <span className="relative -ml-1.5 size-6 shrink-0 overflow-hidden rounded-full bg-component">
-                      <Image src={group.posts[0].cover} alt="" fill sizes="24px" className="object-cover" />
-                    </span>
-                  }
-                >
-                  {group.name}
-                  <span className="text-secondary-foreground tabular-nums">{group.posts.length}</span>
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
     </div>
   );
 }

@@ -59,8 +59,12 @@ export default function SearchBox({
   const dark = useDarkTheme();
   // The beam's travelling types don't stop for reduced motion on their own
   const reducedMotion = useReducedMotion();
+  // The glow animates a dozen custom properties through blur and hue-rotate filters, which the
+  // browser restyles and repaints every frame; measured on the feed (2026-10-20) it was the
+  // biggest single cost while scrolling, so it rests while the page scrolls and comes back after
+  const scrolling = useScrolling();
   // The glow round the pill and, while it's open, the panel
-  const beam = { size: "md", colorVariant: "colorful", strength: 0.7, theme: dark ? "dark" : "light", active: !reducedMotion } as const;
+  const beam = { size: "md", colorVariant: "colorful", strength: 0.7, theme: dark ? "dark" : "light", active: !reducedMotion && !scrolling } as const;
 
   useEffect(() => setRecent(readRecent()), []);
 
@@ -335,4 +339,31 @@ function CategorySwatch({ slug, hue }: { slug: string; hue: number }) {
       {Glyph && <Glyph className="size-3.5" />}
     </span>
   );
+}
+
+// True while the page is scrolling and for a moment after it stops. State changes only when it
+// starts and when it settles, never per scroll event
+function useScrolling(settle = 700) {
+  const [scrolling, setScrolling] = useState(false);
+  useEffect(() => {
+    let timer = 0;
+    let on = false;
+    const onScroll = () => {
+      if (!on) {
+        on = true;
+        setScrolling(true);
+      }
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        on = false;
+        setScrolling(false);
+      }, settle);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(timer);
+    };
+  }, [settle]);
+  return scrolling;
 }

@@ -98,7 +98,11 @@ function Tile({ post, priority, sizes }: { post: DashPost; priority: boolean; si
       <Link href={postHref(post.shortCode)} scroll={false} onClick={rememberOpener} className="block">
         {/* No fill of its own: the shimmering Skeleton is the placeholder, and its alpha tint over
             another would double. Square: the tile's own corner clips it */}
-        <div className="relative w-full overflow-hidden rounded" style={{ aspectRatio: ratio(post) }}>
+        {/* Off screen the browser skips the cover, shimmer and image alike: with a couple of hundred
+            tiles it was restyling every waiting tile's shimmer on every frame of a scroll
+            (2026-10-20). Its size comes from the aspect ratio, so nothing shifts. On the cover, not
+            the tile, so the Save menu that opens from the tile is never clipped */}
+        <div className="relative w-full overflow-hidden rounded" style={{ aspectRatio: ratio(post), contentVisibility: "auto" }}>
           {!loaded && <Skeleton radius="none" className="absolute inset-0" />}
           <Image
             src={post.cover}
