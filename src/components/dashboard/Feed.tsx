@@ -3,7 +3,8 @@
 // The dashboard: the library as a feed, after Cosmos's signed-in home (chosen from a three-way
 // prototype on 2026-10-10). The header's tabs pick the view, its search filters the posts, and
 // the grid shows them. For you is the library ranked on the person's onboarding answers
-// (forYou.ts); someone whose profile has none yet is sent to /dashboard/welcome first. Discover
+// (forYou.ts), under the Playbooks (2026-10-20) until something is typed; someone whose
+// profile has none yet is sent to /dashboard/welcome first. Discover
 // adds a row of categories to browse the library by. ?view=
 // discover|saved, ?category= (on Discover) and ?q= open the feed on a view, category or
 // search, which is how other dashboard pages send you back here.
@@ -15,13 +16,14 @@ import EmptyState from "@/components/fundations/molecules/EmptyState";
 import BoardList from "./BoardList";
 import { useBoards } from "./boards";
 import CategoryBar from "./CategoryBar";
-import { rank } from "./forYou";
+import { rank, spread } from "./forYou";
 import { useProfile } from "./profile";
 import SavedArt from "./SavedArt";
 import Grid from "./Grid";
+import Playbooks from "./Playbooks";
 import Header, { VIEWS, type View } from "./Header";
 import { GridSkeleton } from "./Skeleton";
-import { brandNamed, categoryNamed, matches } from "./search";
+import { brandNamed, categoryNamed, hookNamed, matches, typeNamed } from "./search";
 import type { DashPost } from "./types";
 
 export const feedHref = (view: View, query = "", category: string | null = null) => {
@@ -88,17 +90,26 @@ export default function Feed() {
     const source = view === "Saved" ? saved : view === "Discover" && category ? list.filter((post) => inCategory(post, category)) : list;
     const brand = brandNamed(list, query);
     const named = brand ? null : categoryNamed(query);
+    // A type of post or a hook, as the Playbooks cards and chips send them
+    const type = brand || named ? null : typeNamed(list, query);
+    const hook = brand || named || type ? null : hookNamed(list, query);
     const filtered = !query
       ? source
       : brand
         ? source.filter((post) => post.brand.slug === brand.slug)
         : named
           ? source.filter((post) => inCategory(post, named.slug))
-          : source.filter((post) => matches(post, query));
-    return view === "For you" ? rank(filtered, profile, list, { fresh: true }) : filtered;
+          : type
+            ? source.filter((post) => post.breakdown?.type === type)
+            : hook
+              ? source.filter((post) => post.breakdown?.hook === hook)
+              : source.filter((post) => matches(post, query));
+    // For you never lets one brand's run (a new import, or a brand the answers favour) fill the top
+    return view === "For you" ? spread(rank(filtered, profile, list, { fresh: true }), 6) : filtered;
   }, [list, saved, query, view, category, profile]);
   // For you waits for the answers it ranks on, so it never shows one order and then another, and
   // keeps waiting while a first visit is on its way to the welcome flow
+  const rows = view === "For you" && !query;
   const waiting = (view === "Saved" && status === "loading") || (view === "For you" && (profileStatus === "loading" || (onFeed && unset)));
 
   return (
@@ -112,11 +123,22 @@ export default function Feed() {
         {view === "Discover" && <CategoryBar posts={list} value={category} onChange={setCategory} />}
         {/* The Saved view opens on the boards, then every saved post */}
         {view === "Saved" && !query && status !== "loading" && <BoardList />}
+        {/* For you with nothing typed opens on the playbooks, the wall of posts under them */}
+        {rows && (
+          <Playbooks
+            posts={list}
+            onPick={(next) => {
+              setQuery(next);
+              scrollTo({ top: 0 });
+            }}
+          />
+        )}
         {waiting ? (
           <GridSkeleton label={view === "Saved" ? "Loading your saved posts" : "Loading your feed"} />
         ) : shown.length ? (
           <>
             {view === "Saved" && !query && boards.length > 0 && <h2 className="mb-5 text-title font-medium text-primary-foreground">All saved posts</h2>}
+            {rows && <h2 className="mb-5 text-title font-medium text-primary-foreground">Picked for you</h2>}
             <Grid posts={shown} />
           </>
         ) : (

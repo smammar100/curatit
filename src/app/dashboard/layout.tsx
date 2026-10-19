@@ -7,6 +7,7 @@ import { ProfileProvider } from "@/components/dashboard/profile";
 import { UserProvider } from "@/components/dashboard/user";
 import { ToastProvider } from "@/components/fundations/molecules/Toast";
 import type { DashPost } from "@/components/dashboard/types";
+import { getBreakdownSummaries } from "@/lib/creative/display";
 import { getPublishedPosts } from "@/lib/posts";
 
 export const metadata: Metadata = { title: "Curatit", robots: { index: false, follow: false } };
@@ -22,6 +23,12 @@ export const revalidate = 3600;
 // while it's open (PostView, by this id).
 export default async function DashboardLayout({ children, modal }: { children: ReactNode; modal: ReactNode }) {
   const all = await getPublishedPosts();
+  // The breakdowns' one-line strategies and labels, for the Playbooks rows. The feed still works
+  // without them (the rows fall back to the caption's first line), so a failed read isn't fatal
+  const breakdowns = await getBreakdownSummaries(new Map(all.map((post) => [post.id, post.images.length]))).catch((error: unknown) => {
+    console.error(error);
+    return new Map<string, never>();
+  });
 
   // The feed's own order: what joined the library most recently first (by import day, newest day
   // first), and within each day the brands interleaved, so a new import leads the feed without
@@ -47,6 +54,7 @@ export default async function DashboardLayout({ children, modal }: { children: R
       postedAt: post.postedAt,
       addedAt: post.addedAt,
       cover: post.images[0],
+      breakdown: breakdowns.get(post.id) ?? null,
     }));
 
   return (

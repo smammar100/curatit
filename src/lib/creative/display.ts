@@ -39,3 +39,27 @@ export async function readPublishedAnalysis(client: SupabaseClient, postId: stri
 
 // The post's analysis once an editor has published it; null before that
 export const getPublishedAnalysis = cache((postId: string, images: number) => readPublishedAnalysis(createPublicClient(), postId, images));
+
+// What the feed's Playbooks rows show of every post with a published breakdown: the strategy in a
+// line, and the type of post and hook it was filed under. One read for the whole library, keyed by
+// instagram_posts.id; `images` is each post's slide count, which the prose's slide numbers need
+export type BreakdownSummary = { headline: string; type: string | null; hook: string | null };
+
+export async function getBreakdownSummaries(images: Map<string, number>): Promise<Map<string, BreakdownSummary>> {
+  const { data, error } = await createPublicClient()
+    .from("post_analyses")
+    .select("post_id, creative_dna, current_version_id, image_analysis_complete, expected_slides, processed_slides")
+    .not("published_at", "is", null)
+    .returns<(AnalysisRecord & { post_id: string })[]>();
+  if (error) throw new Error(`Could not load the published breakdowns from Supabase: ${error.message}`);
+  const summaries = new Map<string, BreakdownSummary>();
+  for (const row of data ?? []) {
+    const count = images.get(row.post_id);
+    if (!count) continue;
+    const view = toPublicAnalysis(row, [], count);
+    if (!view) continue;
+    const label = (name: string) => view.labels.find((item) => item.label === name)?.value ?? null;
+    summaries.set(row.post_id, { headline: view.headline, type: label("Type"), hook: label("Hook") });
+  }
+  return summaries;
+}
