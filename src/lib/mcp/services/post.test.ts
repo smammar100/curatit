@@ -208,7 +208,7 @@ describe("tool inputs", () => {
     const published = search["~standard"].jsonSchema!.input({ target: "draft-2020-12" }) as { properties: Record<string, { default?: unknown; description?: string }> };
     expect(published.properties.limit.default).toBe(8);
     expect(published.properties.sort.default).toBe("relevance");
-    expect(published.properties.query_mode.default).toBe("all_words");
+    expect(published.properties.query_mode.default).toBe("natural");
     expect(published.properties.filters.description).toContain('{"industries":["finance"],"formats":["carousel"],"hook_techniques":["question"]}');
     expect(search.parse({ query: "x" })).toEqual({ query: "x" });
     const carousel = z.toJSONSchema(TOOLS.curatit_get_carousel.input) as { properties: Record<string, { default?: unknown }> };
