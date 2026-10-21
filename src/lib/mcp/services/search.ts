@@ -9,17 +9,35 @@ import { decodeCursor, encodeCursor, fingerprint } from "../cursor";
 import { invalid, toCuratitError } from "../errors";
 import type { CatalogRepository, RawSearchRequest } from "../repo/types";
 import { brandOf, classification, excerpt, industryOf, mediaId, nameKey } from "./shared";
+import { interpretSearch } from "@/lib/search/interpret";
+import { searchRefinements } from "@/lib/search/refine";
 
 export const SEARCH_DEFAULT_LIMIT = 8;
 
 export type SearchContext = { signingSecret: Uint8Array<ArrayBuffer>; principalKey: string };
 
 export async function searchPosts(repo: CatalogRepository, input: SearchInputT, ctx: SearchContext): Promise<{ data: SearchOutputT; warnings: string[] }> {
-  const query = input.query?.trim() || null;
-  const queryMode = input.query_mode ?? "all_words";
-  const filters = input.filters ?? {};
+  const originalQuery = input.query?.trim() || null;
+  let query = originalQuery;
+  const queryMode = input.query_mode ?? "natural";
+  const filters = { ...input.filters };
   const limit = input.limit ?? SEARCH_DEFAULT_LIMIT;
   const warnings: string[] = [];
+  if (query && queryMode === "natural") {
+    const [terms, categories, brands] = await Promise.all([repo.terms(), repo.categories(), repo.brands()]);
+    const interpreted = interpretSearch(query, { dimensions: terms.dimensions, categories, brands });
+    if (interpreted.error) throw invalid(interpreted.error);
+    for (const correction of interpreted.corrections ?? []) warnings.push(`Read "${correction.from}" as "${correction.to}". Quote the original phrase to search it literally.`);
+    query = interpreted.query || null;
+    for (const [key, { dimension }] of Object.entries(FILTERS)) {
+      const inferred = interpreted.filters[dimension];
+      if (!inferred) continue;
+      const filterKey = key as FilterKey;
+      if (filters[filterKey]?.length) {
+        warnings.push(`The explicit ${key} filter takes precedence over the natural query's ${JSON.stringify(inferred)}.`);
+      } else filters[filterKey] = Array.isArray(inferred) ? inferred : [inferred];
+    }
+  }
 
   // analysed_only narrows only when true: `false` is the default and filters nothing
   const activeKeys = (Object.keys(filters) as (keyof typeof filters)[]).filter((k) => {
@@ -79,7 +97,7 @@ export async function searchPosts(repo: CatalogRepository, input: SearchInputT, 
 
   // The same search sent with its filters in another order is the same search, so the
   // fingerprint sees them sorted
-  const search = await fingerprint({ query, queryMode, applied: canonical(applied), sort });
+  const search = await fingerprint({ originalQuery, query, queryMode, applied: canonical(applied), sort });
   const cursorScope = { search, principal: ctx.principalKey };
   const page = input.cursor ? await decodeCursor(ctx.signingSecret, input.cursor, cursorScope) : null;
   request.offset = page?.offset ?? 0;
@@ -120,13 +138,16 @@ export async function searchPosts(repo: CatalogRepository, input: SearchInputT, 
   if (result.has_more && result.next_offset === null) warnings.push("The catalog's search stops at 500 results per query. Narrow the search to go further.");
 
   const suggestions = posts.length === 0 && !input.cursor ? relaxations(query, queryMode, applied) : [];
+  const suggestedQueries = posts.length === 0 && !input.cursor && queryMode === "natural" && !filters.analysed_only
+    ? searchRefinements(Object.fromEntries(Object.entries(FILTERS).flatMap(([key, { dimension }]) => applied[key] ? [[dimension, applied[key]]] : [])), query ?? "") : [];
 
   return {
     data: {
       posts,
       next_cursor: nextCursor,
-      applied: { query, query_mode: queryMode, filters: applied, sort, limit },
+      applied: { query, original_query: originalQuery, query_mode: queryMode, filters: applied, sort, limit },
       suggestions,
+      suggested_queries: suggestedQueries,
     },
     warnings,
   };
@@ -153,9 +174,9 @@ function anyWord(query: string) {
   return words.length > 1 ? words.join(" or ") : query;
 }
 
-function relaxations(query: string | null, queryMode: "all_words" | "any_word", applied: Record<string, string[]>) {
+function relaxations(query: string | null, queryMode: "natural" | "all_words" | "any_word", applied: Record<string, string[]>) {
   const out: string[] = [];
-  if (query && queryMode === "all_words" && query.split(/\s+/).length > 1) {
+  if (query && queryMode !== "any_word" && query.split(/\s+/).length > 1) {
     out.push('Every word has to match. Try query_mode "any_word", or fewer, more specific words.');
   }
   if (query && Object.keys(applied).length) out.push("Try the query alone, without filters, or the filters alone.");
