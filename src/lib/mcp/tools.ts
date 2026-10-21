@@ -41,7 +41,7 @@ export const TOOL_META: Record<ToolName, { title: string; description: string; r
   curatit_search_posts: {
     title: "Search Curatit posts",
     description:
-      "Find real Instagram posts in Curatit's curated library by free text (captions, on-slide text, published analyses) and/or taxonomy filters. Returns compact matches with why each matched; nothing is relaxed for you, an empty result comes with suggestions. Page with next_cursor. Needs a query or a filter.",
+      "Find real Instagram posts using everyday descriptions such as 'fintech carousels that open with a stat', or explicit taxonomy filters. Natural mode maps supported phrases to filters and searches remaining keywords across captions, on-slide text and published analyses; applied reports the interpretation. Explicit filters win. Use all_words or any_word for literal keyword search. Returns compact matches with reasons; nothing is relaxed automatically. Empty results have suggestions. Page with next_cursor. Needs a query or a filter.",
     readOnly: true,
     idempotent: true,
   },
