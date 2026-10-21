@@ -1,0 +1,59 @@
+# Natural-language search
+
+Implemented on `feat/natural-language-search`, 2026-10-18; expanded and rebased onto `967cb2b` on 2026-10-21. Deployment requires publishing the branch, merging and deploying the application; there is no database migration or new API key. The initial push was blocked by automatic approval review; changes remain local until publishing is authorized.
+
+## What changed
+
+The dashboard previously required every word to appear in the short hook, brand or format. It now interprets supported English descriptions and searches the published catalog through `curatit_mcp_search_v2`, including captions, on-slide text and approved creative analyses. Exact brand/category searches remain immediate and local. Searches retain database relevance order instead of being reordered by For you preferences.
+
+The MCP/REST service uses the same interpreter. `query_mode` now defaults to `natural`. Existing clients that require the previous behavior should explicitly send `all_words`; `any_word` remains available. `applied.original_query` holds the submitted sentence, `applied.query` the remaining keywords, and `applied.filters` the effective filters. Explicit filters win, with a warning. Cursors include the original query, interpretation, mode, filters and account.
+
+| Query | Interpretation |
+| --- | --- |
+| Show me fintech carousels that open with a stat | Finance + carousel + number/statistic opening hook |
+| Fintech posts launching a feature | Finance + feature launch |
+| Find food posts with product photography | Food & Drink + product photography |
+| Posts using sans serif fonts | Sans-serif typography |
+| Single image brand partnership posts | Static + collaboration |
+| Food posts about Halloween | Food & Drink + keyword `halloween` |
+| Fintech posts about "Black Friday" | Finance + literal phrase `Black Friday` |
+| I am looking for fintech ads announcing a new feature | Finance + feature launch |
+| Posts with customer reviews | Testimonial |
+| Carousels with app screens | Carousel + screenshot/UI imagery |
+| Food carosuel posts | Food & Drink + carousel, with a visible correction |
+| Product photgraphy | Product photography, with a visible correction |
+
+## October 21 improvements
+
+- Broader paraphrases for feature/product launches, testimonials, product showcases, app screenshots, illustration, data visualizations and layouts; better plurals such as `launches`.
+- Conservative spelling correction: at most one edit (including adjacent transposition) in one word per matched phrase, minimum six characters, only one unambiguous taxonomy target. Exact vocabulary matches and quoted phrases are protected. Within a sentence, fuzzy brand names need `from` or `by`. Corrections appear in the dashboard and MCP warnings; they are interpretations, not guarantees of user intent.
+- Ready-to-run refinements remove exactly one constraint or explicitly remove residual keywords. They are never executed automatically or described as having results. The dashboard provides buttons; MCP/REST exposes optional `suggested_queries` and includes them in text responses. No generated refinements for multi-value explicit filters or `analysed_only`, since those cannot currently round-trip through the natural grammar.
+- Empty Saved/category searches offer **Search full library**, retaining the query. Invalid syntax asks for a changed query; network failures offer retry.
+- The search panel offers three example descriptions. Successful complete results are cached for 60 seconds, at most 16 per feed snapshot; errors and capped responses are not cached. The taxonomy cache remains five minutes.
+- Preserves main's current Playbooks, exact type/hook searches, feed spreading, keyboard behavior and design-system components. Search relevance is not reordered by personal feed preferences.
+
+## Implementation
+
+- `src/lib/search/interpret.ts`: shared pure interpreter, longest phrase matching, plurals, aliases, quotation handling, conservative spelling correction and conversational filler removal. Unknown words remain keywords. Brand/term names come from the catalog, not generated guesses. `refine.ts` generates explicit broader queries that round-trip through this interpreter.
+- `src/components/dashboard/useLibrarySearch.ts`: 300 ms debounce, cancellation, stale-response protection, 15-second deadline, a five-minute cache of the public taxonomy, and ranked pagination. Exact brands/categories bypass remote work.
+- `Feed.tsx`: displays interpretation, loading and error states. Search intersects the selected Discover category or Saved posts. Whitespace-only queries restore the feed.
+- `src/lib/mcp/services/search.ts`: applies the shared interpretation to the existing repository, preserving explicit filters, signed pagination and empty-result suggestions.
+
+The dashboard collects pages up to the existing 500-result limit before intersecting Saved/Discover. It reports the cap instead of implying completeness. This fits the current small catalog; for a substantially larger library, move scoped filtering and lightweight ID-only pagination into a dedicated database search RPC. The current RPC returns more metadata than the dashboard needs.
+
+## Boundaries
+
+This is deterministic language interpretation plus full-text search, not embedding-based semantic retrieval or an LLM. It understands the supported taxonomy and aliases; it does not understand every possible paraphrase, infer visual similarity or invent missing labels. There is no model charge per search, though database requests still use normal infrastructure resources.
+
+Quoted phrases remain literal. Negations, alternative/multiple values within a dimension, and date ordering are rejected with guidance rather than inverted or silently broadened. Exact ambiguous brands such as On and Public work; within a sentence use `from On` or `by Public` to select them. Creative filters require published analysis; an unlabelled post will not match one merely because it looks appropriate. No filters are relaxed automatically.
+
+## Verification
+
+- Unit coverage: natural sentences, long-phrase precedence, plural formats, old industry aliases, ambiguous brands, literal phrases, unknown/Unicode text, unsupported constraints and query bounds.
+- Service coverage: natural results and applied metadata, explicit-filter precedence without input mutation, literal mode compatibility, and cursor scope.
+- Dashboard coverage: paginated ordering/deduplication, result cap, upstream errors, debounce and out-of-order responses.
+- October 21: 411 tests passed, 6 skipped (live integration requires credentials); TypeScript and whitespace checks passed. Added paraphrase/typo cases, correction ambiguity protections, refinement round-trip checks, cache expiry, and MCP correction/refinement metadata. The prior live SQL examples below are dated October 18, not a new measurement of today's catalog.
+- Read-only live SQL checks on the existing published catalog: feature launches in Finance returned Wise `DeJsl6nF39v`, Public `Dd_wdh5lBrC`, Robinhood `Dd9Lmh6o00b`, Wealthfront `DdrpIpkAYGX`. Product photography, sans-serif typography and collaboration searches returned labelled matches. Finance + carousel + number hook returned zero; this is retained as an honest empty result, not converted into looser matches.
+- Live checks exercised the interpreted RPC requests. The signed-in browser flow and deployed MCP endpoint still require a deployment smoke check; local DOM tests exercise the new client request lifecycle.
+
+Commands: `npm test`, `npm run typecheck`, `git diff --check`.

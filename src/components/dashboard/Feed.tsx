@@ -23,7 +23,10 @@ import Grid from "./Grid";
 import Playbooks from "./Playbooks";
 import Header, { VIEWS, type View } from "./Header";
 import { GridSkeleton } from "./Skeleton";
-import { brandNamed, categoryNamed, hookNamed, matches, typeNamed } from "./search";
+import { brandNamed, categoryNamed, hookNamed, typeNamed } from "./search";
+import { useLibrarySearch } from "./useLibrarySearch";
+import Notice from "@/components/fundations/molecules/Notice";
+import type { SearchRefinement } from "@/lib/search/refine";
 import type { DashPost } from "./types";
 
 export const feedHref = (view: View, query = "", category: string | null = null) => {
@@ -44,6 +47,7 @@ export default function Feed() {
   const [view, setView] = useState<View>("For you");
   // Discover's category (a slug), or null for All
   const [category, setCategory] = useState<string | null>(null);
+  const search = useLibrarySearch(query, list);
 
   // Open on the view, category and search in the address: on arrival, and whenever a link brings
   // the address back to the feed itself (a post's category or search lands here with the feed
@@ -93,7 +97,7 @@ export default function Feed() {
     // A type of post or a hook, as the Playbooks cards and chips send them
     const type = brand || named ? null : typeNamed(list, query);
     const hook = brand || named || type ? null : hookNamed(list, query);
-    const filtered = !query
+    const filtered = !query.trim()
       ? source
       : brand
         ? source.filter((post) => post.brand.slug === brand.slug)
@@ -103,13 +107,13 @@ export default function Feed() {
             ? source.filter((post) => post.breakdown?.type === type)
             : hook
               ? source.filter((post) => post.breakdown?.hook === hook)
-              : source.filter((post) => matches(post, query));
+              : source.filter((post) => search.order.has(post.shortCode)).toSorted((a, b) => search.order.get(a.shortCode)! - search.order.get(b.shortCode)!);
     // For you never lets one brand's run (a new import, or a brand the answers favour) fill the top
-    return view === "For you" ? spread(rank(filtered, profile, list, { fresh: true }), 6) : filtered;
-  }, [list, saved, query, view, category, profile]);
+    return view === "For you" && !query.trim() ? spread(rank(filtered, profile, list, { fresh: true }), 6) : filtered;
+  }, [list, saved, query, view, category, profile, search.order]);
   // For you waits for the answers it ranks on, so it never shows one order and then another, and
   // keeps waiting while a first visit is on its way to the welcome flow
-  const rows = view === "For you" && !query;
+  const rows = view === "For you" && !query.trim();
   const waiting = (view === "Saved" && status === "loading") || (view === "For you" && (profileStatus === "loading" || (onFeed && unset)));
 
   return (
@@ -122,7 +126,7 @@ export default function Feed() {
       <main className="px-4 pt-2 pb-24 sm:px-6">
         {view === "Discover" && <CategoryBar posts={list} value={category} onChange={setCategory} />}
         {/* The Saved view opens on the boards, then every saved post */}
-        {view === "Saved" && !query && status !== "loading" && <BoardList />}
+        {view === "Saved" && !query.trim() && status !== "loading" && <BoardList />}
         {/* For you with nothing typed opens on the playbooks, the wall of posts under them */}
         {rows && (
           <Playbooks
@@ -133,25 +137,44 @@ export default function Feed() {
             }}
           />
         )}
-        {waiting ? (
-          <GridSkeleton label={view === "Saved" ? "Loading your saved posts" : "Loading your feed"} />
+        {search.result && !search.result.error && <p role="status" className="mb-5 text-body text-secondary-foreground">
+          {shown.length} {shown.length === 1 ? "post" : "posts"}{search.result.labels.length ? ` · ${search.result.labels.join(" · ")}` : ""}
+          {search.result.capped ? " · First 500 matches. Narrow your search to see more." : ""}
+        </p>}
+        {search.result?.corrections?.length ? (
+          <Notice className="mb-5" live>
+            {search.result.corrections.map((item) => `Read “${item.from}” as “${item.to}”.`).join(" ")} Put a phrase in quotes to search its exact wording.
+          </Notice>
+        ) : null}
+        {waiting || search.loading ? (
+          <GridSkeleton label={search.loading ? "Searching the library" : view === "Saved" ? "Loading your saved posts" : "Loading your feed"} />
+        ) : search.result?.error ? (
+          <Notice live tone={search.result.invalid ? "neutral" : "danger"} title={search.result.invalid ? "Adjust your search" : "Search couldn't finish"} action={<Button size="xs" variant="secondary" onClick={search.result.invalid ? () => setQuery("") : search.retry}>{search.result.invalid ? "Clear search" : "Try again"}</Button>}>
+            {search.result.error}
+          </Notice>
         ) : shown.length ? (
           <>
-            {view === "Saved" && !query && boards.length > 0 && <h2 className="mb-5 text-title font-medium text-primary-foreground">All saved posts</h2>}
+            {view === "Saved" && !query.trim() && boards.length > 0 && <h2 className="mb-5 text-title font-medium text-primary-foreground">All saved posts</h2>}
             {rows && <h2 className="mb-5 text-title font-medium text-primary-foreground">Picked for you</h2>}
             <Grid posts={shown} />
           </>
         ) : (
-          <Empty view={view} query={query} onClear={() => setQuery("")} onBrowse={() => setView("For you")} />
+          <Empty view={view} query={query} onClear={() => setQuery("")} onBrowse={() => setView("For you")}
+            refinements={search.result?.refinements ?? []} onRefine={setQuery}
+            scoped={view === "Saved" || (view === "Discover" && Boolean(category))}
+            onSearchAll={() => { setView("Discover"); setCategory(null); }} />
         )}
       </main>
     </div>
   );
 }
 
-function Empty({ view, query, onClear, onBrowse }: { view: View; query: string; onClear: () => void; onBrowse: () => void }) {
+function Empty({ view, query, onClear, onBrowse, refinements, onRefine, scoped, onSearchAll }: {
+  view: View; query: string; onClear: () => void; onBrowse: () => void;
+  refinements: SearchRefinement[]; onRefine: (query: string) => void; scoped: boolean; onSearchAll: () => void;
+}) {
   // Nothing saved at all: the illustration, then how saving works
-  if (view === "Saved" && !query) {
+  if (view === "Saved" && !query.trim()) {
     return (
       <EmptyState
         illustration={<SavedArt />}
@@ -169,11 +192,17 @@ function Empty({ view, query, onClear, onBrowse }: { view: View; query: string; 
   return (
     <EmptyState
       title={`Nothing matches ‘${query}’`}
-      description="Try a format or a goal instead, like ‘carousel’ or ‘launch’."
+      description={scoped ? "This search is limited to your current view. Try the full library." : "Try removing one detail, or describe the posts another way."}
       action={
-        <Button size="sm" variant="default" onClick={onClear}>
-          Clear search
+        <Button size="sm" variant="default" onClick={scoped ? onSearchAll : refinements[0] ? () => onRefine(refinements[0].query) : onClear}>
+          {scoped ? "Search full library" : refinements[0]?.label ?? "Clear search"}
         </Button>
+      }
+      secondaryAction={
+        <div className="flex flex-wrap justify-center gap-2">
+          {!scoped && refinements.slice(1).map((item) => <Button key={item.query} size="sm" variant="transparent" onClick={() => onRefine(item.query)}>{item.label}</Button>)}
+          {(scoped || refinements.length > 0) && <Button size="sm" variant="transparent" onClick={onClear}>Clear search</Button>}
+        </div>
       }
     />
   );

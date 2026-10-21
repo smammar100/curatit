@@ -1,5 +1,7 @@
 # AGENTS.md — Curatit
 
+**Search:** Dashboard and MCP share `src/lib/search/interpret.ts`. Read `docs/natural-language-search.md` before changing search. Keep exact brand/category/Playbook searches immediate, database relevance for free-text results, and expose interpreted filters. Never silently relax constraints.
+
 ## UI work: read this first
 
 Before you create or change any UI, read **[DESIGN.md](./DESIGN.md)** (the design system's rules, layers and component picker) and the topic file in `docs/design/` for what you're touching. The live reference is `/system` (every token and component in both themes; sources in `src/components/system/sheets/`). `.cursor/skills/curatit-design/SKILL.md` points to the same files for Cursor.
