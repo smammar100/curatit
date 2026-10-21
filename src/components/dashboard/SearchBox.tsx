@@ -185,7 +185,8 @@ export default function SearchBox({
                 onFocus={() => !quiet.current && setOpen(true)}
                 // After Escape the field keeps focus, so a click is the other way back in
                 onClick={() => setOpen(true)}
-                placeholder="Search brands, categories or ideas"
+                placeholder="Describe the posts you’re looking for"
+                maxLength={300}
                 autoComplete="off"
                 className="h-full w-full rounded-full border-0 bg-transparent pr-12 pl-12 text-body pointer-coarse:text-[16px] text-primary-foreground placeholder:text-tertiary-foreground focus:ring-0 focus:outline-hidden [&::-webkit-search-cancel-button]:hidden"
               />
@@ -227,6 +228,15 @@ export default function SearchBox({
               {/* A large floating panel: the modal surface and the extra large shadow (the beam's
                   wrapper clips its drops, so what shows is the dark theme's inner highlight) */}
               <div className="rounded-[28px] bg-modal p-6 shadow-xl">
+                {!query.trim() && (
+                  <Section title="Try a description">
+                    <div className="flex flex-wrap gap-2">
+                      {["Fintech feature launches", "Food posts with product photography", "Carousels with app screenshots"].map((example) => (
+                        <Button key={example} size="sm" variant="secondary" onClick={() => pick(example)}>{example}</Button>
+                      ))}
+                    </div>
+                  </Section>
+                )}
                 {recent.length > 0 && (
                   <Section title="Recent" onClear={clearRecent}>
                     <Row>
