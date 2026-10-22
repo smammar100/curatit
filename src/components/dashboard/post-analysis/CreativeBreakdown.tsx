@@ -9,7 +9,7 @@
 // - Visual DNA: composition, typography, colour (the post's colours with their jobs, copyable),
 //   imagery, visual devices, and branding & consistency, each one insight, a few attributes and
 //   the slides that show them; on a carousel, what stays the same and the sequence as a bar.
-// Beside the tabs, Copy brief puts the reference-led reconstruction prompt on the clipboard
+// Beside the tabs, Copy brief puts the reference-led visual adaptation prompt on the clipboard
 // (2026-10-14; the Download .md button beside it was taken out on 2026-10-15). The tabs are the
 // shared Tabs (pill, since 2026-10-19; a hand-built row before), whose ← / → / Home / End are
 // marked handled so PostView's slide arrows leave them be; the button is the same as the
@@ -529,14 +529,14 @@ function CopyBrief({ analysis, source }: { analysis: PublicAnalysis; source: Bri
       <button
         type="button"
         onClick={copy}
-        title="Copy a Markdown prompt to reconstruct this post from its reference images"
+        title="Copy a design brief matching this post’s visual treatment with replacement text, logos and imagery"
         className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-card pr-3 pl-3.5 text-body font-medium whitespace-nowrap text-primary-foreground transition-[background-color,scale] duration-150 ease-out-quint hover:bg-transparent-hover motion-safe:active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
       >
         {state === "copied" ? "Copied" : state === "failed" ? "Couldn't copy" : "Copy brief"}
         {state === "copied" ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
       </button>
       <span role="status" className="sr-only">
-        {state === "copied" ? "Replica brief copied. Paste it into your AI tool." : state === "failed" ? "Couldn't copy the brief here." : ""}
+        {state === "copied" ? "Design brief copied. Paste it into your AI tool." : state === "failed" ? "Couldn't copy the brief here." : ""}
       </span>
     </>
   );

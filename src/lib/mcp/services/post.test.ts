@@ -132,9 +132,9 @@ describe("the 3.0 analysis", () => {
     ]);
     expect(JSON.stringify(analysis.colour_roles)).not.toMatch(/cover sample/i);
     expect(analysis.copywriting).toMatch(/^Short questions/);
-    // The same 1:1 reconstruction prompt the post page copies, with the stored images as public
+    // The same visual adaptation prompt the post page copies, with the stored images as public
     // URLs in stage order
-    expect(analysis.brief_markdown).toMatch(/^# Instagram post — 1:1 replica brief/);
+    expect(analysis.brief_markdown).toMatch(/^# Instagram post — visual adaptation brief/);
     expect(analysis.brief_markdown).not.toMatch(/cover sample/i);
     expect(analysis.brief_markdown).toContain("https://storage.example/library/fixture/fixture-co/carousel/FIX00001/01.webp");
     expect(analysis.brief_markdown).toContain("https://storage.example/library/fixture/fixture-co/carousel/FIX00001/02.webp");
