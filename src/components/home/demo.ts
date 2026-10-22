@@ -66,8 +66,8 @@ export const dna = {
   ],
   // The first lines of the Markdown that Copy brief puts on the clipboard for this post
   brief: [
-    "# Instagram post — 1:1 replica brief",
-    "Reconstruct the carousel as exactly 5 images.",
+    "# Instagram post — visual adaptation brief",
+    "Match the carousel’s visual treatment across 5 images. Use fresh copy, a dummy logo and replacement photos.",
     "Slide 1: Travel-data launch headline and phone",
     "Colours: #090501 #FFFCF3 #172B01 #EEE9B0",
   ],

@@ -221,13 +221,13 @@ describe("CreativeBreakdown: Copy brief", () => {
     expect(tabNames()).not.toContain("Apply");
     await act(async () => button(container, /^Copy brief$/)!.click());
     const brief = writeText.mock.calls[0][0] as string;
-    expect(brief.startsWith("# Instagram post — 1:1 replica brief")).toBe(true);
-    expect(brief).toContain("closest possible visual fidelity");
-    expect(brief).toContain("## Reconstruction requirements");
+    expect(brief.startsWith("# Instagram post — visual adaptation brief")).toBe(true);
+    expect(brief).toContain("closely match its colours");
+    expect(brief).toContain("## Visual matching requirements");
     expect(brief).toContain("## Execution and deliverables");
     expect(brief).toContain("https://www.instagram.com/p/EXAMPLE/");
     expect(button(container, /^Copied$/)).toBeTruthy();
-    expect(container.textContent).toContain("Replica brief copied. Paste it into your AI tool.");
+    expect(container.textContent).toContain("Design brief copied. Paste it into your AI tool.");
     writeText.mockRejectedValueOnce(new Error("denied"));
     await act(async () => button(container, /^Cop/)!.click());
     expect(container.textContent).toContain("Couldn't copy the brief here.");
