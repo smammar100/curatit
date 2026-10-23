@@ -18,7 +18,6 @@ import MobileNav from "./MobileNav";
 
 // Quick access links; `beta` adds a small Beta chip after the label
 const links = [
-  { href: "/#how-it-works", text: "How it works" },
   { href: "/vision", text: "Vision" },
   { href: "/roadmap", text: "Roadmap" },
   { href: "/agents", text: "AI integration", beta: true },

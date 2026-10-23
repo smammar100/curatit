@@ -197,7 +197,9 @@ export function BriefTabs({
       options={briefOptions}
       value={String(active)}
       onValueChange={(value) => onChange(Number(value))}
-      className={cx("w-full [&>button]:flex-1 [&>button]:px-2", className)}
+      // Three equal segments: the library's items set their label at the left, so each one is
+      // centred here or the outer labels would hug the track's edges
+      className={cx("w-full [&>button]:flex-1 [&>button]:justify-center [&>button]:px-2", className)}
     />
   );
 }

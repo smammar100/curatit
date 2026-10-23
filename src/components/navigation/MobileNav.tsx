@@ -21,7 +21,6 @@ import { playMenuSound } from "./menuSound";
 
 // Same links as the desktop nav
 const links = [
-  { href: "/#how-it-works", text: "How it works" },
   { href: "/vision", text: "Vision" },
   { href: "/roadmap", text: "Roadmap" },
   { href: "/agents", text: "AI integration", beta: true },
