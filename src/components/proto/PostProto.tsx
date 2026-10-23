@@ -117,9 +117,9 @@ function Card({ post, analysis }: Omit<Props, "direction" | "theme">) {
           </div>
         </header>
 
-        <main className="mx-auto grid max-w-[96rem] gap-6 px-4 pt-4 pb-16 sm:px-8 lg:grid-cols-[minmax(0,1fr)_26rem] lg:gap-10 lg:pt-8">
+        <main className="mx-auto grid max-w-[96rem] grid-cols-1 gap-6 px-4 pt-4 pb-16 sm:px-8 lg:grid-cols-[minmax(0,1fr)_26rem] lg:gap-10 lg:pt-8">
           {/* The post, sticky while the column beside it scrolls */}
-          <div className="lg:sticky lg:top-6 lg:self-start">
+          <div className="min-w-0 lg:sticky lg:top-6 lg:self-start">
             <div className="relative flex items-center justify-center overflow-hidden rounded-[24px] bg-muted p-4 shadow-surface-1 sm:p-8 lg:h-[calc(100dvh-10rem)]">
               <div className="relative h-full max-h-full w-full max-w-full" style={{ aspectRatio: ratio, maxWidth: `calc((100dvh - 14rem) * (${ratio}))` }}>
                 <Image key={post.images[index]} src={post.images[index]} alt={count > 1 ? `${post.hook} (slide ${index + 1} of ${count})` : post.hook} fill sizes="(min-width: 1024px) 60vw, 100vw" priority className="rounded-[12px] object-contain" />
@@ -149,7 +149,7 @@ function Card({ post, analysis }: Omit<Props, "direction" | "theme">) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex min-w-0 flex-col gap-4">
             {/* The card: one cell per thing, ruled apart */}
             <section className="divide-y divide-border rounded-[24px] bg-surface-3 shadow-surface-2">
               <div className="flex items-start justify-between gap-4 p-5">
@@ -277,7 +277,7 @@ function Studio({ post, analysis, related }: Omit<Props, "direction" | "theme">)
     ["Category", post.category.name],
   ];
   return (
-    <div className="flex h-dvh flex-col">
+    <div className="flex flex-col lg:h-dvh">
       <header className="grid h-14 shrink-0 grid-cols-[1fr_auto_1fr] items-center border-b border-border px-4">
         <div>
           <Button variant="transparent" size="sm" leftIcon={<CaretLeft className="size-3.5" />}>
@@ -300,9 +300,9 @@ function Studio({ post, analysis, related }: Omit<Props, "direction" | "theme">)
         </div>
       </header>
 
-      <div className="grid min-h-0 flex-1 lg:grid-cols-[18rem_minmax(0,1fr)_26rem] lg:divide-x lg:divide-border">
+      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[18rem_minmax(0,1fr)_26rem] lg:divide-x lg:divide-border">
         {/* Left: who posted it, the folds, the details */}
-        <aside className="min-h-0 overflow-y-auto">
+        <aside className="min-w-0 lg:min-h-0 lg:overflow-y-auto">
           <div className="flex items-center gap-3 border-b border-border p-4">
             <Avatar src={post.brand.logo} name={post.brand.name} size="lg" decorative />
             <div className="min-w-0 flex-1">
@@ -410,7 +410,7 @@ function Studio({ post, analysis, related }: Omit<Props, "direction" | "theme">)
         </aside>
 
         {/* Middle: the post */}
-        <div className="flex min-h-0 flex-col items-center gap-4 overflow-y-auto p-6 lg:p-10">
+        <div className="flex min-w-0 flex-col items-center gap-4 p-4 sm:p-6 lg:min-h-0 lg:overflow-y-auto lg:p-10">
           <div className="relative flex min-h-0 w-full flex-1 items-center justify-center">
             <div className="relative h-full max-h-full w-full max-w-full" style={{ aspectRatio: ratio, maxWidth: `calc((100dvh - 14rem) * (${ratio}))` }}>
               <Image key={post.images[index]} src={post.images[index]} alt={count > 1 ? `${post.hook} (slide ${index + 1} of ${count})` : post.hook} fill sizes="(min-width: 1024px) 50vw, 100vw" priority className="rounded-[16px] object-contain" />
@@ -444,7 +444,7 @@ function Studio({ post, analysis, related }: Omit<Props, "direction" | "theme">)
         </div>
 
         {/* Right: the breakdown */}
-        <aside className="min-h-0 overflow-y-auto bg-surface-5 px-6 pb-6">
+        <aside className="min-w-0 bg-surface-5 px-6 pb-6 lg:min-h-0 lg:overflow-y-auto">
           {analysis ? (
             <Document analysis={analysis} stage={stage} view={view} onView={setView} />
           ) : (
