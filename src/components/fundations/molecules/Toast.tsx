@@ -33,8 +33,9 @@
 //
 // The region is fixed at the bottom centre, 24px above the screen's safe area, and stays
 // mounted: two live regions (polite, and assertive for danger), so every toast is announced.
-// It enters with animate-toast-in and leaves with animate-toast-out (held by usePresence);
-// under reduced motion it appears and goes at once.
+// Since 2026-10-23 it's drawn with Fluid Functionalism's systems: the ink (like its tooltip), a
+// pill, rising 8px and growing from 0.97 on the moderate spring, leaving on its exit tween (held
+// mounted for it by usePresence); under reduced motion it fades without moving.
 //
 // An action is a shortcut (Undo, View board), never the only way to do something: a toast can
 // leave before a keyboard or screen reader user gets to it.
@@ -54,10 +55,12 @@ import {
   type ReactNode,
   type Ref,
 } from "react";
+import { MotionConfig, motion } from "motion/react";
 import Check from "@/components/fundations/icons/Check";
 import WarningCircle from "@/components/fundations/icons/WarningCircle";
-import { cx } from "@/lib/cx";
 import { usePresence } from "@/lib/motion";
+import { spring } from "@/lib/springs";
+import { cn } from "@/lib/utils";
 
 export type ToastTone = "neutral" | "danger";
 export type ToastAction = { label: string; onClick: () => void };
@@ -72,9 +75,9 @@ export type ToastOptions = {
   duration?: number;
 };
 
-// How long the exit runs (animate-toast-out is 120ms), how many toasts may wait, and how long the
-// one on screen is seen before a waiting one replaces it
-const EXIT_MS = 120;
+// How long the exit runs (the moderate tier's exit tween), how many toasts may wait, and how long
+// the one on screen is seen before a waiting one replaces it
+const EXIT_MS = Math.round(spring.moderate.exit.duration * 1000);
 const QUEUE_MAX = 3;
 const SEEN_MS = 1500;
 
@@ -100,14 +103,18 @@ export type ToastProps = {
 /** The toast itself, as the provider draws it. Exported for the design system's specimens; in a
  *  feature, call useToast() instead of rendering one */
 export function Toast({ message, tone = "neutral", action, phase, ...rest }: ToastProps) {
+  const shown = phase !== "out";
   return (
-    <div
-      className={cx(
-        "flex w-fit max-w-sm items-center gap-2 rounded-lg bg-inverted-solid px-4 py-2.5 text-body-sm text-on-inverted-foreground shadow-lg",
-        phase === "in" && "pointer-events-auto animate-toast-in motion-reduce:animate-none",
-        phase === "out" && "pointer-events-none animate-toast-out motion-reduce:animate-none",
+    <motion.div
+      className={cn(
+        "flex w-fit max-w-sm items-center gap-2 rounded-[20px] bg-foreground px-4 py-2 text-body text-background shadow-surface-4",
+        shown ? "pointer-events-auto" : "pointer-events-none",
       )}
-      {...rest}
+      // A specimen (no phase) sits still; the entrance rises and grows, the exit fades down
+      initial={phase ? { opacity: 0, y: 8, scale: 0.97 } : false}
+      animate={{ opacity: shown ? 1 : 0, y: shown ? 0 : 4, scale: shown ? 1 : 0.98 }}
+      transition={shown ? spring.moderate : spring.moderate.exit}
+      {...(rest as object)}
     >
       {tone === "danger" ? (
         <WarningCircle className="size-4 shrink-0" />
@@ -122,12 +129,13 @@ export function Toast({ message, tone = "neutral", action, phase, ...rest }: Toa
         <button
           type="button"
           onClick={action.onClick}
-          className="relative ml-2 shrink-0 cursor-pointer rounded-sm font-medium whitespace-nowrap underline-offset-2 select-none touch-manipulation hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus pointer-coarse:after:absolute pointer-coarse:after:-inset-x-2 pointer-coarse:after:-inset-y-3"
+          className="relative ml-2 shrink-0 cursor-pointer rounded-[4px] whitespace-nowrap underline-offset-2 select-none touch-manipulation hover:underline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)] pointer-coarse:after:absolute pointer-coarse:after:-inset-x-2 pointer-coarse:after:-inset-y-3"
+          style={{ fontVariationSettings: "'wght' 550, 'opsz' 18" }}
         >
           {action.label}
         </button>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -289,6 +297,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={api}>
       {children}
+      <MotionConfig reducedMotion="user">
       {/* Kept mounted, so each toast that enters is announced: polite for neutral, assertive for
           danger. Both regions share one cell at the bottom centre, above the safe area */}
       <div className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+1.5rem)] z-50 grid px-4">
@@ -299,6 +308,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           {current?.tone === "danger" && shown}
         </div>
       </div>
+      </MotionConfig>
     </ToastContext.Provider>
   );
 }

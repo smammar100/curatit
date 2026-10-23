@@ -1,14 +1,15 @@
-import type { HTMLAttributes, ReactNode, Ref } from "react";
-import Check from "@/components/fundations/icons/Check";
-import Info from "@/components/fundations/icons/Info";
-import WarningCircle from "@/components/fundations/icons/WarningCircle";
-import { cx } from "@/lib/cx";
+"use client";
 
-// Notice: an inline message that stays on screen while it's true. A form's server error ("Wrong
-// email or password"), a state of the page ("Sharing is off"), a warning before an action ("This
-// token expires in 3 days"), a result that should stay put ("Your email is confirmed"). It sits in
-// the flow, next to what it's about, on a subtle fill of its tone with the tone's icon, so it
-// never relies on colour alone.
+// Notice: an inline message that stays on screen while it's true. Since 2026-10-23 it is Fluid
+// Functionalism's Banner (src/components/ui/banner.tsx): a light wash of the tone's colour behind
+// the words (a neutral grey for information), the tone's filled glyph before them with the mark
+// cut out in the page colour, the words always the ink, the container corners, and actions that
+// trail a one-line message and drop under a longer one. A notice that appears opens its row on
+// the moderate spring and grows in on the slow one; one that's dismissed folds its row away.
+//
+// A form's server error ("Wrong email or password"), a state of the page ("Sharing is off"), a
+// warning before an action ("This token expires in 3 days"), a result that should stay put
+// ("Your email is confirmed"). It sits in the flow, next to what it's about.
 //
 // Use instead:
 //  - a problem with one field: the Field's error, under that field (never a Notice above the form)
@@ -16,49 +17,28 @@ import { cx } from "@/lib/cx";
 //  - a place with nothing in it yet: an EmptyState
 //  - something that needs an answer before anything else: a Dialog
 //
-// Tones (closed, default neutral): neutral (information; bg-card, Info), positive (it worked;
-// Check), warning (it will go wrong unless they act; WarningCircle), danger (it went wrong;
-// WarningCircle, and red words). Warning and danger say "Warning:" / "Error:" to screen readers.
+// Tones (closed, default neutral): neutral (information), positive (it worked), warning (it will
+// go wrong unless they act), danger (it went wrong).
 //
 // `live`: false (the default) for static page content, which is read in order with the page.
-// Set it when the notice appears because of something the person did: danger is then
-// role="alert" (read at once), the rest role="status" (read when the reader is free). A status
-// notice whose words change should stay mounted, so the change is announced.
+// Set it when the notice appears because of something the person did: danger and warning are
+// then role="alert" (read at once), the rest role="status" (read when the reader is free). A
+// status notice whose words change should stay mounted, so the change is announced.
 //
-// `action`: one small control after the message, a Button size="xs" (variant="secondary") or a
-// text link. It sits beside a one-line message and wraps under a longer one.
+// `action`: one small control after the message, a Button size="xs" or a text link.
 //
 // Copy: say what happened and what to do next, in a sentence or two. "Couldn't stop sharing. The
 // link still works: check your connection and try again", never "Something went wrong".
+import type { ReactNode, Ref } from "react";
+import { MotionConfig } from "motion/react";
+import { Banner, BannerActions, BannerDescription, BannerTitle } from "@/components/ui/banner";
+import { fontWeights } from "@/lib/font-weight";
 
 const tones = {
-  neutral: {
-    box: "bg-card text-primary-foreground",
-    icon: "text-secondary-foreground",
-    Glyph: Info,
-    label: undefined,
-  },
-  positive: {
-    box: "bg-positive-subtle text-primary-foreground",
-    icon: "text-positive-foreground",
-    Glyph: Check,
-    label: undefined,
-  },
-  // The words stay primary on positive and warning: their -foreground shades fall under 4.5:1 on
-  // their own tint, so only the icon (3:1 is enough for it) wears the tone
-  warning: {
-    box: "bg-warning-subtle text-primary-foreground",
-    icon: "text-warning-foreground",
-    Glyph: WarningCircle,
-    label: "Warning: ",
-  },
-  // Errors are red words, as AuthNotice's are: danger-foreground holds 4.6:1 on its own tint
-  danger: {
-    box: "bg-danger-subtle text-danger-foreground",
-    icon: "text-danger-foreground",
-    Glyph: WarningCircle,
-    label: "Error: ",
-  },
+  neutral: "default",
+  positive: "success",
+  warning: "warning",
+  danger: "error",
 } as const;
 
 export type NoticeTone = keyof typeof tones;
@@ -66,54 +46,44 @@ export type NoticeTone = keyof typeof tones;
 export type NoticeProps = {
   /** What kind of message. Defaults to neutral */
   tone?: NoticeTone;
-  /** A short summary in medium weight above the message: "Couldn't stop sharing" */
+  /** A short summary in a heavier weight above the message: "Couldn't stop sharing" */
   title?: ReactNode;
-  /** The message: what happened and what to do next */
+  /** The message: a sentence or two */
   children: ReactNode;
-  /** One small control: a Button size="xs" variant="secondary", or a text link */
+  /** One small control after the message */
   action?: ReactNode;
-  /** Announce it: for a notice that appears after an action (danger is role="alert", the rest
-   *  role="status"). Leave off for static page content. Defaults to false */
+  /** Announce it when it appears (a result of something the person did) */
   live?: boolean;
-  /** Layout only (margins, width) */
+  /** Layout only */
   className?: string;
   ref?: Ref<HTMLDivElement>;
-} & Omit<HTMLAttributes<HTMLDivElement>, "children" | "title" | "role">;
+};
 
-export default function Notice({
-  tone = "neutral",
-  title,
-  children,
-  action,
-  live = false,
-  className,
-  ...rest
-}: NoticeProps) {
-  const { box, icon, Glyph, label } = tones[tone];
+export default function Notice({ tone = "neutral", title, children, action, live = false, className, ref }: NoticeProps) {
   return (
-    <div
-      role={live ? (tone === "danger" ? "alert" : "status") : undefined}
-      className={cx("flex items-start gap-2 rounded-lg px-3 py-2.5 text-body-sm", box, className)}
-      {...rest}
-    >
-      <Glyph className={cx("mt-0.5 size-4 shrink-0", icon)} />
-      {/* The text takes the row; the action sits beside it while the text has 14rem, and wraps
-          under it on a narrow screen or beside a long message */}
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-2">
-        <div className="min-w-0 flex-[1_1_14rem] text-pretty">
-          {title && (
-            <p className="font-medium">
-              {label && <span className="sr-only">{label}</span>}
-              {title}
-            </p>
-          )}
-          <div className={title ? "mt-0.5" : undefined}>
-            {!title && label && <span className="sr-only">{label}</span>}
+    <MotionConfig reducedMotion="user">
+      <Banner
+        ref={ref}
+        status={tones[tone]}
+        contrast="high"
+        // Static page content is read in order with the page; only a live notice announces itself
+        role={live ? undefined : "none"}
+        className={className}
+      >
+        {title ? (
+          <>
+            <BannerTitle className="text-pretty">{title}</BannerTitle>
+            <BannerDescription className="text-pretty">{children}</BannerDescription>
+          </>
+        ) : (
+          // Without a title the message takes the title's row, in the normal weight, so the
+          // glyph lines up with its first line
+          <BannerTitle className="text-pretty" style={{ fontVariationSettings: fontWeights.normal }}>
             {children}
-          </div>
-        </div>
-        {action && <div className="flex shrink-0 items-center">{action}</div>}
-      </div>
-    </div>
+          </BannerTitle>
+        )}
+        {action && <BannerActions>{action}</BannerActions>}
+      </Banner>
+    </MotionConfig>
   );
 }

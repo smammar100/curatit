@@ -1,6 +1,6 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import Command from "@/components/fundations/icons/Command";
-import { cx } from "@/lib/cx";
+import { cn } from "@/lib/utils";
 
 // A key to press, drawn as a key cap: the search box's "/" (dashboard/SearchBox.tsx), a menu
 // row's shortcut, "Press ⌘ K" in a sentence. It only shows a key; it never takes a click, a
@@ -15,11 +15,15 @@ import { cx } from "@/lib/cx";
 // caller decides (and keeps the binding in step).
 //
 // `hideOnTouch` hides it on touch screens, where there's no keyboard to press it on.
+//
+// Since 2026-10-23 a cap is drawn as Fluid Functionalism's CommandMenu draws its shortcuts: the
+// hover tint, no stroke, 5px corners, the micro role in the muted ink.
 
-// Sizes: sm 20 (in a menu row, beside 12-13px text), md 24 (the default: the search box's cap)
+// Sizes: sm 16 (the compact step: in a menu row, beside 12px text), md 20 (the default step: the
+// search box's cap)
 const sizes = {
-  sm: "h-5 min-w-5 rounded-sm px-1 text-caption-base",
-  md: "h-6 min-w-6 rounded-md px-1.5 text-caption-lg",
+  sm: "h-4 min-w-4 px-1 text-[length:var(--fs-micro-compact,10px)] leading-[var(--lh-micro-compact,12px)]",
+  md: "h-5 min-w-5 px-1 text-[length:var(--fs-micro,11px)] leading-[var(--lh-micro,14px)]",
 } as const;
 const iconSizes = {
   sm: "size-2.5",
@@ -60,7 +64,7 @@ const ALIASES: Record<string, string> = {
 };
 
 const cap =
-  "inline-flex items-center justify-center font-sans font-normal whitespace-nowrap text-secondary-foreground ring-1 ring-border-default ring-inset";
+  "inline-flex items-center justify-center rounded-[5px] bg-hover font-sans font-normal whitespace-nowrap text-muted-foreground";
 
 type Content =
   | { /** One key: its label as children */ children: ReactNode; keys?: never }
@@ -82,7 +86,7 @@ function Key({ name, size }: { name: string; size: keyof typeof sizes }) {
   const key = ALIASES[lower] ?? lower;
   if (key === "cmd" || key === "command" || key === "⌘") {
     return (
-      <kbd className={cx(cap, sizes[size])}>
+      <kbd className={cn(cap, sizes[size])}>
         <Command className={iconSizes[size]} />
         <span className="sr-only">Command</span>
       </kbd>
@@ -90,7 +94,7 @@ function Key({ name, size }: { name: string; size: keyof typeof sizes }) {
   }
   const named = NAMED[key];
   return (
-    <kbd className={cx(cap, sizes[size])}>
+    <kbd className={cn(cap, sizes[size])}>
       {named ? (
         <>
           <span aria-hidden="true">{named.show}</span>
@@ -107,11 +111,11 @@ function Key({ name, size }: { name: string; size: keyof typeof sizes }) {
 
 export default function Kbd({ size = "md", hideOnTouch = false, keys, children, className, ...rest }: KbdProps) {
   // relative: holds the visually hidden names, so they can't widen a scrolling row
-  const root = cx("relative", hideOnTouch && "pointer-coarse:hidden", className);
+  const root = cn("relative", hideOnTouch && "pointer-coarse:hidden", className);
 
   if (keys) {
     return (
-      <kbd {...rest} className={cx("inline-flex items-center gap-0.5", root)}>
+      <kbd {...rest} className={cn("inline-flex items-center gap-0.5", root)}>
         {keys.map((name, i) => (
           <span key={`${name}-${i}`} className="contents">
             {i > 0 && <span className="sr-only"> plus </span>}
@@ -123,7 +127,7 @@ export default function Kbd({ size = "md", hideOnTouch = false, keys, children, 
   }
 
   return (
-    <kbd {...rest} className={cx(cap, sizes[size], root)}>
+    <kbd {...rest} className={cn(cap, sizes[size], root)}>
       {children}
     </kbd>
   );

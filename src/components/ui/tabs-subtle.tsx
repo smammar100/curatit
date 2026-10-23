@@ -270,8 +270,12 @@ TabsSubtle.displayName = "TabsSubtle";
 
 interface TabsSubtleItemProps extends HTMLAttributes<HTMLButtonElement> {
   icon?: IconComponent;
-  label: string;
+  /** Curatit: a node, so a tab can carry a count after its words; only a string names a
+   *  collapsed tab for assistive tech. */
+  label: ReactNode;
   index: number;
+  /** Curatit: forwarded to the trigger (a disabled tab is skipped by the arrows). */
+  disabled?: boolean;
 }
 
 const TabsSubtleItem = forwardRef<HTMLButtonElement, TabsSubtleItemProps>(
@@ -354,7 +358,7 @@ const TabsSubtleItem = forwardRef<HTMLButtonElement, TabsSubtleItemProps>(
         data-fluid-hover-index={index}
         id={idPrefix ? `${idPrefix}-tab-${index}` : undefined}
         aria-controls={idPrefix ? `${idPrefix}-panel-${index}` : undefined}
-        aria-label={collapseLabel && !showLabel ? label : undefined}
+        aria-label={collapseLabel && !showLabel && typeof label === "string" ? label : undefined}
         className={cn(
           // Fixed heights (was py-2 around a 19.5px line box ≈ 35.5px) so the
           // text-box trim on the label doesn't shrink the tab. Standalone

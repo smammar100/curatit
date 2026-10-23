@@ -1,6 +1,7 @@
 import type { HTMLAttributes, ReactNode, Ref } from "react";
 import Text from "@/components/fundations/elements/Text";
-import { cx } from "@/lib/cx";
+import { fontWeights } from "@/lib/font-weight";
+import { cn } from "@/lib/utils";
 
 // EmptyState: what a place looks like with nothing in it yet, and the way forward. An empty
 // board, the Saved view before the first save, a search that found nothing, an editor's queue
@@ -35,14 +36,14 @@ import { cx } from "@/lib/cx";
 // is on every post."). Action: the outcome as a verb ("Browse the feed", "Clear search").
 
 const sizes = {
-  md: { box: "max-w-sm py-16", art: "mb-6", line: "mt-2", actions: "mt-6", tile: "size-12 rounded-2xl [&_svg]:size-6" },
-  sm: { box: "max-w-xs px-4 py-8", art: "mb-3", line: "mt-1", actions: "mt-4", tile: "size-10 rounded-xl [&_svg]:size-5" },
+  md: { box: "max-w-sm py-16", art: "mb-6", line: "mt-2", actions: "mt-6", tile: "size-12 rounded-[20px] [&_svg]:size-6" },
+  sm: { box: "max-w-xs px-4 py-8", art: "mb-3", line: "mt-1", actions: "mt-4", tile: "size-10 rounded-[16px] [&_svg]:size-5" },
 } as const;
 
 // The type for each context and size. Dashboard: the app's roles. Site: Text variants
 const dashboardType = {
-  md: { title: "text-title font-medium", line: "text-body" },
-  sm: { title: "text-body font-medium", line: "text-caption" },
+  md: { title: "text-title", line: "text-body" },
+  sm: { title: "text-body", line: "text-caption" },
 } as const;
 const siteType = {
   md: { title: "h6", line: "body" },
@@ -89,17 +90,17 @@ export default function EmptyState({
   const s = sizes[size];
   const TitleTag = titleTag;
   return (
-    <div className={cx("mx-auto flex flex-col items-center text-center", s.box, className)} {...rest}>
+    <div className={cn("mx-auto flex flex-col items-center text-center", s.box, className)} {...rest}>
       {icon && (
         <div
           aria-hidden="true"
-          className={cx("flex items-center justify-center bg-component text-secondary-foreground", s.tile, s.art)}
+          className={cn("flex items-center justify-center bg-muted text-muted-foreground", s.tile, s.art)}
         >
           {icon}
         </div>
       )}
       {illustration && (
-        <div aria-hidden="true" className={cx("pointer-events-none select-none", s.art)}>
+        <div aria-hidden="true" className={cn("pointer-events-none select-none", s.art)}>
           {illustration}
         </div>
       )}
@@ -108,30 +109,34 @@ export default function EmptyState({
           <Text
             tag={TitleTag}
             variant={siteType[size].title}
-            className={cx("text-balance text-primary-foreground", size === "sm" && "font-medium")}
+            className="text-balance text-foreground"
+            style={size === "sm" ? { fontVariationSettings: fontWeights.semibold } : undefined}
           >
             {title}
           </Text>
           {description && (
-            <Text variant={siteType[size].line} className={cx("text-pretty text-secondary-foreground", s.line)}>
+            <Text variant={siteType[size].line} className={cn("text-pretty text-muted-foreground", s.line)}>
               {description}
             </Text>
           )}
         </>
       ) : (
         <>
-          <TitleTag className={cx("text-balance text-primary-foreground", dashboardType[size].title)}>
+          <TitleTag
+            className={cn("text-balance text-foreground", dashboardType[size].title)}
+            style={{ fontVariationSettings: fontWeights.semibold }}
+          >
             {title}
           </TitleTag>
           {description && (
-            <p className={cx("text-pretty text-secondary-foreground", dashboardType[size].line, s.line)}>
+            <p className={cn("text-pretty text-muted-foreground", dashboardType[size].line, s.line)}>
               {description}
             </p>
           )}
         </>
       )}
       {(action || secondaryAction) && (
-        <div className={cx("flex flex-wrap items-center justify-center gap-3", s.actions)}>
+        <div className={cn("flex flex-wrap items-center justify-center gap-3", s.actions)}>
           {action}
           {secondaryAction}
         </div>

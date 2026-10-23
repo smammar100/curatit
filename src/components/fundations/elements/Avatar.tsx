@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, type HTMLAttributes, type Ref } from "react";
-import { cx } from "@/lib/cx";
+import { fontWeights } from "@/lib/font-weight";
+import { cn } from "@/lib/utils";
 
 // A person: their picture, or their initials when there's no picture or it fails to load.
 // Use it wherever a person is shown (the account menu, a board's owner, a comment). A brand or
@@ -77,12 +78,13 @@ export default function Avatar({
       role={showImage || decorative ? undefined : "img"}
       aria-label={showImage || decorative ? undefined : name}
       aria-hidden={decorative || undefined}
-      className={cx(
-        "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-medium select-none",
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full select-none",
         sizes[size],
-        showImage ? "bg-component" : "bg-brand-subtle text-on-brand-subtle-foreground",
+        showImage ? "bg-muted" : "bg-brand-subtle text-on-brand-subtle-foreground",
         className,
       )}
+      style={showImage ? undefined : { fontVariationSettings: fontWeights.semibold }}
     >
       {showImage ? (
         <img
@@ -94,7 +96,7 @@ export default function Avatar({
           decoding="async"
           referrerPolicy="no-referrer"
           onError={() => setFailed(src!)}
-          className="size-full rounded-full object-cover outline-1 -outline-offset-1 outline-edge"
+          className="size-full rounded-full object-cover outline-1 -outline-offset-1 outline-border"
         />
       ) : (
         initials(name)

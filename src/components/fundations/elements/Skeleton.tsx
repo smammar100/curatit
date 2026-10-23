@@ -1,10 +1,12 @@
 import type { CSSProperties } from "react";
-import { cx } from "@/lib/cx";
+import { cn } from "@/lib/utils";
 
-// The shape of content that's on its way: a grey block with a band of light crossing it, in
-// the size and place the real thing will take, so nothing moves when it arrives. Use it for a
-// region whose layout you know (a feed, a card, a row of text, an avatar). For a wait inside a
-// control, or one with no layout to hold, use Spinner; for "there is nothing here", EmptyState.
+// The shape of content that's on its way: a block of the hover tint, pulsing, in the size and
+// place the real thing will take, so nothing moves when it arrives (since 2026-10-23 the
+// skeleton Fluid Functionalism's reveal and sidebar use: bg-hover, animate-pulse, still under
+// reduced motion). Use it for a region whose layout you know (a feed, a card, a row of text, an
+// avatar). For a wait inside a control, or one with no layout to hold, use Spinner; for "there
+// is nothing here", EmptyState.
 //
 // Three shapes, all hidden from screen readers:
 //   line    one line of text: as tall as the text around it (1lh), the bar 0.75em, so stacked
@@ -12,16 +14,13 @@ import { cx } from "@/lib/cx";
 //           class; `width` shortens a last line.
 //   circle  an avatar, at Avatar's sizes.
 //   rect    anything else (a cover, a card, a button): size it with className (w-full
-//           aspect-4/5, h-10 w-32) and give it the radius of what it stands in for.
-// The band is the dashboard's recipe (dashboard/Skeleton.tsx): bg-component with the
-// --color-shimmer band, 1.6s ease-in-out, and it holds still under reduced motion.
+//           aspect-4/5, h-7 w-32) and give it the radius of what it stands in for.
 //
 // Announce the wait once, around the skeletons, never on each block:
 //   <div role="status" aria-label="Loading posts">…skeletons…</div>
 // and swap the whole region for the content when it lands.
 
-const shimmer =
-  "animate-shimmer bg-component bg-[linear-gradient(100deg,transparent_35%,var(--color-shimmer)_50%,transparent_65%)] bg-size-[200%_100%] motion-reduce:animate-none";
+const pulse = "bg-hover animate-pulse motion-reduce:animate-none";
 
 // A line's width: full by default, shorter for the last line of a paragraph or a title
 const widths = {
@@ -39,13 +38,13 @@ const circles = {
   md: "size-8",
   lg: "size-11",
 } as const;
-// A rect's corners: copy what it stands in for. sm (4px) is an image's, the default; lg (8px) a
-// button's or a field's; 2xl (12px) a card's; full a pill's
+// A rect's corners, the shape's: sm (4px) is an image's inside a padded card, the default; lg
+// (20px) a control's, the pill; 2xl (24px) a card's, the container; full a circle's
 const radii = {
   none: "rounded-none",
-  sm: "rounded-sm",
-  lg: "rounded-lg",
-  "2xl": "rounded-2xl",
+  sm: "rounded-[4px]",
+  lg: "rounded-[20px]",
+  "2xl": "rounded-[24px]",
   full: "rounded-full",
 } as const;
 
@@ -71,10 +70,10 @@ export default function Skeleton(props: SkeletonProps) {
     return (
       <span
         aria-hidden="true"
-        className={cx("flex h-[1lh] items-center", widths[props.width ?? "full"], className)}
+        className={cn("flex h-[1lh] items-center", widths[props.width ?? "full"], className)}
         style={style}
       >
-        <span className={cx("block h-[0.75em] w-full rounded-full", shimmer)} />
+        <span className={cn("block h-[0.75em] w-full rounded-full", pulse)} />
       </span>
     );
   }
@@ -83,7 +82,7 @@ export default function Skeleton(props: SkeletonProps) {
     return (
       <span
         aria-hidden="true"
-        className={cx("block shrink-0 rounded-full", circles[props.size ?? "md"], shimmer, className)}
+        className={cn("block shrink-0 rounded-full", circles[props.size ?? "md"], pulse, className)}
         style={style}
       />
     );
@@ -92,7 +91,7 @@ export default function Skeleton(props: SkeletonProps) {
   return (
     <span
       aria-hidden="true"
-      className={cx("block", radii[props.radius ?? "sm"], shimmer, className)}
+      className={cn("block", radii[props.radius ?? "sm"], pulse, className)}
       style={style}
     />
   );

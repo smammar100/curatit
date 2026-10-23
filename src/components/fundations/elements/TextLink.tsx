@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
-import { cx } from "@/lib/cx";
+import { cn } from "@/lib/utils";
 
 // A link that is words: somewhere to go, read as part of the text. Built on next/link, so an
 // internal href is a client-side navigation and is prefetched. For a page's next step drawn as a
@@ -17,17 +17,18 @@ import { cx } from "@/lib/cx";
 //
 // `external` opens a new tab (target=_blank, rel=noreferrer), adds the ArrowUpRight glyph,
 // held to the last word so it never wraps alone, and says "(opens in a new tab)" to screen
-// readers. Focus is the brand ring with a small radius, on keyboard focus only.
+// readers. Focus is the site's 1px ring with a small radius, on keyboard focus only (2026-10-23:
+// Fluid Functionalism's ring, 80ms colour changes, and the quiet variant in the muted ink).
 
 const variants = {
   inline:
-    "underline decoration-border-strong decoration-1 underline-offset-2 hover:text-brand-foreground hover:decoration-brand-foreground",
+    "underline decoration-border decoration-1 underline-offset-2 hover:text-brand-foreground hover:decoration-brand-foreground",
   quiet:
-    "text-secondary-foreground no-underline hover:text-primary-foreground pointer-coarse:after:absolute pointer-coarse:after:-inset-x-1 pointer-coarse:after:-inset-y-3",
+    "text-muted-foreground no-underline hover:text-foreground pointer-coarse:after:absolute pointer-coarse:after:-inset-x-1 pointer-coarse:after:-inset-y-3",
 } as const;
 
 const base =
-  "relative rounded-sm transition-[color,text-decoration-color] duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus";
+  "relative rounded-[4px] transition-[color,text-decoration-color] duration-80 focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]";
 
 export type TextLinkProps = Omit<ComponentProps<typeof Link>, "target" | "children"> & {
   variant?: keyof typeof variants;
@@ -48,8 +49,8 @@ export default function TextLink({
     <Link
       {...rest}
       target={external ? "_blank" : undefined}
-      rel={external ? cx("noreferrer", rel) : rel}
-      className={cx(base, variants[variant], className)}
+      rel={external ? cn("noreferrer", rel) : rel}
+      className={cn(base, variants[variant], className)}
     >
       {children}
       {external && (

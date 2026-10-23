@@ -411,6 +411,12 @@ interface DropdownContentProps {
   sideOffset?: number;
   /** Shift along the trigger edge, in px. */
   alignOffset?: number;
+  /** Curatit: the menu's name for assistive tech, on the role="menu" element. */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
+  /** Curatit: Radix's close autofocus (focus back on the trigger); preventDefault keeps focus
+   *  where it is, for a trigger that's only shown on hover. */
+  onCloseAutoFocus?: RadixContentProps["onCloseAutoFocus"];
 }
 
 const DropdownContent = forwardRef<HTMLDivElement, DropdownContentProps>(
@@ -424,6 +430,9 @@ const DropdownContent = forwardRef<HTMLDivElement, DropdownContentProps>(
       align = "start",
       sideOffset = 6,
       alignOffset = 0,
+      "aria-label": ariaLabel,
+      "aria-labelledby": ariaLabelledBy,
+      onCloseAutoFocus,
     },
     ref
   ) => {
@@ -627,6 +636,9 @@ const DropdownContent = forwardRef<HTMLDivElement, DropdownContentProps>(
           align={align}
           sideOffset={sideOffset}
           alignOffset={alignOffset}
+          aria-label={ariaLabel}
+          aria-labelledby={ariaLabelledBy}
+          onCloseAutoFocus={onCloseAutoFocus}
         >
           <motion.div
             className={cn("z-50 outline-none", popupMotionClass)}

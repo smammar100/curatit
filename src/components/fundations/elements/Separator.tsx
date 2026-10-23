@@ -1,5 +1,5 @@
 import type { HTMLAttributes, Ref } from "react";
-import { cx } from "@/lib/cx";
+import { cn } from "@/lib/utils";
 
 // A hairline between groups: menu sections, the rows of a settings list, two halves of a
 // toolbar. Use it where space alone doesn't separate two groups; most of the time a gap does,
@@ -15,12 +15,13 @@ import { cx } from "@/lib/cx";
 // Horizontal fills its container's width; vertical stretches to its flex row's height (outside
 // a flex row, give it a height in className). Margins are the caller's.
 
-// Tones: the border tokens, alpha tints that sit back on any ground. default 6%, subtle 2%
-// (between the rows of a dense table), strong 15% (a boundary that must hold on a grey mat)
+// Tones: the one stroke (--border, 12% of the ink) since 2026-10-23, and the quieter 60% of it
+// that Fluid Functionalism draws between a menu's groups; strong is kept as a name for older
+// call sites and is the same stroke
 const tones = {
-  default: "bg-border-default",
-  subtle: "bg-border-subtle",
-  strong: "bg-border-strong",
+  default: "bg-border",
+  subtle: "bg-border/60",
+  strong: "bg-border",
 } as const;
 const orientations = {
   horizontal: "h-px w-full",
@@ -52,7 +53,7 @@ export default function Separator({
       ref={ref}
       role={semantic ? "separator" : "none"}
       aria-orientation={semantic ? orientation : undefined}
-      className={cx("shrink-0", orientations[orientation], tones[tone], className)}
+      className={cn("shrink-0", orientations[orientation], tones[tone], className)}
     />
   );
 }

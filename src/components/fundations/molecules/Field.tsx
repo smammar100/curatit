@@ -7,12 +7,15 @@ import {
   type ReactNode,
 } from "react";
 import WarningCircle from "@/components/fundations/icons/WarningCircle";
-import { cx } from "@/lib/cx";
+import { cn } from "@/lib/utils";
 
 // A form control with its words: the label, an optional hint, an optional error, a required
-// marker and an `aside` at the label's right (like "Forgot password?"). Every Input, Textarea,
-// SearchField, Checkbox, Switch or Segmented with a visible label goes in one; a control with no
-// visible label (a search pill in a header) takes an aria-label instead.
+// marker and an `aside` at the label's right (like "Forgot password?"). Since 2026-10-23 the
+// words follow Fluid Functionalism's InputField: the label in the muted ink, brightening to the
+// ink while its control is focused, set a notch in from the control's edge; the hint a caption
+// in the muted ink; the error in red, with an icon. Every Input, Textarea, SearchField, Checkbox,
+// Switch or Segmented with a visible label goes in one; a control with no visible label (a
+// search pill in a header) takes an aria-label instead.
 //
 // It wires itself by cloning its one child: the control gets the id the label points at,
 // aria-labelledby (so a Segmented, which a <label> can't name, is named too), aria-describedby
@@ -33,7 +36,7 @@ import { cx } from "@/lib/cx";
 //
 // In the inline layouts the whole label line takes a click, the gap beside the control included,
 // and on touch screens the row grows to 44px so neighbouring rows' hit areas never overlap.
-// A disabled control greys its label too. `className` is for layout, on the root.
+// A disabled control dims its label too. `className` is for layout, on the root.
 //
 // FieldGroup (a named export) is the heading over a set of controls: a <fieldset> whose <legend>
 // is set as a Field's label, with an optional hint under it and an error under the set. The
@@ -64,9 +67,11 @@ export type FieldProps = {
   className?: string;
 };
 
+// The label: the muted ink, the ink while the control has focus, red while it has an error,
+// dimmed while the control is disabled
 const labelClass =
-  "text-body-sm font-medium text-primary-foreground group-has-[:disabled]/field:text-disabled-foreground";
-const hintClass = "text-caption-lg text-pretty text-secondary-foreground";
+  "text-body text-muted-foreground transition-colors duration-80 group-focus-within/field:text-foreground group-has-[[aria-invalid=true]]/field:text-destructive group-has-[:disabled]/field:opacity-50";
+const hintClass = "text-caption text-pretty text-muted-foreground";
 
 export default function Field({
   label,
@@ -98,7 +103,7 @@ export default function Field({
   });
 
   const marker = required && (
-    <span aria-hidden="true" className="ml-0.5 text-secondary-foreground">
+    <span aria-hidden="true" className="ml-0.5">
       *
     </span>
   );
@@ -112,39 +117,40 @@ export default function Field({
   if (layout === "stacked") {
     const hintFirst = descriptionAt === "label";
     return (
-      <div className={cx("group/field", className)}>
-        <div className={cx("flex items-baseline justify-between gap-3", hintFirst && hint ? "mb-0.5" : "mb-1.5")}>
+      <div className={cn("group/field", className)}>
+        {/* A notch in from the control's edge, as the library sets its labels */}
+        <div className={cn("flex items-baseline justify-between gap-3 px-2.5", hintFirst && hint ? "mb-0.5" : "mb-1")}>
           <label id={labelId} htmlFor={controlId} className={labelClass}>
             {label}
             {marker}
           </label>
           {aside}
         </div>
-        {hintFirst && hint && <div className="mb-2">{hint}</div>}
+        {hintFirst && hint && <div className="mb-1.5 px-2.5">{hint}</div>}
         {control}
-        {problem && <div className="mt-1.5">{problem}</div>}
-        {!hintFirst && hint && <div className="mt-1.5">{hint}</div>}
+        {problem && <div className="mt-1 px-2.5">{problem}</div>}
+        {!hintFirst && hint && <div className="mt-1 px-2.5">{hint}</div>}
       </div>
     );
   }
 
-  // Inline: the control in a box one text line tall (20px), so a 16 or 20px checkbox and the
-  // 28px switch all centre on the label's first line however many lines follow. The label is a
-  // block across its column, and a pseudo-element reaches over the 12px gap, so the gap clicks
-  // too. The DOM follows what's seen, so a screen reader meets them in the same order
+  // Inline: the control in a box one text line tall (20px), so a 16px checkbox and the switch's
+  // track all centre on the label's first line however many lines follow. The label is a block
+  // across its column, and a pseudo-element reaches over the 12px gap, so the gap clicks too.
+  // The DOM follows what's seen, so a screen reader meets them in the same order
   const end = layout === "inline-end";
   const slot = <span className="flex h-5 shrink-0 items-center">{control}</span>;
   return (
-    <div className={cx("group/field flex items-start gap-3 pointer-coarse:py-3", className)}>
+    <div className={cn("group/field flex items-start gap-3 pointer-coarse:py-3", className)}>
       {!end && slot}
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-3">
           <label
             id={labelId}
             htmlFor={controlId}
-            className={cx(
+            className={cn(
               labelClass,
-              "relative block flex-1 cursor-pointer group-has-[:disabled]/field:cursor-default",
+              "relative block flex-1 cursor-pointer text-foreground group-has-[:disabled]/field:cursor-default",
               end
                 ? "after:absolute after:inset-y-0 after:-right-3 after:w-3"
                 : "before:absolute before:inset-y-0 before:-left-3 before:w-3",
@@ -156,17 +162,17 @@ export default function Field({
           {aside}
         </div>
         {hint && <div className="mt-0.5">{hint}</div>}
-        {problem && <div className="mt-1.5">{problem}</div>}
+        {problem && <div className="mt-1">{problem}</div>}
       </div>
       {end && slot}
     </div>
   );
 }
 
-// The note under a field: red, with an icon, so it never relies on colour alone (as AuthField's)
+// The note under a field: red, with an icon, so it never relies on colour alone
 function FieldError({ id, children }: { id?: string; children: ReactNode }) {
   return (
-    <p id={id} className="flex items-start gap-1.5 text-caption-lg text-pretty text-danger-foreground">
+    <p id={id} className="flex items-start gap-1.5 text-caption text-pretty text-destructive">
       <WarningCircle className="mt-px size-3.5 shrink-0" />
       <span className="min-w-0">{children}</span>
     </p>
@@ -189,9 +195,9 @@ export type FieldGroupProps = {
   className?: string;
 };
 
-// The legend never greys (unlike a Field's label): one disabled control in a set doesn't disable
-// the question
-const legendClass = "mb-1.5 text-body-sm font-medium text-primary-foreground";
+// The legend is the ink (a question over the controls, not one control's label) and never dims:
+// one disabled control in a set doesn't disable the question
+const legendClass = "mb-1 text-body text-foreground";
 
 export function FieldGroup({ legend, children, description, error, className }: FieldGroupProps) {
   const generated = useId();
@@ -200,17 +206,17 @@ export function FieldGroup({ legend, children, description, error, className }: 
   return (
     <fieldset
       aria-describedby={[errorId, hintId].filter(Boolean).join(" ") || undefined}
-      className={cx("min-w-0", className)}
+      className={cn("min-w-0", className)}
     >
       <legend className={legendClass}>{legend}</legend>
       {description && (
-        <p id={hintId} className={cx(hintClass, "-mt-1 mb-2")}>
+        <p id={hintId} className={cn(hintClass, "-mt-0.5 mb-2")}>
           {description}
         </p>
       )}
       {children}
       {error && (
-        <div className="mt-1.5">
+        <div className="mt-1">
           <FieldError id={errorId}>{error}</FieldError>
         </div>
       )}
