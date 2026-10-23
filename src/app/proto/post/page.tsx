@@ -8,6 +8,7 @@
 // is chosen.
 import "@/app/(site)/system/theme-scopes.css";
 import PostProto from "@/components/proto/PostProto";
+import { DIRECTIONS, type Direction } from "@/components/proto/postDirections";
 import { getBreakdownSummaries, getPublishedAnalysis } from "@/lib/creative/display";
 import { getPostDetail, getPublishedPosts } from "@/lib/posts";
 
@@ -24,10 +25,13 @@ export default async function PostProtoPage({ searchParams }: { searchParams: Pr
   const post = await getPostDetail(shortCode);
   if (!post) return <p className="p-8">No such post.</p>;
   const analysis = await getPublishedAnalysis(post.id, post.images.length);
-  // Three more of the brand's posts, for the Studio direction's "More from" list
-  const related = posts
-    .filter((p) => p.brand.slug === post.brand.slug && p.shortCode !== post.shortCode)
-    .slice(0, 3)
-    .map((p) => ({ shortCode: p.shortCode, hook: p.hook, cover: p.images[0] }));
-  return <PostProto post={post} analysis={analysis} related={related} direction={params.direction === "studio" ? "studio" : "card"} theme={params.theme === "dark" ? "dark" : "light"} />;
+  // More posts: the brand's own first, then the category's, for the "More from" and "More like
+  // this" sections
+  const others = posts.filter((p) => p.shortCode !== post.shortCode);
+  const related = [...others.filter((p) => p.brand.slug === post.brand.slug), ...others.filter((p) => p.brand.slug !== post.brand.slug && p.category.slug === post.category.slug), ...others]
+    .filter((p, i, all) => all.findIndex((q) => q.shortCode === p.shortCode) === i)
+    .slice(0, 12)
+    .map((p) => ({ shortCode: p.shortCode, hook: p.hook, cover: p.images[0], brand: p.brand.name, width: p.width, height: p.height }));
+  const direction = DIRECTIONS.includes(params.direction as Direction) ? (params.direction as Direction) : "card";
+  return <PostProto post={post} analysis={analysis} related={related} direction={direction} theme={params.theme === "dark" ? "dark" : "light"} />;
 }

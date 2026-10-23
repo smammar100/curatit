@@ -16,6 +16,8 @@ import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
 import CaretDown from "@/components/fundations/icons/CaretDown";
 import CaretLeft from "@/components/fundations/icons/CaretLeft";
 import CaretRight from "@/components/fundations/icons/CaretRight";
+import Close from "@/components/fundations/icons/Close";
+import Info from "@/components/fundations/icons/Info";
 import ChatCircle from "@/components/fundations/icons/ChatCircle";
 import FilmStrip from "@/components/fundations/icons/FilmStrip";
 import Heart from "@/components/fundations/icons/Heart";
@@ -41,11 +43,12 @@ function Label({ children }: { children: string }) {
   return <p className="text-micro tracking-[0.08em] text-muted-foreground uppercase">{children}</p>;
 }
 
-type Related = { shortCode: string; hook: string; cover: string };
-type Props = { post: PostDetail; analysis: PublicAnalysis | null; related: Related[]; direction: "card" | "studio"; theme: "light" | "dark" };
+type Related = { shortCode: string; hook: string; cover: string; brand: string; width: number | null; height: number | null };
+import { type Direction } from "@/components/proto/postDirections";
+type Props = { post: PostDetail; analysis: PublicAnalysis | null; related: Related[]; direction: Direction; theme: "light" | "dark" };
 
 export default function PostProto({ direction, theme, ...rest }: Props) {
-  const Variant = direction === "studio" ? Studio : Card;
+  const Variant = { card: Card, studio: Studio, pin: Pin, shot: Shot, inspector: Inspector }[direction];
   return (
     <MotionConfig reducedMotion="user">
       <div data-theme-scope={theme} data-theme={theme} className="min-h-dvh bg-page text-body text-foreground">
@@ -459,6 +462,374 @@ function Studio({ post, analysis, related }: Omit<Props, "direction" | "theme">)
             </div>
           )}
         </aside>
+      </div>
+    </div>
+  );
+}
+
+// ---- 3. Pin: after Pinterest's pin page (mobbin.com/screens/f7e3f19d-2ee1-4b87-a91d-38bf0a9f023a).
+// One rounded card over the page, the post on its left half and the actions, title, brand,
+// caption and breakdown on its right; "More like this" as a masonry of real posts under it ----
+
+function Pin({ post, analysis, related }: Omit<Props, "direction" | "theme">) {
+  const { index, setIndex, view, setView, saved, setSaved, count, stage, role, ratio } = usePost(post, analysis);
+  return (
+    <>
+      <header className="flex h-14 items-center justify-between px-4 sm:px-8">
+        <Button variant="transparent" size="sm" leftIcon={<CaretLeft className="size-3.5" />}>
+          Library
+        </Button>
+        <Lockup />
+        <Avatar name="Ammar" size="sm" decorative />
+      </header>
+      <main className="mx-auto max-w-[64rem] px-4 pb-16 sm:px-8">
+        <article className="grid grid-cols-1 overflow-hidden rounded-[24px] bg-surface-3 shadow-surface-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="relative flex items-center justify-center bg-muted lg:min-h-[40rem]">
+            <div className="relative w-full" style={{ aspectRatio: ratio }}>
+              <Image key={post.images[index]} src={post.images[index]} alt={count > 1 ? `${post.hook} (slide ${index + 1} of ${count})` : post.hook} fill sizes="(min-width: 1024px) 32rem, 100vw" priority className="object-cover" />
+            </div>
+            {count > 1 && (
+              <>
+                <p className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--foreground)] px-2.5 py-1 text-caption text-[var(--background)] tabular-nums">
+                  {index + 1} / {count}
+                  {role && <span className="opacity-70"> · {role}</span>}
+                </p>
+                <div className="absolute inset-y-0 left-3 flex items-center">
+                  <Button variant="secondary" iconOnly aria-label="Previous slide" disabled={index === 0} onClick={() => setIndex(index - 1)}>
+                    <CaretLeft className="size-3.5" />
+                  </Button>
+                </div>
+                <div className="absolute inset-y-0 right-3 flex items-center">
+                  <Button variant="secondary" iconOnly aria-label="Next slide" disabled={index === count - 1} onClick={() => setIndex(index + 1)}>
+                    <CaretRight className="size-3.5" />
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+          <div className="flex min-w-0 flex-col lg:max-h-[46rem]">
+            {/* Pinterest's top row: reactions on the left, the board and Save on the right */}
+            <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3">
+              <div className="flex items-center gap-1">
+                <Button variant="transparent" size="sm" leftIcon={<Heart className="size-3.5" />}>
+                  {countLabel(post.likes)}
+                </Button>
+                <Button variant="transparent" size="sm" leftIcon={<ChatCircle className="size-3.5" />}>
+                  {countLabel(post.comments)}
+                </Button>
+                <Button variant="transparent" iconOnly aria-label="Share">
+                  <ShareNetwork className="size-3.5" />
+                </Button>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Button variant="transparent" size="sm" rightIcon={<CaretDown className="size-3" />}>
+                  Launch references
+                </Button>
+                <Button variant={saved ? "secondary" : "accent"} aria-pressed={saved} onClick={() => setSaved((v) => !v)}>
+                  {saved ? "Saved" : "Save"}
+                </Button>
+              </div>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
+              <h1 className="font-display text-[22px] leading-7 text-balance text-foreground">{post.hook}</h1>
+              <div className="mt-3 flex items-center gap-3">
+                <Avatar src={post.brand.logo} name={post.brand.name} size="md" decorative />
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-1 text-foreground" style={semibold}>
+                    {post.brand.name}
+                    {post.verified && <SealCheck className="size-3.5 text-muted-foreground" aria-label="Verified" />}
+                  </p>
+                  <p className="truncate text-caption text-muted-foreground">{post.categories.map((c) => c.name).join(" · ")}</p>
+                </div>
+                <Button variant="secondary" size="sm" isLink href={post.url} target="_blank" rel="noreferrer">
+                  Instagram
+                </Button>
+              </div>
+              {post.caption && <p className="mt-3 line-clamp-3 text-pretty text-muted-foreground">{post.caption}</p>}
+              <div className="mt-4 flex gap-2">
+                <Button className="flex-1" leftIcon={<Sparkle className="size-3.5" />}>
+                  Copy brief
+                </Button>
+                <Thumbs post={post} index={index} onIndex={setIndex} />
+              </div>
+              {analysis && (
+                <div className="mt-5 border-t border-border pt-1">
+                  <Document analysis={analysis} stage={stage} view={view} onView={setView} />
+                </div>
+              )}
+            </div>
+          </div>
+        </article>
+        <h2 className="mt-10 text-center text-subtitle text-foreground" style={semibold}>
+          More like this
+        </h2>
+        <div className="mt-4 columns-2 gap-3 sm:columns-3 lg:columns-4">
+          {related.map((r) => (
+            <a key={r.shortCode} href={`?post=${r.shortCode}&direction=pin`} className="group mb-3 block break-inside-avoid">
+              <span className="relative block w-full overflow-hidden rounded-[16px] bg-muted" style={{ aspectRatio: r.width && r.height ? `${r.width} / ${r.height}` : "4 / 5" }}>
+                <Image src={r.cover} alt="" fill sizes="(min-width: 1024px) 16rem, 50vw" className="object-cover transition-opacity duration-150 group-hover:opacity-90" />
+              </span>
+              <span className="mt-1.5 block truncate px-1 text-caption text-muted-foreground">{r.brand}</span>
+            </a>
+          ))}
+        </div>
+      </main>
+    </>
+  );
+}
+
+// ---- 4. Shot: after Dribbble's shot page (mobbin.com/screens/e6ee3ed0-cab4-4751-8db4-13a8293655e7).
+// Title and brand above, the post as wide as the column, a floating rail of round actions on
+// the right, then the breakdown and the Visual DNA side by side under it ----
+
+function Shot({ post, analysis }: Omit<Props, "direction" | "theme">) {
+  const { index, setIndex, view, setView, saved, setSaved, count, stage, role, ratio } = usePost(post, analysis);
+  const rail = [
+    { label: saved ? "Saved" : "Save", icon: BookmarkSimple, on: saved, onClick: () => setSaved((v) => !v) },
+    { label: "Share", icon: ShareNetwork },
+    { label: "Details", icon: Info },
+  ];
+  return (
+    <>
+      <header className="flex h-14 items-center justify-between px-4 sm:px-8">
+        <Lockup />
+        <div className="flex items-center gap-2">
+          <Button variant="transparent" size="sm" leftIcon={<CaretLeft className="size-3.5" />}>
+            Library
+          </Button>
+          <Avatar name="Ammar" size="sm" decorative />
+        </div>
+      </header>
+      <main className="relative mx-auto max-w-[72rem] px-4 pt-6 pb-16 sm:px-8 lg:pt-10">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="font-display text-[28px] leading-8 text-balance text-foreground lg:text-[32px] lg:leading-9">{post.hook}</h1>
+            <div className="mt-3 flex items-center gap-2.5">
+              <Avatar src={post.brand.logo} name={post.brand.name} size="md" decorative />
+              <p className="flex items-center gap-1 text-foreground" style={semibold}>
+                {post.brand.name}
+                {post.verified && <SealCheck className="size-3.5 text-muted-foreground" aria-label="Verified" />}
+              </p>
+              <p className="text-caption text-muted-foreground">
+                {post.handle && `@${post.handle} · `}
+                {dateLabel.format(new Date(post.postedAt))}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Button variant="secondary" iconOnly aria-label={saved ? "Saved" : "Save"} aria-pressed={saved} onClick={() => setSaved((v) => !v)}>
+              <BookmarkSimple className="size-3.5" />
+            </Button>
+            <Button variant="secondary" iconOnly aria-label="Share">
+              <ShareNetwork className="size-3.5" />
+            </Button>
+            <Button leftIcon={<Sparkle className="size-3.5" />}>Copy brief</Button>
+          </div>
+        </div>
+
+        <div className="relative mt-6 overflow-hidden rounded-[20px] bg-muted">
+          <div className="relative mx-auto max-h-[80dvh]" style={{ aspectRatio: ratio, maxWidth: `calc(80dvh * (${ratio}))` }}>
+            <Image key={post.images[index]} src={post.images[index]} alt={count > 1 ? `${post.hook} (slide ${index + 1} of ${count})` : post.hook} fill sizes="(min-width: 1024px) 72rem, 100vw" priority className="object-contain" />
+          </div>
+          {count > 1 && (
+            <>
+              <p className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--foreground)] px-2.5 py-1 text-caption text-[var(--background)] tabular-nums">
+                {index + 1} / {count}
+                {role && <span className="opacity-70"> · {role}</span>}
+              </p>
+              <div className="absolute inset-y-0 left-3 flex items-center">
+                <Button variant="secondary" iconOnly aria-label="Previous slide" disabled={index === 0} onClick={() => setIndex(index - 1)}>
+                  <CaretLeft className="size-3.5" />
+                </Button>
+              </div>
+              <div className="absolute inset-y-0 right-3 flex items-center">
+                <Button variant="secondary" iconOnly aria-label="Next slide" disabled={index === count - 1} onClick={() => setIndex(index + 1)}>
+                  <CaretRight className="size-3.5" />
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <Thumbs post={post} index={index} onIndex={setIndex} />
+          <div className="flex items-center gap-4 text-caption text-muted-foreground">
+            <span className="flex items-center gap-1 tabular-nums">
+              <Heart className="size-3.5" /> {countLabel(post.likes)}
+            </span>
+            <span className="flex items-center gap-1 tabular-nums">
+              <ChatCircle className="size-3.5" /> {countLabel(post.comments)}
+            </span>
+            <Button variant="transparent" size="sm" isLink href={post.url} target="_blank" rel="noreferrer" rightIcon={<ArrowUpRight className="size-3.5" />}>
+              Instagram
+            </Button>
+          </div>
+        </div>
+
+        {/* Dribbble's floating rail, from lg */}
+        <ul className="sticky top-1/2 z-10 -mt-24 ml-auto hidden w-fit -translate-y-1/2 flex-col gap-2 lg:flex" style={{ marginRight: "-3.5rem" }}>
+          {rail.map(({ label, icon: Glyph, on, onClick }) => (
+            <li key={label}>
+              <button type="button" aria-label={label} aria-pressed={on} onClick={onClick} className={cn("flex size-10 items-center justify-center rounded-full bg-surface-4 text-foreground shadow-surface-3 transition-colors duration-80 hover:bg-hover", on && "bg-[var(--foreground)] text-[var(--background)] hover:bg-[var(--foreground)]")}>
+                <Glyph className="size-4" />
+              </button>
+            </li>
+          ))}
+        </ul>
+
+        {analysis ? (
+          <div className="mt-12 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <section className="min-w-0 px-6">
+              <Document analysis={analysis} stage={stage} view="breakdown" onView={setView} />
+            </section>
+            <section className="min-w-0 rounded-[24px] bg-surface-3 px-6 pb-5 shadow-surface-1">
+              <Document analysis={analysis} stage={stage} view="visual" onView={setView} />
+            </section>
+          </div>
+        ) : (
+          <p className="mt-12 text-caption text-muted-foreground">No published breakdown for this post yet.</p>
+        )}
+      </main>
+    </>
+  );
+}
+
+// ---- 5. Inspector: after Savee's post view (mobbin.com/screens/82495bf4-5c65-4f73-ae61-f5e75934aa24)
+// and Magnific's (mobbin.com/screens/9ce59f92-107f-4407-9b4a-462cf2f9eb9e). A dark lightbox the
+// post fills, an Info panel on the right (the colours as dots, Add to a board, then the breakdown),
+// a filmstrip of other posts along the foot ----
+
+function Inspector({ post, analysis, related }: Omit<Props, "direction" | "theme">) {
+  const { index, setIndex, view, setView, saved, setSaved, count, stage, role, ratio } = usePost(post, analysis);
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="flex h-dvh flex-col bg-[#0b0a10] text-white">
+      <header className="flex h-14 shrink-0 items-center justify-between px-4">
+        <div className="flex items-center gap-3">
+          <button type="button" aria-label="Back" className="flex size-7 items-center justify-center rounded-full text-white/70 hover:text-white">
+            <CaretLeft className="size-4" />
+          </button>
+          <span className="flex -space-x-2">
+            {related.slice(0, 4).map((r) => (
+              <span key={r.shortCode} className="relative size-7 overflow-hidden rounded-full outline-2 outline-[#0b0a10]">
+                <Image src={r.cover} alt="" fill sizes="28px" className="object-cover" />
+              </span>
+            ))}
+            <span className="flex size-7 items-center justify-center rounded-full bg-white/10 text-micro text-white/80 outline-2 outline-[#0b0a10] tabular-nums">+{Math.max(0, related.length - 4)}</span>
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button type="button" aria-pressed={saved} onClick={() => setSaved((v) => !v)} className={cn("flex h-7 items-center gap-1.5 rounded-full px-3 text-caption transition-colors duration-80", saved ? "bg-white text-black" : "bg-white/10 text-white hover:bg-white/15")} style={semibold}>
+            <BookmarkSimple className="size-3.5" />
+            {saved ? "Saved" : "Save"}
+            <CaretDown className="size-3" />
+          </button>
+          <button type="button" aria-label="Info" aria-pressed={open} onClick={() => setOpen((v) => !v)} className={cn("flex size-7 items-center justify-center rounded-full text-white/70 hover:text-white", open && "bg-white/10 text-white")}>
+            <Info className="size-4" />
+          </button>
+          <button type="button" aria-label="Share" className="flex size-7 items-center justify-center rounded-full text-white/70 hover:text-white">
+            <ShareNetwork className="size-4" />
+          </button>
+        </div>
+      </header>
+
+      <div className={cn("grid min-h-0 flex-1", open && "lg:grid-cols-[minmax(0,1fr)_24rem]")}>
+        <div className="relative flex min-h-0 flex-col">
+          <div className="relative flex min-h-0 flex-1 items-center justify-center p-6">
+            <div className="relative h-full max-h-full w-full" style={{ aspectRatio: ratio, maxWidth: `calc((100dvh - 12rem) * (${ratio}))` }}>
+              <Image key={post.images[index]} src={post.images[index]} alt={count > 1 ? `${post.hook} (slide ${index + 1} of ${count})` : post.hook} fill sizes="(min-width: 1024px) 60vw, 100vw" priority className="object-contain" />
+            </div>
+            {count > 1 && (
+              <>
+                <p className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-2.5 py-1 text-caption text-white tabular-nums">
+                  {index + 1} / {count}
+                  {role && <span className="opacity-70"> · {role}</span>}
+                </p>
+                <button type="button" aria-label="Previous slide" disabled={index === 0} onClick={() => setIndex(index - 1)} className="absolute top-1/2 left-4 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 disabled:opacity-30">
+                  <CaretLeft className="size-4" />
+                </button>
+                <button type="button" aria-label="Next slide" disabled={index === count - 1} onClick={() => setIndex(index + 1)} className="absolute top-1/2 right-4 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 disabled:opacity-30">
+                  <CaretRight className="size-4" />
+                </button>
+              </>
+            )}
+          </div>
+          {/* The foot: this post's slides, then other posts */}
+          <div className="flex shrink-0 items-center gap-2 overflow-x-auto border-t border-white/10 px-4 py-3 [scrollbar-width:none]">
+            {post.images.map((src, i) => (
+              <button key={src} type="button" aria-label={`Slide ${i + 1}`} aria-pressed={i === index} onClick={() => setIndex(i)} className={cn("relative h-16 w-12 shrink-0 overflow-hidden rounded-[8px] transition-opacity duration-80", i === index ? "ring-2 ring-white" : "opacity-50 hover:opacity-100")}>
+                <Image src={src} alt="" fill sizes="48px" className="object-cover" />
+              </button>
+            ))}
+            <span className="mx-2 h-10 w-px shrink-0 bg-white/15" />
+            {related.map((r) => (
+              <a key={r.shortCode} href={`?post=${r.shortCode}&direction=inspector`} className="relative h-16 w-12 shrink-0 overflow-hidden rounded-[8px] opacity-50 transition-opacity duration-80 hover:opacity-100">
+                <Image src={r.cover} alt={r.hook} fill sizes="48px" className="object-cover" />
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {open && (
+          <aside data-theme-scope="dark" data-theme="dark" className="flex min-h-0 flex-col border-l border-white/10 bg-surface-3 text-body text-foreground">
+            <div className="flex items-center justify-between px-5 pt-4 pb-3">
+              <p className="text-foreground" style={semibold}>
+                Info
+              </p>
+              <Button variant="transparent" iconOnly aria-label="Close info" onClick={() => setOpen(false)}>
+                <Close className="size-3.5" />
+              </Button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
+              <div className="flex items-center gap-3">
+                <Avatar src={post.brand.logo} name={post.brand.name} size="md" decorative />
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-1 truncate text-foreground" style={semibold}>
+                    {post.brand.name}
+                    {post.verified && <SealCheck className="size-3.5 text-muted-foreground" aria-label="Verified" />}
+                  </p>
+                  <p className="truncate text-caption text-muted-foreground">{post.handle ? `@${post.handle}` : post.category.name}</p>
+                </div>
+              </div>
+              <p className="mt-3 text-pretty text-foreground">{post.hook}</p>
+              <p className="mt-1 flex items-center gap-3 text-caption text-muted-foreground">
+                <span>{dateLabel.format(new Date(post.postedAt))}</span>
+                <span className="flex items-center gap-1 tabular-nums">
+                  <Heart className="size-3" /> {countLabel(post.likes)}
+                </span>
+                <span className="flex items-center gap-1 tabular-nums">
+                  <ChatCircle className="size-3" /> {countLabel(post.comments)}
+                </span>
+              </p>
+              {analysis && analysis.colours.length > 0 && (
+                <ul className="mt-4 flex gap-2">
+                  {analysis.colours.map((c) => (
+                    <li key={c.hex} title={c.role ?? c.hex} className="size-8 rounded-full outline-1 -outline-offset-1 outline-border" style={{ background: c.hex }} />
+                  ))}
+                </ul>
+              )}
+              <div className="mt-4 flex gap-2">
+                <Button variant="secondary" className="flex-1" rightIcon={<CaretDown className="size-3" />}>
+                  Add to a board
+                </Button>
+                <Button leftIcon={<Sparkle className="size-3.5" />}>Copy brief</Button>
+              </div>
+              <ul className="mt-3 space-y-1">
+                {["Launch references", "Charity storytelling"].map((b, i) => (
+                  <li key={b} className="flex items-center gap-2.5 rounded-[12px] px-2 py-1.5 hover:bg-hover">
+                    <span className="relative size-7 overflow-hidden rounded-[8px] bg-muted">{related[i] && <Image src={related[i].cover} alt="" fill sizes="28px" className="object-cover" />}</span>
+                    <span className="min-w-0 flex-1 truncate text-caption text-foreground">{b}</span>
+                    <span className="text-micro text-muted-foreground tabular-nums">{12 - i * 5}</span>
+                  </li>
+                ))}
+              </ul>
+              {analysis && (
+                <div className="mt-5 border-t border-border pt-1">
+                  <Document analysis={analysis} stage={stage} view={view} onView={setView} />
+                </div>
+              )}
+            </div>
+          </aside>
+        )}
       </div>
     </div>
   );
