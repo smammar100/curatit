@@ -30,7 +30,7 @@ import { evidenceGroups, integritySummary, STATUS_LABEL, type DecisionView, type
 import { cn } from "@/lib/utils";
 
 type View = "breakdown" | "visual";
-type Stage = { index: number; onSlide: (index: number) => void; count: number };
+export type Stage = { index: number; onSlide: (index: number) => void; count: number };
 
 const DIRECTIONS = [
   { value: "ledger", label: "Ledger" },
@@ -111,7 +111,7 @@ type VariantProps = { analysis: PublicAnalysis; stage: Stage; view: View; onView
 
 // ---- Shared pieces ----
 
-const traits = (analysis: PublicAnalysis) =>
+export const traits = (analysis: PublicAnalysis) =>
   [
     ["Archetype", "Type"],
     ["Goal", "Inferred goal"],
@@ -836,7 +836,7 @@ function Strong({ children }: { children: ReactNode }) {
   );
 }
 
-function Document({ analysis, stage, view, onView }: VariantProps) {
+export function Document({ analysis, stage, view, onView }: VariantProps) {
   const [why, setWhy] = useState<number | null>(0);
   const [checks, setChecks] = useState(false);
   return (
@@ -855,60 +855,75 @@ function Document({ analysis, stage, view, onView }: VariantProps) {
       {view === "breakdown" ? (
         <article className="pt-2 text-pretty">
           <h1 className="font-display text-[22px] leading-7 text-balance text-foreground">{analysis.headline}</h1>
-          {analysis.summary && <p className="mt-2.5 text-muted-foreground">{analysis.summary}</p>}
-          <p className="mt-3 text-caption text-muted-foreground">
-            {traits(analysis).map((t, i) => (
-              <span key={t.label}>
-                {i > 0 && " · "}
-                {t.label} <Strong>{t.value}</Strong>
-              </span>
+          {analysis.summary && <p className="mt-2.5 text-body text-pretty text-muted-foreground">{analysis.summary}</p>}
+          <dl className="mt-4 grid grid-cols-2 gap-1.5">
+            {traits(analysis).map((t) => (
+              <div key={t.label} className="min-w-0 rounded-[14px] bg-muted px-3 py-2 shadow-surface-1">
+                <dt className="text-micro text-muted-foreground">{t.label}</dt>
+                <dd className="mt-0.5 truncate text-foreground" style={semibold} title={t.value}>
+                  {t.value}
+                </dd>
+              </div>
             ))}
-          </p>
-          <hr className="my-5 border-border" />
-          <h2 className="text-subtitle text-foreground" style={semibold}>
-            Key creative decisions
-          </h2>
-          <ol className="mt-2 list-decimal space-y-3 pl-5 marker:text-muted-foreground marker:tabular-nums">
+          </dl>
+          <div className="mt-6 flex items-baseline justify-between gap-3">
+            <h2 className="text-subtitle text-foreground" style={semibold}>
+              Key creative decisions
+            </h2>
+            <span className="text-caption text-muted-foreground tabular-nums">{analysis.creativeDecisions.length}</span>
+          </div>
+          <ol className="mt-2 space-y-2">
             {analysis.creativeDecisions.map((d, i) => (
-              <li key={i} className="pl-1">
-                <p className="text-foreground">
-                  <Strong>{d.title}.</Strong> <span className="text-muted-foreground">{d.explanation}</span>
-                </p>
-                <p className="mt-1 flex flex-wrap items-center gap-x-3 text-caption">
-                  <Evidence evidence={d.evidence} stage={stage} />
-                  <button type="button" aria-expanded={why === i} onClick={() => setWhy(why === i ? null : i)} className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
-                    Why it works
-                    <Chevron open={why === i} />
-                  </button>
-                </p>
-                {why === i && (
-                  <blockquote className="mt-2 space-y-1.5 border-l-2 border-border pl-3 text-muted-foreground">
-                    {d.observation && (
-                      <p>
-                        <Strong>Observed.</Strong> {d.observation}
-                      </p>
+              <li key={i} className="rounded-[20px] bg-muted p-3.5 shadow-surface-1">
+                <div className="flex gap-3">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-surface-3 text-caption text-foreground tabular-nums shadow-surface-1" style={semibold}>
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <h3 className="text-subtitle text-balance text-foreground" style={semibold}>
+                        {d.title}
+                      </h3>
+                      <span className="shrink-0 text-caption">
+                        <Evidence evidence={d.evidence} stage={stage} />
+                      </span>
+                    </div>
+                    <p className="mt-1 text-body text-pretty text-muted-foreground">{d.explanation}</p>
+                    <button type="button" aria-expanded={why === i} onClick={() => setWhy(why === i ? null : i)} className="mt-2 flex h-6 items-center gap-1 text-caption text-muted-foreground hover:text-foreground">
+                      {why === i ? "Hide why it works" : "Why it works"}
+                      <Chevron open={why === i} />
+                    </button>
+                    {why === i && (
+                      <dl className="mt-2 grid gap-2.5 border-t border-border pt-3">
+                        {(
+                          [
+                            ["Observed", d.observation],
+                            ["Possible effect", d.effect],
+                            ["Reusable principle", d.principle],
+                            ["Watch out", d.watchOut],
+                          ] as [string, string | null][]
+                        ).map(([label, text]) =>
+                          text ? (
+                            <div key={label}>
+                              <dt className="text-micro text-muted-foreground">{label}</dt>
+                              <dd className={cn("mt-0.5 text-body text-pretty", label === "Reusable principle" ? "text-foreground" : "text-muted-foreground")} style={label === "Reusable principle" ? semibold : undefined}>
+                                {text}
+                              </dd>
+                            </div>
+                          ) : null,
+                        )}
+                      </dl>
                     )}
-                    <p>
-                      <Strong>Possible effect.</Strong> {d.effect}
-                    </p>
-                    <p>
-                      <Strong>Reusable principle.</Strong> {d.principle}
-                    </p>
-                    {d.watchOut && (
-                      <p>
-                        <Strong>Watch out.</Strong> {d.watchOut}
-                      </p>
-                    )}
-                  </blockquote>
-                )}
+                  </div>
+                </div>
               </li>
             ))}
           </ol>
           {analysis.integrity.length > 0 && (
-            <aside className="mt-5 rounded-[16px] bg-muted p-3">
+            <aside className="mt-4 rounded-[20px] bg-muted p-3.5 shadow-surface-1">
               <button type="button" aria-expanded={checks} onClick={() => setChecks((v) => !v)} className="flex w-full items-start gap-2.5 text-left">
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-surface-3 text-muted-foreground shadow-surface-1">
-                  <Info className="size-3.5" />
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-surface-3 text-muted-foreground shadow-surface-1">
+                  <Info className="size-4" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-caption text-muted-foreground">Data checks</span>
@@ -917,7 +932,7 @@ function Document({ analysis, stage, view, onView }: VariantProps) {
                 <Chevron open={checks} />
               </button>
               {checks && (
-                <ul className="mt-2.5 space-y-2 pl-[2.375rem]">
+                <ul className="mt-3 space-y-2.5 border-t border-border pt-3 pl-11">
                   {analysis.integrity.map((c, i) => (
                     <li key={i}>
                       <p>
@@ -941,12 +956,12 @@ function Document({ analysis, stage, view, onView }: VariantProps) {
           )}
         </article>
       ) : (
-        <div className="space-y-5 pt-2">
+        <div className="space-y-2 pt-2">
           {analysis.visual.map((s) => {
             const Glyph = DNA_ICONS[s.key];
             return (
-              <section key={s.key} className="flex gap-3">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-muted text-muted-foreground">
+              <section key={s.key} className="flex gap-3 rounded-[20px] bg-muted p-3.5 shadow-surface-1">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-surface-3 text-muted-foreground shadow-surface-1">
                   <Glyph className="size-4" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -987,8 +1002,8 @@ function Document({ analysis, stage, view, onView }: VariantProps) {
               </section>
             );
           })}
-          <section className="flex gap-3">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-muted text-muted-foreground">
+          <section className="flex gap-3 rounded-[20px] bg-muted p-3.5 shadow-surface-1">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-surface-3 text-muted-foreground shadow-surface-1">
               <FilmStrip className="size-4" />
             </span>
             <div className="min-w-0 flex-1">
