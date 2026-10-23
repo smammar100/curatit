@@ -14,8 +14,16 @@ import CaretDown from "@/components/fundations/icons/CaretDown";
 import CaretLeft from "@/components/fundations/icons/CaretLeft";
 import CaretRight from "@/components/fundations/icons/CaretRight";
 import Copy from "@/components/fundations/icons/Copy";
+import FilmStrip from "@/components/fundations/icons/FilmStrip";
+import Info from "@/components/fundations/icons/Info";
 import ListChecks from "@/components/fundations/icons/ListChecks";
 import PaintBrush from "@/components/fundations/icons/PaintBrush";
+import Palette from "@/components/fundations/icons/Palette";
+import Picture from "@/components/fundations/icons/Picture";
+import SealCheck from "@/components/fundations/icons/SealCheck";
+import Sparkle from "@/components/fundations/icons/Sparkle";
+import SquaresFour from "@/components/fundations/icons/SquaresFour";
+import TextAa from "@/components/fundations/icons/TextAa";
 import { ThemePanel } from "@/components/system/SheetParts";
 import { fontWeights } from "@/lib/font-weight";
 import { evidenceGroups, integritySummary, STATUS_LABEL, type DecisionView, type EvidenceTarget, type PublicAnalysis } from "@/lib/creative/publicView";
@@ -30,6 +38,7 @@ const DIRECTIONS = [
   { value: "spec", label: "Spec sheet" },
   { value: "storyboard", label: "Storyboard" },
   { value: "editorial", label: "Editorial" },
+  { value: "document", label: "Document" },
 ] as const;
 type Direction = (typeof DIRECTIONS)[number]["value"];
 
@@ -808,10 +817,201 @@ function Editorial({ analysis, stage, view, onView }: VariantProps) {
   );
 }
 
+// ---- 6. Document: the Breakdown as a rich-text page, Visual DNA with an icon per dimension ----
+
+const DNA_ICONS = {
+  composition: SquaresFour,
+  typography: TextAa,
+  colour: Palette,
+  imagery: Picture,
+  devices: Sparkle,
+  branding: SealCheck,
+} as const;
+
+function Strong({ children }: { children: ReactNode }) {
+  return (
+    <span className="text-foreground" style={semibold}>
+      {children}
+    </span>
+  );
+}
+
+function Document({ analysis, stage, view, onView }: VariantProps) {
+  const [why, setWhy] = useState<number | null>(0);
+  const [checks, setChecks] = useState(false);
+  return (
+    <div>
+      <div className="sticky top-0 z-10 -mx-6 flex items-center justify-between gap-2 bg-surface-5 px-6 py-2">
+        <Tabs value={view} onValueChange={onView}>
+          <TabList aria-label="Creative breakdown">
+            <Tab value="breakdown">Breakdown</Tab>
+            <Tab value="visual">Visual DNA</Tab>
+          </TabList>
+          <TabPanel value="breakdown" className="hidden">{null}</TabPanel>
+          <TabPanel value="visual" className="hidden">{null}</TabPanel>
+        </Tabs>
+        <CopyBriefButton variant="transparent" />
+      </div>
+      {view === "breakdown" ? (
+        <article className="pt-2 text-pretty">
+          <h1 className="font-display text-[22px] leading-7 text-balance text-foreground">{analysis.headline}</h1>
+          {analysis.summary && <p className="mt-2.5 text-muted-foreground">{analysis.summary}</p>}
+          <p className="mt-3 text-caption text-muted-foreground">
+            {traits(analysis).map((t, i) => (
+              <span key={t.label}>
+                {i > 0 && " · "}
+                {t.label} <Strong>{t.value}</Strong>
+              </span>
+            ))}
+          </p>
+          <hr className="my-5 border-border" />
+          <h2 className="text-subtitle text-foreground" style={semibold}>
+            Key creative decisions
+          </h2>
+          <ol className="mt-2 list-decimal space-y-3 pl-5 marker:text-muted-foreground marker:tabular-nums">
+            {analysis.creativeDecisions.map((d, i) => (
+              <li key={i} className="pl-1">
+                <p className="text-foreground">
+                  <Strong>{d.title}.</Strong> <span className="text-muted-foreground">{d.explanation}</span>
+                </p>
+                <p className="mt-1 flex flex-wrap items-center gap-x-3 text-caption">
+                  <Evidence evidence={d.evidence} stage={stage} />
+                  <button type="button" aria-expanded={why === i} onClick={() => setWhy(why === i ? null : i)} className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                    Why it works
+                    <Chevron open={why === i} />
+                  </button>
+                </p>
+                {why === i && (
+                  <blockquote className="mt-2 space-y-1.5 border-l-2 border-border pl-3 text-muted-foreground">
+                    {d.observation && (
+                      <p>
+                        <Strong>Observed.</Strong> {d.observation}
+                      </p>
+                    )}
+                    <p>
+                      <Strong>Possible effect.</Strong> {d.effect}
+                    </p>
+                    <p>
+                      <Strong>Reusable principle.</Strong> {d.principle}
+                    </p>
+                    {d.watchOut && (
+                      <p>
+                        <Strong>Watch out.</Strong> {d.watchOut}
+                      </p>
+                    )}
+                  </blockquote>
+                )}
+              </li>
+            ))}
+          </ol>
+          {analysis.integrity.length > 0 && (
+            <aside className="mt-5 rounded-[16px] bg-muted p-3">
+              <button type="button" aria-expanded={checks} onClick={() => setChecks((v) => !v)} className="flex w-full items-start gap-2.5 text-left">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-surface-3 text-muted-foreground shadow-surface-1">
+                  <Info className="size-3.5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-caption text-muted-foreground">Data checks</span>
+                  <span className="block text-foreground">{integritySummary(analysis.integrity)}</span>
+                </span>
+                <Chevron open={checks} />
+              </button>
+              {checks && (
+                <ul className="mt-2.5 space-y-2 pl-[2.375rem]">
+                  {analysis.integrity.map((c, i) => (
+                    <li key={i}>
+                      <p>
+                        <Strong>{c.aspect}</Strong>
+                        <span className="ml-2 text-caption text-muted-foreground">{STATUS_LABEL[c.status]}</span>
+                      </p>
+                      <p className="text-muted-foreground">{c.note}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </aside>
+          )}
+          {analysis.caveats.length > 0 && (
+            <>
+              <hr className="my-5 border-border" />
+              <p className="text-caption text-muted-foreground">
+                <Strong>Caveats.</Strong> {analysis.caveats.join(" ")}
+              </p>
+            </>
+          )}
+        </article>
+      ) : (
+        <div className="space-y-5 pt-2">
+          {analysis.visual.map((s) => {
+            const Glyph = DNA_ICONS[s.key];
+            return (
+              <section key={s.key} className="flex gap-3">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-muted text-muted-foreground">
+                  <Glyph className="size-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h3 className="text-foreground" style={semibold}>
+                      {s.title}
+                    </h3>
+                    {s.evidence.length > 0 && (
+                      <span className="text-caption">
+                        <Evidence evidence={s.evidence} stage={stage} />
+                      </span>
+                    )}
+                  </div>
+                  {s.insight && <p className="mt-0.5 text-pretty text-muted-foreground">{s.insight}</p>}
+                  {s.key === "colour" && (
+                    <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
+                      {analysis.colours.map((c) => (
+                        <li key={c.hex} className="flex items-center gap-2">
+                          <span className="size-7 rounded-full outline-1 -outline-offset-1 outline-border" style={{ background: c.hex }} />
+                          <span className="min-w-0">
+                            {c.role && <span className="block text-caption text-foreground">{c.role}</span>}
+                            <span className="block font-mono text-micro text-muted-foreground uppercase">{c.hex}</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {s.chips.length > 0 && (
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {s.chips.map((chip) => (
+                        <Badge key={chip} variant="outline">
+                          {chip}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+            );
+          })}
+          <section className="flex gap-3">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-muted text-muted-foreground">
+              <FilmStrip className="size-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-foreground" style={semibold}>
+                Sequence
+              </h3>
+              <div className="mt-1.5">
+                <Ticks slides={[]} stage={stage} onPick />
+              </div>
+              {analysis.sequence.formula && <p className="mt-1 text-caption text-muted-foreground">{analysis.sequence.formula}</p>}
+            </div>
+          </section>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const VARIANTS: Record<Direction, (props: VariantProps) => ReactNode> = {
   ledger: Ledger,
   cards: Cards,
   spec: Spec,
   storyboard: Storyboard,
   editorial: Editorial,
+  document: Document,
 };

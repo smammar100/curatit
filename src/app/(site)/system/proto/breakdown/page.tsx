@@ -17,7 +17,7 @@ export default async function BreakdownProtoPage({ searchParams }: { searchParam
           Breakdown directions
         </Text>
         <Text className="mt-2 text-secondary-foreground">
-          Five ways to set the post panel&rsquo;s Breakdown and Visual DNA tabs, on one analysis. Pick a direction and a tab; the stage on the left follows the slide links.
+          Six ways to set the post panel&rsquo;s Breakdown and Visual DNA tabs, on one analysis. Pick a direction and a tab; the stage on the left follows the slide links.
         </Text>
       </div>
       <BreakdownProto analysis={analysis} initial={{ direction: params.direction, view: params.tab }} />
