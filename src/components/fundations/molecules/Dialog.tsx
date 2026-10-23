@@ -15,7 +15,7 @@
 // short form that belongs to no page (name a new board). Instead: a message about the page is a
 // Notice; confirmation after an action is a Toast; a choice from a list is a Menu; a few words on
 // a control are a Tooltip; anything long, linked to or worth a Back button is its own page.
-import type { ReactNode, RefObject } from "react";
+import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 import { MotionConfig } from "motion/react";
 import {
   Dialog as FluidDialog,
@@ -91,6 +91,13 @@ export default function Dialog({
   dismissible = true,
   initialFocus,
 }: DialogProps) {
+  // What had focus when it opened, so focus goes back there when it closes. Radix sends focus to
+  // its own DialogTrigger on close and nowhere when there isn't one; the site opens dialogs from
+  // state, so the wrapper remembers the opener itself
+  const opener = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (open) opener.current = document.activeElement as HTMLElement | null;
+  }, [open]);
   return (
     <MotionConfig reducedMotion="user">
       <FluidDialog open={open} onOpenChange={onOpenChange}>
@@ -104,6 +111,12 @@ export default function Dialog({
             if (!target) return;
             event.preventDefault();
             target.focus();
+          }}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            const back = opener.current;
+            opener.current = null;
+            if (back?.isConnected) back.focus();
           }}
           onPointerDownOutside={(event) => {
             if (!dismissible) event.preventDefault();
