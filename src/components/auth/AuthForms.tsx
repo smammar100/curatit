@@ -41,7 +41,7 @@ import PasswordField from "./PasswordField";
 // the site's, as on the navigation's links
 const focusRing =
   "rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus";
-const linkClass = `font-medium text-brand-foreground underline-offset-2 hover:underline ${focusRing}`;
+export const linkClass = `font-medium text-brand-foreground underline-offset-2 hover:underline ${focusRing}`;
 
 function useParam(name: string) {
   const [value, setValue] = useState<string | null>(null);
@@ -57,7 +57,7 @@ function Next() {
   return next ? <input type="hidden" name="next" value={next} /> : null;
 }
 
-function Heading({ title, children }: { title: string; children: ReactNode }) {
+export function Heading({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="text-center text-balance">
       <Text tag="h1" variant="h5" className="text-primary-foreground">
@@ -70,7 +70,7 @@ function Heading({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Footer({ children }: { children: ReactNode }) {
+export function Footer({ children }: { children: ReactNode }) {
   return (
     <Text
       tag="p"
@@ -151,7 +151,7 @@ function useValidation(
 // focus stays on it, and the busy words are its name for screen readers); `waiting` is for
 // before it can be used at all, and disables it outright, which also holds back a press made
 // before the page's script has loaded
-function Submit({
+export function Submit({
   pending,
   waiting = false,
   idle,

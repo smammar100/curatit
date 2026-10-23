@@ -1,15 +1,14 @@
 "use client";
 
 // The pieces of the welcome flow (Welcome.tsx): the answers being made, and the pickers for the
-// name and occupation, the brands and the taste test; the live wall; the chips of what the taps
-// say; the end. The industries are folders (Folders.tsx).
-import { useEffect, useId, useRef, type ReactNode, type Ref } from "react";
+// name and occupation and the brands; the live wall; the end. The industries are folders (Folders.tsx).
+import { useEffect, useId, useRef, useState, type ReactNode, type Ref } from "react";
 import Image from "next/image";
 import Check from "@/components/fundations/icons/Check";
 import Button from "@/components/fundations/elements/Button";
 import Input from "@/components/fundations/elements/Input";
 import { ratio } from "@/components/dashboard/Grid";
-import { learnedChips, rank } from "@/components/dashboard/forYou";
+import { rank } from "@/components/dashboard/forYou";
 import type { Profile } from "@/components/dashboard/profile";
 import type { DashPost } from "@/components/dashboard/types";
 import { categoriesWithPosts, inCategory } from "@/lib/categories";
@@ -76,15 +75,23 @@ export function Chip({ on, onClick, children, className }: { on: boolean; onClic
   );
 }
 
-// The name, then what they do as one tap. The name takes focus on arrival, except on touch
-// (the keyboard would jump up); Enter in it submits the step. The step's question is its visible
-// label, so the field is named by aria-label rather than a Field.
+// The name, then what they do as one tap, or Other and a few words of their own (the column takes
+// 40 characters). The name takes focus on arrival, except on touch (the keyboard would jump up);
+// Enter in it submits the step. The step's question is its visible label, so the fields are named
+// by aria-label rather than a Field.
 export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: Partial<Draft>) => void }) {
   const ref = useRef<HTMLInputElement>(null);
   const groupLabel = useId();
+  const own = value.occupation && !OCCUPATIONS.includes(value.occupation) ? value.occupation : "";
+  const [other, setOther] = useState(!!own);
+  const [text, setText] = useState(own);
   useEffect(() => {
     if (!matchMedia("(pointer: coarse)").matches) ref.current?.focus();
   }, []);
+  const pick = (occupation: string) => {
+    setOther(false);
+    onChange({ occupation: value.occupation === occupation ? null : occupation });
+  };
   return (
     <div className="space-y-5">
       <Input
@@ -104,11 +111,37 @@ export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: 
         </p>
         <div role="group" aria-labelledby={groupLabel} className="flex flex-wrap gap-1.5">
           {OCCUPATIONS.map((occupation) => (
-            <Chip key={occupation} on={value.occupation === occupation} onClick={() => onChange({ occupation: value.occupation === occupation ? null : occupation })}>
+            <Chip key={occupation} on={!other && value.occupation === occupation} onClick={() => pick(occupation)}>
               {occupation}
             </Chip>
           ))}
+          <Chip
+            on={other}
+            onClick={() => {
+              setOther(!other);
+              onChange({ occupation: other ? null : text.trim() || null });
+            }}
+          >
+            Other
+          </Chip>
         </div>
+        {/* Opened by a tap on Other, so it takes focus even on touch */}
+        {other && (
+          <Input
+            size="lg"
+            name="occupation"
+            aria-label="What do you do?"
+            placeholder="What do you do?"
+            value={text}
+            onChange={(e) => {
+              setText(e.target.value);
+              onChange({ occupation: e.target.value.trim() || null });
+            }}
+            maxLength={40}
+            autoFocus
+            className="mt-3"
+          />
+        )}
       </div>
     </div>
   );
@@ -145,39 +178,6 @@ export function BrandGrid({ brands, value, onChange, className }: { brands: Bran
   );
 }
 
-// Posts to tap, as a grid of 4:5 tiles; once `max` are picked the rest step back. `ground` is
-// the surface they sit on, so the picked ring's gap matches it: the page, or the welcome wall's
-// solid base-50 (a ring offset must be solid, or the ring shows through the gap)
-export function TasteGrid({ posts, value, onChange, max, ground = "white", className }: { posts: DashPost[]; value: string[]; onChange: (next: string[]) => void; max: number; ground?: "white" | "grey"; className?: string }) {
-  return (
-    <div className={cx("grid gap-2", className)}>
-      {posts.map((p) => {
-        const on = value.includes(p.shortCode);
-        const full = !on && value.length >= max;
-        return (
-          <button
-            key={p.shortCode}
-            type="button"
-            aria-pressed={on}
-            aria-label={p.hook}
-            disabled={full}
-            onClick={() => onChange(toggle(value, p.shortCode))}
-            className={cx(
-              "relative block aspect-4/5 w-full overflow-hidden rounded-lg bg-component outline-1 -outline-offset-1 outline-edge transition-[opacity,scale,box-shadow] duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.97]",
-              on && "ring-2 ring-primary-foreground ring-offset-2",
-              on && (ground === "grey" ? "ring-offset-base-50" : "ring-offset-page"),
-              full && "opacity-40",
-            )}
-          >
-            <Image src={p.cover} alt="" fill sizes="200px" className="object-cover" />
-            {on && <Tick className="absolute top-2 right-2 size-6" />}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 // A wall of posts at their own shapes, each tile rising in when the wall changes. Posts are
 // dealt to the shortest of three columns, as the feed's grid does, so the order reads across
 // the top row: the ones that come first are the ones you see first
@@ -204,36 +204,12 @@ export function Collage({ posts, className }: { posts: DashPost[]; className?: s
   );
 }
 
-export function LearnedChips({ posts, taste, max = 5, className }: { posts: DashPost[]; taste: string[]; max?: number; className?: string }) {
-  const chips = learnedChips(posts, taste, max);
-  if (!chips.length) return null;
-  return (
-    <ul className={cx("flex flex-wrap gap-1.5", className)} aria-label="What your picks say">
-      {chips.map((chip) => (
-        <li key={chip} className="welcome-chip rounded-full bg-card px-3 py-1.5 text-caption font-medium whitespace-nowrap text-primary-foreground">
-          {chip}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-// A small ring that fills as you pick
-export function Ring({ value, max, className }: { value: number; max: number; className?: string }) {
-  const r = 11;
-  const c = 2 * Math.PI * r;
-  return (
-    <svg viewBox="0 0 28 28" aria-hidden="true" className={cx("size-7 -rotate-90", className)}>
-      <circle cx="14" cy="14" r={r} fill="none" strokeWidth="3" className="stroke-border-strong" />
-      <circle cx="14" cy="14" r={r} fill="none" strokeWidth="3" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(1, value / max))} className="stroke-inverted-solid transition-[stroke-dashoffset] duration-300 ease-out-quint motion-reduce:transition-none" />
-    </svg>
-  );
-}
-
-// The end: the feed's new top six, fanned, and the way in
+// The end, alone in the middle of the page: the feed's new top six, fanned, and the way in. The
+// name is shown capitalised, however it was typed
 export function Done({ posts, draft, headingRef }: { posts: DashPost[]; draft: Draft; headingRef?: Ref<HTMLHeadingElement> }) {
   const top = rank(posts, draft).slice(0, 6);
-  const who = firstName(draft.name);
+  const first = firstName(draft.name);
+  const who = first.charAt(0).toLocaleUpperCase() + first.slice(1);
   return (
     <div className="welcome-rise flex flex-col items-center text-center">
       <div className="mb-8 flex h-32 items-start justify-center" aria-hidden="true">
@@ -247,9 +223,9 @@ export function Done({ posts, draft, headingRef }: { posts: DashPost[]; draft: D
           </span>
         ))}
       </div>
-      <Heading ref={headingRef} title={`${who ? `${who}, your` : "Your"} For you is ready.`} sub={`${posts.length} posts, the ones for you first.`} />
+      <Heading ref={headingRef} title={`You’re all set${who ? `, ${who}` : ""}.`} sub={`We’ve sorted ${posts.length} posts so the ones that fit you come first.`} />
       <Button isLink href="/dashboard" size="base" variant="default" className="mt-8 w-fit">
-        Open For you
+        Go to my feed
       </Button>
     </div>
   );

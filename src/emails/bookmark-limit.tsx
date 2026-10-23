@@ -12,6 +12,8 @@ export type BookmarkLimitProps = {
   saved?: Thumb[];
   price?: string;
   upgradeUrl?: string;
+  /** sendEmail's unsubscribe link (an optional email: sent with `optional`) */
+  unsubscribeUrl?: string;
 };
 
 export const getSubject = (limit = 5) => `You've saved ${limit} of ${limit} posts`;
@@ -30,11 +32,12 @@ export default function BookmarkLimit({
   saved = defaultSaved,
   price = '$9 a month',
   upgradeUrl = `${appUrl}/pricing`,
+  unsubscribeUrl,
 }: BookmarkLimitProps) {
   return (
     <Layout
       preview="That's the Free plan limit. Your saved posts stay put."
-      footer={<Footer reason={<>You're getting this because {email} is on the Curatit Free plan.</>} />}
+      footer={<Footer reason={<>You're getting this because {email} is on the Curatit Free plan.</>} unsubscribeUrl={unsubscribeUrl} />}
     >
       <H1>You've saved {limit} of {limit} posts</H1>
       <Body2 style={{ marginTop: '12px' }}>
@@ -82,4 +85,5 @@ export default function BookmarkLimit({
 
 BookmarkLimit.PreviewProps = {
   email: 'sara@studio.co',
+  unsubscribeUrl: 'https://www.curatit.app/unsubscribe',
 } satisfies BookmarkLimitProps;

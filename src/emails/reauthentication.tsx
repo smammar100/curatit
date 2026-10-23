@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Block, Body2, Caption, Code, Footer, H1, Layout } from './_components/layout';
+import { appUrl } from './_components/tokens';
 
 // Supabase Auth: Reauthentication. Sent when someone changes their password with
 // Secure password change on, or does anything else that asks for a fresh code.
@@ -21,7 +22,7 @@ export default function Reauthentication({ email, code, expiresIn = '1 hour' }: 
       <Body2 style={{ marginTop: '12px' }}>Enter this code in Curatit to confirm a change to your account.</Body2>
 
       <Block pt={24}>
-        <Code code={code} />
+        <Code code={code} copyUrl={`${appUrl}/code#${code}`} />
       </Block>
 
       <Caption style={{ marginTop: '28px' }}>
