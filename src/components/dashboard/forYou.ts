@@ -34,35 +34,6 @@ export function rank<P extends DashPost>(posts: P[], a: Taste, library: DashPost
     .map((x) => x.p);
 }
 
-const FORMAT_NAMES = { carousel: "Carousels", video: "Videos", static: "Single images" } as const;
-
-// What the taste picks say, most common first: industries, brands, and a format once two picks
-// share it
-export function learned(posts: DashPost[], taste: string[]) {
-  const liked = taste.flatMap((code) => posts.find((p) => p.shortCode === code) ?? []);
-  const tally = <T,>(items: T[], key: (item: T) => string) => {
-    const counts = new Map<string, { item: T; n: number }>();
-    for (const item of items) {
-      const k = key(item);
-      counts.set(k, { item, n: (counts.get(k)?.n ?? 0) + 1 });
-    }
-    return [...counts.values()].sort((a, b) => b.n - a.n);
-  };
-  return {
-    categories: tally(liked, (p) => p.category.slug).map(({ item }) => ({ slug: item.category.slug, name: item.category.name })),
-    brands: tally(liked, (p) => p.brand.slug).map(({ item }) => ({ slug: item.brand.slug, name: item.brand.name })),
-    formats: tally(liked, (p) => p.format)
-      .filter(({ n }) => n >= 2)
-      .map(({ item }) => FORMAT_NAMES[item.format]),
-  };
-}
-
-// The chips the flow shows as you tap: two industries, two brands, one format
-export function learnedChips(posts: DashPost[], taste: string[], max = 5) {
-  const l = learned(posts, taste);
-  return [...l.categories.slice(0, 2).map((c) => c.name), ...l.brands.slice(0, 2).map((b) => b.name), ...l.formats.slice(0, 1)].slice(0, max);
-}
-
 // Keeps the order but never lets a brand come back within `gap` places while another brand could
 // go there instead, so one brand's run of posts (a new import, or a brand the answers favour) can't
 // fill a row. A brand with nothing else left to place keeps its order at the end
