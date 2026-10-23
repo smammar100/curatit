@@ -2,7 +2,11 @@
 
 // The auth forms, each driven by a server action in src/app/auth/actions.ts. The pages are
 // static, so ?next= (where to go after signing in) and ?error= (a link that failed in
-// /auth/callback) are read from the address once the page has loaded.
+// /auth/callback) are read from the address once the page has loaded. Since 2026-10-23 every
+// piece is the system's: the fields are AuthField (a Field holding an Input), the server's
+// message a danger Notice, the links TextLinks (inline in the footers and inside notes, quiet for
+// "Forgot password?" at the label's right), the words on the tokens and the library's semibold
+// where they were medium. The validation, the copy and the analytics are as they were.
 import {
   useActionState,
   useEffect,
@@ -11,10 +15,10 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import Link from "next/link";
 // Fundations
 import Button from "@/components/fundations/elements/Button";
 import Text from "@/components/fundations/elements/Text";
+import TextLink from "@/components/fundations/elements/TextLink";
 // Components
 import {
   requestPasswordReset,
@@ -32,16 +36,12 @@ import {
   passwordProblem,
   SIGNUP_EMAIL_KEY,
 } from "@/lib/auth";
+import { fontWeights } from "@/lib/font-weight";
 import { SUPPORT_MAILTO } from "@/lib/site";
 import { AuthField, AuthNotice } from "./AuthParts";
 import PasswordField from "./PasswordField";
 
-// The colour holds on hover (5:1 or more on the card in both themes; any accent step that darkens
-// it in light mode dims it in dark mode), and the underline marks the hover. The focus ring is
-// the site's, as on the navigation's links
-const focusRing =
-  "rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus";
-const linkClass = `font-medium text-brand-foreground underline-offset-2 hover:underline ${focusRing}`;
+const semibold = { fontVariationSettings: fontWeights.semibold };
 
 function useParam(name: string) {
   const [value, setValue] = useState<string | null>(null);
@@ -60,10 +60,10 @@ function Next() {
 function Heading({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="text-center text-balance">
-      <Text tag="h1" variant="h5" className="text-primary-foreground">
+      <Text tag="h1" variant="h5" className="text-foreground">
         {title}
       </Text>
-      <Text tag="p" variant="bodySM" className="mt-2 text-secondary-foreground">
+      <Text tag="p" variant="bodySM" className="mt-2 text-muted-foreground">
         {children}
       </Text>
     </div>
@@ -75,7 +75,8 @@ function Footer({ children }: { children: ReactNode }) {
     <Text
       tag="p"
       variant="captionLG"
-      className="mt-5 text-center font-medium text-secondary-foreground"
+      className="mt-5 text-center text-muted-foreground"
+      style={semibold}
     >
       {children}
     </Text>
@@ -164,7 +165,7 @@ function Submit({
 }) {
   return (
     <Button
-      // The default step, 36px, the same as the fields above it
+      // The compact step, 28px, the same as the fields above it
       size="lg"
       variant="default"
       type="submit"
@@ -215,23 +216,17 @@ export function SignInForm() {
           autoComplete="current-password"
           required
           aside={
-            <Link
-              href="/forgot-password"
-              // 16px of text, given 24px to tap without moving the row
-              className={`-my-1 py-1 text-caption-lg font-medium text-secondary-foreground transition-colors duration-150 ease-out-quint hover:text-brand-foreground ${focusRing}`}
-            >
+            // The label's own size (Field sets it on the label alone)
+            <TextLink variant="quiet" href="/forgot-password" className="text-body">
               Forgot password?
-            </Link>
+            </TextLink>
           }
         />
         {error && <AuthNotice>{error}</AuthNotice>}
         <Submit pending={pending} idle="Sign in" busy="Signing in…" />
       </form>
       <Footer>
-        Don&apos;t have an account?{" "}
-        <Link href="/signup" className={linkClass}>
-          Sign up
-        </Link>
+        Don&apos;t have an account? <TextLink href="/signup">Sign up</TextLink>
       </Footer>
     </>
   );
@@ -298,10 +293,7 @@ export function SignUpForm() {
         />
       </form>
       <Footer>
-        Already have an account?{" "}
-        <Link href="/signin" className={linkClass}>
-          Sign in
-        </Link>
+        Already have an account? <TextLink href="/signin">Sign in</TextLink>
       </Footer>
     </>
   );
@@ -309,18 +301,10 @@ export function SignUpForm() {
 
 // Under the email on sign-up when the address already has an account: sign in, or write to us
 function EmailTaken() {
-  const link = `font-medium underline underline-offset-2 ${focusRing}`;
   return (
     <span>
-      {authMessage("email_exists")}{" "}
-      <Link href="/signin" className={link}>
-        Sign in
-      </Link>{" "}
-      instead, or{" "}
-      <a href={SUPPORT_MAILTO} className={link}>
-        contact support
-      </a>
-      .
+      {authMessage("email_exists")} <TextLink href="/signin">Sign in</TextLink> instead, or{" "}
+      <TextLink href={SUPPORT_MAILTO}>contact support</TextLink>.
     </span>
   );
 }
@@ -336,8 +320,10 @@ function CheckEmail({ email }: { email: string }) {
     <>
       <Heading title="Check your email">
         We sent a link to{" "}
-        <span className="font-medium text-primary-foreground">{email}</span>. Open it in
-        this browser to finish signing up.
+        <span className="text-foreground" style={semibold}>
+          {email}
+        </span>
+        . Open it in this browser to finish signing up.
       </Heading>
       <form
         action={(form) => {
@@ -370,10 +356,18 @@ function CheckEmail({ email }: { email: string }) {
         </Button>
       </form>
       <Footer>
-        Wrong address? {/* A full load, so the form starts empty */}
-        <a href="/signup" className={linkClass}>
+        Wrong address?{" "}
+        {/* A full load (not a client-side navigation to the page that's already here), so the
+            form starts empty */}
+        <TextLink
+          href="/signup"
+          onClick={(event) => {
+            event.preventDefault();
+            location.assign("/signup");
+          }}
+        >
           Start again
-        </a>
+        </TextLink>
       </Footer>
     </>
   );
@@ -390,13 +384,13 @@ export function ForgotPasswordForm() {
       <>
         <Heading title="Check your email">
           If there&apos;s an account for{" "}
-          <span className="font-medium text-primary-foreground">{state.sent}</span>, a
-          link to choose a new password is on its way. Open it in this browser.
+          <span className="text-foreground" style={semibold}>
+            {state.sent}
+          </span>
+          , a link to choose a new password is on its way. Open it in this browser.
         </Heading>
         <Footer>
-          <Link href="/signin" className={linkClass}>
-            Back to sign in
-          </Link>
+          <TextLink href="/signin">Back to sign in</TextLink>
         </Footer>
       </>
     );
@@ -422,10 +416,7 @@ export function ForgotPasswordForm() {
         <Submit pending={pending} idle="Send reset link" busy="Sending…" />
       </form>
       <Footer>
-        Remembered it?{" "}
-        <Link href="/signin" className={linkClass}>
-          Sign in
-        </Link>
+        Remembered it? <TextLink href="/signin">Sign in</TextLink>
       </Footer>
     </>
   );
@@ -471,9 +462,7 @@ export function ConfirmLinkForm() {
           Open the button in the email again, or copy the whole link into your browser.
         </Heading>
         <Footer>
-          <Link href="/signin" className={linkClass}>
-            Back to sign in
-          </Link>
+          <TextLink href="/signin">Back to sign in</TextLink>
         </Footer>
       </>
     );
@@ -489,9 +478,7 @@ export function ConfirmLinkForm() {
         <Submit pending={pending} waiting={!link} idle={copy.button} busy={copy.busy} />
       </form>
       <Footer>
-        <Link href="/signin" className={linkClass}>
-          Back to sign in
-        </Link>
+        <TextLink href="/signin">Back to sign in</TextLink>
       </Footer>
     </>
   );
@@ -522,12 +509,7 @@ export function ResetPasswordForm() {
             {error === authMessage("session_missing") && (
               <>
                 {" "}
-                <Link
-                  href="/forgot-password"
-                  className={`font-medium underline underline-offset-2 ${focusRing}`}
-                >
-                  Get a new link
-                </Link>
+                <TextLink href="/forgot-password">Get a new link</TextLink>
               </>
             )}
           </AuthNotice>
@@ -535,9 +517,7 @@ export function ResetPasswordForm() {
         <Submit pending={pending} idle="Save password" busy="Saving…" />
       </form>
       <Footer>
-        <Link href="/signin" className={linkClass}>
-          Back to sign in
-        </Link>
+        <TextLink href="/signin">Back to sign in</TextLink>
       </Footer>
     </>
   );

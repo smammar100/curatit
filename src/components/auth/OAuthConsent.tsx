@@ -7,7 +7,10 @@
 // line, what allowing lets the app do and what it can't, who's signed in, where the browser
 // goes next. The details come from Supabase by the authorization id in the address; allowing
 // or denying returns the address to send the browser on to. Signed-out visitors go to sign-in
-// and come back.
+// and come back. Since 2026-10-23 on the system's tokens: the marks on the muted tint with the one
+// stroke, the check on the ink, the permissions in an inner tile (20px corners, the muted tint,
+// the first shadow step), the headings in the muted ink at the library's semibold, the error a
+// danger Notice, Allow and Deny the system's Buttons as before.
 
 import { useEffect, useState } from "react";
 import Symbol from "@/components/assets/Symbol";
@@ -15,8 +18,11 @@ import Button from "@/components/fundations/elements/Button";
 import Text from "@/components/fundations/elements/Text";
 import Check from "@/components/fundations/icons/Check";
 import Plugs from "@/components/fundations/icons/Plugs";
+import { fontWeights } from "@/lib/font-weight";
 import { createClient } from "@/utils/supabase/client";
 import { AuthNotice } from "./AuthParts";
+
+const semibold = { fontVariationSettings: fontWeights.semibold };
 
 type Details = {
   authorization_id: string;
@@ -110,7 +116,7 @@ export default function OAuthConsent() {
         className="mb-6 flex items-center justify-center gap-3"
         aria-hidden="true"
       >
-        <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-component ring-1 ring-edge">
+        <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-muted ring-1 ring-border">
           {details?.client.logo_uri ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -119,19 +125,19 @@ export default function OAuthConsent() {
               className="size-full object-cover"
             />
           ) : (
-            <Plugs className="size-5 text-tertiary-foreground" />
+            <Plugs className="size-5 text-muted-foreground" />
           )}
         </span>
         <span className="flex items-center gap-1">
-          <span className="h-px w-5 bg-border-strong" />
-          <span className="flex size-5 items-center justify-center rounded-full bg-inverted-solid text-on-inverted-foreground">
+          <span className="h-px w-5 bg-border" />
+          <span className="flex size-5 items-center justify-center rounded-full bg-foreground text-background">
             <Check className="size-3" />
           </span>
-          <span className="h-px w-5 bg-border-strong" />
+          <span className="h-px w-5 bg-border" />
         </span>
-        <span className="flex size-12 items-center justify-center rounded-full bg-component ring-1 ring-edge">
+        <span className="flex size-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
           <Symbol
-            className="size-6 text-primary-foreground"
+            className="size-6 text-foreground"
             aria-hidden="true"
           />
         </span>
@@ -141,7 +147,7 @@ export default function OAuthConsent() {
       <Text
         tag="h1"
         variant="h5"
-        className="text-center text-balance text-primary-foreground"
+        className="text-center text-balance text-foreground"
       >
         {details
           ? `${app} wants to use Curatit as you`
@@ -157,7 +163,7 @@ export default function OAuthConsent() {
         <Text
           tag="p"
           variant="bodySM"
-          className="mt-4 text-center text-secondary-foreground"
+          className="mt-4 text-center text-muted-foreground"
         >
           Checking the request…
         </Text>
@@ -165,40 +171,32 @@ export default function OAuthConsent() {
 
       {details && (
         <>
-          <div className="mt-6 rounded-xl bg-card p-4 shadow-xs">
-            <Text
-              tag="p"
-              variant="captionLG"
-              className="font-medium tracking-wider text-secondary-foreground uppercase"
-            >
+          <div className="mt-6 rounded-[20px] bg-muted p-4 shadow-surface-1">
+            <Text tag="p" variant="captionLG" className="text-muted-foreground" style={semibold}>
               Allowing lets it
             </Text>
             <ul className="mt-2 space-y-1.5">
               {ALLOWS.map((line) => (
                 <li
                   key={line}
-                  className="flex items-start gap-2 text-body-sm text-primary-foreground"
+                  className="flex items-start gap-2 text-body-sm text-foreground"
                 >
-                  <Check className="mt-1 size-3.5 shrink-0 text-tertiary-foreground" />
+                  <Check className="mt-1 size-3.5 shrink-0 text-muted-foreground" />
                   {line}
                 </li>
               ))}
             </ul>
-            <Text
-              tag="p"
-              variant="captionLG"
-              className="mt-4 font-medium tracking-wider text-secondary-foreground uppercase"
-            >
+            <Text tag="p" variant="captionLG" className="mt-4 text-muted-foreground" style={semibold}>
               It can never
             </Text>
             <ul className="mt-2 space-y-1.5">
               {NEVER.map((line) => (
                 <li
                   key={line}
-                  className="flex items-start gap-2 text-body-sm text-secondary-foreground"
+                  className="flex items-start gap-2 text-body-sm text-muted-foreground"
                 >
                   <span
-                    className="mt-2 size-1 shrink-0 rounded-full bg-tertiary-foreground"
+                    className="mt-2 size-1 shrink-0 rounded-full bg-muted-foreground"
                     aria-hidden="true"
                   />
                   {line}
@@ -232,30 +230,30 @@ export default function OAuthConsent() {
             </Button>
           </div>
 
-          <dl className="mt-5 space-y-1 text-caption-lg text-secondary-foreground">
+          <dl className="mt-5 space-y-1 text-caption-lg text-muted-foreground">
             <div className="flex justify-between gap-4">
               <dt>Signed in as</dt>
-              <dd className="truncate text-primary-foreground">
+              <dd className="truncate text-foreground">
                 {details.user.email ?? "you"}
               </dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt>Then goes to</dt>
-              <dd className="truncate text-primary-foreground">
+              <dd className="truncate text-foreground">
                 {safeHost(details.redirect_uri)}
               </dd>
             </div>
             {appHost && (
               <div className="flex justify-between gap-4">
                 <dt>App website</dt>
-                <dd className="truncate text-primary-foreground">{appHost}</dd>
+                <dd className="truncate text-foreground">{appHost}</dd>
               </div>
             )}
           </dl>
           <Text
             tag="p"
             variant="captionLG"
-            className="mt-4 text-center text-pretty text-secondary-foreground"
+            className="mt-4 text-center text-pretty text-muted-foreground"
           >
             Access lasts until you revoke it from your account. Curatit never
             shares your password with the app.

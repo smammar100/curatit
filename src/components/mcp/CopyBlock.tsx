@@ -1,27 +1,36 @@
 "use client";
 
 // A configuration snippet with a copy button: the one piece of script on the connect page.
-// The button confirms with a check for a moment (and a status line for screen readers).
+// The button confirms with a check for a moment, and a status line for screen readers.
 // `tone="light"` is for a snippet inside a white card (the MCP landing page's install card):
-// a pale field with a hairline instead of the dark slab, and long lines wrap.
+// the muted tile with a hairline instead of the inverted slab, and long lines wrap.
+//
+// Since 2026-10-23 the copy button is the system's ghost Button (icon-only, named for screen
+// readers) and the dark tone is the ink itself, as the Toast draws it (bg-foreground, the page's
+// colour on it, so it inverts with the theme). Inside the slab the ink and the page swap places
+// through two variables set on the button's wrapper, the way Button's accent variant sets its
+// own, so the ghost button's words and hover read on the slab in both themes.
 
 import { useEffect, useRef, useState } from "react";
+import Button from "@/components/fundations/elements/Button";
 import Check from "@/components/fundations/icons/Check";
 import Copy from "@/components/fundations/icons/Copy";
 import { cx } from "@/lib/cx";
 
 const tones = {
-  // The standout slab, dark in both themes
+  // The inverted slab: the ink, with the page's colour on it
   dark: {
-    pre: "bg-standout text-on-standout-primary-foreground",
+    pre: "bg-foreground text-background",
+    // The wrapper hands the slab's two colours to the button swapped (--ink and --ground are
+    // read off the page one level up, since a variable can't be set from itself); the hover
+    // tint is the page's colour at 12%, which reads on the slab in both themes
     button:
-      "bg-paper/10 text-on-standout-primary-foreground hover:bg-paper/20 focus-visible:outline-brand-border-focus",
+      "[--foreground:var(--ground)] [--background:var(--ink)] [--muted-foreground:color-mix(in_oklab,var(--ground)_70%,transparent)] [--hover:color-mix(in_oklab,var(--ground)_12%,transparent)] [--active:color-mix(in_oklab,var(--ground)_18%,transparent)]",
   },
   // Wraps rather than scrolls: a narrow card would otherwise hide most of a command
   light: {
-    pre: "bg-card text-primary-foreground ring-1 ring-border-default whitespace-pre-wrap [overflow-wrap:anywhere]",
-    button:
-      "text-secondary-foreground hover:bg-component-hover hover:text-primary-foreground focus-visible:outline-brand-border-focus",
+    pre: "bg-muted text-foreground shadow-surface-1 whitespace-pre-wrap [overflow-wrap:anywhere]",
+    button: "",
   },
 };
 
@@ -49,24 +58,24 @@ export default function CopyBlock({ code, label, tone = "dark" }: { code: string
     }
   };
   return (
-    <div className="relative">
-      <pre className={cx("overflow-x-auto rounded-lg px-4 py-3.5 pr-14 font-mono text-body-sm leading-relaxed", tones[tone].pre)}>
+    <div className="relative [--ground:var(--background)] [--ink:var(--foreground)]">
+      <pre className={cx("overflow-x-auto rounded-[12px] px-4 py-3.5 pr-14 font-mono text-body-sm leading-relaxed", tones[tone].pre)}>
         <code>{code}</code>
       </pre>
-      <button
-        type="button"
-        onClick={copy}
-        aria-label={copied ? `Copied ${label}` : `Copy ${label}`}
-        className={cx(
-          "absolute top-2 right-2 flex size-9 items-center justify-center rounded-md transition-colors duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-2",
-          tones[tone].button,
-        )}
-      >
-        <span className="grid">
-          <Copy className={cx(icon, copied ? gone : shown)} />
-          <Check className={cx(icon, copied ? shown : gone)} />
-        </span>
-      </button>
+      <span className={cx("absolute top-2 right-2", tones[tone].button)}>
+        <Button
+          variant="transparent"
+          size="sm"
+          iconOnly
+          onClick={copy}
+          aria-label={copied ? `Copied ${label}` : `Copy ${label}`}
+        >
+          <span className="grid">
+            <Copy className={cx(icon, copied ? gone : shown)} />
+            <Check className={cx(icon, copied ? shown : gone)} />
+          </span>
+        </Button>
+      </span>
       <span role="status" className="sr-only">
         {copied ? "Copied" : ""}
       </span>

@@ -7,6 +7,9 @@
 // another post; the whole collage leans a little toward the cursor. On a touch screen a tap flips
 // the covers around it, and while nobody's touching it a cover turns over now and then by itself.
 // Purely decorative: hidden from assistive tech, and the page's own text says what happened.
+// Since 2026-10-23 a face is an image tile on the system's tokens: 12px corners, the muted tint
+// under a cover that hasn't loaded, the one stroke inside its edge. The lift, the lens and the
+// flip (.nf-* in global.css) are as they were.
 import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type Ref } from "react";
 import Image from "next/image";
 import { cx } from "@/lib/cx";
@@ -40,7 +43,7 @@ function useReducedMotion() {
 
 const Face = memo(function Face({ src, back }: { src: string | undefined; back?: boolean }) {
   return (
-    <div className={cx("nf-face absolute inset-0 overflow-hidden rounded bg-base-100 outline-1 -outline-offset-1 outline-edge", back && "nf-back")}>
+    <div className={cx("nf-face absolute inset-0 overflow-hidden rounded-[12px] bg-muted outline-1 -outline-offset-1 outline-border", back && "nf-back")}>
       {src && <Image src={src} alt="" fill sizes="(min-width: 1024px) 80px, 9vw" quality={60} draggable={false} className="object-cover" />}
     </div>
   );

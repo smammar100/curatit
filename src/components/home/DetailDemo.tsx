@@ -8,10 +8,15 @@ import { easeOut, introItem, introScale, useIntro, useLoop } from "./DemoParts";
 import { detail } from "./demo";
 import { usePost } from "./HomePosts";
 import { cx } from "@/lib/cx";
+import { fontWeights } from "@/lib/font-weight";
 
 // A carousel as its strip of slides, each labelled with its role; pick one to see it large.
 // While on screen it steps through the slides on its own; clicking a slide takes over.
 // Fills its box (HowItWorks gives every illustration the same one).
+// Since 2026-10-23 the slides are drawn as the post page draws its thumbnails (10px corners,
+// the one stroke, a 2px ring of the ink on the one showing) and the large slide takes the tile
+// corner with the ladder's shadow; the caption pill is a raised surface. The slide buttons stay
+// real buttons (aria-pressed), since they're images, not labels.
 export default function DetailDemo() {
   const [slide, setSlide] = useState(0);
   const post = usePost(detail.post);
@@ -42,7 +47,7 @@ export default function DetailDemo() {
                 setSlide(i);
               }}
               className={cx(
-                "relative block w-full rounded transition-opacity duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus",
+                "relative block w-full rounded-[10px] transition-opacity duration-150 ease-out-quint focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]",
                 i === slide ? "opacity-100" : "opacity-60 hover:opacity-100",
               )}
             >
@@ -50,14 +55,14 @@ export default function DetailDemo() {
                 post={post}
                 slide={i}
                 sizes="56px"
-                className="rounded"
+                className="rounded-[10px]"
               />
               {/* One ring that glides to the selected slide */}
               {i === slide && (
                 <m.span
                   layoutId={ringId}
                   aria-hidden="true"
-                  className="absolute -inset-1 rounded-md ring-2 ring-primary-foreground"
+                  className="absolute -inset-1 rounded-[14px] ring-2 ring-foreground"
                   transition={
                     reduceMotion
                       ? { duration: 0 }
@@ -91,17 +96,17 @@ export default function DetailDemo() {
               post={post}
               slide={slide}
               sizes="260px"
-              className="h-full w-full rounded shadow [&_img]:object-top"
+              className="h-full w-full rounded-[12px] shadow-surface-2 [&_img]:object-top"
             />
           </m.div>
         </AnimatePresence>
         {/* The slide's role and count, a pill resting on the image's bottom edge */}
         <m.p
           variants={introItem}
-          className="absolute inset-x-0 bottom-3 z-10 mx-auto w-fit rounded-md bg-modal/90 px-2.5 py-1 text-caption-lg text-secondary-foreground shadow-sm backdrop-blur-sm"
+          className="absolute inset-x-0 bottom-3 z-10 mx-auto flex h-7 w-fit items-center rounded-[20px] bg-surface-3/90 px-3 text-caption-lg text-muted-foreground shadow-surface-2 backdrop-blur-sm"
           aria-live={playing ? "off" : "polite"}
         >
-          <span className="font-medium text-primary-foreground">
+          <span className="text-foreground" style={{ fontVariationSettings: fontWeights.semibold }}>
             {detail.sequence[slide]}
           </span>{" "}
           · {slide + 1} / {count}

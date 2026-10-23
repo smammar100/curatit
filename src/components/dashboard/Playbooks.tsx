@@ -7,11 +7,15 @@
 // it (typeNamed in search.ts), and the grid shows the result. Laid out after Cosmos's Explore (its
 // curated collections) at the owner's request, after a first build where every type was a full
 // row of posts. A row of hook chips under the cards was built and taken out at the owner's request.
+// Since 2026-10-23 on the system's tokens: the strip a 12px tile on the grey mat with the one
+// stroke inside its edge, the words in the dashboard's roles, the arrows compact Buttons, and the
+// card's focus the one ring. Each card stays a button (a Card molecule can't be pressed).
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Button from "@/components/fundations/elements/Button";
 import CaretLeft from "@/components/fundations/icons/CaretLeft";
 import CaretRight from "@/components/fundations/icons/CaretRight";
+import { fontWeights } from "@/lib/font-weight";
 import { spread } from "./forYou";
 import type { DashPost } from "./types";
 
@@ -39,10 +43,10 @@ export default function Playbooks({ posts, onPick }: { posts: DashPost[]; onPick
         <Scroller
           heading={
             <>
-              <h2 id="playbooks-types" className="font-display text-display font-light text-primary-foreground">
+              <h2 id="playbooks-types" className="font-display text-display font-light text-foreground">
                 Playbooks
               </h2>
-              <p className="mt-1 text-body text-secondary-foreground">The kinds of post the breakdowns keep finding, across brands</p>
+              <p className="mt-1 text-body text-muted-foreground">The kinds of post the breakdowns keep finding, across brands</p>
             </>
           }
           label="playbooks"
@@ -66,11 +70,11 @@ function TypeCard({ group, priority, onPick }: { group: Group; priority: boolean
     <button
       type="button"
       onClick={onPick}
-      className="group block w-full cursor-pointer rounded-xl text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus"
+      className="group block w-full cursor-pointer rounded-[12px] text-left focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]"
     >
-      <span className="grid grid-cols-3 gap-0.5 overflow-hidden rounded-xl bg-card">
+      <span className="relative grid grid-cols-3 gap-0.5 overflow-hidden rounded-[12px] bg-card after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:outline-1 after:-outline-offset-1 after:outline-border">
         {covers.map((post) => (
-          <span key={post.shortCode} className="relative aspect-4/5 overflow-hidden bg-component">
+          <span key={post.shortCode} className="relative aspect-4/5 overflow-hidden bg-muted">
             <Image
               src={post.cover}
               alt=""
@@ -82,8 +86,10 @@ function TypeCard({ group, priority, onPick }: { group: Group; priority: boolean
           </span>
         ))}
       </span>
-      <span className="mt-2.5 block truncate text-subtitle font-medium text-primary-foreground">{group.name}</span>
-      <span className="mt-0.5 block truncate text-caption text-secondary-foreground tabular-nums">
+      <span className="mt-2.5 block truncate text-subtitle text-foreground" style={{ fontVariationSettings: fontWeights.semibold }}>
+        {group.name}
+      </span>
+      <span className="mt-0.5 block truncate text-caption text-muted-foreground tabular-nums">
         {group.posts.length} posts from {group.brands} brands
       </span>
     </button>
@@ -122,19 +128,19 @@ function Scroller({ heading, label, children }: { heading: ReactNode; label: str
       <div className="mb-4 flex items-end gap-4">
         <div className="min-w-0 flex-1">{heading}</div>
         {(more.left || more.right) && (
-        <div className="hidden shrink-0 gap-1 sm:flex">
-          <Button size="sm" variant="secondary" shape="pill" iconOnly aria-label={`Back through the ${label}`} disabled={!more.left} onClick={() => page(-1)}>
-            <CaretLeft className="size-3.5" />
-          </Button>
-          <Button size="sm" variant="secondary" shape="pill" iconOnly aria-label={`More ${label}`} disabled={!more.right} onClick={() => page(1)}>
-            <CaretRight className="size-3.5" />
-          </Button>
-        </div>
+          <div className="hidden shrink-0 gap-1 sm:flex">
+            <Button size="sm" variant="secondary" iconOnly aria-label={`Back through the ${label}`} disabled={!more.left} onClick={() => page(-1)}>
+              <CaretLeft className="size-3.5" />
+            </Button>
+            <Button size="sm" variant="secondary" iconOnly aria-label={`More ${label}`} disabled={!more.right} onClick={() => page(1)}>
+              <CaretRight className="size-3.5" />
+            </Button>
+          </div>
         )}
       </div>
       <ul
         ref={ref}
-        className="scrollbar-hide -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:scroll-px-6 sm:px-6 lg:gap-5"
+        className="scrollbar-hide -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 py-1 sm:-mx-6 sm:scroll-px-6 sm:px-6 lg:gap-5"
         style={{ maskImage: mask, WebkitMaskImage: mask }}
       >
         {children}

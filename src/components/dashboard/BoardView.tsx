@@ -7,15 +7,23 @@
 // opens up on hover or focus, and "Add a note" appears on hover. The name, description and notes
 // edit in place. Everything comes from BoardsProvider, so changes show at once and are written
 // in the background.
+//
+// Since 2026-10-23 it is built from the system: Share is a Dialog (the link in an Input beside
+// Copy, Open the link and Stop sharing, or Create link) rather than a popover beside its button,
+// and Delete asks in an alertdialog Dialog with focus on Cancel, opened once More's menu has
+// closed so focus comes back to More after. The wall's tiles sit on 10px corners, the brand label
+// and the note on 10px tiles of the page's colour, the empty board and the missing board are
+// EmptyStates, and the loading shape is the Skeleton atom. The name, description and notes keep
+// their own text-in-place editor (Editable): the name is the display serif, and the note sits on
+// its own label over the cover, so Input's 28px pill would turn them back into a form. It's set
+// as the field recipe while editing (the card surface, the brand ring).
 import {
   useEffect,
-  useId,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
   useSyncExternalStore,
-  type MouseEvent as ReactMouseEvent,
 } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -23,18 +31,22 @@ import { useRouter } from "next/navigation";
 // Fundations
 import Button from "@/components/fundations/elements/Button";
 import Input from "@/components/fundations/elements/Input";
+import Skeleton from "@/components/fundations/elements/Skeleton";
 import TextLink from "@/components/fundations/elements/TextLink";
+import Dialog from "@/components/fundations/molecules/Dialog";
+import EmptyState from "@/components/fundations/molecules/EmptyState";
 import Menu, { MenuItem, MenuSeparator } from "@/components/fundations/molecules/Menu";
 import BrandName from "@/components/home/BrandName";
 import { cx } from "@/lib/cx";
+import { fontWeights } from "@/lib/font-weight";
+import { exitFallbackMs, spring } from "@/lib/springs";
 import { NAME_MAX, SaveMenu, useBoards } from "./boards";
 import { feedHref } from "./Feed";
 import { postHref, ratio, rememberOpener } from "./Grid";
 import Header from "./Header";
 import { DESCRIPTION_MAX } from "./NewBoardDialog";
-import { Block, GridSkeleton } from "./Skeleton";
+import { GridSkeleton } from "./Skeleton";
 import type { Board, DashPost } from "./types";
-import { usePopover } from "./usePopover";
 
 export const boardHref = (id: string) => `/dashboard/b/${id}`;
 export const shareHref = (token: string) => `/s/${token}`;
@@ -50,6 +62,8 @@ const NOTE_MAX = 280;
 // Tiles aim for this width; the column count is however many fit (two at least)
 const TARGET = 210;
 const GAP = 8;
+
+const semibold = { fontVariationSettings: fontWeights.semibold };
 
 // "2 hours ago"
 const relative = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
@@ -94,7 +108,16 @@ export default function BoardView({ id }: { id: string }) {
         {status === "loading" ? (
           <BoardSkeleton />
         ) : !board ? (
-          <Message title="This board isn’t here" body="It may have been deleted, or it belongs to someone else." action="Back to Saved" href={feedHref("Saved")} />
+          <EmptyState
+            className="py-24"
+            title="This board isn’t here"
+            description="It may have been deleted, or it belongs to someone else."
+            action={
+              <Button isLink href={feedHref("Saved")} size="sm" variant="muted">
+                Back to Saved
+              </Button>
+            }
+          />
         ) : (
           <>
             <header className="pt-2 pb-6">
@@ -105,7 +128,7 @@ export default function BoardView({ id }: { id: string }) {
               {/* The name and the actions share a row; the rest of the header hangs under the name */}
               <div className="mt-1 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
                 <div className="min-w-0 flex-1">
-                  <h1 className="-mx-2 font-display text-display font-light text-balance text-primary-foreground">
+                  <h1 className="-mx-2 font-display text-display font-light text-balance text-foreground">
                     <Editable
                       value={board.name}
                       editing={editing === "name"}
@@ -117,7 +140,7 @@ export default function BoardView({ id }: { id: string }) {
                   </h1>
                   {/* Only when there is one; More has "Add a description" */}
                   {(board.description || editing === "description") && (
-                    <div className="-mx-2 mt-1.5 max-w-2xl text-subtitle text-pretty text-secondary-foreground">
+                    <div className="-mx-2 mt-1.5 max-w-2xl text-subtitle text-pretty text-muted-foreground">
                       <Editable
                         value={board.description ?? ""}
                         editing={editing === "description"}
@@ -128,13 +151,12 @@ export default function BoardView({ id }: { id: string }) {
                       />
                     </div>
                   )}
-                  <p className="mt-2 text-body text-secondary-foreground tabular-nums">
+                  <p className="mt-2 text-body text-muted-foreground tabular-nums">
                     {items.length} {items.length === 1 ? "post" : "posts"} · Updated {ago(board.updatedAt)}
                     {board.shareToken && " · Shared"}
                   </p>
                 </div>
-                {/* Share and More: the dashboard's secondary pills (Button lg), like the header's
-                    Create, each opening a popover */}
+                {/* Share and More: the dashboard's secondary pills, like the header's Create */}
                 <div className="flex shrink-0 items-center gap-2">
                   <SharePanel board={board} />
                   <MoreMenu board={board} onRename={() => setEditing("name")} onDescribe={() => setEditing("description")} />
@@ -207,14 +229,14 @@ function Tile({ board, post, note, sizes }: { board: Board; post: DashPost; note
         href={postHref(post.shortCode)}
         scroll={false}
         onClick={rememberOpener}
-        className="relative block overflow-hidden rounded-sm bg-component"
+        className="relative block overflow-hidden rounded-[10px] bg-muted focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]"
         style={{ aspectRatio: ratio(post) }}
       >
         <Image src={post.cover} alt={post.hook} fill sizes={sizes} className="object-cover" />
       </Link>
       <div className="pointer-events-none absolute inset-0 flex flex-col justify-between gap-2 p-2">
         <div className={cx("flex items-start justify-between gap-2", reveal)}>
-          <span className="min-w-0 rounded-md bg-page/95 px-2 py-1 shadow-sm">
+          <span className="min-w-0 rounded-[10px] bg-background/95 px-2 py-1 shadow-sm">
             <BrandName brand={post.brand} />
           </span>
           <SaveMenu post={post.shortCode} tone="overlay" className="pointer-events-auto shrink-0" />
@@ -223,7 +245,7 @@ function Tile({ board, post, note, sizes }: { board: Board; post: DashPost; note
             taller than the tile (it scrolls inside), long words broken. "Add a note" only on hover. */}
         <div
           className={cx(
-            "pointer-events-auto min-h-0 shrink overflow-y-auto rounded-md bg-page/95 text-caption text-primary-foreground shadow-sm scrollbar-hide",
+            "pointer-events-auto min-h-0 shrink overflow-y-auto rounded-[10px] bg-background/95 text-caption text-foreground shadow-sm scrollbar-hide",
             !note && !editing && reveal,
           )}
         >
@@ -248,7 +270,9 @@ function Tile({ board, post, note, sizes }: { board: Board; post: DashPost; note
 }
 
 // Text that turns into a field when clicked: Enter (or leaving the field) saves, Escape cancels.
-// In a multi-line field Shift+Enter starts a new line.
+// In a multi-line field Shift+Enter starts a new line. Its own, not Input (see the top): at rest
+// a ghost row with the hover tint, while editing the field recipe's focused look (the card
+// surface, the brand ring) at the text's own size.
 function Editable({
   value,
   placeholder,
@@ -271,7 +295,7 @@ function Editable({
   maxLength: number;
   label: string;
   multiline?: boolean;
-  // A grey fill under the pointer; off for a note, which sits on its own label over the cover
+  // The hover tint under the pointer; off for a note, which sits on its own label over the cover
   // (a second hover background in className would fight this one, since cx doesn't merge)
   hoverFill?: boolean;
   // The padding, at rest and while editing: its own prop so a caller never sets a second py-*
@@ -299,9 +323,9 @@ function Editable({
         onClick={() => onEdit(true)}
         title={`Edit ${label.toLowerCase()}`}
         className={cx(
-          "w-full rounded-lg text-left transition-colors duration-150 ease-out-quint",
+          "w-full rounded-[12px] text-left transition-colors duration-80 focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]",
           padding,
-          hoverFill && "hover:bg-transparent-hover",
+          hoverFill && "hover:bg-hover",
           // The placeholder ("Add a note") in the placeholder's colour
           !value && "text-tertiary-foreground",
           multiline && "whitespace-pre-line",
@@ -333,10 +357,11 @@ function Editable({
         (event.currentTarget as HTMLElement).blur();
       }
     },
-    // The text in place, on the grey mat, with the focus ring (it only exists while it has focus).
-    // border-0 takes off the grey border @tailwindcss/forms gives text fields
+    // The text in place, on the card surface with the brand ring (the field recipe's focused
+    // look; it only exists while it has focus). border-0 takes off the grey border
+    // @tailwindcss/forms gives text fields
     className: cx(
-      "w-full rounded-lg border-0 bg-card text-left ring-2 ring-brand-border-focus outline-hidden [font:inherit]",
+      "w-full rounded-[12px] border-0 bg-surface-3 text-left ring-1 ring-[var(--focus-ring)] outline-hidden [font:inherit]",
       padding,
       className,
     ),
@@ -344,16 +369,14 @@ function Editable({
   return multiline ? <textarea rows={3} {...shared} className={cx(shared.className, "resize-none")} /> : <input {...shared} />;
 }
 
-// Share: a read-only link anyone can open, made and turned off here. A popover dialog beside its
-// button (the dashboard's usePopover("dialog"): there's no shared popover molecule) built from the
-// shared atoms: the link in an Input, Copy, Create link and Stop sharing as Buttons, Open as a
-// TextLink. Opening it moves focus to its first control; Escape takes focus back to Share.
+// Share: a read-only link anyone can open, made and turned off here, in the shared Dialog: the
+// link in an Input beside Copy, Open the link and Stop sharing under it, or Create link alone.
+// The dialog puts focus in the link field and back on Share when it closes.
 function SharePanel({ board }: { board: Board }) {
   const { setSharing, notify } = useBoards();
-  const popover = usePopover("dialog");
+  const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const origin = useOrigin();
-  const shared = Boolean(board.shareToken);
   const url = board.shareToken ? `${origin}${shareHref(board.shareToken)}` : "";
 
   useEffect(() => {
@@ -361,13 +384,6 @@ function SharePanel({ board }: { board: Board }) {
     const timer = setTimeout(() => setCopied(false), 1500);
     return () => clearTimeout(timer);
   }, [copied]);
-
-  // Making the link or turning it off swaps the panel's controls, taking the focused one away;
-  // focus goes to the new first control rather than falling back to the page
-  const { open, focusIn } = popover;
-  useEffect(() => {
-    if (open && (!document.activeElement || document.activeElement === document.body)) focusIn();
-  }, [open, shared, focusIn]);
 
   const copy = async () => {
     try {
@@ -379,92 +395,77 @@ function SharePanel({ board }: { board: Board }) {
   };
 
   return (
-    <div {...popover.rootProps} className="relative">
-      <Button aria-haspopup="dialog" {...popover.triggerProps} variant="secondary" size="lg" shape="pill">
+    <>
+      <Button variant="secondary" size="lg" aria-haspopup="dialog" onClick={() => setOpen(true)}>
         Share
       </Button>
-      {popover.mounted && (
-        <div
-          {...popover.contentProps}
-          role="dialog"
-          aria-label="Share this board"
-          className={cx("absolute top-full right-0 z-30 mt-2 w-80 origin-top-right rounded-2xl bg-modal p-4 text-left shadow-lg", popover.motion)}
-        >
-          <p className="text-body font-medium text-primary-foreground">{board.shareToken ? "Anyone with the link can view" : "Share a read-only link"}</p>
-          <p className="mt-1 text-body text-pretty text-secondary-foreground">
-            {board.shareToken
-              ? "They see the posts and your notes, and can’t change anything."
-              : "Anyone with the link sees this board’s posts and your notes. They can’t change anything."}
-          </p>
-          {board.shareToken ? (
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+        size="sm"
+        title={board.shareToken ? "Anyone with the link can view" : "Share a read-only link"}
+        description={
+          board.shareToken
+            ? "They see the posts and your notes, and can’t change anything."
+            : "Anyone with the link sees this board’s posts and your notes. They can’t change anything."
+        }
+        footer={
+          board.shareToken ? (
             <>
-              {/* The link and Copy side by side, both at the Input's 40px */}
-              <div className="mt-3 flex gap-2">
-                <Input
-                  readOnly
-                  value={url}
-                  aria-label="Share link"
-                  spellCheck={false}
-                  onFocus={(event) => event.currentTarget.select()}
-                  className="min-w-0 flex-1"
-                />
-                <Button type="button" size="base" variant="default" onClick={copy} className="w-18 shrink-0">
-                  {copied ? "Copied" : "Copy"}
-                </Button>
-              </div>
-              <div className="mt-3 flex items-center justify-between text-body">
-                <TextLink href={url} external>
-                  Open the link
-                </TextLink>
-                {/* An action, so a Button; pulled out by its padding so the words keep the edge */}
-                <Button type="button" size="xs" variant="transparent" onClick={() => setSharing(board.id, false)} className="-mr-2.5">
-                  Stop sharing
-                </Button>
-              </div>
+              {/* An action, so a Button; the link a TextLink, since it goes somewhere */}
+              <Button type="button" variant="transparent" onClick={() => setSharing(board.id, false)}>
+                Stop sharing
+              </Button>
+              <TextLink href={url} external className="text-body">
+                Open the link
+              </TextLink>
             </>
           ) : (
-            <Button type="button" size="sm" variant="default" onClick={() => setSharing(board.id, true)} className="mt-3 w-full">
+            <Button type="button" variant="default" onClick={() => setSharing(board.id, true)}>
               Create link
             </Button>
-          )}
-        </div>
-      )}
-    </div>
+          )
+        }
+      >
+        {board.shareToken && (
+          // The link and Copy side by side, both at the control height
+          <div className="flex gap-2">
+            <Input readOnly value={url} aria-label="Share link" spellCheck={false} onFocus={(event) => event.currentTarget.select()} className="min-w-0 flex-1" />
+            <Button type="button" variant="default" onClick={copy} className="w-18 shrink-0">
+              {copied ? "Copied" : "Copy"}
+            </Button>
+          </div>
+        )}
+      </Dialog>
+    </>
   );
 }
 
-// More: the shared Menu (Rename, Add/Edit description, Delete board…). Delete asks first, where the
-// menu was: choosing it closes the menu and opens the question in its place, a small alertdialog
-// popover with focus on Cancel, so Enter can't delete by accident. It's a popover of its own, not
-// the Menu's contents, because a role="menu" may hold only items: a question and two plain buttons
-// inside it would be read as a broken menu, and Menu's arrow keys and typeahead would fight them.
-// Cancel and Escape take focus back to More.
+// More: the shared Menu (Rename, Add/Edit description, Delete board…). Delete asks first, in an
+// alertdialog Dialog with focus on Cancel, so Enter can't delete by accident. The question opens
+// once the menu has finished closing (its exit, plus the library's safety margin): by then Radix
+// has put focus back on More, so the dialog remembers More as its opener and returns focus there
+// on Cancel or Escape.
 function MoreMenu({ board, onRename, onDescribe }: { board: Board; onRename: () => void; onDescribe: () => void }) {
   const router = useRouter();
   const { deleteBoard } = useBoards();
-  const confirm = usePopover("dialog");
-  const id = useId();
+  const [asking, setAsking] = useState(false);
+  const pendingDelete = useRef(false);
+  const cancelRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <div {...confirm.rootProps} className="relative">
+    <>
       <Menu
         label="Board actions"
         align="end"
+        onOpenChange={(open) => {
+          if (open || !pendingDelete.current) return;
+          pendingDelete.current = false;
+          window.setTimeout(() => setAsking(true), exitFallbackMs(spring.fast));
+        }}
         trigger={
-          <Button
-            ref={confirm.triggerProps.ref}
-            // While the question is up, More takes it down (as it would close its menu)
-            onClick={(event) => {
-              if (!confirm.open) return;
-              event.preventDefault();
-              confirm.close(false);
-            }}
-            variant="secondary"
-            size="lg"
-            shape="pill"
-            iconOnly
-            aria-label="More"
-          >
+          <Button variant="secondary" size="lg" iconOnly aria-label="More">
+            {/* Three dots, drawn: there's no DotsThree in the icon set yet */}
             <span aria-hidden="true" className="flex gap-[3px]">
               {[0, 1, 2].map((i) => (
                 <span key={i} className="size-[3px] rounded-full bg-current" />
@@ -476,123 +477,111 @@ function MoreMenu({ board, onRename, onDescribe }: { board: Board; onRename: () 
         <MenuItem onSelect={onRename}>Rename</MenuItem>
         <MenuItem onSelect={onDescribe}>{board.description ? "Edit description" : "Add a description"}</MenuItem>
         <MenuSeparator />
-        {/* Opens the question. Its trigger's click with no detail, as Enter makes, so the question
-            takes focus (to Cancel) however the item was chosen; the menu then closes, putting
-            focus on More, and the question's first frame moves it on to Cancel */}
-        <MenuItem tone="danger" onSelect={() => confirm.triggerProps.onClick({ detail: 0 } as ReactMouseEvent)}>
+        <MenuItem
+          tone="danger"
+          onSelect={() => {
+            pendingDelete.current = true;
+          }}
+        >
           Delete board…
         </MenuItem>
       </Menu>
-      {confirm.mounted && (
-        <div
-          {...confirm.contentProps}
-          role="alertdialog"
-          aria-labelledby={`${id}-question`}
-          aria-describedby={`${id}-consequence`}
-          className={cx("absolute top-full right-0 z-40 mt-2 w-60 origin-top-right rounded-2xl bg-modal p-3.5 text-left shadow-lg", confirm.motion)}
-        >
-          <p id={`${id}-question`} className="text-body font-medium text-pretty text-primary-foreground">
-            Delete “{board.name}”?
-          </p>
-          <p id={`${id}-consequence`} className="mt-1 text-body text-pretty text-secondary-foreground">
-            The board and its notes go for good. The posts stay in the library.
-          </p>
-          <div className="mt-3 flex gap-2">
-            {/* First, so the popover's focus lands on it */}
-            <Button type="button" size="sm" variant="muted" onClick={() => confirm.close()} className="flex-1">
+      <Dialog
+        open={asking}
+        onOpenChange={setAsking}
+        role="alertdialog"
+        size="sm"
+        title={`Delete “${board.name}”?`}
+        description="The board and its notes go for good. The posts stay in the library."
+        closeButton={false}
+        initialFocus={cancelRef}
+        footer={
+          <>
+            <Button ref={cancelRef} type="button" variant="muted" onClick={() => setAsking(false)}>
               Cancel
             </Button>
             <Button
               type="button"
-              size="sm"
               variant="danger"
               onClick={() => {
+                setAsking(false);
                 router.push(feedHref("Saved"));
                 deleteBoard(board.id);
               }}
-              className="flex-1"
             >
               Delete
             </Button>
-          </div>
-        </div>
-      )}
-    </div>
+          </>
+        }
+      />
+    </>
   );
 }
 
 // The board's empty state: the illustration, what belongs here, and the way to fill it
 function EmptyBoard() {
   return (
-    <div className="mx-auto flex max-w-sm flex-col items-center py-16 text-center">
-      <EmptyBoardArt className="w-64" />
-      <p className="mt-6 text-title font-medium text-primary-foreground">Nothing on this board yet</p>
-      <p className="mt-2 text-body text-pretty text-secondary-foreground">Save posts to it from the feed: Save is on every post, and this board is in its list.</p>
-      <Button isLink href="/dashboard" size="sm" variant="default" className="mt-6 w-fit">
-        Browse the feed
-      </Button>
-    </div>
+    <EmptyState
+      illustration={<EmptyBoardArt className="w-64" />}
+      title="Nothing on this board yet"
+      description="Save posts to it from the feed: Save is on every post, and this board is in its list."
+      action={
+        <Button isLink href="/dashboard" size="sm" variant="default">
+          Browse the feed
+        </Button>
+      }
+    />
   );
 }
 
 // Two saved posts fanned behind a dashed card waiting for the next one: what a board is, and
-// what's missing. Drawn in the palette's tokens (so it follows dark mode), decorative because
-// the words beside it say the same. The cards fan out once (.board-art-card in global.css);
-// static under reduced motion.
+// what's missing. Drawn in the system's tokens (the card surface, the one stroke, the muted tint
+// for the picture and lines, so it follows dark mode), decorative because the words beside it
+// say the same. The cards fan out once (.board-art-card in global.css); static under reduced
+// motion.
 function EmptyBoardArt({ className }: { className?: string }) {
   const card = (side: "left" | "right", x: number, angle: number) => (
     <g transform={`translate(${x} 46) rotate(${angle} 44 112)`}>
       <g className="board-art-card" data-side={side}>
-        <rect x="0.75" y="0.75" width="86.5" height="110.5" rx="10" fill="var(--color-white)" stroke="var(--color-base-300)" strokeWidth="1.5" />
-        <rect x="9" y="9" width="70" height="64" rx="5" fill="var(--color-base-200)" />
-        <rect x="9" y="83" width="46" height="5" rx="2.5" fill="var(--color-base-200)" />
-        <rect x="9" y="94" width="30" height="5" rx="2.5" fill="var(--color-base-200)" />
+        <rect x="0.75" y="0.75" width="86.5" height="110.5" rx="10" fill="var(--surface-3)" stroke="var(--border)" strokeWidth="1.5" />
+        <rect x="9" y="9" width="70" height="64" rx="5" fill="var(--muted)" />
+        <rect x="9" y="83" width="46" height="5" rx="2.5" fill="var(--muted)" />
+        <rect x="9" y="94" width="30" height="5" rx="2.5" fill="var(--muted)" />
       </g>
     </g>
   );
   return (
     <svg viewBox="0 0 280 176" aria-hidden="true" className={cx("pointer-events-none select-none", className)}>
-      <ellipse cx="140" cy="166" rx="92" ry="5" fill="var(--color-base-100)" />
+      <ellipse cx="140" cy="166" rx="92" ry="5" fill="var(--hover)" />
       {card("left", 46, -10)}
       {card("right", 146, 10)}
       <g transform="translate(96 30)">
         <g className="board-art-card" data-side="front">
-          <rect x="0.75" y="0.75" width="86.5" height="126.5" rx="10" fill="var(--color-white)" stroke="var(--color-base-400)" strokeWidth="1.5" strokeDasharray="5 5" />
-          <path d="M44 38v26M31 51h26" stroke="var(--color-base-500)" strokeWidth="2.5" strokeLinecap="round" />
-          <rect x="9" y="92" width="46" height="5" rx="2.5" fill="var(--color-base-200)" />
-          <rect x="9" y="103" width="30" height="5" rx="2.5" fill="var(--color-base-200)" />
+          <rect x="0.75" y="0.75" width="86.5" height="126.5" rx="10" fill="var(--surface-3)" stroke="var(--border)" strokeWidth="1.5" strokeDasharray="5 5" />
+          <path d="M44 38v26M31 51h26" stroke="var(--muted-foreground)" strokeWidth="2.5" strokeLinecap="round" />
+          <rect x="9" y="92" width="46" height="5" rx="2.5" fill="var(--muted)" />
+          <rect x="9" y="103" width="30" height="5" rx="2.5" fill="var(--muted)" />
         </g>
       </g>
     </svg>
   );
 }
 
-function Message({ title, body, action, href }: { title: string; body: string; action: string; href: string }) {
-  return (
-    <div className="mx-auto max-w-sm py-24 text-center">
-      <p className="text-subtitle font-medium text-primary-foreground">{title}</p>
-      <p className="mt-2 text-body text-secondary-foreground">{body}</p>
-      <Button isLink href={href} size="sm" variant="muted" className="mx-auto mt-6 w-fit">
-        {action}
-      </Button>
-    </div>
-  );
-}
-
-// The board's shape while it loads: the header (name, line, count, Share and More), then the wall
+// The board's shape while it loads: the header (the Saved link, the name, the line, the count,
+// Share and More at the controls' 28px), then the wall
 function BoardSkeleton() {
   return (
     <div role="status" aria-label="Loading board">
       <div className="flex flex-col gap-4 pt-2 pb-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex-1">
-          <Block className="h-3.5 w-12 rounded-full" />
-          <Block className="mt-3 h-7 w-64 max-w-full rounded-full" />
-          <Block className="mt-3 h-4 w-96 max-w-full rounded-full" />
-          <Block className="mt-3 h-3.5 w-40 rounded-full" />
+          <Skeleton radius="full" className="h-3.5 w-12" />
+          <Skeleton radius="full" className="mt-3 h-7 w-64 max-w-full" />
+          <Skeleton radius="full" className="mt-3 h-4 w-96 max-w-full" />
+          <Skeleton radius="full" className="mt-3 h-3.5 w-40" />
         </div>
         <div className="flex gap-2">
-          <Block className="h-11 w-18 rounded-full" />
-          <Block className="size-11 rounded-full" />
+          <Skeleton radius="lg" className="h-7 w-14" />
+          <Skeleton radius="full" className="size-7" />
         </div>
       </div>
       <GridSkeleton label="Loading the board’s posts" />

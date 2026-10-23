@@ -6,9 +6,18 @@
 // like the real grid, and one post being saved: its hover state with "Saved", the Save menu open
 // on the board it went to, and the toast that confirms it. It mirrors components/dashboard, so
 // keep the two in step when the dashboard changes.
+//
+// Since 2026-10-23 it is drawn on the system the dashboard is built from: the header's tabs as
+// the pressed pill and heavier label of the shared Tabs, the search field on the Input's recipe
+// (the one stroke, no fill), Create and Saved as the secondary Button (a hairline ring, 28px),
+// the count in the brand's solid with the page's ring, the account as the Avatar's initials, the
+// Save menu as the Menu (a 12px container two steps up the surface ladder, 8px rows, the hover
+// tint on the first) and the toast as the Toast (the ink, the page's colour on it). Weights come
+// from fontVariationSettings, never a font-* class.
 import Image from "next/image";
 // Fundation
 import Symbol from "@/components/assets/Symbol";
+import Avatar from "@/components/fundations/elements/Avatar";
 import Check from "@/components/fundations/icons/Check";
 import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
 import Plus from "@/components/fundations/icons/Plus";
@@ -19,7 +28,10 @@ import BrandName from "./BrandName";
 import { board, libraryWindow } from "./demo";
 import { usePosts, type HomePost } from "./HomePosts";
 import { cx } from "@/lib/cx";
+import { fontWeights } from "@/lib/font-weight";
 import { useMounted } from "@/lib/useMounted";
+
+const semibold = { fontVariationSettings: fontWeights.semibold };
 
 // Five columns in a wide window, four in a medium one, three on a phone
 const COLUMNS = 5;
@@ -38,6 +50,10 @@ function intoColumns(posts: HomePost[]) {
   return columns;
 }
 
+// The secondary Button, drawn: the one stroke, no fill, the compact 28px pill
+const secondary =
+  "flex h-7 items-center justify-center rounded-[20px] text-caption text-foreground ring-1 ring-border";
+
 export default function LibraryWindow({ className }: { className?: string }) {
   const posts = usePosts(libraryWindow.posts);
   const boardCovers = usePosts(
@@ -55,34 +71,42 @@ export default function LibraryWindow({ className }: { className?: string }) {
         {/* The header */}
         <div className="flex h-12 shrink-0 items-center gap-3 px-4 @lg:gap-5">
           <div className="flex items-center gap-3 @lg:gap-4">
-            <Symbol className="size-5 text-primary-foreground" />
-            <div className="hidden items-center gap-3 text-caption font-medium @lg:flex">
-              <span className="text-primary-foreground">For you</span>
-              <span className="text-secondary-foreground">Discover</span>
+            <Symbol className="size-5 text-foreground" />
+            {/* The tabs: the one you're on sits on the pressed pill with the heavier label */}
+            <div className="hidden items-center text-caption @lg:flex">
+              <span
+                className="flex h-7 items-center rounded-[20px] bg-active px-3 text-foreground"
+                style={semibold}
+              >
+                For you
+              </span>
+              <span className="flex h-7 items-center rounded-[20px] px-3 text-muted-foreground">
+                Discover
+              </span>
             </div>
           </div>
-          {/* The search pill, Create and Saved are the dashboard's secondary controls: the control
-              surface and its default shadow, as the real header has them */}
-          <div className="mx-auto flex h-8 min-w-0 flex-1 items-center gap-2 rounded-full bg-component-on-container-subtle px-3 text-caption shadow-sm @lg:max-w-[22rem]">
-            <Search className="size-3 shrink-0 text-tertiary-foreground" />
-            <span className="truncate text-primary-foreground">
+          {/* The search field, on the Input's recipe */}
+          <div className="mx-auto flex h-7 min-w-0 flex-1 items-center gap-2 rounded-[20px] px-2.5 text-caption ring-1 ring-border @lg:max-w-[22rem]">
+            <Search className="size-3.5 shrink-0 text-muted-foreground" />
+            <span className="truncate text-foreground">
               {libraryWindow.query}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="flex h-7 items-center gap-1 rounded-full bg-component-on-container-subtle px-2.5 text-caption font-medium text-primary-foreground shadow-sm">
-              <Plus className="size-3" />
+            <span className={cx(secondary, "gap-1 px-2.5")} style={semibold}>
+              <Plus className="size-3.5" />
               <span className="hidden @md:inline">Create</span>
             </span>
-            <span className="relative flex size-7 items-center justify-center rounded-full bg-component-on-container-subtle text-primary-foreground shadow-sm">
-              <BookmarkSimple className="size-3" />
-              <span className="absolute -top-1 -right-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-brand-solid px-0.5 text-[8px] text-on-brand-solid-foreground tabular-nums ring-1 ring-page">
+            <span className="relative inline-flex">
+              <span className={cx(secondary, "size-7")}>
+                <BookmarkSimple className="size-3.5" />
+              </span>
+              {/* The count: the brand's solid, cut out of the header by a ring of the page's colour */}
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-solid px-1 text-micro text-on-brand-solid-foreground tabular-nums ring-2 ring-surface-3">
                 {board.references.length}
               </span>
             </span>
-            <span className="flex size-7 items-center justify-center rounded-full bg-brand-subtle text-[9px] font-medium text-on-brand-subtle-foreground">
-              AM
-            </span>
+            <Avatar name="A M" size="sm" decorative />
           </div>
         </div>
 
@@ -110,8 +134,11 @@ export default function LibraryWindow({ className }: { className?: string }) {
             ))}
           </div>
 
-          {/* The toast the save sets off */}
-          <p className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-md bg-inverted-solid px-3 py-1.5 text-micro whitespace-nowrap text-on-inverted-foreground shadow-lg">
+          {/* The toast the save sets off: the ink, as the Toast draws it */}
+          <p
+            className="absolute bottom-4 left-1/2 z-20 flex h-7 -translate-x-1/2 items-center gap-1.5 rounded-[20px] bg-foreground px-3 text-micro whitespace-nowrap text-background shadow-surface-4"
+            style={semibold}
+          >
             <Check className="size-2.5" />
             Saved to {board.name}
           </p>
@@ -137,7 +164,7 @@ function Tile({
   return (
     <li className={cx("relative", saved && "z-10")}>
       <div
-        className="relative w-full overflow-hidden rounded-sm bg-component"
+        className="relative w-full overflow-hidden rounded-[8px] bg-muted"
         style={{ aspectRatio: ratio(post) }}
       >
         {mounted && (
@@ -154,29 +181,35 @@ function Tile({
       {saved && (
         <>
           <div className="absolute inset-x-0 top-0 flex justify-end p-1.5">
-            <span className="flex h-6 items-center gap-1 rounded-md bg-page/95 px-2 text-[10px] font-medium text-primary-foreground shadow-sm">
+            <span
+              className="flex h-6 items-center gap-1 rounded-[20px] bg-surface-3/95 px-2 text-caption-sm text-foreground shadow-surface-2"
+              style={semibold}
+            >
               <Check className="size-2.5" />
               Saved
             </span>
           </div>
-          <span className="absolute bottom-1.5 left-1.5 rounded-md bg-page/95 px-1.5 py-1 shadow-sm">
+          <span className="absolute bottom-1.5 left-1.5 rounded-[20px] bg-surface-3/95 px-2 py-1 shadow-surface-2">
             <BrandName brand={post.brand} />
           </span>
-          {/* The Save menu, as the dashboard draws it: the floating surface with the large shadow,
-              the first board under the highlight */}
-          <div className="absolute top-9 right-1.5 w-36 rounded-lg bg-modal p-1 text-micro shadow-lg @lg:w-44">
-            <p className="px-2 pt-1 pb-1.5 text-[10px] font-medium text-secondary-foreground">
+          {/* The Save menu, as the Menu draws it: a 12px container two steps up the ladder, 8px
+              rows, the first board under the hover tint */}
+          <div className="absolute top-9 right-1.5 w-36 rounded-[12px] bg-surface-5 p-1 text-micro shadow-surface-3 @lg:w-44">
+            <p
+              className="px-2 pt-1 pb-1.5 text-caption-sm text-muted-foreground"
+              style={semibold}
+            >
               Save to board
             </p>
             {libraryWindow.boards.map((name, i) => (
               <p
                 key={name}
                 className={cx(
-                  "flex items-center gap-2 rounded-md px-2 py-1.5 text-primary-foreground",
-                  i === 0 && "bg-transparent-hover",
+                  "flex items-center gap-2 rounded-[8px] px-2 py-1.5 text-foreground",
+                  i === 0 && "bg-hover",
                 )}
               >
-                <span className="relative size-5 shrink-0 overflow-hidden rounded-sm bg-component">
+                <span className="relative size-5 shrink-0 overflow-hidden rounded-[4px] bg-muted">
                   {i === 0 && mounted && boardCovers[0] && (
                     <Image
                       src={boardCovers[0].images[0]}
@@ -189,12 +222,12 @@ function Tile({
                 </span>
                 <span className="min-w-0 flex-1 truncate">{name}</span>
                 {i === 0 && (
-                  <Check className="size-2.5 shrink-0 text-secondary-foreground" />
+                  <Check className="size-2.5 shrink-0 text-muted-foreground" />
                 )}
               </p>
             ))}
-            <p className="flex items-center gap-2 rounded-md px-2 py-1.5 text-primary-foreground">
-              <span className="flex size-5 shrink-0 items-center justify-center rounded-sm bg-component">
+            <p className="flex items-center gap-2 rounded-[8px] px-2 py-1.5 text-foreground">
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-[4px] bg-muted">
                 <Plus className="size-2.5" />
               </span>
               New board

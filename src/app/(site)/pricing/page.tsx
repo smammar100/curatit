@@ -3,13 +3,16 @@ import type { Metadata } from "next";
 import Text from "@/components/fundations/elements/Text";
 import Button from "@/components/fundations/elements/Button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
+import Card from "@/components/fundations/molecules/Card";
 // Components
 import Faq from "@/components/global/Faq";
 
 // Pricing (rewritten 2026-10-15 from the copy audit; the template's website-directory plans and
 // FAQs are gone). There is no billing in the product yet, so this says what's true: one free plan
 // while Curatit is in beta, with everything in it, and paid team plans to come. Don't add prices
-// or limits here until billing exists; the plan below is what an account actually gets.
+// or limits here until billing exists; the plan below is what an account actually gets. Since
+// 2026-10-23 the plan is the system's raised Card (a white card on the surface ladder with the one
+// hairline), its rows divided by the one stroke, the words on the tokens.
 
 export const metadata: Metadata = {
   title: { absolute: "Curatit pricing | Plans for social media inspiration" },
@@ -64,37 +67,37 @@ export default function PricingPage() {
       <section>
         <Wrapper variant="standard" className="page-start">
           <div className="text-balance max-w-3xl mx-auto text-center">
-            <Text tag="h1" variant="h1" className="text-primary-foreground">
+            <Text tag="h1" variant="h1" className="text-foreground">
               Free while we&apos;re in beta.
             </Text>
             <Text
               tag="p"
               variant="body"
-              className="text-secondary-foreground mt-4 max-w-xl mx-auto"
+              className="text-muted-foreground mt-4 max-w-xl mx-auto"
             >
               The whole library, breakdowns, boards and sharing. Team plans come
               later.
             </Text>
           </div>
           <div className="mx-auto mt-12 max-w-xl">
-            <div className="flex flex-col rounded-2xl bg-container p-6 shadow-xs sm:p-8">
+            <Card variant="raised" padding="lg" className="flex flex-col sm:p-8">
               <div className="space-y-3">
                 <Text
                   tag="p"
                   variant="h3"
-                  className="text-primary-foreground text-balance"
+                  className="text-foreground text-balance"
                 >
                   Free
                 </Text>
-                <Text tag="p" variant="bodySM" className="text-secondary-foreground">
+                <Text tag="p" variant="bodySM" className="text-muted-foreground">
                   For anyone making social content for brands. Everything in
                   Curatit, for one person.
                 </Text>
               </div>
-              <Text tag="p" variant="h1" className="text-primary-foreground mt-8">
+              <Text tag="p" variant="h1" className="text-foreground mt-8">
                 $0
               </Text>
-              <ul className="divide-y divide-border-default mt-4">
+              <ul className="divide-y divide-border mt-4">
                 {included.map((item) => (
                   <li
                     key={item.label}
@@ -103,14 +106,14 @@ export default function PricingPage() {
                     <Text
                       tag="span"
                       variant="body"
-                      className="shrink-0 text-primary-foreground"
+                      className="shrink-0 text-foreground"
                     >
                       {item.label}
                     </Text>
                     <Text
                       tag="span"
                       variant="bodySM"
-                      className="text-right text-secondary-foreground"
+                      className="text-right text-muted-foreground"
                     >
                       {item.value}
                     </Text>
@@ -126,7 +129,7 @@ export default function PricingPage() {
               >
                 Create account
               </Button>
-            </div>
+            </Card>
           </div>
         </Wrapper>
       </section>

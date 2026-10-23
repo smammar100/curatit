@@ -1,12 +1,19 @@
 "use client";
 
 // Discover's row of categories above the grid, after Cosmos's Explore: All, then each of the
-// library's categories as an icon and its name in the tab size, quiet grey, with only the one
-// that's on sitting in a soft pill, tinted with its category's hue (the swatch hue the homepage
-// and the search panel use; All stays grey). The icons are the homepage category tabs'
-// (Categories). Only categories with posts are listed, and a post counts in its brand's main
-// category and in its extra tags (lib/categories). When the row is wider than the window it scrolls sideways, and the edge with more beyond it fades out, only
-// while there is more, so the last category is never left faded.
+// library's categories as an icon and its name, quiet grey, with only the one that's on sitting
+// in a soft pill, tinted with its category's hue (the swatch hue the homepage and the search
+// panel use; All stays grey). The icons are the homepage category tabs' (Categories). Only
+// categories with posts are listed, and a post counts in its brand's main category and in its
+// extra tags (lib/categories). When the row is wider than the window it scrolls sideways, and
+// the edge with more beyond it fades out, only while there is more, so the last category is
+// never left faded.
+//
+// Since 2026-10-23 the pills are the controls' compact step (28px, 12px text, the pill corner,
+// the one focus ring, a 44px touch area) on the system's tokens. They stay their own buttons
+// rather than the shared Tabs: each is a toggle (pressing the one that's on goes back to All,
+// which a tab can't do), and the one that's on carries its category's hue, the palette's
+// recorded exception, through light-dark() as inline colours do here.
 import { useEffect, useMemo, useRef, useState } from "react";
 import SquaresFour from "@/components/fundations/icons/SquaresFour";
 import { categoriesWithPosts } from "@/lib/categories";
@@ -40,8 +47,8 @@ export default function CategoryBar({ posts, value, onChange }: { posts: DashPos
   const mask = `linear-gradient(to right, ${more.left ? "transparent" : "black"}, black ${FADE}, black calc(100% - ${FADE}), ${more.right ? "transparent" : "black"})`;
   const item = (on: boolean) =>
     cx(
-      "flex h-11 shrink-0 items-center gap-2 rounded-full pr-5 pl-4 text-title font-medium whitespace-nowrap transition-[background-color,color] duration-150 ease-out-quint focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-border-focus",
-      on ? "bg-component text-primary-foreground" : "text-secondary-foreground hover:text-primary-foreground",
+      "relative flex h-7 shrink-0 items-center gap-1.5 rounded-[20px] pr-3 pl-2.5 text-body whitespace-nowrap transition-[background-color,color] duration-80 focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)] pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:-inset-y-2",
+      on ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-hover hover:text-foreground",
     );
   // The selected category's pill: a pale tint of its hue with the icon and name in a deep shade
   // of it (6.3:1 or more in both themes), through light-dark() as inline colours do here
@@ -57,11 +64,11 @@ export default function CategoryBar({ posts, value, onChange }: { posts: DashPos
       aria-label="Categories"
       // Spread evenly from the page's left gutter to its right one while the tabs fit (the gaps
       // grow, the tabs keep their size); once they don't, space-between packs them and the row scrolls
-      className="scrollbar-hide -mx-4 mb-8 flex justify-between gap-1 overflow-x-auto px-4 sm:-mx-6 sm:px-6"
+      className="scrollbar-hide -mx-4 mb-8 flex justify-between gap-1 overflow-x-auto px-4 py-2 sm:-mx-6 sm:px-6"
       style={{ maskImage: mask, WebkitMaskImage: mask }}
     >
       <button type="button" aria-pressed={value === null} onClick={() => onChange(null)} className={item(value === null)}>
-        <SquaresFour aria-hidden="true" className="size-4.5 shrink-0" />
+        <SquaresFour aria-hidden="true" className="size-3.5 shrink-0" />
         All
       </button>
       {options.map((option) => {
@@ -69,7 +76,7 @@ export default function CategoryBar({ posts, value, onChange }: { posts: DashPos
         const Glyph = CATEGORY_ICONS[option.slug];
         return (
           <button key={option.slug} type="button" aria-pressed={on} onClick={() => onChange(on ? null : option.slug)} className={item(on)} style={on ? tint(option.hue) : undefined}>
-            {Glyph && <Glyph aria-hidden="true" className="size-4.5 shrink-0" />}
+            {Glyph && <Glyph aria-hidden="true" className="size-3.5 shrink-0" />}
             {option.name}
           </button>
         );

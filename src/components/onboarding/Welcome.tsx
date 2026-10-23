@@ -8,6 +8,11 @@
 // answers save to the profile at the end; "Skip for now" saves what's been answered so far and
 // that you've been here, so it doesn't ask again. The feed ranks on them from then on. Open
 // again from the account menu to change them.
+//
+// Since 2026-10-23 on the design system: Skip, Cancel and "No one in particular" are transparent
+// Buttons (the 44px hit area is the system's own on touch screens), a profile that can't load is
+// a danger Notice with Reload, the wall's ground is bg-muted, and the pickers are in parts.tsx
+// and Folders.tsx.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Symbol from "@/components/assets/Symbol";
@@ -20,7 +25,7 @@ import { useProfile } from "@/components/dashboard/profile";
 import { cx } from "@/lib/cx";
 import { track } from "@/lib/analytics";
 import { FolderTiles } from "./Folders";
-import { BrandGrid, Collage, Done, Heading, LearnedChips, NameRole, Progress, Ring, TasteGrid, brandsOf, categoriesOf, type Draft } from "./parts";
+import { BrandGrid, Collage, Done, Heading, LearnedChips, NameRole, Progress, Ring, TasteGrid, brandsOf, categoriesOf, semibold, type Draft } from "./parts";
 
 const TASTE = 3;
 const TASTE_TILES = 16;
@@ -32,11 +37,6 @@ const STEPS = [
   { title: "Brands you keep an eye on?", sub: "Optional. Their new posts go up top." },
   { title: "Tap three that stop your thumb.", sub: "No wrong answers. This is how the feed learns your taste." },
 ];
-
-// A quiet text button with a 44px hit area that doesn't change the layout (Button has no
-// text-only variant at that height: transparent fills on hover, and its 44px size sets 14px)
-const textButton =
-  "-mx-2 inline-flex h-11 items-center rounded-full px-2 text-body font-medium text-secondary-foreground transition-colors duration-150 ease-out-quint hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus disabled:pointer-events-none disabled:text-disabled-foreground";
 
 export default function Welcome() {
   const router = useRouter();
@@ -91,13 +91,18 @@ export default function Welcome() {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-page px-6" role="status" aria-live="polite">
         {status === "error" ? (
-          <div className="max-w-sm text-center">
-            <p className="text-subtitle font-medium text-primary-foreground">We couldn’t load your profile.</p>
-            <p className="mt-2 text-body text-secondary-foreground">Check your connection and reload the page.</p>
-            <Button type="button" size="base" variant="muted" onClick={() => location.reload()} className="mx-auto mt-6 w-fit">
-              Reload
-            </Button>
-          </div>
+          <Notice
+            tone="danger"
+            title="We couldn’t load your profile."
+            action={
+              <Button size="xs" variant="muted" onClick={() => location.reload()}>
+                Reload
+              </Button>
+            }
+            className="max-w-sm"
+          >
+            Check your connection and reload the page.
+          </Notice>
         ) : (
           <span className="sr-only">Loading your profile</span>
         )}
@@ -168,17 +173,17 @@ export default function Welcome() {
         <div className="grid grid-cols-[1fr_auto_1fr] items-center">
           <div>
             {step > 0 && !done && (
-              <Button variant="transparent" size="lg" shape="pill" iconOnly aria-label="Back" onClick={() => setStep((s) => s - 1)}>
-                <CaretLeft size="sm" />
+              <Button variant="transparent" iconOnly aria-label="Back" onClick={() => setStep((s) => s - 1)}>
+                <CaretLeft className="size-3.5" />
               </Button>
             )}
           </div>
-          <Symbol className="size-7 text-primary-foreground" aria-hidden="true" />
+          <Symbol className="size-7 text-foreground" aria-hidden="true" />
           <div className="text-right">
             {!done && (
-              <button type="button" onClick={skip} disabled={saving !== null} className={textButton}>
+              <Button variant="transparent" size="sm" onClick={skip} disabled={saving !== null}>
                 {start.redo ? "Cancel" : saving === "skip" ? "One moment…" : "Skip for now"}
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -210,7 +215,7 @@ export default function Welcome() {
                     <TasteGrid posts={taste.slice(0, 9)} value={draft.taste} onChange={(taste) => patch({ taste })} max={TASTE} className="grid-cols-3 lg:hidden" />
                     <div className="mt-4 flex items-center gap-3 lg:mt-0">
                       <Ring value={draft.taste.length} max={TASTE} className="size-9 shrink-0" />
-                      <p className="text-title font-medium text-pretty text-primary-foreground tabular-nums" aria-live="polite">
+                      <p className="text-title text-pretty text-foreground tabular-nums" style={semibold} aria-live="polite">
                         {count}
                       </p>
                     </div>
@@ -228,17 +233,17 @@ export default function Welcome() {
                   {step === STEPS.length - 1 ? (saving === "finish" ? "Saving…" : "Open my feed") : "Next"}
                 </Button>
                 {step === 2 && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="transparent"
+                    size="sm"
                     onClick={() => {
                       patch({ brands: [] });
                       stepDone(0);
                       setStep((s) => s + 1);
                     }}
-                    className={textButton}
                   >
                     No one in particular
-                  </button>
+                  </Button>
                 )}
               </div>
             </form>
@@ -247,15 +252,13 @@ export default function Welcome() {
       </section>
 
       {/* Your For you, taking shape. The caption isn't a live region: each pick already says
-          whether it's on, and this would say it twice. The ground is the solid base-50 rather
-          than bg-card (the same grey, as a 2% tint), because a picked tile's ring offset has to
-          be a solid colour equal to it (TasteGrid's ground="grey"); a tint would let the ring
-          show through the gap */}
-      <aside className="relative hidden bg-base-50 lg:block" aria-label="Your feed, taking shape">
-        <p className="absolute top-6 right-10 left-10 z-10 text-caption text-secondary-foreground">{caption}</p>
+          whether it's on, and this would say it twice. The ground is the muted tint; a picked
+          tile's ring sits inside its own edge, so the ground needn't be solid */}
+      <aside className="relative hidden bg-muted lg:block" aria-label="Your feed, taking shape">
+        <p className="absolute top-6 right-10 left-10 z-10 text-caption text-muted-foreground">{caption}</p>
         <div className={cx("absolute inset-0 overflow-hidden px-10 pt-14 pb-10", step === 3 && !done && "overflow-y-auto")}>
           {step === 3 && !done ? (
-            <TasteGrid posts={taste} value={draft.taste} onChange={(taste) => patch({ taste })} max={TASTE} ground="grey" className="grid-cols-4" />
+            <TasteGrid posts={taste} value={draft.taste} onChange={(taste) => patch({ taste })} max={TASTE} className="grid-cols-4" />
           ) : (
             // Re-rises only when the wall's posts actually change
             <Collage key={ranked.slice(0, 12).map((p) => p.shortCode).join()} posts={ranked.slice(0, 12)} />

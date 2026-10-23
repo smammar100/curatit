@@ -4,12 +4,18 @@
 // you type, and the project's rules as a checklist that ticks off live (PASSWORD_RULES in
 // lib/auth, the same rules Supabase enforces). The meter runs red, amber, light green, green
 // (the danger, warning and success tokens in global.css); the word beside it says the same in
-// a darker shade, so the level never rests on colour alone.
+// a darker shade, so the level never rests on colour alone. Since 2026-10-23 the field is the
+// system's (AuthField: a Field holding an Input), the meter's track and the unfilled bars are the
+// muted tint and the one stroke, and the words take the ink or the muted ink, in the library's
+// semibold where they were medium.
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Check from "@/components/fundations/icons/Check";
 import { PASSWORD_RULES } from "@/lib/auth";
 import { cx } from "@/lib/cx";
+import { fontWeights } from "@/lib/font-weight";
 import { AuthField } from "./AuthParts";
+
+const semibold = { fontVariationSettings: fontWeights.semibold };
 
 const LEVELS = [
   { label: "", fill: "", text: "" },
@@ -97,14 +103,14 @@ export default function PasswordField({
           {[1, 2, 3, 4].map((step) => (
             <span
               key={step}
-              className="h-1 overflow-hidden rounded-full bg-component"
+              className="h-1 overflow-hidden rounded-full bg-muted"
             >
               <span
                 className={cx(
                   "block h-full origin-left rounded-full transition-[scale,background-color] duration-200 ease-out-quint motion-reduce:transition-none",
                   step <= level
                     ? cx(fill, "scale-x-100")
-                    : "scale-x-0 bg-border-strong",
+                    : "scale-x-0 bg-border",
                 )}
                 // The fill sweeps left to right as the level climbs
                 style={{ transitionDelay: `${(step - 1) * 40}ms` }}
@@ -115,9 +121,10 @@ export default function PasswordField({
         <p
           aria-live="polite"
           className={cx(
-            "w-12 text-right text-caption-lg font-medium transition-colors duration-200 ease-out-quint motion-reduce:transition-none",
+            "w-12 text-right text-caption-lg transition-colors duration-200 ease-out-quint motion-reduce:transition-none",
             text,
           )}
+          style={semibold}
         >
           {word && <span className="sr-only">Password strength: </span>}
           {word}
@@ -136,7 +143,7 @@ export default function PasswordField({
               key={rule.id}
               className={cx(
                 "flex items-center gap-1.5 text-caption-lg transition-colors duration-150 ease-out-quint motion-reduce:transition-none",
-                ok ? "text-primary-foreground" : "text-secondary-foreground",
+                ok ? "text-foreground" : "text-muted-foreground",
               )}
             >
               <span

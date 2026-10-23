@@ -10,7 +10,9 @@
 // under it stops all of it (WCAG 2.2.2), and under reduced motion everything holds still on the
 // first post. It works with three to five posts: the walk only visits the ones there are. It's
 // drawn inside the page's .vision-night panel, so its colours are the base-* and white classes
-// the panel redefines (the semantic tokens don't flip there). Original work, made for Curatit.
+// the panel redefines (the semantic tokens don't flip there, which is also why the Pause button
+// is drawn by hand on those classes rather than being a system Button; its focus ring is the
+// site's one ring, 2026-10-23). Original work, made for Curatit.
 import Image from "next/image";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Pause from "@/components/fundations/icons/Pause";
@@ -300,7 +302,7 @@ export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
         onClick={() => setPaused((value) => !value)}
         aria-pressed={paused}
         aria-label={paused ? "Play the animation" : "Pause the animation"}
-        className="absolute right-0 bottom-0 flex size-11 items-center justify-center rounded-full text-base-500 ring-1 ring-base-200 transition-[color,background-color] duration-150 ease-out-quint hover:bg-base-100 hover:text-base-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-500"
+        className="absolute right-0 bottom-0 flex size-11 items-center justify-center rounded-full text-base-500 ring-1 ring-base-200 transition-[color,background-color] duration-80 hover:bg-base-100 hover:text-base-900 focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]"
       >
         {paused ? <Play className="size-4" /> : <Pause className="size-4" />}
       </button>

@@ -1,7 +1,9 @@
 "use client";
 
 // The dashboard's masonry: posts at their own proportions in as many columns as the chosen
-// tile size fits, each tile opening the post, with Save on hover.
+// tile size fits, each tile opening the post, with Save on hover. Since 2026-10-23 on the
+// system's tokens: the cover in a 12px corner over the Skeleton atom's shimmer, the brand label
+// a 10px tile of the page's colour with the default shadow.
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -95,14 +97,19 @@ function Tile({ post, priority, sizes }: { post: DashPost; priority: boolean; si
   const [loaded, setLoaded] = useState(false);
   return (
     <li className="group relative">
-      <Link href={postHref(post.shortCode)} scroll={false} onClick={rememberOpener} className="block">
+      <Link
+        href={postHref(post.shortCode)}
+        scroll={false}
+        onClick={rememberOpener}
+        className="block rounded-[12px] focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]"
+      >
         {/* No fill of its own: the shimmering Skeleton is the placeholder, and its alpha tint over
             another would double. Square: the tile's own corner clips it */}
         {/* Off screen the browser skips the cover, shimmer and image alike: with a couple of hundred
             tiles it was restyling every waiting tile's shimmer on every frame of a scroll
             (2026-10-20). Its size comes from the aspect ratio, so nothing shifts. On the cover, not
             the tile, so the Save menu that opens from the tile is never clipped */}
-        <div className="relative w-full overflow-hidden rounded" style={{ aspectRatio: ratio(post), contentVisibility: "auto" }}>
+        <div className="relative w-full overflow-hidden rounded-[12px]" style={{ aspectRatio: ratio(post), contentVisibility: "auto" }}>
           {!loaded && <Skeleton radius="none" className="absolute inset-0" />}
           <Image
             src={post.cover}
@@ -125,7 +132,7 @@ function Tile({ post, priority, sizes }: { post: DashPost; priority: boolean; si
         <SaveMenu post={post.shortCode} tone="overlay" className="pointer-events-auto self-end" />
         {/* A label over the cover: the page's colour (white, near-black in dark) and the default
             shadow */}
-        <span className="self-start rounded-md bg-page/95 px-2 py-1 shadow-sm">
+        <span className="self-start rounded-[10px] bg-background/95 px-2 py-1 shadow-sm">
           <BrandName brand={post.brand} />
         </span>
       </div>

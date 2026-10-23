@@ -5,6 +5,7 @@ import Text from "@/components/fundations/elements/Text";
 import LinkedinLogo from "@/components/fundations/icons/LinkedinLogo";
 import SelectionGraph from "@/components/vision/SelectionGraph";
 import Signature from "@/components/vision/Signature";
+import { fontWeights } from "@/lib/font-weight";
 import { getPublishedPosts, type LibraryPost } from "@/lib/posts";
 
 export const metadata: Metadata = {
@@ -36,7 +37,11 @@ function byCategory(posts: LibraryPost[], count: number) {
 // The Vision page, the "Night" direction (chosen 2026-10-12 from a five-way prototype): one panel
 // inset from the window edges, dark on the light site and paper on the dark one (like the
 // footer), holding the statement, the founder's note in his own voice with his signature, and
-// the animated post graph; then the library's counts and the ways in, back on the page itself
+// the animated post graph; then the library's counts and the ways in, back on the page itself.
+// Since 2026-10-23 the panel has the container corners and the section under it is on the
+// system's tokens; inside the panel the base-* classes stay (they are how .vision-night inverts,
+// the semantic tokens don't flip there), which is also why the LinkedIn link is drawn by hand on
+// them rather than being a system Button. Its focus ring is the site's one ring.
 export default async function VisionPage() {
   // Like the homepage, a failed fetch throws, so a failed revalidation keeps the last good page
   const posts = await getPublishedPosts();
@@ -48,7 +53,7 @@ export default async function VisionPage() {
       <section className="px-4 pt-16 lg:pt-20">
         {/* Inside the panel the base-* and white classes are how it inverts: .vision-night
             redefines them, not the semantic tokens, so they stay here (SelectionGraph too) */}
-        <div className="vision-night overflow-clip rounded-5xl sm:rounded-[2rem]">
+        <div className="vision-night overflow-clip rounded-[24px]">
           <Wrapper variant="standard" className="pt-12 pb-20 lg:pt-20 lg:pb-28">
             <div className="mx-auto max-w-2xl text-center">
               <Text tag="h1" variant="h1" className="text-base-900 text-balance">
@@ -77,7 +82,9 @@ export default async function VisionPage() {
               <Signature className="w-64 text-base-900 sm:w-80" />
               <div className="mt-8 flex items-center gap-3 text-left">
                 <div className="min-w-0">
-                  <p className="text-body-sm font-medium text-base-900">{FOUNDER.name}</p>
+                  <p className="text-body-sm text-base-900" style={{ fontVariationSettings: fontWeights.semibold }}>
+                    {FOUNDER.name}
+                  </p>
                   <p className="text-body-sm text-base-600">{FOUNDER.title}</p>
                 </div>
                 <a
@@ -85,7 +92,7 @@ export default async function VisionPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`${FOUNDER.name} on LinkedIn (opens in a new tab)`}
-                  className="ml-2 flex size-11 shrink-0 items-center justify-center rounded-full text-base-500 ring-1 ring-base-200 transition-[color,background-color] duration-150 ease-out-quint hover:bg-base-100 hover:text-base-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-500"
+                  className="ml-2 flex size-11 shrink-0 items-center justify-center rounded-full text-base-500 ring-1 ring-base-200 transition-[color,background-color] duration-80 hover:bg-base-100 hover:text-base-900 focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]"
                 >
                   <LinkedinLogo className="size-4" />
                 </a>
@@ -105,7 +112,7 @@ export default async function VisionPage() {
         <Wrapper variant="standard" className="section-y">
           <div className="mx-auto max-w-2xl text-center">
             {posts.length > 0 && (
-              <Text tag="h2" variant="h3" className="text-balance text-primary-foreground">
+              <Text tag="h2" variant="h3" className="text-balance text-foreground">
                 {posts.length} posts from {brands} brands so far, and more every week.
               </Text>
             )}

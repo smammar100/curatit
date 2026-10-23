@@ -4,10 +4,21 @@
 // and failed, for editors. AI drafts wait here until an editor approves them; nothing an AI wrote
 // is public before that. Analyses themselves run on a person's machine (npm run creative -- work),
 // so the queue shows what's waiting for that, not a progress bar.
+//
+// Since 2026-10-23 on the design system, after the post page's Card look: the counts as quiet
+// grey tiles (bg-muted, the first step of depth), the lists in the shared Tabs, a failed load as
+// a Notice, the wait as Skeleton rows, an empty list as EmptyState with the cleared-queue drawing,
+// each post a ruled row with a 10px-cornered thumbnail, and the runs as a table in one hairline.
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Button from "@/components/fundations/elements/Button";
+import Skeleton from "@/components/fundations/elements/Skeleton";
+import TextLink from "@/components/fundations/elements/TextLink";
+import WarningCircle from "@/components/fundations/icons/WarningCircle";
+import Card from "@/components/fundations/molecules/Card";
+import EmptyState from "@/components/fundations/molecules/EmptyState";
+import Notice from "@/components/fundations/molecules/Notice";
 import Tabs, {
   Tab,
   TabList,
@@ -29,10 +40,11 @@ import {
   Frame,
   label,
   money,
-  Notice,
+  PageMessage,
   Pill,
   reviewHref,
   seconds,
+  semibold,
   sourceLabel,
   StatusPill,
   useBusy,
@@ -60,9 +72,9 @@ export default function ReviewQueue() {
   return (
     <Frame>
       {editor === false ? (
-        <Notice title="Editors only">
+        <PageMessage title="Editors only">
           The analysis review is for Curatit&apos;s editors.
-        </Notice>
+        </PageMessage>
       ) : (
         <QueueView queue={queue} failed={failed} onRefresh={refresh} />
       )}
@@ -120,9 +132,9 @@ export function QueueView({
   const shown: ReactNode = (
     <>
       {failed && (
-        <p className="rounded-2xl bg-danger-subtle px-4 py-3 text-body text-danger-foreground">
+        <Notice tone="danger" live className="mb-3">
           Couldn&apos;t load the queue: {failed}
-        </p>
+        </Notice>
       )}
       {!queue && !failed && <ListSkeleton />}
       {queue && tab === "Recent runs" && <Runs queue={queue} />}
@@ -154,10 +166,10 @@ export function QueueView({
   return (
     <>
       <div>
-        <h1 className="font-display text-display font-light text-primary-foreground">
+        <h1 className="font-display text-display font-light text-foreground">
           Analysis review
         </h1>
-        <p className="mt-1 max-w-2xl text-subtitle text-pretty text-secondary-foreground">
+        <p className="mt-1 max-w-2xl text-subtitle text-pretty text-muted-foreground">
           AI drafts wait here until an editor approves them. Nothing is public
           before that, and a new analysis never replaces one you&apos;ve
           reviewed.
@@ -167,18 +179,19 @@ export function QueueView({
           {tiles.map(([name, value]) => (
             <div
               key={name}
-              className="flex min-w-0 flex-col-reverse rounded-2xl bg-card px-3.5 py-3"
+              className="flex min-w-0 flex-col-reverse rounded-[20px] bg-muted px-4 py-3 shadow-surface-1"
             >
-              <dt className="truncate text-caption text-secondary-foreground">
+              <dt className="truncate text-caption text-muted-foreground">
                 {name}
               </dt>
               <dd
                 className={cx(
-                  "text-title font-medium tabular-nums",
+                  "text-title tabular-nums",
                   name === "Failed" && value
-                    ? "text-danger-foreground"
-                    : "text-primary-foreground",
+                    ? "text-destructive"
+                    : "text-foreground",
                 )}
+                style={semibold}
               >
                 {value ?? "–"}
               </dd>
@@ -186,7 +199,7 @@ export function QueueView({
           ))}
         </dl>
         {queue?.oldestPending && (
-          <p className="mt-2 text-caption text-secondary-foreground">
+          <p className="mt-2 text-caption text-muted-foreground">
             Oldest queued {ago(queue.oldestPending)}. Run{" "}
             <code className="font-mono text-micro">
               npm run creative -- work
@@ -196,10 +209,9 @@ export function QueueView({
         )}
 
         {/* The shared Tabs: one tab stop, ← / → / Home / End marked handled so the dashboard's
-            own arrow handlers leave them be; the row wraps on a narrow screen. mt-7 and the panels' mt-3
-            land the row where the hand-built one sat (32px up, 16px down), past the list's py-1 */}
+            own arrow handlers leave them be; the row wraps on a narrow screen */}
         <Tabs value={tab} onValueChange={setTab} className="mt-7">
-          <TabList aria-label="Lists" variant="pill" wrap>
+          <TabList aria-label="Lists" wrap>
             {TABS.map((name) => (
               <Tab key={name} value={name} count={lists[name]}>
                 {name}
@@ -219,8 +231,8 @@ export function QueueView({
 
 // Approve and publish everything waiting for review in one go (2026-10-15, after an import of
 // 55 posts: the owner reviews a whole import at once, and one by one took the afternoon). It asks
-// first, then records each decision through the same creative_review call the Approve button
-// makes, so every post gets its review event and its page is rebuilt, and says how it went.
+// first, in place, then records each decision through the same creative_review call the Approve
+// button makes, so every post gets its review event and its page is rebuilt, and says how it went.
 function ApproveAll({
   rows,
   onDone,
@@ -280,18 +292,17 @@ function ApproveAll({
   const n = targets.length;
   return (
     <div
-      className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-card px-4 py-3"
+      className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[20px] bg-muted px-4 py-3 shadow-surface-1"
       aria-live="polite"
     >
       {phase === "idle" && (
         <>
-          <p className="text-body text-secondary-foreground">
+          <p className="text-body text-muted-foreground">
             {n} {n === 1 ? "analysis is" : "analyses are"} waiting.
           </p>
           <Button
             variant="default"
             size="sm"
-            shape="pill"
             onClick={() => setPhase("confirm")}
           >
             Approve and publish all {n}
@@ -300,18 +311,17 @@ function ApproveAll({
       )}
       {phase === "confirm" && (
         <>
-          <p className="text-body text-primary-foreground">
+          <p className="text-body text-foreground">
             Publish all {n}? Each goes live as it is. Any of them can be
             unpublished afterwards.
           </p>
           <div className="flex gap-2">
-            <Button variant="default" size="sm" shape="pill" onClick={run}>
+            <Button variant="default" size="sm" onClick={run}>
               Publish all {n}
             </Button>
             <Button
               variant="secondary"
               size="sm"
-              shape="pill"
               onClick={() => setPhase("idle")}
             >
               Cancel
@@ -320,7 +330,7 @@ function ApproveAll({
         </>
       )}
       {phase === "running" && (
-        <p className="text-body text-primary-foreground tabular-nums">
+        <p className="text-body text-foreground tabular-nums">
           Publishing{" "}
           {progress.done + progress.failed + 1 > n
             ? n
@@ -333,8 +343,8 @@ function ApproveAll({
           className={cx(
             "text-body",
             progress.failed
-              ? "text-danger-foreground"
-              : "text-primary-foreground",
+              ? "text-destructive"
+              : "text-foreground",
           )}
         >
           Published {progress.done} of {n}.
@@ -350,23 +360,19 @@ function ApproveAll({
 // An empty list: the cleared-queue drawing over one line saying which list is empty
 function Empty({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-2xl bg-card px-4 pt-10 pb-8 text-center">
-      <ReviewArt className="mx-auto mb-5 w-56" />
-      <p className="text-body text-secondary-foreground">{children}</p>
-    </div>
+    <Card variant="mat" padding="sm">
+      <EmptyState illustration={<ReviewArt className="w-56" />} title={children} />
+    </Card>
   );
 }
 
 function ListSkeleton() {
   return (
-    <ul aria-hidden="true" className="space-y-2">
+    <div role="status" aria-label="Loading the queue" className="space-y-2">
       {[0, 1, 2].map((i) => (
-        <li
-          key={i}
-          className="h-20 animate-pulse rounded-2xl bg-card motion-reduce:animate-none"
-        />
+        <Skeleton key={i} radius="lg" className="h-20" />
       ))}
-    </ul>
+    </div>
   );
 }
 
@@ -389,13 +395,17 @@ function Rows({
   );
 }
 
+// The hairline round a picture, drawn over it so the image can't cover it (as CardMedia does)
+const edge =
+  "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:outline-1 after:-outline-offset-1 after:outline-border";
+
 function Row({ row, onChange }: { row: QueueRow; onChange: () => void }) {
   const { post, analysis, job, proposals } = row;
   const dna = analysis?.creative_dna;
   const { busy, error, run } = useBusy();
   return (
-    <li className="relative flex items-center gap-3 rounded-2xl p-2 pr-3 ring-1 ring-border-default transition-[background-color] duration-150 ease-out-quint hover:bg-transparent-hover">
-      <div className="relative aspect-4/5 w-12 shrink-0 overflow-hidden rounded-sm bg-component outline-1 -outline-offset-1 outline-edge">
+    <li className="relative flex items-center gap-3 rounded-[20px] p-2 pr-3 ring-1 ring-border transition-[background-color] duration-80 hover:bg-hover">
+      <div className={cx("relative aspect-4/5 w-12 shrink-0 overflow-hidden rounded-[10px] bg-muted", edge)}>
         {post.images[0] && (
           <Image
             src={post.images[0]}
@@ -407,33 +417,38 @@ function Row({ row, onChange }: { row: QueueRow; onChange: () => void }) {
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-2 truncate text-caption text-secondary-foreground">
-          <span className="font-medium text-primary-foreground">
+        <p className="flex items-center gap-2 truncate text-caption text-muted-foreground">
+          <span className="text-foreground" style={semibold}>
             {post.brand}
           </span>
           <span>{post.category}</span>
           <span className="font-mono text-micro">{post.short_code}</span>
         </p>
+        {/* The row's one link, stretched over it; the focus ring goes round the row */}
         <Link
           href={reviewHref(post.id)}
-          className="mt-0.5 block truncate text-subtitle font-medium text-primary-foreground after:absolute after:inset-0 after:rounded-2xl"
+          className="mt-0.5 block truncate text-subtitle text-foreground outline-none after:absolute after:inset-0 after:rounded-[20px] focus-visible:after:outline-1 focus-visible:after:outline-offset-2 focus-visible:after:outline-[color:var(--focus-ring)]"
+          style={semibold}
         >
           {dna?.concept ?? (job ? "Analysis failed" : "No analysis yet")}
         </Link>
         {job?.state === "failed" ? (
-          <p className="truncate text-caption text-danger-foreground">
+          <p className="truncate text-caption text-destructive">
             {job.last_failure_kind}: {job.last_error}
           </p>
         ) : (
           dna && (
-            <p className="truncate text-caption text-secondary-foreground">
+            <p className="truncate text-caption text-muted-foreground">
               {label("archetype", dna.primary_archetype.slug)} ·{" "}
               {label("objective", dna.marketing_objective.slug)}
             </p>
           )
         )}
         {error && (
-          <p className="text-caption text-danger-foreground">{error}</p>
+          <p className="flex items-center gap-1.5 text-caption text-destructive">
+            <WarningCircle className="size-3.5 shrink-0" />
+            {error}
+          </p>
         )}
       </div>
       <div className="relative z-10 flex shrink-0 items-center gap-1.5">
@@ -455,7 +470,6 @@ function Row({ row, onChange }: { row: QueueRow; onChange: () => void }) {
           <Button
             variant="secondary"
             size="sm"
-            shape="pill"
             disabled={busy !== null}
             onClick={() =>
               run("retry", () => reprocess(post.id)).then(
@@ -474,10 +488,10 @@ function Row({ row, onChange }: { row: QueueRow; onChange: () => void }) {
 function Runs({ queue }: { queue: Queue }) {
   if (!queue.runs.length) return <Empty>No runs yet.</Empty>;
   return (
-    <div className="overflow-x-auto rounded-2xl ring-1 ring-border-default">
+    <div className="overflow-x-auto rounded-[20px] ring-1 ring-border">
       <table className="w-full min-w-[40rem] text-left text-body">
-        <thead className="text-caption text-secondary-foreground">
-          <tr className="border-b border-border-default">
+        <thead className="text-caption text-muted-foreground">
+          <tr className="border-b border-border">
             {[
               "When",
               "Post",
@@ -487,26 +501,23 @@ function Runs({ queue }: { queue: Queue }) {
               "Est. cost",
               "Time",
             ].map((h) => (
-              <th key={h} scope="col" className="px-3 py-2 font-medium">
+              <th key={h} scope="col" className="px-3 py-2" style={semibold}>
                 {h}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-border-default tabular-nums">
+        <tbody className="divide-y divide-border tabular-nums">
           {queue.runs.map((run) => (
             <tr key={run.id}>
-              <td className="px-3 py-2 whitespace-nowrap text-secondary-foreground">
+              <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
                 {ago(run.started_at)}
               </td>
-              <td className="max-w-48 truncate px-3 py-2">
+              <td className="max-w-48 truncate px-3 py-2 text-foreground">
                 {run.post ? (
-                  <Link
-                    href={reviewHref(run.post_id)}
-                    className="text-primary-foreground transition-colors duration-150 ease-out-quint hover:text-brand-foreground"
-                  >
+                  <TextLink href={reviewHref(run.post_id)}>
                     {run.post.brand} · {run.post.short_code}
-                  </Link>
+                  </TextLink>
                 ) : (
                   run.post_id
                 )}
@@ -515,7 +526,7 @@ function Runs({ queue }: { queue: Queue }) {
                 className={cx(
                   "px-3 py-2",
                   (run.status === "failed" || run.status === "invalid") &&
-                    "text-danger-foreground",
+                    "text-destructive",
                 )}
                 title={run.error ?? undefined}
               >
@@ -536,7 +547,7 @@ function Runs({ queue }: { queue: Queue }) {
           ))}
         </tbody>
       </table>
-      <p className="border-t border-border-default px-3 py-2 text-caption text-secondary-foreground">
+      <p className="border-t border-border px-3 py-2 text-caption text-muted-foreground">
         Costs are the model provider&apos;s list-price estimates; on a Claude
         subscription they count against its usage limits rather than being
         billed.

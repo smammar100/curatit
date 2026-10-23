@@ -6,17 +6,27 @@
 // (optionally publishing), rejects, reopens, unpublishes, edits (saved as a new version) or asks
 // for a fresh analysis (filed as a proposal beside whatever has been reviewed). Previous and Next
 // (or K and J) step through the queue list the post was opened from.
+//
+// Since 2026-10-23 on the design system, after the post page's Card look: the slide stage and
+// the decisions, the slide record and the caption on quiet grey tiles (bg-muted, the first step
+// of depth, 20 to 24px corners), the slide arrows and the steps through the list as icon Buttons,
+// the version and slide-role chips as pressed Buttons, Compare with as a Field over a native
+// select on the field recipe, a failed decision as a Notice, the wait as a Skeleton, and the
+// Instagram link as a TextLink.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Button from "@/components/fundations/elements/Button";
 import Input from "@/components/fundations/elements/Input";
-import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
+import Skeleton from "@/components/fundations/elements/Skeleton";
+import TextLink from "@/components/fundations/elements/TextLink";
 import CaretLeft from "@/components/fundations/icons/CaretLeft";
 import CaretRight from "@/components/fundations/icons/CaretRight";
 import Check from "@/components/fundations/icons/Check";
+import Field from "@/components/fundations/molecules/Field";
+import Notice from "@/components/fundations/molecules/Notice";
 import { cx } from "@/lib/cx";
+import { fontWeights } from "@/lib/font-weight";
 import type { CreativeDna, SlideObservation } from "@/lib/creative/schema";
 import { refreshPostPage } from "@/app/dashboard/review/actions";
 import { track } from "@/lib/analytics";
@@ -32,20 +42,23 @@ import DnaEditor from "./DnaEditor";
 import {
   ago,
   EvidenceChip,
-  fieldParts,
   Frame,
   label,
   money,
-  Notice,
+  PageMessage,
   Pill,
   reviewHref,
   Section,
   seconds,
+  selectClass,
+  semibold,
   sourceLabel,
   StatusPill,
   useBusy,
 } from "./parts";
 import { useWalk, type WalkItem } from "./walk";
+
+const normal = { fontVariationSettings: fontWeights.normal };
 
 export default function ReviewPost({ postId }: { postId: string }) {
   const editor = useIsEditor();
@@ -65,24 +78,23 @@ export default function ReviewPost({ postId }: { postId: string }) {
   let content;
   if (editor === false)
     content = (
-      <Notice title="Editors only">
+      <PageMessage title="Editors only">
         The analysis review is for Curatit&apos;s editors.
-      </Notice>
+      </PageMessage>
     );
   else if (failed)
-    content = <Notice title="Couldn't load this analysis">{failed}</Notice>;
+    content = <PageMessage title="Couldn't load this analysis">{failed}</PageMessage>;
   else if (data === undefined)
     content = (
-      <div
-        aria-hidden="true"
-        className="mt-6 h-[70vh] max-w-6xl animate-pulse rounded-3xl bg-card motion-reduce:animate-none"
-      />
+      <div role="status" aria-label="Loading the analysis">
+        <Skeleton radius="2xl" className="mt-6 h-[70vh] max-w-6xl" />
+      </div>
     );
   else if (data === null)
     content = (
-      <Notice title="No such post">
+      <PageMessage title="No such post">
         The review covers posts in the library.
-      </Notice>
+      </PageMessage>
     );
   else content = <PostReviewView data={data} onRefresh={refresh} />;
   return <Frame>{content}</Frame>;
@@ -197,12 +209,15 @@ export function PostReviewView({
 
         <div className="min-w-0">
           <div className="flex min-h-9 items-center justify-between gap-3">
-            <Link
+            <Button
+              variant="secondary"
+              size="sm"
+              isLink
               href={reviewHref()}
-              className="text-caption font-medium whitespace-nowrap text-secondary-foreground transition-colors duration-150 ease-out-quint hover:text-primary-foreground"
+              leftIcon={<CaretLeft className="size-3.5" />}
             >
-              ← Review queue
-            </Link>
+              Review queue
+            </Button>
             {/* Not while a decision is saving: one that failed after you'd moved on would never show */}
             <ReviewNav
               {...walk}
@@ -215,25 +230,20 @@ export function PostReviewView({
               }
             />
           </div>
-          <p className="mt-3 flex flex-wrap items-center gap-x-2 text-caption text-secondary-foreground">
-            <span className="font-medium text-primary-foreground">
+          <p className="mt-3 flex flex-wrap items-center gap-x-2 text-caption text-muted-foreground">
+            <span className="text-foreground" style={semibold}>
               {post.brand}
             </span>
             <span>{post.category}</span>
             <span>{post.format}</span>
-            <a
-              href={post.url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-0.5 transition-colors duration-150 ease-out-quint hover:text-brand-foreground"
-            >
-              {post.short_code} on Instagram <ArrowUpRight className="size-3" />
-            </a>
+            <TextLink variant="quiet" external href={post.url}>
+              {post.short_code} on Instagram
+            </TextLink>
           </p>
           <h1
             ref={title}
             tabIndex={-1}
-            className="mt-1 font-display text-display font-light text-balance text-primary-foreground outline-none"
+            className="mt-1 font-display text-display font-light text-balance text-foreground outline-none"
           >
             {dna?.concept ?? "Not analysed yet"}
           </h1>
@@ -277,7 +287,7 @@ export function PostReviewView({
 
           {/* Decisions */}
           {version && !editing && (
-            <div className="mt-5 rounded-2xl bg-card p-3">
+            <div className="mt-5 rounded-[20px] bg-muted p-4 shadow-surface-1">
               <div className="flex flex-wrap gap-2">
                 {(!isCurrent ||
                   analysis?.review_status !== "approved" ||
@@ -285,7 +295,6 @@ export function PostReviewView({
                   <Button
                     variant="default"
                     size="sm"
-                    shape="pill"
                     disabled={!!busy}
                     onClick={() => decide("approve", true)}
                   >
@@ -298,7 +307,6 @@ export function PostReviewView({
                   <Button
                     variant="secondary"
                     size="sm"
-                    shape="pill"
                     disabled={!!busy}
                     onClick={() => decide("approve")}
                   >
@@ -308,7 +316,6 @@ export function PostReviewView({
                 <Button
                   variant="secondary"
                   size="sm"
-                  shape="pill"
                   disabled={!!busy}
                   onClick={() => (setDone(null), setEditing(true))}
                 >
@@ -318,7 +325,6 @@ export function PostReviewView({
                   <Button
                     variant="secondary"
                     size="sm"
-                    shape="pill"
                     disabled={!!busy}
                     onClick={() => decide("reject")}
                   >
@@ -329,7 +335,6 @@ export function PostReviewView({
                   <Button
                     variant="secondary"
                     size="sm"
-                    shape="pill"
                     disabled={!!busy}
                     onClick={() => decide("reopen")}
                   >
@@ -340,7 +345,6 @@ export function PostReviewView({
                   <Button
                     variant="secondary"
                     size="sm"
-                    shape="pill"
                     disabled={!!busy}
                     onClick={() => decide("unpublish")}
                   >
@@ -350,7 +354,6 @@ export function PostReviewView({
                 <Button
                   variant="secondary"
                   size="sm"
-                  shape="pill"
                   disabled={!!busy}
                   title="Queue a fresh analysis; it lands as a proposal next to this one"
                   onClick={() => {
@@ -381,24 +384,28 @@ export function PostReviewView({
                 className="mt-3"
               />
               {error && (
-                <p className="mt-2 text-caption text-danger-foreground">
+                <Notice tone="danger" live className="mt-3">
                   {error}
-                </p>
+                </Notice>
               )}
               <div role="status">
                 {done?.versionId === version.id && !busy && (
-                  <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-body text-secondary-foreground">
+                  <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-body text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
                       <Check className="size-3.5 shrink-0" />
                       {done.text}
                     </span>
                     {walk.next && (
-                      <Link
+                      <Button
+                        variant="transparent"
+                        size="sm"
+                        isLink
                         href={reviewHref(walk.next.id)}
-                        className="relative font-medium text-primary-foreground transition-colors duration-150 ease-out-quint before:absolute before:-inset-x-1 before:-inset-y-3 hover:text-brand-foreground"
+                        rightIcon={<CaretRight className="size-3.5" />}
+                        className="-my-1"
                       >
-                        Next: {walk.next.label} →
-                      </Link>
+                        Next: {walk.next.label}
+                      </Button>
                     )}
                   </p>
                 )}
@@ -410,13 +417,14 @@ export function PostReviewView({
           {data.versions.length > 0 && (
             <Section title={`Versions (${data.versions.length})`}>
               <div className="flex flex-wrap gap-1.5">
+                {/* The shown version as a pressed Button: the ink while it's the one on screen */}
                 {data.versions.map((v) => (
-                  <button
+                  <Button
                     key={v.id}
-                    type="button"
+                    variant={v.id === versionId ? "default" : "secondary"}
+                    size="sm"
                     aria-pressed={v.id === versionId}
                     onClick={() => (setVersionId(v.id), setEditing(false))}
-                    className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-caption font-medium text-secondary-foreground ring-1 ring-border-default transition-[background-color,color,box-shadow] duration-150 ease-out-quint hover:bg-transparent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-pressed:bg-inverted-solid aria-pressed:text-on-inverted-foreground aria-pressed:ring-inverted-solid"
                   >
                     v{v.version_no} ·{" "}
                     {v.source === "ai"
@@ -428,19 +436,15 @@ export function PostReviewView({
                     {v.review_decision
                       ? ` · ${v.review_decision}`
                       : olderDraft(v) && " · older draft"}
-                  </button>
+                  </Button>
                 ))}
               </div>
               {data.versions.length > 1 && version && (
-                <label className="mt-3 flex items-center gap-2 text-caption text-secondary-foreground">
-                  Compare with
+                <Field label="Compare with" className="mt-3 max-w-48">
                   <select
                     value={compareId ?? ""}
                     onChange={(e) => setCompareId(e.target.value || null)}
-                    className={cx(
-                      "h-8 rounded-lg py-0 pr-8 pl-3 text-caption",
-                      fieldParts,
-                    )}
+                    className={selectClass}
                   >
                     <option value="">nothing</option>
                     {data.versions
@@ -451,7 +455,7 @@ export function PostReviewView({
                         </option>
                       ))}
                   </select>
-                </label>
+                </Field>
               )}
               {version && compare && <Diff a={version} b={compare} />}
             </Section>
@@ -486,10 +490,8 @@ export function PostReviewView({
             <p
               id="review-caption"
               className={cx(
-                "rounded-2xl px-3.5 py-3 text-body whitespace-pre-line text-secondary-foreground",
-                focus === "caption"
-                  ? "bg-component ring-2 ring-primary-foreground"
-                  : "bg-card",
+                "rounded-[20px] bg-muted px-4 py-3 text-body whitespace-pre-line text-muted-foreground shadow-surface-1",
+                focus === "caption" && "ring-2 ring-foreground",
               )}
             >
               {post.caption ? (
@@ -498,7 +500,7 @@ export function PostReviewView({
                   quotes={dna ? quotesFor(dna, "caption") : []}
                 />
               ) : (
-                <span className="text-secondary-foreground">No caption.</span>
+                <span className="text-muted-foreground">No caption.</span>
               )}
             </p>
           </Section>
@@ -572,7 +574,7 @@ function ReviewNav({
       aria-label="Posts in this list"
       className="flex shrink-0 items-center gap-2"
     >
-      <p className="text-caption whitespace-nowrap text-secondary-foreground tabular-nums">
+      <p className="text-caption whitespace-nowrap text-muted-foreground tabular-nums">
         <span className="max-sm:hidden">{walk.list} · </span>
         {index >= 0
           ? `${index + 1} of ${count}`
@@ -596,35 +598,30 @@ function Step({
   const Caret = direction === "previous" ? CaretLeft : CaretRight;
   const name = direction === "previous" ? "Previous post" : "Next post";
   const shortcut = direction === "previous" ? "K" : "J";
-  // 40px to look at, 44px to hit
-  const hit = "before:absolute before:-inset-0.5 before:rounded-full";
+  // Nothing to go to, or not now: the same button, disabled, with the reason on hover
   if (!to || blocked)
     return (
-      <span
-        aria-hidden="true"
+      <Button
+        variant="secondary"
+        iconOnly
+        disabled
+        aria-label={name}
         title={to ? (blocked ?? undefined) : undefined}
-        className={cx(
-          hit,
-          "relative flex size-10 items-center justify-center rounded-full text-disabled-foreground",
-        )}
       >
-        <Caret className="size-4" />
-      </span>
+        <Caret className="size-3.5" />
+      </Button>
     );
   return (
     <Button
       isLink
       href={reviewHref(to.id)}
       variant="secondary"
-      size="base"
-      shape="pill"
       iconOnly
       aria-label={`${name}: ${to.label}`}
       aria-keyshortcuts={shortcut}
       title={`${to.label} (${shortcut})`}
-      className={hit}
     >
-      <Caret className="size-4" />
+      <Caret className="size-3.5" />
     </Button>
   );
 }
@@ -658,7 +655,9 @@ function SlideViewer({
 
   return (
     <aside className="min-w-0 lg:sticky lg:top-27 lg:max-h-[calc(100dvh-7.5rem)] lg:self-start lg:overflow-y-auto lg:overscroll-contain lg:pb-2">
-      <div className="relative aspect-4/5 overflow-hidden rounded-3xl bg-component">
+      {/* The stage: the slide on a grey mat, the position in the ink (as the post page's counter)
+          and the arrows as the system's icon buttons, each faded out at its end */}
+      <div className="relative aspect-4/5 overflow-hidden rounded-[24px] bg-muted shadow-surface-1">
         {images[slide] && (
           <Image
             src={images[slide]}
@@ -670,30 +669,16 @@ function SlideViewer({
           />
         )}
         <p
-          className="absolute top-3 left-3 rounded-full bg-black/60 px-2.5 py-1 text-caption text-paper tabular-nums"
+          className="absolute top-3 left-3 rounded-full bg-[var(--foreground)] px-2.5 py-1 text-caption text-[var(--background)] tabular-nums"
           aria-live="polite"
         >
           Position {slide} · slide {slide + 1} of {images.length}
         </p>
-        {slide > 0 && (
-          <button
-            type="button"
-            aria-label="Previous slide"
-            onClick={() => onSlide(slide - 1)}
-            className="absolute top-1/2 left-3 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-paper transition-[background-color,scale] duration-150 ease-out-quint hover:bg-black/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.97]"
-          >
-            <CaretLeft className="size-4" />
-          </button>
-        )}
-        {slide < last && (
-          <button
-            type="button"
-            aria-label="Next slide"
-            onClick={() => onSlide(slide + 1)}
-            className="absolute top-1/2 right-3 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-paper transition-[background-color,scale] duration-150 ease-out-quint hover:bg-black/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.97]"
-          >
-            <CaretRight className="size-4" />
-          </button>
+        {images.length > 1 && (
+          <>
+            <SlideArrow side="left" disabled={slide === 0} onClick={() => onSlide(slide - 1)} />
+            <SlideArrow side="right" disabled={slide === last} onClick={() => onSlide(slide + 1)} />
+          </>
         )}
       </div>
       {images.length > 1 && (
@@ -702,6 +687,8 @@ function SlideViewer({
           role="group"
           aria-label="Slides"
         >
+          {/* The thumbnails, as the post page draws them: the shown one in a ring of the ink, the
+              rest dimmed on the hairline, each with its zero-based position in the corner */}
           {images.map((src, i) => (
             <button
               key={src}
@@ -709,7 +696,10 @@ function SlideViewer({
               aria-label={`Position ${i}`}
               aria-pressed={i === slide}
               onClick={() => onSlide(i)}
-              className="relative aspect-4/5 w-11 shrink-0 overflow-hidden rounded-lg opacity-60 ring-primary-foreground transition-opacity duration-150 ease-out-quint hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-border-focus aria-pressed:opacity-100 aria-pressed:ring-2"
+              className={cx(
+                "relative aspect-4/5 w-11 shrink-0 overflow-hidden rounded-[10px] transition-opacity duration-150 ease-out-quint focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]",
+                i === slide ? "ring-2 ring-foreground" : "opacity-60 ring-1 ring-border hover:opacity-100 focus-visible:opacity-100",
+              )}
             >
               <Image
                 src={src}
@@ -718,7 +708,7 @@ function SlideViewer({
                 sizes="44px"
                 className="object-cover"
               />
-              <span className="absolute right-0.5 bottom-0.5 rounded bg-black/60 px-1 text-micro text-paper tabular-nums">
+              <span className="absolute right-0.5 bottom-0.5 rounded-[4px] bg-[var(--foreground)] px-1 text-micro text-[var(--background)] tabular-nums">
                 {i}
               </span>
             </button>
@@ -726,13 +716,13 @@ function SlideViewer({
         </div>
       )}
       {observation ? (
-        <div className="mt-3 rounded-2xl bg-card px-3.5 py-3 text-body text-secondary-foreground">
-          <p className="text-caption text-secondary-foreground">
+        <div className="mt-3 rounded-[20px] bg-muted px-4 py-3 text-body text-muted-foreground shadow-surface-1">
+          <p className="text-caption text-muted-foreground">
             Read off position {slide} · {label("slide_role", observation.role)}{" "}
             · {observation.confidence} confidence
           </p>
           {observation.visible_text?.headline && (
-            <p className="mt-2 font-medium text-primary-foreground">
+            <p className="mt-2 text-foreground" style={semibold}>
               “{observation.visible_text.headline}”
             </p>
           )}
@@ -773,8 +763,8 @@ function SlideViewer({
               ] as const
             ).map(([k, v]) => (
               <div key={k} className="contents">
-                <dt className="text-secondary-foreground">{k}</dt>
-                <dd className="text-primary-foreground">{v}</dd>
+                <dt className="text-muted-foreground">{k}</dt>
+                <dd className="text-foreground">{v}</dd>
               </div>
             ))}
           </dl>
@@ -787,7 +777,7 @@ function SlideViewer({
                 <span
                   key={hex}
                   title={hex}
-                  className="size-5 rounded-full outline-1 -outline-offset-1 outline-edge"
+                  className="size-5 rounded-full ring-1 ring-border ring-inset"
                   style={{ background: hex }}
                 />
               ))}
@@ -795,11 +785,29 @@ function SlideViewer({
           )}
         </div>
       ) : (
-        <p className="mt-3 rounded-2xl bg-card px-3.5 py-3 text-caption text-secondary-foreground">
+        <p className="mt-3 rounded-[20px] bg-muted px-4 py-3 text-caption text-muted-foreground shadow-surface-1">
           No record of this slide in the selected version.
         </p>
       )}
     </aside>
+  );
+}
+
+// A slide arrow on the stage: the wrapper places it and fades it out at either end
+function SlideArrow({ side, disabled, onClick }: { side: "left" | "right"; disabled: boolean; onClick: () => void }) {
+  const Caret = side === "left" ? CaretLeft : CaretRight;
+  return (
+    <div
+      className={cx(
+        "absolute top-1/2 -translate-y-1/2 transition-opacity duration-150 ease-out-quint",
+        side === "left" ? "left-3" : "right-3",
+        disabled && "pointer-events-none opacity-0",
+      )}
+    >
+      <Button variant="secondary" iconOnly aria-label={side === "left" ? "Previous slide" : "Next slide"} disabled={disabled} onClick={onClick}>
+        <Caret className="size-3.5" />
+      </Button>
+    </div>
   );
 }
 
@@ -826,7 +834,7 @@ function Highlight({ text, quotes }: { text: string; quotes: string[] }) {
       text.slice(at, start),
       <mark
         key={start}
-        className="rounded bg-component-active text-primary-foreground"
+        className="rounded-[4px] bg-active text-foreground"
       >
         {text.slice(start, end)}
       </mark>,
@@ -887,24 +895,24 @@ function DnaView({
       <Section title="Summary">
         {/* Creative Intelligence 3.0: the strategy line the post page leads with */}
         {dna.strategy_headline && (
-          <p className="text-subtitle font-medium text-pretty text-primary-foreground">
+          <p className="text-subtitle text-pretty text-foreground" style={semibold}>
             {dna.strategy_headline}
           </p>
         )}
         {dna.strategy_summary && (
-          <p className="mt-1 text-body text-pretty text-secondary-foreground">
+          <p className="mt-1 text-body text-pretty text-muted-foreground">
             {dna.strategy_summary}
           </p>
         )}
         <p
           className={cx(
-            "text-pretty text-primary-foreground",
+            "text-pretty text-foreground",
             dna.strategy_headline ? "mt-3 text-body" : "text-subtitle",
           )}
         >
           {dna.creative_summary}
         </p>
-        <p className="mt-2 text-body text-secondary-foreground">
+        <p className="mt-2 text-body text-muted-foreground">
           {dna.content_intent}
         </p>
       </Section>
@@ -917,19 +925,19 @@ function DnaView({
           <ol className="space-y-4">
             {dna.creative_decisions.map((d, i) => (
               <li key={i} className="text-body">
-                <p className="font-medium text-pretty text-primary-foreground">
-                  <span className="mr-2 font-mono text-micro text-tertiary-foreground">
+                <p className="text-pretty text-foreground" style={semibold}>
+                  <span className="mr-2 font-mono text-micro text-muted-foreground" style={normal}>
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   {d.title}{" "}
                   <Refs refs={d.evidence} focus={focus} onShow={onShow} />
                   {d.confidence !== "high" && (
-                    <span className="ml-2 text-caption font-normal text-secondary-foreground">
+                    <span className="ml-2 text-caption text-muted-foreground" style={normal}>
                       {d.confidence} confidence
                     </span>
                   )}
                 </p>
-                <dl className="mt-1.5 grid gap-x-3 gap-y-1 text-secondary-foreground sm:grid-cols-[7.5rem_1fr]">
+                <dl className="mt-1.5 grid gap-x-3 gap-y-1 text-muted-foreground sm:grid-cols-[7.5rem_1fr]">
                   {(
                     [
                       ["Explanation", d.explanation],
@@ -944,7 +952,7 @@ function DnaView({
                     .filter(([, value]) => value)
                     .map(([name, value]) => (
                       <div key={name} className="contents">
-                        <dt className="text-caption text-secondary-foreground">
+                        <dt className="text-caption text-muted-foreground">
                           {name}
                         </dt>
                         <dd className="text-pretty">{value}</dd>
@@ -955,22 +963,22 @@ function DnaView({
             ))}
           </ol>
           {dna.creative_formula && (
-            <p className="mt-4 text-body text-secondary-foreground">
-              <span className="mr-2 text-caption text-secondary-foreground">
+            <p className="mt-4 text-body text-muted-foreground">
+              <span className="mr-2 text-caption text-muted-foreground">
                 Formula
               </span>
               {dna.creative_formula}
             </p>
           )}
           {dna.application && (
-            <dl className="mt-3 grid gap-x-3 gap-y-1 text-body text-secondary-foreground sm:grid-cols-[7.5rem_1fr]">
-              <dt className="text-caption text-secondary-foreground">
+            <dl className="mt-3 grid gap-x-3 gap-y-1 text-body text-muted-foreground sm:grid-cols-[7.5rem_1fr]">
+              <dt className="text-caption text-muted-foreground">
                 When to use
               </dt>
               <dd className="text-pretty">
                 {dna.application.when_to_use.join(" · ")}
               </dd>
-              <dt className="text-caption text-secondary-foreground">
+              <dt className="text-caption text-muted-foreground">
                 When not to
               </dt>
               <dd className="text-pretty">
@@ -979,8 +987,8 @@ function DnaView({
             </dl>
           )}
           {dna.copywriting && (
-            <p className="mt-3 text-body text-pretty text-secondary-foreground">
-              <span className="mr-2 text-caption text-secondary-foreground">
+            <p className="mt-3 text-body text-pretty text-muted-foreground">
+              <span className="mr-2 text-caption text-muted-foreground">
                 Copywriting
               </span>
               {dna.copywriting}
@@ -996,11 +1004,11 @@ function DnaView({
               <li key={c.hex} className="flex items-center gap-2">
                 <span
                   aria-hidden="true"
-                  className="size-4 rounded outline-1 -outline-offset-1 outline-edge"
+                  className="size-4 rounded-[4px] ring-1 ring-border ring-inset"
                   style={{ background: c.hex }}
                 />
-                <span className="text-primary-foreground">{c.role}</span>
-                <span className="font-mono text-micro text-secondary-foreground uppercase">
+                <span className="text-foreground">{c.role}</span>
+                <span className="font-mono text-micro text-muted-foreground uppercase">
                   {c.hex}
                 </span>
               </li>
@@ -1013,18 +1021,19 @@ function DnaView({
         <Section title="Data checks">
           <ul className="space-y-2 text-body">
             {dna.integrity_notes.map((n, i) => (
-              <li key={i} className="text-pretty text-primary-foreground">
+              <li key={i} className="text-pretty text-foreground">
                 <span
                   className={cx(
                     "mr-2 text-caption",
                     n.status === "concern" || n.status === "potential_concern"
-                      ? "font-medium text-danger-foreground"
-                      : "text-secondary-foreground",
+                      ? "text-destructive"
+                      : "text-muted-foreground",
                   )}
+                  style={n.status === "concern" || n.status === "potential_concern" ? semibold : undefined}
                 >
                   {STATUS_WORDS[n.status] ?? n.status}
                 </span>
-                <span className="font-medium">{n.aspect}:</span> {n.note}{" "}
+                <span style={semibold}>{n.aspect}:</span> {n.note}{" "}
                 <Refs refs={n.evidence} focus={focus} onShow={onShow} />
               </li>
             ))}
@@ -1034,8 +1043,8 @@ function DnaView({
 
       <Section title="Classification">
         <dl className="grid gap-x-4 gap-y-2 text-body sm:grid-cols-[10rem_1fr]">
-          <dt className="text-secondary-foreground">Primary archetype</dt>
-          <dd className="text-primary-foreground">
+          <dt className="text-muted-foreground">Primary archetype</dt>
+          <dd className="text-foreground">
             {label("archetype", dna.primary_archetype.slug)}{" "}
             <Refs
               refs={dna.primary_archetype.evidence}
@@ -1043,8 +1052,8 @@ function DnaView({
               onShow={onShow}
             />
           </dd>
-          <dt className="text-secondary-foreground">Also</dt>
-          <dd className="text-primary-foreground">
+          <dt className="text-muted-foreground">Also</dt>
+          <dd className="text-foreground">
             {dna.secondary_archetypes.length
               ? dna.secondary_archetypes.map((s) => (
                   <span key={s.slug} className="mr-3 inline-block">
@@ -1054,8 +1063,8 @@ function DnaView({
                 ))
               : "—"}
           </dd>
-          <dt className="text-secondary-foreground">Objective</dt>
-          <dd className="text-primary-foreground">
+          <dt className="text-muted-foreground">Objective</dt>
+          <dd className="text-foreground">
             {label("objective", dna.marketing_objective.slug)}{" "}
             <Refs
               refs={dna.marketing_objective.evidence}
@@ -1063,19 +1072,19 @@ function DnaView({
               onShow={onShow}
             />
           </dd>
-          <dt className="text-secondary-foreground">Hook</dt>
-          <dd className="text-primary-foreground">
+          <dt className="text-muted-foreground">Hook</dt>
+          <dd className="text-foreground">
             {label("hook_technique", dna.hook.technique)}
             {dna.hook.observed_text && (
-              <span className="text-secondary-foreground">
+              <span className="text-muted-foreground">
                 {" "}
                 · “{dna.hook.observed_text}” ({dna.hook.location})
               </span>
             )}
             <Refs refs={dna.hook.evidence} focus={focus} onShow={onShow} />
           </dd>
-          <dt className="text-secondary-foreground">Copy</dt>
-          <dd className="text-primary-foreground">
+          <dt className="text-muted-foreground">Copy</dt>
+          <dd className="text-foreground">
             {dna.copy_strategy.tone.map((t) => label("tone", t)).join(", ")} ·{" "}
             {dna.copy_strategy.persuasion
               .map((p) => label("persuasion", p))
@@ -1083,8 +1092,8 @@ function DnaView({
             · call to action:{" "}
             {label("cta", dna.copy_strategy.cta).toLowerCase()}
           </dd>
-          <dt className="text-secondary-foreground">Visual system</dt>
-          <dd className="text-primary-foreground">
+          <dt className="text-muted-foreground">Visual system</dt>
+          <dd className="text-foreground">
             {[
               ...dna.visual_system.composition.map((s) => label("layout", s)),
               ...dna.visual_system.typography.map((s) =>
@@ -1092,7 +1101,7 @@ function DnaView({
               ),
               ...dna.visual_system.imagery.map((s) => label("imagery", s)),
             ].join(", ")}
-            <span className="block text-secondary-foreground">
+            <span className="block text-muted-foreground">
               {dna.visual_system.text_hierarchy}
             </span>
             {dna.visual_notes &&
@@ -1107,8 +1116,8 @@ function DnaView({
                 ] as const
               ).map((key) =>
                 dna.visual_notes?.[key] ? (
-                  <span key={key} className="mt-1 block text-secondary-foreground">
-                    <span className="text-caption text-secondary-foreground">
+                  <span key={key} className="mt-1 block text-muted-foreground">
+                    <span className="text-caption text-muted-foreground">
                       {key}:
                     </span>{" "}
                     {dna.visual_notes[key]}
@@ -1122,29 +1131,29 @@ function DnaView({
       <Section
         title={`Narrative · ${label("narrative_pattern", dna.narrative.pattern)}`}
       >
-        <p className="text-body text-pretty text-secondary-foreground">
+        <p className="text-body text-pretty text-muted-foreground">
           {dna.narrative.arc}
         </p>
         <ol className="mt-2 flex flex-wrap gap-1.5">
           {dna.narrative.slide_roles.map((s) => (
             <li key={s.position}>
-              <button
-                type="button"
+              {/* Each role shows its slide; a pressed one while that slide is the one on show */}
+              <Button
+                variant={focus === `slide:${s.position}` ? "default" : "secondary"}
+                size="sm"
+                aria-pressed={focus === `slide:${s.position}`}
                 onClick={() => onShow(`slide:${s.position}`)}
-                className="inline-flex h-7 items-center gap-1 rounded-full bg-card px-2.5 text-caption text-secondary-foreground ring-1 ring-border-default transition-colors duration-150 ease-out-quint hover:bg-transparent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
               >
-                <span className="font-mono text-micro text-secondary-foreground">
-                  {s.position}
-                </span>{" "}
+                <span className="font-mono text-micro tabular-nums">{s.position}</span>
                 {label("slide_role", s.role)}
-              </button>
+              </Button>
             </li>
           ))}
         </ol>
       </Section>
 
       <Section title="Why it might work (hypotheses)">
-        <ul className="space-y-2 text-body text-primary-foreground">
+        <ul className="space-y-2 text-body text-foreground">
           {dna.creative_rationale.map((r, i) => (
             <li key={i} className="text-pretty">
               {r.hypothesis}{" "}
@@ -1152,10 +1161,10 @@ function DnaView({
             </li>
           ))}
         </ul>
-        <ul className="mt-3 space-y-1 text-body text-secondary-foreground">
+        <ul className="mt-3 space-y-1 text-body text-muted-foreground">
           {dna.attention_mechanisms.map((m, i) => (
             <li key={i}>
-              <span className="text-caption text-secondary-foreground">
+              <span className="text-caption text-muted-foreground">
                 {m.kind}:
               </span>{" "}
               {m.statement}{" "}
@@ -1166,15 +1175,15 @@ function DnaView({
       </Section>
 
       <Section title="Takeaways">
-        <ol className="list-decimal space-y-1 pl-5 text-body text-primary-foreground marker:text-tertiary-foreground">
+        <ol className="list-decimal space-y-1 pl-5 text-body text-foreground marker:text-muted-foreground">
           {dna.takeaways.map((t) => (
             <li key={t}>{t}</li>
           ))}
         </ol>
-        <p className="mt-3 text-caption text-secondary-foreground">
+        <p className="mt-3 text-caption text-muted-foreground">
           Adapting the principle
         </p>
-        <ul className="mt-1 space-y-1 text-body text-secondary-foreground">
+        <ul className="mt-1 space-y-1 text-body text-muted-foreground">
           {dna.adaptation_ideas.map((t) => (
             <li key={t}>{t}</li>
           ))}
@@ -1182,7 +1191,7 @@ function DnaView({
       </Section>
 
       <Section title="Evidence">
-        <ul className="space-y-1.5 text-body text-secondary-foreground">
+        <ul className="space-y-1.5 text-body text-muted-foreground">
           {dna.evidence.map((e, i) => (
             <li key={i} className="flex items-baseline gap-2">
               <EvidenceChip
@@ -1193,7 +1202,7 @@ function DnaView({
               <span>
                 {e.observation}
                 {e.quote && (
-                  <span className="text-secondary-foreground">
+                  <span className="text-muted-foreground">
                     {" "}
                     · “{e.quote}”
                   </span>
@@ -1208,12 +1217,12 @@ function DnaView({
         dna.constraints_or_uncertainties.length > 0 ||
         dna.quality.uncertainties.length > 0) && (
         <Section title="Look at before approving">
-          <ul className="space-y-1 text-body text-secondary-foreground">
+          <ul className="space-y-1 text-body text-muted-foreground">
             {warnings.map((w, i) => (
               <li key={`w${i}`}>
                 {w.message}
                 {w.path && (
-                  <span className="font-mono text-micro text-secondary-foreground">
+                  <span className="font-mono text-micro text-muted-foreground">
                     {" "}
                     {w.path}
                   </span>
@@ -1230,7 +1239,7 @@ function DnaView({
         </Section>
       )}
 
-      <p className="mt-6 text-caption text-secondary-foreground">
+      <p className="mt-6 text-caption text-muted-foreground">
         v{version.version_no} · {version.model_id ?? "edited"} · prompt{" "}
         {version.prompt_version ?? "—"} · taxonomy {version.taxonomy_version} ·{" "}
         {ago(version.created_at)}
@@ -1275,29 +1284,30 @@ function Diff({ a, b }: { a: Version; b: Version }) {
   ).filter(([, x, y]) => x !== y);
   if (!rows.length)
     return (
-      <p className="mt-3 text-caption text-secondary-foreground">
+      <p className="mt-3 text-caption text-muted-foreground">
         v{a.version_no} and v{b.version_no} say the same.
       </p>
     );
   return (
-    <div className="mt-3 overflow-hidden rounded-2xl ring-1 ring-border-default">
-      <div className="grid grid-cols-[8rem_1fr_1fr] gap-px bg-border-default text-body">
-        <div className="bg-container px-3 py-2 text-caption text-secondary-foreground" />
-        <div className="bg-container px-3 py-2 text-caption font-medium text-primary-foreground">
+    <div className="mt-3 overflow-hidden rounded-[20px] ring-1 ring-border">
+      {/* The cells on the page's own ground, ruled apart by the one stroke in the gaps */}
+      <div className="grid grid-cols-[8rem_1fr_1fr] gap-px bg-border text-body">
+        <div className="bg-background px-3 py-2 text-caption text-muted-foreground" />
+        <div className="bg-background px-3 py-2 text-caption text-foreground" style={semibold}>
           v{a.version_no} (shown)
         </div>
-        <div className="bg-container px-3 py-2 text-caption font-medium text-primary-foreground">
+        <div className="bg-background px-3 py-2 text-caption text-foreground" style={semibold}>
           v{b.version_no}
         </div>
         {rows.map(([name, x, y]) => (
           <div key={name} className="contents">
-            <div className="bg-container px-3 py-2 text-caption text-secondary-foreground">
+            <div className="bg-background px-3 py-2 text-caption text-muted-foreground">
               {name}
             </div>
-            <div className="bg-container px-3 py-2 whitespace-pre-line text-primary-foreground">
+            <div className="bg-background px-3 py-2 whitespace-pre-line text-foreground">
               {x || "—"}
             </div>
-            <div className="bg-container px-3 py-2 whitespace-pre-line text-secondary-foreground">
+            <div className="bg-background px-3 py-2 whitespace-pre-line text-muted-foreground">
               {y || "—"}
             </div>
           </div>
@@ -1312,10 +1322,10 @@ function History({ data }: { data: PostReview }) {
     return null;
   return (
     <Section title="History">
-      <ul className="space-y-1 text-caption text-secondary-foreground">
+      <ul className="space-y-1 text-caption text-muted-foreground">
         {data.events.map((e) => (
           <li key={e.id}>
-            <span className="text-secondary-foreground">
+            <span className="text-muted-foreground">
               {ago(e.created_at)}
             </span> ·{" "}
             {e.action.replace("_", " ")}
@@ -1329,10 +1339,10 @@ function History({ data }: { data: PostReview }) {
             key={r.id}
             className={cx(
               (r.status === "failed" || r.status === "invalid") &&
-                "text-danger-foreground",
+                "text-destructive",
             )}
           >
-            <span className="text-secondary-foreground">
+            <span className="text-muted-foreground">
               {ago(r.started_at)}
             </span>{" "}
             · run{" "}
@@ -1357,9 +1367,9 @@ function History({ data }: { data: PostReview }) {
           .map((j) => (
             <li
               key={j.id}
-              className={cx(j.state === "failed" && "text-danger-foreground")}
+              className={cx(j.state === "failed" && "text-destructive")}
             >
-              <span className="text-secondary-foreground">
+              <span className="text-muted-foreground">
                 {ago(j.created_at)}
               </span>{" "}
               · job{" "}

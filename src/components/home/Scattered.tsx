@@ -3,6 +3,7 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { cx } from "@/lib/cx";
+import { fontWeights } from "@/lib/font-weight";
 import { useMounted } from "@/lib/useMounted";
 import PostCover from "./PostCover";
 import { scattered } from "./demo";
@@ -18,7 +19,16 @@ import { useIntroOnce } from "./useIntroOnce";
  * The scraps pop in one after another the first time the scene scrolls into
  * view, once per session. Reduced motion shows the finished scene, and so does
  * a scene already on screen when its section comes alive (see useIntroOnce).
+ *
+ * Drawn on the system's tokens since 2026-10-23: every scrap is a raised card
+ * from the surface ladder with the tile corner (12px), its text the ink and
+ * the muted ink in the type roles, its fills the muted tile, the hover tint
+ * and the one stroke; the chat's unread count and the design file's cursor
+ * tags are the brand's solid and the ink. Weights come from
+ * fontVariationSettings, never a font-* class.
  */
+
+const semibold = { fontVariationSettings: fontWeights.semibold };
 
 const SCENE = { w: 1400, h: 1000 };
 // The scene covers its container through CSS, so the server HTML is already the right size
@@ -62,7 +72,7 @@ function Card({
   return (
     <div
       className={cx(
-        "rounded-md bg-white shadow ring-1 ring-base-200",
+        "rounded-[12px] bg-surface-3 shadow-surface-2",
         className,
       )}
     >
@@ -74,16 +84,16 @@ function Card({
 function Phone({ id, name }: { id: string; name: string }) {
   return (
     <Card className="overflow-hidden">
-      <div className="flex h-5 items-center justify-between px-2.5 text-[9px] font-medium text-base-900">
+      <div className="flex h-5 items-center justify-between px-2.5 text-caption-sm text-foreground" style={semibold}>
         <span>9:41</span>
         <span className="flex gap-0.5">
-          <span className="h-2 w-1 bg-base-900" />
-          <span className="h-2 w-1 bg-base-900" />
-          <span className="h-2 w-1 bg-base-300" />
+          <span className="h-2 w-1 bg-foreground" />
+          <span className="h-2 w-1 bg-foreground" />
+          <span className="h-2 w-1 bg-border" />
         </span>
       </div>
       <Cover id={id} />
-      <p className="px-2.5 py-1.5 text-[11px] text-base-500">{name}</p>
+      <p className="px-2.5 py-1.5 text-caption-base text-muted-foreground">{name}</p>
     </Card>
   );
 }
@@ -117,16 +127,16 @@ const scraps: Scrap[] = [
     delay: 0.05,
     node: (
       <Card className="p-3">
-        <div className="flex items-center justify-between text-[12px]">
-          <span className="font-medium text-base-900">Saved</span>
-          <span className="text-base-500">All posts</span>
+        <div className="flex items-center justify-between text-caption-lg">
+          <span className="text-foreground" style={semibold}>Saved</span>
+          <span className="text-muted-foreground">All posts</span>
         </div>
         <div className="mt-2 grid grid-cols-2 gap-1">
           {scattered.saved.map((id) => (
-            <Cover key={id} id={id} className="rounded-sm" />
+            <Cover key={id} id={id} className="rounded-[4px]" />
           ))}
         </div>
-        <p className="mt-2 text-[11px] text-base-500">
+        <p className="mt-2 text-caption-base text-muted-foreground">
           2,318 posts · no folders
         </p>
       </Card>
@@ -160,15 +170,15 @@ const scraps: Scrap[] = [
       <Card className="flex gap-3 p-3">
         <Avatar />
         <div className="min-w-0">
-          <p className="text-[12px] text-base-500">
-            <span className="font-medium text-base-900">Priya</span> · 10:42
+          <p className="text-caption-lg text-muted-foreground">
+            <span className="text-foreground" style={semibold}>Priya</span> · 10:42
           </p>
-          <p className="mt-0.5 text-[14px] leading-snug text-base-900">
+          <p className="mt-0.5 text-body-sm text-foreground">
             do you have that carousel from the money app? the one with the phone
             on every slide
           </p>
         </div>
-        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-accent-600 text-[11px] font-semibold text-paper">
+        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-brand-solid text-caption-base text-on-brand-solid-foreground" style={semibold}>
           3
         </span>
       </Card>
@@ -182,26 +192,26 @@ const scraps: Scrap[] = [
     delay: 0.5,
     node: (
       <Card className="overflow-hidden">
-        <p className="border-b border-base-100 px-3 py-1.5 text-[12px] font-medium text-base-900">
+        <p className="border-b border-border px-3 py-1.5 text-caption-lg text-foreground" style={semibold}>
           links_FINAL_v3.xlsx
         </p>
-        <table className="w-full text-[11px]">
+        <table className="w-full text-caption-base">
           <thead>
-            <tr className="bg-base-50 text-left text-base-500">
-              <th className="px-3 py-1 font-medium">Brand</th>
-              <th className="px-3 py-1 font-medium">Link</th>
-              <th className="px-3 py-1 font-medium">Why it&apos;s good</th>
+            <tr className="bg-muted text-left text-muted-foreground" style={semibold}>
+              <th className="px-3 py-1">Brand</th>
+              <th className="px-3 py-1">Link</th>
+              <th className="px-3 py-1">Why it&apos;s good</th>
             </tr>
           </thead>
           <tbody>
             {sheetRows.map((row, i) => (
-              <tr key={i} className="border-t border-base-100">
+              <tr key={i} className="border-t border-border">
                 {row.map((cell, j) => (
                   <td
                     key={j}
                     className={cx(
                       "px-3 py-1",
-                      j === 0 ? "text-base-900" : "text-base-600",
+                      j === 0 ? "text-foreground" : "text-muted-foreground",
                       j === 2 && "italic",
                     )}
                   >
@@ -223,15 +233,15 @@ const scraps: Scrap[] = [
     delay: 0.65,
     node: (
       <Card className="p-4">
-        <p className="text-[15px] font-semibold text-base-900">
+        <p className="text-body-base text-foreground" style={semibold}>
           References — Payments launch
         </p>
-        <ul className="mt-2 space-y-1 text-[12px] text-base-600">
+        <ul className="mt-2 space-y-1 text-caption-lg text-muted-foreground">
           <li>• instagram.com/p/DeJsl6… (green one?)</li>
           <li>• the Coinbase card-pack post → ask Jo</li>
           <li>• pinterest board → link dead</li>
           <li>• see slack thread from March</li>
-          <li className="text-base-400">
+          <li className="text-tertiary-foreground">
             • TODO: find the carousel with the phone
           </li>
         </ul>
@@ -246,27 +256,27 @@ const scraps: Scrap[] = [
     delay: 0.3,
     node: (
       <Card className="overflow-hidden">
-        <p className="border-b border-base-100 px-3 py-1.5 text-[12px] text-base-600">
-          <span className="font-medium text-base-900">moodboard-spring-v2</span>{" "}
+        <p className="border-b border-border px-3 py-1.5 text-caption-lg text-muted-foreground">
+          <span className="text-foreground" style={semibold}>moodboard-spring-v2</span>{" "}
           · Design file
         </p>
-        <div className="relative h-48 bg-base-50">
+        <div className="relative h-48 bg-muted">
           <Cover
             id={scattered.canvas[0]}
-            className="absolute top-4 left-5 w-16 rotate-[-6deg] rounded-sm shadow-sm"
+            className="absolute top-4 left-5 w-16 rotate-[-6deg] rounded-[4px] shadow-surface-2"
           />
           <Cover
             id={scattered.canvas[1]}
-            className="absolute top-10 left-28 w-20 rotate-[3deg] rounded-sm shadow-sm"
+            className="absolute top-10 left-28 w-20 rotate-[3deg] rounded-[4px] shadow-surface-2"
           />
           <Cover
             id={scattered.canvas[2]}
-            className="absolute top-3 right-6 w-16 rotate-[8deg] rounded-sm shadow-sm"
+            className="absolute top-3 right-6 w-16 rotate-[8deg] rounded-[4px] shadow-surface-2"
           />
-          <span className="absolute top-28 left-44 rounded-sm bg-base-900 px-1.5 py-0.5 text-[10px] text-white">
+          <span className="absolute top-28 left-44 rounded-[4px] bg-foreground px-1.5 py-0.5 text-caption-sm text-background">
             Sam
           </span>
-          <span className="absolute top-36 right-14 rounded-sm bg-accent-600 px-1.5 py-0.5 text-[10px] text-paper">
+          <span className="absolute top-36 right-14 rounded-[4px] bg-brand-solid px-1.5 py-0.5 text-caption-sm text-on-brand-solid-foreground">
             Jo
           </span>
         </div>
@@ -282,14 +292,14 @@ const scraps: Scrap[] = [
     node: (
       <div className="text-center">
         <div className="relative mx-auto h-24 w-32">
-          <div className="absolute top-0 left-0 h-5 w-14 rounded-t-md bg-base-200" />
-          <div className="absolute inset-x-0 top-4 bottom-0 rounded-tr-md rounded-b-md bg-base-200" />
-          <div className="absolute inset-x-1 top-6 bottom-1 rounded-md bg-base-300" />
+          <div className="absolute top-0 left-0 h-5 w-14 rounded-t-[8px] bg-muted" />
+          <div className="absolute inset-x-0 top-4 bottom-0 rounded-tr-[8px] rounded-b-[8px] bg-muted" />
+          <div className="absolute inset-x-1 top-6 bottom-1 rounded-[8px] bg-border" />
         </div>
-        <p className="mt-2 text-[12px] font-medium text-base-900">
+        <p className="mt-2 text-caption-lg text-foreground" style={semibold}>
           Inspo_final_v3
         </p>
-        <p className="text-[11px] text-base-500">
+        <p className="text-caption-base text-muted-foreground">
           47 items · modified 3 months ago
         </p>
       </div>
@@ -303,21 +313,21 @@ const scraps: Scrap[] = [
     delay: 0.7,
     node: (
       <Card className="p-3">
-        <p className="text-[13px] font-medium text-base-900">
+        <p className="text-body-sm text-foreground" style={semibold}>
           Re: Re: Re: refs for the deck
         </p>
-        <p className="mt-0.5 text-[12px] text-base-600">
-          <span className="text-base-900">Marcus</span> · Attached 12
+        <p className="mt-0.5 text-caption-lg text-muted-foreground">
+          <span className="text-foreground">Marcus</span> · Attached 12
           screenshots. Not sure which brand the second one was.
         </p>
-        <div className="mt-2 flex gap-1 text-[10px] text-base-600">
-          <span className="rounded-sm bg-base-50 px-1.5 py-0.5">
+        <div className="mt-2 flex gap-1 text-caption-sm text-muted-foreground">
+          <span className="rounded-[4px] bg-muted px-1.5 py-0.5">
             IMG_4821.PNG
           </span>
-          <span className="rounded-sm bg-base-50 px-1.5 py-0.5">
+          <span className="rounded-[4px] bg-muted px-1.5 py-0.5">
             IMG_4830.PNG
           </span>
-          <span className="rounded-sm bg-base-50 px-1.5 py-0.5">+10</span>
+          <span className="rounded-[4px] bg-muted px-1.5 py-0.5">+10</span>
         </div>
       </Card>
     ),
@@ -334,12 +344,12 @@ const scraps: Scrap[] = [
           <span
             key={i}
             className={cx(
-              "h-6 flex-1 rounded-sm",
-              i % 3 === 0 ? "bg-base-200" : "bg-base-100",
+              "h-6 flex-1 rounded-[4px]",
+              i % 3 === 0 ? "bg-border" : "bg-muted",
             )}
           />
         ))}
-        <span className="shrink-0 px-1 text-[11px] text-base-500">
+        <span className="shrink-0 px-1 text-caption-base text-muted-foreground">
           +38 tabs
         </span>
       </Card>
@@ -354,15 +364,15 @@ const scraps: Scrap[] = [
     delay: 1,
     node: (
       <Card className="p-3">
-        <p className="text-[11px] font-medium text-base-900">
+        <p className="text-caption-base text-foreground" style={semibold}>
           moodboard_v7.pdf
         </p>
         <div className="mt-2 grid grid-cols-3 gap-1">
           {scattered.pdf.map((id) => (
-            <Cover key={id} id={id} className="rounded-sm" />
+            <Cover key={id} id={id} className="rounded-[4px]" />
           ))}
         </div>
-        <p className="mt-2 text-[10px] text-base-500">14 MB · page 3 of 22</p>
+        <p className="mt-2 text-caption-sm text-muted-foreground">14 MB · page 3 of 22</p>
       </Card>
     ),
   },
@@ -373,7 +383,7 @@ const scraps: Scrap[] = [
     w: 250,
     delay: 1.1,
     node: (
-      <div className="rounded-2xl rounded-bl-sm bg-base-100 px-4 py-2.5 text-[13px] leading-snug text-base-900">
+      <div className="rounded-[24px] rounded-bl-[4px] bg-muted px-4 py-2.5 text-body-sm text-foreground">
         sending you a few screenshots, the green one is somewhere in there
       </div>
     ),
@@ -427,7 +437,7 @@ export default function Scattered({ className }: { className?: string }) {
             <path
               key={d}
               d={d}
-              className="stroke-base-300"
+              className="stroke-border"
               strokeWidth="1.5"
               strokeDasharray="6 6"
             />

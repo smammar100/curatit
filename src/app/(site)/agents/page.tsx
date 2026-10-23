@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 // Fundation
 import Wrapper from "@/components/fundations/containers/Wrapper";
 import Text from "@/components/fundations/elements/Text";
 import Button from "@/components/fundations/elements/Button";
+import TextLink from "@/components/fundations/elements/TextLink";
+import Card from "@/components/fundations/molecules/Card";
 // Icons
 import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
 import Check from "@/components/fundations/icons/Check";
@@ -16,6 +17,7 @@ import { runExampleSearches } from "@/components/mcp/searchExamples";
 import Badge from "@/components/fundations/elements/Badge";
 import ClientInstall from "@/components/mcp/ClientInstall";
 import { TOOLS } from "@/components/mcp/tools";
+import { fontWeights } from "@/lib/font-weight";
 import { getPublishedPosts } from "@/lib/posts";
 import { SUPPORT_MAILTO } from "@/lib/site";
 
@@ -34,12 +36,13 @@ export const revalidate = 3600;
 // shown as example searches typed out over rows of their real results (SearchReel, after Mobbin's "one search" section), the six
 // tools as a quiet grid under a left label, what a token can and can't do, the Beta note and a
 // closing call. Earlier Mobbin references (Higgsfield, Neon, Midday, Bloom) shaped the tabs and the
-// before/after.
+// before/after. Since 2026-10-23 the page is set on the system: the two "can and can't" panels
+// are raised Cards and the Beta note a grey one, the benefit icons sit on muted plates, every
+// link in running text is a TextLink, and the small headings take the library's semibold.
 
 const TOKEN_HREF = "/dashboard/settings/tokens";
 
-const linkClass =
-  "underline decoration-border-strong underline-offset-2 transition-colors duration-150 ease-out-quint hover:text-brand-foreground";
+const semibold = { fontVariationSettings: fontWeights.semibold };
 
 export default async function AgentsPage() {
   // If the library can't be reached, the example searches are left out (SearchReel renders nothing without them)
@@ -74,19 +77,19 @@ export default async function AgentsPage() {
         <Wrapper variant="standard" className="page-start">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-end lg:gap-8">
             <div className="lg:col-span-7">
-              <p className="flex items-center gap-2 text-body-sm text-secondary-foreground">
+              <p className="flex items-center gap-2 text-body-sm text-muted-foreground">
                 Curatit MCP
                 <Badge>Beta</Badge>
               </p>
               <Text
                 tag="h1"
                 variant="h1"
-                className="mt-4 text-balance text-primary-foreground"
+                className="mt-4 text-balance text-foreground"
               >
                 Bring Curatit to your AI assistant
               </Text>
             </div>
-            <Text className="text-pretty text-secondary-foreground lg:col-span-5 lg:pb-1">
+            <Text className="text-pretty text-muted-foreground lg:col-span-5 lg:pb-1">
               Search real brand posts, read their editor-approved breakdowns and
               build briefs from inside Claude, Cursor, VS Code or ChatGPT. Every
               answer comes with its source.
@@ -106,7 +109,7 @@ export default async function AgentsPage() {
               tag="h2"
               id="why"
               variant="h1"
-              className="text-balance text-primary-foreground"
+              className="text-balance text-foreground"
             >
               <span className="block">Finding references took hours.</span>
               <span className="block">Now it&apos;s one question.</span>
@@ -114,7 +117,7 @@ export default async function AgentsPage() {
             <Text
               tag="p"
               variant="body"
-              className="mt-4 max-w-xl text-pretty text-secondary-foreground"
+              className="mt-4 max-w-xl text-pretty text-muted-foreground"
             >
               Ask in plain words and get real brand posts back, not descriptions
               of ones that don&apos;t exist.
@@ -128,13 +131,13 @@ export default async function AgentsPage() {
           <ul className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
             {benefits.map((benefit) => (
               <li key={benefit.title}>
-                <span className="flex size-9 items-center justify-center rounded-full bg-card text-primary-foreground ring-1 ring-border-default">
+                <span className="flex size-9 items-center justify-center rounded-full bg-muted text-foreground">
                   {benefit.icon}
                 </span>
-                <h3 className="mt-4 text-body-base font-medium text-primary-foreground">
+                <h3 className="mt-4 text-body-base text-foreground" style={semibold}>
                   {benefit.title}
                 </h3>
-                <p className="mt-1 text-body-sm text-pretty text-secondary-foreground">
+                <p className="mt-1 text-body-sm text-pretty text-muted-foreground">
                   {benefit.body}
                 </p>
               </li>
@@ -152,13 +155,13 @@ export default async function AgentsPage() {
                 tag="h2"
                 id="tools"
                 variant="h3"
-                className="text-balance text-primary-foreground"
+                className="text-balance text-foreground"
               >
                 Six read-only tools
               </Text>
               <Text
                 variant="bodySM"
-                className="mt-3 max-w-xs text-pretty text-secondary-foreground"
+                className="mt-3 max-w-xs text-pretty text-muted-foreground"
               >
                 Your assistant picks the one it needs. None of them can change
                 anything.
@@ -167,13 +170,13 @@ export default async function AgentsPage() {
             <ul className="grid grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2 lg:col-span-8">
               {TOOLS.map((tool) => (
                 <li key={tool.name}>
-                  <h3 className="text-body-sm font-medium text-primary-foreground">
+                  <h3 className="text-body-sm text-foreground" style={semibold}>
                     {tool.title}
                   </h3>
-                  <p className="mt-1 text-body-sm text-pretty text-secondary-foreground">
+                  <p className="mt-1 text-body-sm text-pretty text-muted-foreground">
                     {tool.does}
                   </p>
-                  <p className="mt-2 font-mono text-caption-lg break-all text-secondary-foreground">
+                  <p className="mt-2 font-mono text-caption-lg break-all text-muted-foreground">
                     {tool.name}
                   </p>
                 </li>
@@ -187,11 +190,11 @@ export default async function AgentsPage() {
       <section aria-label="What your tool can and can't do">
         <Wrapper variant="standard" className="section-y">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="rounded-2xl bg-container p-5 shadow-xs lg:p-6">
-              <h3 className="text-body-base font-medium text-primary-foreground">
+            <Card variant="raised" padding="lg">
+              <h3 className="text-body-base text-foreground" style={semibold}>
                 What your tool can do
               </h3>
-              <ul className="mt-4 space-y-3 text-body-sm text-pretty text-secondary-foreground">
+              <ul className="mt-4 space-y-3 text-body-sm text-pretty text-muted-foreground">
                 {[
                   `Read what you can read: the library's ${count}published posts and their editor-approved analyses.`,
                   "Answer with real Instagram links, so every reference can be opened.",
@@ -199,19 +202,19 @@ export default async function AgentsPage() {
                 ].map((line) => (
                   <li key={line} className="flex gap-3">
                     <Check
-                      className="mt-0.5 size-4 shrink-0 text-primary-foreground"
+                      className="mt-0.5 size-4 shrink-0 text-foreground"
                       aria-hidden="true"
                     />
                     {line}
                   </li>
                 ))}
               </ul>
-            </div>
-            <div className="rounded-2xl bg-container p-5 shadow-xs lg:p-6">
-              <h3 className="text-body-base font-medium text-primary-foreground">
+            </Card>
+            <Card variant="raised" padding="lg">
+              <h3 className="text-body-base text-foreground" style={semibold}>
                 What it can&apos;t do
               </h3>
-              <ul className="mt-4 space-y-3 text-body-sm text-pretty text-secondary-foreground">
+              <ul className="mt-4 space-y-3 text-body-sm text-pretty text-muted-foreground">
                 {[
                   "Post anything, or change your account.",
                   "See your boards.",
@@ -226,26 +229,18 @@ export default async function AgentsPage() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 text-body-sm text-secondary-foreground">
-                Make and revoke tokens in{" "}
-                <Link href={TOKEN_HREF} className={linkClass}>
-                  API tokens
-                </Link>
-                .
+              <p className="mt-4 text-body-sm text-muted-foreground">
+                Make and revoke tokens in <TextLink href={TOKEN_HREF}>API tokens</TextLink>.
               </p>
-            </div>
+            </Card>
           </div>
 
-          <div className="mt-4 flex flex-col gap-3 rounded-2xl bg-card p-5 sm:flex-row sm:items-center lg:p-6">
+          <Card variant="mat" padding="lg" className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Badge className="w-fit">Beta</Badge>
-            <p className="text-body-sm text-pretty text-secondary-foreground">
-              Things may change while we test it.{" "}
-              <a href={SUPPORT_MAILTO} className={linkClass}>
-                Tell us what breaks
-              </a>
-              .
+            <p className="text-body-sm text-pretty text-muted-foreground">
+              Things may change while we test it. <TextLink href={SUPPORT_MAILTO}>Tell us what breaks</TextLink>.
             </p>
-          </div>
+          </Card>
         </Wrapper>
       </section>
 
@@ -254,10 +249,10 @@ export default async function AgentsPage() {
         <Wrapper variant="standard" className="section-y">
           <div className="mx-auto max-w-2xl text-center text-balance">
             <Text tag="h2" id="start" variant="h2">
-              <span className="block text-secondary-foreground">
+              <span className="block text-muted-foreground">
                 Your next brief starts in a chat.
               </span>
-              <span className="block text-primary-foreground">
+              <span className="block text-foreground">
                 Bring the library with you.
               </span>
             </Text>

@@ -9,6 +9,7 @@ import {
   type FocusEvent,
 } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
+import Badge from "@/components/fundations/elements/Badge";
 import Segmented from "@/components/fundations/elements/Segmented";
 import Search from "@/components/fundations/icons/Search";
 import { cx } from "@/lib/cx";
@@ -201,7 +202,9 @@ export function BriefTabs({
   );
 }
 
-// The search field with a brief in it. While `typing`, a caret follows the text.
+// The search field with a brief in it, drawn after the system's Input (2026-10-23: the one
+// stroke on no fill, the compact 28px pill, the icon in the leading slot). While `typing`, a
+// caret follows the text. A drawing, not a field: nothing can be typed into it.
 export function QueryField({
   query,
   typing = false,
@@ -214,23 +217,24 @@ export function QueryField({
   return (
     <div
       className={cx(
-        "flex h-9 items-center gap-2 rounded-md bg-component-on-container-subtle px-3 text-caption-lg ring-1 ring-border-default shadow-sm",
+        "flex h-7 items-center gap-2 rounded-[20px] px-2.5 text-caption-lg ring-1 ring-border",
         className,
       )}
     >
-      <Search className="size-3.5 shrink-0 text-tertiary-foreground" />
+      <Search className="size-3.5 shrink-0 text-muted-foreground" />
       <span className="sr-only">Brief:</span>
-      <span className="truncate text-primary-foreground">{query}</span>
+      <span className="truncate text-foreground">{query}</span>
       {typing && (
         <span
           aria-hidden="true"
-          className="-ml-1.5 h-3.5 w-px shrink-0 bg-primary-foreground"
+          className="-ml-1.5 h-3.5 w-px shrink-0 bg-foreground"
         />
       )}
     </div>
   );
 }
 
+// A matched term: the system's Badge (2026-10-23), outlined so it reads as a label
 export function Tag({
   children,
   className,
@@ -239,13 +243,8 @@ export function Tag({
   className?: string;
 }) {
   return (
-    <span
-      className={cx(
-        "rounded-md bg-component-on-container-subtle px-2 py-1 text-caption-lg text-primary-foreground ring-1 ring-border-default",
-        className,
-      )}
-    >
+    <Badge variant="outline" className={className}>
       {children}
-    </span>
+    </Badge>
   );
 }

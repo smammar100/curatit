@@ -22,6 +22,8 @@ import { usePosts } from "./HomePosts";
 // While on screen it cycles through the briefs: the query types out, then the
 // results arrive one by one. Clicking a brief takes over from the loop.
 // Fills its box (HowItWorks gives every illustration the same one).
+// Since 2026-10-23 the brief tabs are the shared Segmented, the field a drawing of the Input,
+// the matched terms Badges, and the result covers take the tile corner and the ladder's shadow.
 export default function SearchDemo() {
   const [active, setActive] = useState(0);
   const { ref, playing, stop } = useLoop<HTMLDivElement>(4500, () =>
@@ -48,7 +50,7 @@ export default function SearchDemo() {
       </m.div>
       <m.ul
         variants={introItem}
-        className="mt-4 min-h-0 flex-1 divide-y divide-border-default overflow-hidden"
+        className="mt-4 min-h-0 flex-1 divide-y divide-border overflow-hidden"
         aria-live={playing ? "off" : "polite"}
       >
         {posts.map((post, i) => {
@@ -70,7 +72,7 @@ export default function SearchDemo() {
               <PostCover
                 post={post}
                 sizes="48px"
-                className="w-12 shrink-0 rounded shadow-sm"
+                className="w-12 shrink-0 rounded-[10px] shadow-surface-2"
               />
               <div className="min-w-0">
                 <BrandName brand={post.brand} />

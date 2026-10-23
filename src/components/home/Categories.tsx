@@ -33,6 +33,11 @@ function tabTone(hue: number) {
 // with enough posts to fill the gallery and `galleries` each tab's ten posts, by slug (both picked
 // on the server, see page.tsx); a tab's gallery takes its extra tags too. The ten slots stay put;
 // each one cross-fades to its new post, slot by slot, so the grid never reflows.
+//
+// The tabs keep their own tablist (2026-10-23): the shared Tabs can't take a hue per tab or the
+// one pill that slides between them taking on each category's colour, so the row is drawn on the
+// system's compact pill (28px, rounded-[20px], 12px text, the one focus ring, the touch area
+// reaching 44px through ::before) with the hues from src/lib/categories.ts, a recorded exception.
 export default function Categories({
   categories,
   galleries,
@@ -91,10 +96,10 @@ export default function Categories({
     <section>
       <Wrapper variant="standard" className="section-y">
         <div className="text-balance max-w-3xl mx-auto text-center">
-          <Text tag="h2" variant="h1" className="text-primary-foreground">
+          <Text tag="h2" variant="h1" className="text-foreground">
             Explore posts by industry.
           </Text>
-          <Text tag="p" variant="body" className="text-secondary-foreground mt-4">
+          <Text tag="p" variant="body" className="text-muted-foreground mt-4">
             Browse examples from finance, food, travel and more.
           </Text>
         </div>
@@ -135,7 +140,7 @@ export default function Categories({
             role="tablist"
             aria-label="Category"
             style={{ maskImage: mask, WebkitMaskImage: mask }}
-            className="scrollbar-hide flex justify-center-safe gap-1 overflow-x-auto px-4 py-0.5 sm:px-8"
+            className="scrollbar-hide flex justify-center-safe gap-1 overflow-x-auto px-4 py-2 sm:px-8"
           >
             {categories.map((category) => {
               const selected = category.slug === active;
@@ -148,7 +153,6 @@ export default function Categories({
                   id={`${id}-${category.slug}`}
                   aria-selected={selected}
                   aria-controls={`${id}-panel`}
-                  style={tabTone(category.hue)}
                   onClick={(event) => {
                     setActive(category.slug);
                     event.currentTarget.scrollIntoView({
@@ -157,20 +161,22 @@ export default function Categories({
                     });
                   }}
                   className={cx(
-                    // The pill is 40px; the pseudo-element brings the hit area to 44px. The press
-                    // is Tailwind's `scale` property, so that's what transitions, not transform
-                    "relative h-10 shrink-0 touch-manipulation rounded-lg pr-4 pl-3.5 text-body-sm transition-[color,background-color,scale] duration-150 ease-out-quint before:absolute before:inset-x-0 before:-inset-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.96]",
+                    // The pill is the compact 28px step; the pseudo-element brings the hit area
+                    // to 44px. The press is Tailwind's `scale` property, so that's what
+                    // transitions, not transform
+                    "relative h-7 shrink-0 touch-manipulation rounded-[20px] pr-3 pl-2.5 text-caption transition-[color,background-color,scale] duration-150 ease-out-quint before:absolute before:inset-x-0 before:-inset-y-2 focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)] motion-safe:active:scale-[0.96]",
                     selected
                       ? "text-(--tab-ink)"
-                      : "text-secondary-foreground hover:bg-(--tab-tint) hover:text-primary-foreground",
+                      : "text-muted-foreground hover:bg-(--tab-tint) hover:text-foreground",
                   )}
+                  style={tabTone(category.hue)}
                 >
                   {/* One pill that slides to the selected tab, taking on its colour as it goes */}
                   {selected && (
                     <m.span
                       layoutId={`${id}-pill`}
                       aria-hidden="true"
-                      className="absolute inset-0 rounded-lg"
+                      className="absolute inset-0 rounded-[20px]"
                       initial={false}
                       animate={{ backgroundColor: tabFill(category.hue) }}
                       transition={
@@ -180,9 +186,9 @@ export default function Categories({
                       }
                     />
                   )}
-                  <span className="relative flex items-center gap-2">
+                  <span className="relative flex items-center gap-1.5">
                     {Icon && (
-                      <Icon className="size-4 shrink-0 text-(--tab-ink)" />
+                      <Icon className="size-3.5 shrink-0 text-(--tab-ink)" />
                     )}
                     {category.name}
                   </span>
@@ -219,7 +225,7 @@ export default function Categories({
                   <PostCover
                     post={post}
                     sizes="(min-width: 1024px) 220px, 45vw"
-                    className="rounded shadow"
+                    className="rounded-[12px] shadow-surface-2"
                   />
                   <BrandName brand={post.brand} className="mt-2" />
                 </m.div>

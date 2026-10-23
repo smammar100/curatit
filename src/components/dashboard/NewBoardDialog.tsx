@@ -2,15 +2,16 @@
 
 // Making a board, after Cosmos's "New collection": a dialog with the name set large in the middle,
 // a short line saying what the board is for, a switch to share it by link, and Create. Since
-// 2026-10-19 it's the shared Dialog (fundations/molecules/Dialog): showModal keeps focus inside,
-// Escape closes it, the page behind can't be reached or scrolled, focus starts in the name and goes
-// back to whatever opened it (Create in the header), and it scales in and fades through
-// .dialog-motion. Its own look rides on two Dialog options: the 28px corners (radius="large") and
-// "New board" as a quiet label (titleVariant="quiet"), since the name below is the subject.
+// 2026-10-19 it's the shared Dialog (fundations/molecules/Dialog; since 2026-10-23 Fluid
+// Functionalism's: Radix keeps focus inside, Escape closes it, the page behind can't be reached
+// or scrolled, focus starts in the name and goes back to whatever opened it, and it enters on the
+// slow spring). "New board" is a quiet label (titleVariant="quiet"), since the name below is the
+// subject; the footer's one primary action is Create board, and the switch sits in a Field.
 //
 // The name and the description stay their own fields, not Input / Textarea: they are the text in
-// place, transparent until focus fills them with bg-card, the name in the display serif at 28px.
-// Input's surface, height and type would turn them back into a form.
+// place, transparent until focus fills them with the hover tint, the name in the display serif at
+// 28px and both centred. Input's 28px pill, ring and type would turn them back into a form. They
+// sit on the system's tokens and the control corner (2026-10-23).
 import { useId, useState } from "react";
 import Button from "@/components/fundations/elements/Button";
 import Switch from "@/components/fundations/elements/Switch";
@@ -22,8 +23,9 @@ import { NAME_MAX, useBoards } from "./boards";
 // A description is a line about the board, not a brief
 export const DESCRIPTION_MAX = 160;
 
-// The fills are alpha tints (card), so they read on the modal surface in both themes. Each field
-// sets its own text colour (cx doesn't merge, so a second one here would fight it)
+// The fills are alpha tints (the hover tint), so they read on the dialog's surface in both
+// themes. Each field sets its own text colour (cx doesn't merge, so a second one here would fight
+// it). border-0 and focus:ring-0 take off what @tailwindcss/forms gives text fields
 const field =
   "w-full rounded-[20px] border-0 bg-transparent px-3 text-center transition-colors duration-80 focus:bg-hover focus:ring-0 focus:outline-hidden";
 
@@ -56,10 +58,9 @@ export default function NewBoardDialog({ open, onClose, firstPost }: { open: boo
       onOpenChange={(next) => !next && onClose()}
       title="New board"
       titleVariant="quiet"
-      radius="large"
       dismissible={!typed}
       footer={
-        <Button type="submit" form={formId} variant="default" size="xl" shape="pill" disabled={!name.trim()} className="w-full">
+        <Button type="submit" form={formId} variant="default" disabled={!name.trim()} className="w-full">
           Create board
         </Button>
       }
@@ -88,7 +89,7 @@ export default function NewBoardDialog({ open, onClose, firstPost }: { open: boo
             placeholder="Board name"
             autoComplete="off"
             spellCheck={false}
-            className={cx(field, "py-1 font-display text-display font-light text-primary-foreground placeholder:text-tertiary-foreground")}
+            className={cx(field, "py-1 font-display text-display font-light text-foreground placeholder:text-tertiary-foreground")}
           />
           <label htmlFor={`${id}-about`} className="sr-only">
             Short description
@@ -108,7 +109,7 @@ export default function NewBoardDialog({ open, onClose, firstPost }: { open: boo
             }}
             maxLength={DESCRIPTION_MAX}
             placeholder="What’s this board for? (optional)"
-            className={cx(field, "resize-none py-2 text-body pointer-coarse:text-[16px] text-pretty text-secondary-foreground placeholder:text-tertiary-foreground")}
+            className={cx(field, "resize-none py-2 text-body pointer-coarse:text-[16px] text-pretty text-muted-foreground placeholder:text-tertiary-foreground")}
           />
         </div>
 

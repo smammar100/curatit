@@ -1,12 +1,17 @@
 "use client";
 
 // Small pieces the review pages share: the page frame, status pills, section headings, evidence
-// chips, the selects' recipe and the formatting of costs and times.
+// chips, the native select's recipe and the formatting of costs and times. Since 2026-10-23 on
+// the design system: the pills are Badge, the evidence chips are pressed Buttons, the page-level
+// message is the display role, and the selects wear the post page's field recipe (28px pill, the
+// one stroke, the brand ring on focus) until there's a Select atom.
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Badge from "@/components/fundations/elements/Badge";
+import Button from "@/components/fundations/elements/Button";
 import { term, type Dimension } from "@/lib/creative/taxonomy";
+import { fontWeights } from "@/lib/font-weight";
 import { feedHref } from "../Feed";
 import Header from "../Header";
 import type { ReviewStatus, Source } from "./data";
@@ -35,15 +40,10 @@ export const label = (dimension: Dimension, slug: string | null | undefined) => 
 const STATUS: Record<ReviewStatus, string> = { draft: "Draft", needs_review: "Needs review", approved: "Approved", rejected: "Rejected" };
 const SOURCE: Record<Source, string> = { ai: "Written by AI", human: "Written by an editor", mixed: "AI, edited by an editor" };
 
-// A status label: the shared Badge at 24px with round ends, outlined, inverted or danger
+// A status label: the shared Badge, outlined, inverted or danger
 export function Pill({ children, tone = "plain", title }: { children: ReactNode; tone?: "plain" | "strong" | "danger"; title?: string }) {
   return (
-    <Badge
-      size="lg"
-      shape="pill"
-      variant={tone === "strong" ? "inverted" : tone === "danger" ? "danger" : "outline"}
-      title={title}
-    >
+    <Badge size="lg" variant={tone === "strong" ? "inverted" : tone === "danger" ? "danger" : "outline"} title={title}>
       {children}
     </Badge>
   );
@@ -53,11 +53,15 @@ export const StatusPill = ({ status }: { status: ReviewStatus }) => <Pill tone={
 export const SourcePill = ({ source }: { source: Source }) => <Pill>{SOURCE[source]}</Pill>;
 export const sourceLabel = (source: Source) => SOURCE[source];
 
+export const semibold = { fontVariationSettings: fontWeights.semibold };
+
 export function Section({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
   return (
-    <section className="mt-6 border-t border-border-default pt-5">
+    <section className="mt-6 border-t border-border pt-5">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-caption font-medium text-secondary-foreground">{title}</h2>
+        <h2 className="text-caption text-muted-foreground" style={semibold}>
+          {title}
+        </h2>
         {action}
       </div>
       {children}
@@ -65,18 +69,20 @@ export function Section({ title, children, action }: { title: string; children: 
   );
 }
 
-// An evidence reference, as written in the analysis (slide:N is zero-based); clicking shows it
+// An evidence reference, as written in the analysis (slide:N is zero-based); clicking shows it.
+// A pressed Button: the ink while it's the one on show, the hairline otherwise
 export function EvidenceChip({ value, onShow, active }: { value: string; onShow: (value: string) => void; active?: boolean }) {
   return (
-    <button
-      type="button"
-      onClick={() => onShow(value)}
+    <Button
+      variant={active ? "default" : "secondary"}
+      size="xs"
       aria-pressed={active}
+      onClick={() => onShow(value)}
       title={value.startsWith("slide:") ? `Show position ${value.slice(6)}` : value === "caption" ? "Show the caption" : "From the post's metadata"}
-      className="inline-flex h-6 items-center rounded-full bg-card px-2 font-mono text-micro text-secondary-foreground ring-1 ring-border-default transition-[background-color,color] duration-150 ease-out-quint hover:bg-transparent-hover hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-pressed:bg-inverted-solid aria-pressed:text-on-inverted-foreground"
+      className="font-mono"
     >
       {value}
-    </button>
+    </Button>
   );
 }
 
@@ -93,11 +99,14 @@ export function ago(iso: string | null | undefined) {
   return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 }
 
-export function Notice({ title, children }: { title: string; children?: ReactNode }) {
+// A message that stands in for the whole page ("Editors only", "No such post"): the page's own
+// heading in the display role over a line of explanation. Not the Notice molecule, which is an
+// inline banner beside content; this is the page
+export function PageMessage({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <div className="mx-auto mt-24 max-w-md text-center">
-      <h1 className="font-display text-display font-light text-balance text-primary-foreground">{title}</h1>
-      {children && <div className="mt-3 text-subtitle text-pretty text-secondary-foreground">{children}</div>}
+      <h1 className="font-display text-display font-light text-balance text-foreground">{title}</h1>
+      {children && <div className="mt-3 text-subtitle text-pretty text-muted-foreground">{children}</div>}
     </div>
   );
 }
@@ -121,12 +130,10 @@ export function useBusy() {
   return { busy, error, setError, run };
 }
 
-// The buttons are the shared Button (`default` for the main action, `secondary` for the rest, at
-// size sm with round ends), the text fields the shared Field with Input and Textarea (since
-// 2026-10-19). The selects are native until the design system has a Select, so they keep the
-// field recipe's parts here (surface, default shadow, brand focus ring, 16px on touch screens so
-// iOS doesn't zoom) at their own heights, in the dashboard's body role. focus:ring-0 takes off the
-// 1px blue ring @tailwindcss/forms draws on a focused select, which would sit over the brand ring
-const focusRing = "focus:shadow-[0_0_0_2px_var(--color-brand-border-focus)]";
-export const fieldParts = `border-0 bg-component-on-container-subtle text-primary-foreground shadow-sm placeholder:text-tertiary-foreground transition-[box-shadow] duration-150 ease-out-quint focus:ring-0 focus:outline-hidden pointer-coarse:text-[16px] ${focusRing}`;
-export const selectClass = `h-10 rounded-lg py-0 pr-8 pl-3 text-body ${fieldParts}`;
+// The selects are native until the design system has a Select (a value in a form, which Menu
+// leaves to the browser), so they wear the post page's field recipe: the Input's 28px pill, the
+// one stroke, a faint hover tint, the card surface and the brand ring while focused, 16px on
+// touch screens so iOS doesn't zoom. focus:outline-hidden takes off the ring @tailwindcss/forms
+// draws on a focused select, which would sit over the brand ring
+export const selectClass =
+  "h-7 w-full rounded-full border-0 bg-transparent pr-8 pl-3 text-body pointer-coarse:text-[16px] text-foreground ring-1 ring-border transition-[box-shadow,background-color] duration-150 ease-out-quint hover:bg-hover focus:bg-surface-3 focus:ring-[var(--focus-ring)] focus:outline-hidden disabled:text-muted-foreground disabled:opacity-50";

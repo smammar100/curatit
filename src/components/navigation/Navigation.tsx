@@ -4,10 +4,18 @@ import Lockup from "@/components/assets/Lockup";
 // Fundations
 import Badge from "@/components/fundations/elements/Badge";
 import Button from "@/components/fundations/elements/Button";
+import TextLink from "@/components/fundations/elements/TextLink";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 // Components
 import ThemeToggle from "@/components/global/ThemeToggle";
 import MobileNav from "./MobileNav";
+
+// The site's navigation from md up (MobileNav takes over below it): the lockup, the links centred
+// on the page, then the theme menu, Sign in and Create account. Since 2026-10-23 on the system:
+// each link is a quiet TextLink (the muted ink, the ink on hover, 44px tall on touch screens), the
+// two account actions are Buttons, the theme switch is ThemeToggle's menu, and the lockup's focus
+// ring is the site's one ring.
+
 // Quick access links; `beta` adds a small Beta chip after the label
 const links = [
   { href: "/#how-it-works", text: "How it works" },
@@ -26,23 +34,24 @@ export default function Navigation() {
           <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full gap-3 relative">
             <Link
               href="/"
-              className="w-fit shrink-0 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus"
+              className="w-fit shrink-0 rounded-[4px] focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--focus-ring)]"
               aria-label="Go to homepage"
             >
               <Lockup />
             </Link>
-            {/* On a touch screen each link reaches 44px tall and 8px past its words through an
-                invisible ::after; the gap-6 between them still keeps the areas apart */}
-            <div className="flex items-center justify-center gap-6">
+            {/* The quiet link reaches 44px tall and 4px past its words on a touch screen through
+                its own invisible ::after; the gap-6 between them still keeps the areas apart */}
+            <div className="flex items-center justify-center gap-6 text-body-sm">
               {links.map((link) => (
-                <Link
+                <TextLink
                   key={link.href}
-                  className="relative inline-flex min-h-7 items-center gap-1.5 rounded-sm text-body-sm whitespace-nowrap text-secondary-foreground transition-colors duration-150 ease-out-quint hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus pointer-coarse:after:absolute pointer-coarse:after:-inset-x-2 pointer-coarse:after:-inset-y-2"
+                  variant="quiet"
                   href={link.href}
+                  className="inline-flex min-h-7 items-center gap-1.5 whitespace-nowrap"
                 >
                   {link.text}
                   {link.beta && <Badge size="sm">Beta</Badge>}
-                </Link>
+                </TextLink>
               ))}
             </div>
             <div className="flex items-center justify-end gap-2">

@@ -8,7 +8,8 @@ import { cx } from "@/lib/cx";
  * A reel of app-icon tiles that advance through five slots laid out on a
  * shallow arc: small and soft at the ends, full size in the middle. One tile
  * moves on every beat while the reel is on screen; the rest wait their turn
- * hidden beyond the ends. Reduced motion holds the reel still.
+ * hidden beyond the ends. Reduced motion holds the reel still. A tile is an app icon: the
+ * container corner (24px) and the ladder's card shadow (2026-10-23).
  */
 
 const SIZE = 96; // tile size at the middle slot, px
@@ -113,7 +114,7 @@ export default function LogoReel({
         return (
           <m.div
             key={i}
-            className="absolute top-0 left-0 overflow-hidden rounded-4xl shadow-sm"
+            className="absolute top-0 left-0 overflow-hidden rounded-[24px] shadow-surface-2"
             style={{ width: SIZE, height: SIZE }}
             initial={false}
             animate={slotStyle(virtual, orientation, near)}

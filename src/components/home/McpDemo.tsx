@@ -10,6 +10,7 @@ import { useScript } from "./DemoParts";
 import PostCover from "./PostCover";
 import { briefs } from "./demo";
 import { usePosts } from "./HomePosts";
+import { fontWeights } from "@/lib/font-weight";
 
 const brief = briefs[0];
 const trace = ["Reading the brief", "Searching the library"];
@@ -25,7 +26,9 @@ const SEARCH_SECONDS = 2.3;
  * in and hold, then it clears and starts again. It pauses while pointed at or
  * focused (useScript), but never mid-search: the clock would keep running
  * through the pause, so a pause that comes then waits for the results.
- * Reduced motion shows the results only.
+ * Reduced motion shows the results only. Drawn on the system's tokens since 2026-10-23: the
+ * panel and the message bubble take the container corner, the covers the tile corner and the
+ * ladder's shadow, the agent's line the muted ink.
  */
 
 type Step = 0 | 1 | 2 | 3 | 4; // empty · brief sent · trace step 1 · trace step 2 · results
@@ -58,7 +61,7 @@ export default function McpDemo() {
       {...handlers}
       role="group"
       aria-label="Demo: an AI agent asking Curatit for references and getting three posts back"
-      className="relative overflow-hidden rounded-2xl bg-card lg:aspect-4/3"
+      className="relative overflow-hidden rounded-[24px] bg-card lg:aspect-4/3"
       data-step={step}
     >
       {/* Grows with its content on small screens; centred in a fixed 4:3 panel from lg up */}
@@ -66,7 +69,7 @@ export default function McpDemo() {
         <div className="flex justify-end">
           {/* Sent like a message: rises in from its bottom-right corner */}
           <m.p
-            className="max-w-sm origin-bottom-right rounded-2xl rounded-br-sm bg-component px-5 py-4 text-sm leading-relaxed text-primary-foreground sm:text-base"
+            className="max-w-sm origin-bottom-right rounded-[24px] rounded-br-[4px] bg-muted px-5 py-4 text-body-sm text-foreground sm:text-body-base"
             initial={false}
             animate={
               step >= 1
@@ -79,15 +82,15 @@ export default function McpDemo() {
                 : { duration: 0.3 }
             }
           >
-            Show me <strong className="font-medium">launch carousels</strong>{" "}
-            that <strong className="font-medium">show the product</strong>
+            Show me <strong style={{ fontVariationSettings: fontWeights.semibold }}>launch carousels</strong>{" "}
+            that <strong style={{ fontVariationSettings: fontWeights.semibold }}>show the product</strong>
           </m.p>
         </div>
         {/* The agent's line and the results share one cell: the trace unfolds into the space the
             results will take, and folds away as they arrive, so the panel never changes height */}
         <div className="mt-6 grid">
           <m.div
-            className="self-start pt-1 text-secondary-foreground [grid-area:1/1]"
+            className="self-start pt-1 text-muted-foreground [grid-area:1/1]"
             initial={false}
             animate={{ opacity: step >= 2 ? 1 : 0 }}
             transition={{ duration: 0.25 }}
@@ -104,8 +107,8 @@ export default function McpDemo() {
               // Real colours, not currentColor: the shimmer mixes the ink with transparent, and
               // color-mix() can't take currentColor, which would leave the label invisible. The
               // tokens are alpha greys, which color-mix() takes as they are
-              color="var(--color-secondary-foreground)"
-              glyphColor="var(--color-primary-foreground)"
+              color="var(--muted-foreground)"
+              glyphColor="var(--foreground)"
               fontSize={14}
               collapsible={false}
               live={false}
@@ -149,10 +152,10 @@ export default function McpDemo() {
                   <PostCover
                     post={post}
                     sizes="160px"
-                    className="rounded shadow"
+                    className="rounded-[12px] shadow-surface-2"
                   />
                   <BrandName brand={post.brand} className="mt-2" />
-                  <p className="mt-0.5 line-clamp-1 text-caption-lg text-secondary-foreground">
+                  <p className="mt-0.5 line-clamp-1 text-caption-lg text-muted-foreground">
                     {post.hook}
                   </p>
                 </m.li>

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 import Text from "@/components/fundations/elements/Text";
+import Card from "@/components/fundations/molecules/Card";
 import { Lifeline, type LifelineEvent, type LifelineMarker } from "@/components/lifeline";
 import { CHANGELOG, EARLIER, ROADMAP, type RoadmapStage } from "@/content/roadmap";
+import { fontWeights } from "@/lib/font-weight";
 import { getPublishedPosts } from "@/lib/posts";
 
 export const metadata: Metadata = {
@@ -13,6 +15,8 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 const REPO = "https://github.com/smammar100/curatit/commit/";
+
+const semibold = { fontVariationSettings: fontWeights.semibold };
 
 const STAGES: { stage: RoadmapStage; when: string; note: string }[] = [
   { stage: "Now", when: "In progress", note: "Being built or rolled out" },
@@ -37,7 +41,9 @@ const dateRange = (from: string, to: string) =>
 // carries the whole story on one rail: the days before the newest in a few lines, then each day
 // since in full, every update linked to the commit behind it, then Now, Next and Later. Below it, what's
 // coming in detail. Both come from src/content/roadmap.ts, written from this repo's history (npm
-// run changelog:draft lists the commits since the newest day)
+// run changelog:draft lists the commits since the newest day). Since 2026-10-23 the three stage
+// columns are the system's Cards on the grey mat, each item a white tile on the surface ladder's
+// first step, the words on the tokens at the library's semibold where they were medium.
 export default async function RoadmapPage() {
   const posts = await getPublishedPosts();
   const updates = CHANGELOG.reduce((n, day) => n + day.entries.length, 0);
@@ -104,14 +110,14 @@ export default async function RoadmapPage() {
       <section>
         <Wrapper variant="standard" className="page-start">
           <div className="max-w-2xl">
-            <Text tag="h1" variant="h1" className="text-balance text-primary-foreground">
+            <Text tag="h1" variant="h1" className="text-balance text-foreground">
               Roadmap
             </Text>
-            <Text className="mt-6 text-pretty text-secondary-foreground">
+            <Text className="mt-6 text-pretty text-muted-foreground">
               What&apos;s been built, what&apos;s being built and what&apos;s next, on one line. Curatit is built in the open: every update links to the
               change that made it.
             </Text>
-            <Text variant="bodySM" className="mt-4 text-secondary-foreground">
+            <Text variant="bodySM" className="mt-4 text-muted-foreground">
               {updates} updates across {days.length} days of building. Scroll over the line to travel along it.
             </Text>
           </div>
@@ -128,35 +134,37 @@ export default async function RoadmapPage() {
 
       <section aria-labelledby="coming">
         <Wrapper variant="standard" className="section-y">
-          <Text tag="h2" id="coming" variant="h3" className="text-primary-foreground">
+          <Text tag="h2" id="coming" variant="h3" className="text-foreground">
             What&apos;s coming
           </Text>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {STAGES.map(({ stage, note }) => (
-              <section key={stage} aria-labelledby={`stage-${stage}`} className="rounded-2xl bg-card p-5 lg:p-6">
-                <div className="flex items-baseline justify-between gap-3">
-                  <Text tag="h3" id={`stage-${stage}`} className="font-medium text-primary-foreground">
-                    {stage}
-                  </Text>
-                  <Text variant="captionLG" className="text-secondary-foreground">
-                    {note}
-                  </Text>
-                </div>
-                <ul className="mt-5 space-y-3">
-                  {ROADMAP.filter((item) => item.stage === stage).map((item) => (
-                    <li key={item.title} className="rounded-xl bg-container p-4 shadow-xs ring-1 ring-edge">
-                      <Text variant="captionLG" className="font-medium tracking-wider text-secondary-foreground uppercase">
-                        {item.area}
-                      </Text>
-                      <Text variant="bodySM" className="mt-1 font-medium text-primary-foreground">
-                        {item.title}
-                      </Text>
-                      <Text variant="bodySM" className="mt-1 text-pretty text-secondary-foreground">
-                        {item.detail}
-                      </Text>
-                    </li>
-                  ))}
-                </ul>
+              <section key={stage} aria-labelledby={`stage-${stage}`}>
+                <Card variant="mat" padding="lg" className="h-full">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <Text tag="h3" id={`stage-${stage}`} className="text-foreground" style={semibold}>
+                      {stage}
+                    </Text>
+                    <Text variant="captionLG" className="text-muted-foreground">
+                      {note}
+                    </Text>
+                  </div>
+                  <ul className="mt-5 space-y-3">
+                    {ROADMAP.filter((item) => item.stage === stage).map((item) => (
+                      <li key={item.title} className="rounded-[12px] bg-surface-3 p-4 shadow-surface-1">
+                        <Text variant="captionLG" className="text-muted-foreground" style={semibold}>
+                          {item.area}
+                        </Text>
+                        <Text variant="bodySM" className="mt-1 text-foreground" style={semibold}>
+                          {item.title}
+                        </Text>
+                        <Text variant="bodySM" className="mt-1 text-pretty text-muted-foreground">
+                          {item.detail}
+                        </Text>
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
               </section>
             ))}
           </div>

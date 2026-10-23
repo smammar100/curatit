@@ -3,7 +3,10 @@
 // The dashboard header, after Cosmos: the mark and the For you / Discover tabs, a
 // search pill in the middle, then Create, Saved (a bookmark with the count of saved posts) and
 // the account menu. The feed drives it directly; other dashboard pages pass `onView` /
-// `onSearch` that take you back to the feed.
+// `onSearch` that take you back to the feed. Since 2026-10-23 every control is the system's:
+// the Tabs, the Menu below lg with a ghost Button as its trigger, Create and Saved as compact
+// Buttons, the count as an inverted Badge on the bookmark's corner, and the account menu's
+// avatar in a ghost icon Button. The search pill (SearchBox) is its own, as before.
 import { useMemo, useState } from "react";
 import Link from "next/link";
 // Assets
@@ -11,6 +14,7 @@ import Symbol from "@/components/assets/Symbol";
 // Icons
 import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
 import Plus from "@/components/fundations/icons/Plus";
+import Badge from "@/components/fundations/elements/Badge";
 import Button from "@/components/fundations/elements/Button";
 import Menu, { MenuCaret, MenuItemRadio, MenuRadioGroup } from "@/components/fundations/molecules/Menu";
 import Tabs, { Tab, TabList } from "@/components/fundations/molecules/Tabs";
@@ -48,7 +52,7 @@ export default function Header({
         <Link
           href="/dashboard"
           aria-label="Your feed"
-          className="rounded-sm text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus"
+          className="rounded-[4px] text-foreground focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]"
         >
           <Symbol className="size-8" aria-hidden="true" />
         </Link>
@@ -87,34 +91,30 @@ export default function Header({
           >
             <BookmarkSimple className="size-3.5" />
           </Button>
-          {/* The count: the brand's solid, cut out of the header by a ring of the page's colour */}
+          {/* The count: the ink, cut out of the header by a ring of the page's colour */}
           {savedCount > 0 && (
-            <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-solid px-1 text-micro text-on-brand-solid-foreground tabular-nums ring-2 ring-page">
+            <Badge variant="inverted" size="sm" aria-hidden="true" className="pointer-events-none absolute -top-2 -right-2 tabular-nums ring-2 ring-page">
               {savedCount}
-            </span>
+            </Badge>
           )}
         </span>
-        <AccountMenu savedCount={savedCount} onShowSaved={() => onView("Saved")} />
+        <AccountMenu onShowSaved={() => onView("Saved")} />
       </div>
     </header>
   );
 }
 
 // The feed menu below lg: the shared Menu, with the views as a radio group (a check on the one
-// you're on; none on pages that aren't the feed). The trigger keeps the tabs' type, with the
-// menu's caret, which turns while it's open
+// you're on; none on pages that aren't the feed). The trigger is a ghost Button with the menu's
+// caret, which turns while it's open
 function ViewMenu({ view, onChange }: { view: View | null; onChange: (view: View) => void }) {
   return (
     <Menu
       label="Feed"
       trigger={
-        <button
-          type="button"
-          className="relative flex items-center gap-1.5 rounded-sm text-title font-medium text-primary-foreground after:absolute after:-inset-x-2 after:-inset-y-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
-        >
+        <Button variant="transparent" size="lg" rightIcon={<MenuCaret />}>
           {view ?? "Feed"}
-          <MenuCaret />
-        </button>
+        </Button>
       }
     >
       <MenuRadioGroup<View | ""> value={view ?? ""} onValueChange={(next) => next && onChange(next)}>
@@ -128,24 +128,13 @@ function ViewMenu({ view, onChange }: { view: View | null; onChange: (view: View
   );
 }
 
-// Create: opens the new board dialog. Just the plus below md, where it keeps a near-round 12px
-// either side; the label joins it from md. Button lg's own px-4 is overridden on purpose
-// (12px below md, 20px from md, as before): the breakpoint variants sort after the base
-// utility, so they always win
+// Create: opens the new board dialog. Just the plus below md (the label span is hidden, so the
+// pill closes round the icon); the label joins it from md
 function CreateBoard() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button
-        variant="secondary"
-        size="lg"
-        shape="pill"
-        onClick={() => setOpen(true)}
-        aria-label="Create a board"
-        aria-haspopup="dialog"
-        leftIcon={<Plus className="size-4.5" />}
-        className="max-md:px-3 md:px-5"
-      >
+      <Button variant="secondary" size="lg" onClick={() => setOpen(true)} aria-label="Create a board" aria-haspopup="dialog" leftIcon={<Plus className="size-3.5" />}>
         <span className="hidden md:inline">Create</span>
       </Button>
       <NewBoardDialog open={open} onClose={() => setOpen(false)} />

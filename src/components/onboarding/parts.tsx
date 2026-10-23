@@ -3,9 +3,16 @@
 // The pieces of the welcome flow (Welcome.tsx): the answers being made, and the pickers for the
 // name and occupation, the brands and the taste test; the live wall; the chips of what the taps
 // say; the end. The industries are folders (Folders.tsx).
+//
+// Since 2026-10-23 on the design system: the role chips are pressed Buttons (the ink while
+// chosen, the hairline otherwise), the learned chips are Badges, and every picture sits on
+// bg-muted with the one hairline drawn over it (as CardMedia does) and 12px corners; a picked
+// brand or post wears a 2px ring of the ink inside its own edge, so no ring offset has to match
+// the ground it sits on.
 import { useEffect, useId, useRef, type ReactNode, type Ref } from "react";
 import Image from "next/image";
 import Check from "@/components/fundations/icons/Check";
+import Badge from "@/components/fundations/elements/Badge";
 import Button from "@/components/fundations/elements/Button";
 import Input from "@/components/fundations/elements/Input";
 import { ratio } from "@/components/dashboard/Grid";
@@ -14,6 +21,15 @@ import type { Profile } from "@/components/dashboard/profile";
 import type { DashPost } from "@/components/dashboard/types";
 import { categoriesWithPosts, inCategory } from "@/lib/categories";
 import { cx } from "@/lib/cx";
+import { fontWeights } from "@/lib/font-weight";
+
+export const semibold = { fontVariationSettings: fontWeights.semibold };
+
+// The hairline round a picture, drawn over it so the image can't cover it (as CardMedia does);
+// `picked` thickens it into a 2px ring of the ink
+export const edge =
+  "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:outline-1 after:-outline-offset-1 after:outline-border after:transition-[outline-color,outline-width] after:duration-80";
+export const picked = "after:outline-2 after:-outline-offset-2 after:outline-foreground";
 
 // The answers while they're being made: the profile without the time it was finished
 export type Draft = Omit<Profile, "onboardedAt" | "editor">;
@@ -40,10 +56,10 @@ export function categoriesOf(posts: DashPost[]): Category[] {
 export function Heading({ ref, id, title, sub, align = "center" }: { ref?: Ref<HTMLHeadingElement>; id?: string; title: string; sub?: string; align?: "center" | "left" }) {
   return (
     <div className={cx("text-balance", align === "center" && "text-center")}>
-      <h1 ref={ref} id={id} tabIndex={-1} className="font-display text-display font-light text-primary-foreground outline-none">
+      <h1 ref={ref} id={id} tabIndex={-1} className="font-display text-display font-light text-foreground outline-none">
         {title}
       </h1>
-      {sub && <p className="mt-2 text-subtitle text-secondary-foreground">{sub}</p>}
+      {sub && <p className="mt-2 text-subtitle text-muted-foreground">{sub}</p>}
     </div>
   );
 }
@@ -53,24 +69,16 @@ export function Progress({ step, total, className }: { step: number; total: numb
   return (
     <div role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={step + 1} aria-label={`Step ${step + 1} of ${total}`} className={cx("flex gap-1.5", className)}>
       {Array.from({ length: total }, (_, i) => (
-        <span key={i} className={cx("h-1 flex-1 rounded-full transition-colors duration-150 ease-out-quint", i <= step ? "bg-inverted-solid" : "bg-border-strong")} />
+        <span key={i} className={cx("h-1 flex-1 rounded-full transition-colors duration-80", i <= step ? "bg-foreground" : "bg-border")} />
       ))}
     </div>
   );
 }
 
-// A toggle chip: the dashboard's 44px pill Button, pressed. On, it's the primary fill; off, it
-// brings its own grey mat (variant="none"), which no variant has
+// A toggle chip: a pressed Button, the ink while it's on and the hairline while it's off
 export function Chip({ on, onClick, children, className }: { on: boolean; onClick: () => void; children: ReactNode; className?: string }) {
   return (
-    <Button
-      variant={on ? "default" : "none"}
-      size="lg"
-      shape="pill"
-      aria-pressed={on}
-      onClick={onClick}
-      className={cx(!on && "bg-card text-primary-foreground hover:bg-transparent-hover", className)}
-    >
+    <Button variant={on ? "default" : "secondary"} aria-pressed={on} onClick={onClick} className={className}>
       {children}
     </Button>
   );
@@ -78,7 +86,8 @@ export function Chip({ on, onClick, children, className }: { on: boolean; onClic
 
 // The name, then what they do as one tap. The name takes focus on arrival, except on touch
 // (the keyboard would jump up); Enter in it submits the step. The step's question is its visible
-// label, so the field is named by aria-label rather than a Field.
+// label, so the field is named by aria-label rather than a Field. The roles are chips rather than
+// a Segmented: six of them, and a second tap clears the choice
 export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: Partial<Draft>) => void }) {
   const ref = useRef<HTMLInputElement>(null);
   const groupLabel = useId();
@@ -89,7 +98,6 @@ export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: 
     <div className="space-y-5">
       <Input
         ref={ref}
-        size="lg"
         name="name"
         aria-label="Your name"
         value={value.name}
@@ -99,7 +107,7 @@ export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: 
         maxLength={60}
       />
       <div>
-        <p id={groupLabel} className="mb-2 text-caption font-medium text-secondary-foreground">
+        <p id={groupLabel} className="mb-2 text-caption text-muted-foreground" style={semibold}>
           And you’re a…
         </p>
         <div role="group" aria-labelledby={groupLabel} className="flex flex-wrap gap-1.5">
@@ -114,30 +122,41 @@ export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: 
   );
 }
 
+// The check that marks a pick: the ink, with the page's own colour for the mark
 export const Tick = ({ className }: { className?: string }) => (
-  <span className={cx("flex size-5 items-center justify-center rounded-full bg-inverted-solid text-on-inverted-foreground shadow-sm", className)}>
+  <span className={cx("flex size-5 items-center justify-center rounded-full bg-foreground text-background shadow-sm", className)}>
     <Check className="size-3" />
   </span>
 );
 
-// The brands as their marks, with a check over a picked one
+// The brands as their marks, with a check over a picked one. A tile of a mark and a two-line
+// name, so a plain pressed button rather than a Button, on the row look (12px corners, the
+// hover tint, the one focus ring)
 export function BrandGrid({ brands, value, onChange, className }: { brands: Brand[]; value: string[]; onChange: (next: string[]) => void; className?: string }) {
   return (
     <div className={cx("grid gap-1", className)}>
       {brands.map((b) => {
         const on = value.includes(b.slug);
         return (
-          <button key={b.slug} type="button" aria-pressed={on} onClick={() => onChange(toggle(value, b.slug))} className="group flex min-w-0 flex-col items-center gap-1.5 rounded-xl p-2 transition-[background-color,scale] duration-150 ease-out-quint hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.96]">
-            <span className={cx("relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-component outline-1 -outline-offset-1 outline-edge transition-[box-shadow] duration-150 ease-out-quint", on && "ring-2 ring-primary-foreground ring-offset-2 ring-offset-page")}>
+          <button
+            key={b.slug}
+            type="button"
+            aria-pressed={on}
+            onClick={() => onChange(toggle(value, b.slug))}
+            className="group flex min-w-0 flex-col items-center gap-1.5 rounded-[12px] p-2 transition-[background-color,scale] duration-80 hover:bg-hover focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)] motion-safe:active:scale-[0.96]"
+          >
+            <span className={cx("relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted", edge, on && picked)}>
               {b.logo && <Image src={b.logo} alt="" fill sizes="44px" className="object-cover" />}
-              {/* A scrim over the logo, dark in both themes */}
+              {/* A scrim over the logo in the ink, with the check in the page's colour */}
               {on && (
-                <span className="absolute inset-0 flex items-center justify-center bg-standout/55 text-on-standout-primary-foreground">
+                <span className="absolute inset-0 flex items-center justify-center bg-foreground/60 text-background">
                   <Check size="sm" />
                 </span>
               )}
             </span>
-            <span className={cx("line-clamp-2 w-full text-center text-caption leading-tight", on ? "font-medium text-primary-foreground" : "text-secondary-foreground")}>{b.name}</span>
+            <span className={cx("line-clamp-2 w-full text-center text-caption", on ? "text-foreground" : "text-muted-foreground")} style={on ? semibold : undefined}>
+              {b.name}
+            </span>
           </button>
         );
       })}
@@ -145,10 +164,9 @@ export function BrandGrid({ brands, value, onChange, className }: { brands: Bran
   );
 }
 
-// Posts to tap, as a grid of 4:5 tiles; once `max` are picked the rest step back. `ground` is
-// the surface they sit on, so the picked ring's gap matches it: the page, or the welcome wall's
-// solid base-50 (a ring offset must be solid, or the ring shows through the gap)
-export function TasteGrid({ posts, value, onChange, max, ground = "white", className }: { posts: DashPost[]; value: string[]; onChange: (next: string[]) => void; max: number; ground?: "white" | "grey"; className?: string }) {
+// Posts to tap, as a grid of 4:5 tiles; once `max` are picked the rest step back. A picked tile
+// wears the ring of the ink inside its own edge and the check in its corner
+export function TasteGrid({ posts, value, onChange, max, className }: { posts: DashPost[]; value: string[]; onChange: (next: string[]) => void; max: number; className?: string }) {
   return (
     <div className={cx("grid gap-2", className)}>
       {posts.map((p) => {
@@ -163,9 +181,9 @@ export function TasteGrid({ posts, value, onChange, max, ground = "white", class
             disabled={full}
             onClick={() => onChange(toggle(value, p.shortCode))}
             className={cx(
-              "relative block aspect-4/5 w-full overflow-hidden rounded-lg bg-component outline-1 -outline-offset-1 outline-edge transition-[opacity,scale,box-shadow] duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.97]",
-              on && "ring-2 ring-primary-foreground ring-offset-2",
-              on && (ground === "grey" ? "ring-offset-base-50" : "ring-offset-page"),
+              "relative block aspect-4/5 w-full overflow-hidden rounded-[12px] bg-muted shadow-surface-1 transition-[opacity,scale] duration-150 ease-out-quint focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)] motion-safe:active:scale-[0.97]",
+              edge,
+              on && picked,
               full && "opacity-40",
             )}
           >
@@ -194,7 +212,7 @@ export function Collage({ posts, className }: { posts: DashPost[]; className?: s
       {columns.map((column, c) => (
         <div key={c} className="flex flex-col gap-3">
           {column.map(({ post, i }) => (
-            <div key={post.shortCode} className="welcome-rise relative overflow-hidden rounded-lg bg-component outline-1 -outline-offset-1 outline-edge" style={{ aspectRatio: ratio(post), animationDelay: `${i * 30}ms` }}>
+            <div key={post.shortCode} className={cx("welcome-rise relative overflow-hidden rounded-[12px] bg-muted shadow-surface-1", edge)} style={{ aspectRatio: ratio(post), animationDelay: `${i * 30}ms` }}>
               <Image src={post.cover} alt="" fill sizes="240px" className="object-cover" />
             </div>
           ))}
@@ -210,8 +228,8 @@ export function LearnedChips({ posts, taste, max = 5, className }: { posts: Dash
   return (
     <ul className={cx("flex flex-wrap gap-1.5", className)} aria-label="What your picks say">
       {chips.map((chip) => (
-        <li key={chip} className="welcome-chip rounded-full bg-card px-3 py-1.5 text-caption font-medium whitespace-nowrap text-primary-foreground">
-          {chip}
+        <li key={chip} className="welcome-chip">
+          <Badge>{chip}</Badge>
         </li>
       ))}
     </ul>
@@ -224,8 +242,8 @@ export function Ring({ value, max, className }: { value: number; max: number; cl
   const c = 2 * Math.PI * r;
   return (
     <svg viewBox="0 0 28 28" aria-hidden="true" className={cx("size-7 -rotate-90", className)}>
-      <circle cx="14" cy="14" r={r} fill="none" strokeWidth="3" className="stroke-border-strong" />
-      <circle cx="14" cy="14" r={r} fill="none" strokeWidth="3" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(1, value / max))} className="stroke-inverted-solid transition-[stroke-dashoffset] duration-300 ease-out-quint motion-reduce:transition-none" />
+      <circle cx="14" cy="14" r={r} fill="none" strokeWidth="3" className="stroke-border" />
+      <circle cx="14" cy="14" r={r} fill="none" strokeWidth="3" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(1, value / max))} className="stroke-foreground transition-[stroke-dashoffset] duration-300 ease-out-quint motion-reduce:transition-none" />
     </svg>
   );
 }
@@ -240,7 +258,7 @@ export function Done({ posts, draft, headingRef }: { posts: DashPost[]; draft: D
         {top.map((p, i) => (
           <span
             key={p.shortCode}
-            className="welcome-rise relative -mx-2 aspect-4/5 w-16 overflow-hidden sm:w-20 rounded-lg bg-component shadow-xl outline-1 -outline-offset-1 outline-edge"
+            className={cx("welcome-rise relative -mx-2 aspect-4/5 w-16 overflow-hidden rounded-[12px] bg-muted shadow-xl sm:w-20", edge)}
             style={{ rotate: `${(i - 2.5) * 7}deg`, translate: `0 ${Math.abs(i - 2.5) * 5}px`, animationDelay: `${i * 60}ms` }}
           >
             <Image src={p.cover} alt="" fill sizes="80px" className="object-cover" />

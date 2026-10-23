@@ -8,9 +8,15 @@
 // types the next query every few seconds and the tiles arrive one after another; it pauses while
 // pointed at or focused, stops in a hidden tab, and under reduced motion shows the first search
 // still. The queries are buttons too, under the row, so anyone can pick one.
+//
+// Since 2026-10-23 the tiles are grey mats with the container corner, the cover inside them the
+// tile corner with the one stroke and the ladder's shadow, the brand's mark a raised tile, and
+// the queries are the system's Buttons (secondary; the chosen one the tinted muted look, with
+// aria-pressed saying which) in a wrapping row.
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import Button from "@/components/fundations/elements/Button";
 import Text from "@/components/fundations/elements/Text";
 import SearchSparkle from "@/components/fundations/icons/SearchSparkle";
 import { cx } from "@/lib/cx";
@@ -97,7 +103,7 @@ export default function SearchReel({
       {/* The query, typed */}
       <Text
         variant="h3"
-        className="flex min-h-12 items-center gap-3 text-primary-foreground"
+        className="flex min-h-12 items-center gap-3 text-foreground"
         aria-live="off"
       >
         <SearchSparkle
@@ -109,7 +115,7 @@ export default function SearchReel({
         <span
           aria-hidden="true"
           className={cx(
-            "-ml-2 h-[0.9em] w-px bg-primary-foreground",
+            "-ml-2 h-[0.9em] w-px bg-foreground",
             done && "search-reel-caret",
           )}
         />
@@ -124,12 +130,12 @@ export default function SearchReel({
         {search.results.map((result, i) => (
           <li
             key={result.shortCode}
-            className="search-reel-tile group relative w-60 shrink-0 rounded-2xl bg-card p-5 sm:w-72 sm:p-6 lg:w-80"
+            className="search-reel-tile group relative w-60 shrink-0 rounded-[24px] bg-card p-5 sm:w-72 sm:p-6 lg:w-80"
             style={{ animationDelay: `${i * 70}ms` }}
           >
             {/* The cover zooms in a touch under the pointer, inside its clipped frame (isolate
                 keeps Safari clipping the rounded corners while it scales) */}
-            <div className="relative isolate aspect-4/5 overflow-hidden rounded bg-component shadow ring-1 ring-border-default">
+            <div className="relative isolate aspect-4/5 overflow-hidden rounded-[12px] bg-muted shadow-surface-2 ring-1 ring-border">
               {mounted && (
                 <Image
                   src={result.cover}
@@ -141,7 +147,7 @@ export default function SearchReel({
               )}
             </div>
             {/* The brand's mark on the tile's corner, like an app icon */}
-            <div className="absolute top-3 left-3 size-12 overflow-hidden rounded-xl bg-container shadow ring-1 ring-border-default sm:size-14">
+            <div className="absolute top-3 left-3 size-12 overflow-hidden rounded-[12px] bg-surface-3 shadow-surface-2 sm:size-14">
               {mounted && result.logo ? (
                 <Image
                   src={result.logo}
@@ -156,7 +162,7 @@ export default function SearchReel({
               href={result.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute inset-0 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
+              className="absolute inset-0 rounded-[24px] focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]"
             >
               <span className="sr-only">
                 Open this {result.brand} post on Instagram (opens in a new tab)
@@ -170,23 +176,18 @@ export default function SearchReel({
       <div
         role="group"
         aria-label="Example searches"
-        className="mt-6 flex flex-wrap gap-x-5 gap-y-1"
+        className="mt-6 flex flex-wrap gap-2"
       >
         {searches.map((option, i) => (
-          <button
+          <Button
             key={option.query}
-            type="button"
+            variant={i === active ? "muted" : "secondary"}
+            size="sm"
             aria-pressed={i === active}
             onClick={() => choose(i)}
-            className={cx(
-              "min-h-10 rounded-sm text-body-sm transition-colors duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus",
-              i === active
-                ? "text-primary-foreground underline underline-offset-4"
-                : "text-secondary-foreground hover:text-primary-foreground",
-            )}
           >
             {option.query}
-          </button>
+          </Button>
         ))}
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { m } from "framer-motion";
 // Fundations
 import Button from "@/components/fundations/elements/Button";
+import Input from "@/components/fundations/elements/Input";
 import Text from "@/components/fundations/elements/Text";
 // Components
 import BrandName from "./BrandName";
@@ -17,6 +18,9 @@ import { cx } from "@/lib/cx";
 // in a strip that runs off the right edge. While on screen the strip drifts and the link
 // copies itself every few seconds; clicking Copy takes over.
 // Fills its box (HowItWorks gives every illustration the same one).
+// Since 2026-10-23 the link field is the system's Input (read-only, selects on focus) beside the
+// primary Button, which carries the Copied state; the covers take the tile corner and the
+// surface ladder's shadow.
 export default function BoardDemo() {
   const [copied, setCopied] = useState(false);
   const { ref, playing, stop } = useLoop<HTMLDivElement>(5000, () =>
@@ -34,19 +38,12 @@ export default function BoardDemo() {
   return (
     <m.div ref={ref} {...intro} className="flex h-full flex-col pb-10">
       <m.div variants={introItem} className="flex items-center gap-2">
-        <input
+        <Input
           readOnly
           value="curatit.com/s/k7Qm2xVbR4"
           aria-label="Example share link"
           onFocus={(event) => event.currentTarget.select()}
-          className={cx(
-            // The field recipe's parts (inputClass) at the demo's 36px: border-0 clears the forms
-            // plugin's border, and focus is the 2px brand ring over the default shadow
-            "block h-9 min-w-0 flex-1 rounded-md border-0 px-3 text-caption-lg shadow-sm ring-1 transition-[color,background-color,box-shadow] duration-150 ease-out-quint focus:ring-2 focus:ring-brand-border-focus focus:outline-hidden",
-            copied
-              ? "bg-brand-subtle text-primary-foreground ring-brand-border-subtle"
-              : "bg-component-on-container-subtle text-secondary-foreground ring-border-default",
-          )}
+          className="min-w-0 flex-1"
         />
         <Button
           type="button"
@@ -71,10 +68,10 @@ export default function BoardDemo() {
         </Button>
       </m.div>
       <m.div variants={introItem} className="mt-5">
-        <Text tag="p" variant="h6" className="text-primary-foreground">
+        <Text tag="p" variant="h6" className="text-foreground">
           {board.name}
         </Text>
-        <p className="mt-0.5 text-caption-lg text-secondary-foreground">
+        <p className="mt-0.5 text-caption-lg text-muted-foreground">
           Read-only · {posts.length} references
         </p>
       </m.div>
@@ -111,10 +108,10 @@ export default function BoardDemo() {
                 <PostCover
                   post={post}
                   sizes="180px"
-                  className="w-full rounded shadow-sm"
+                  className="w-full rounded-[12px] shadow-surface-2"
                 />
                 <BrandName brand={post.brand} className="mt-2" />
-                <p className="truncate text-caption-lg text-secondary-foreground">
+                <p className="truncate text-caption-lg text-muted-foreground">
                   {note}
                 </p>
               </li>

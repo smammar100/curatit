@@ -11,7 +11,13 @@ import Button from "@/components/fundations/elements/Button";
 import ThemeToggle from "@/components/global/ThemeToggle";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 import { cx } from "@/lib/cx";
+import { fontWeights } from "@/lib/font-weight";
 import { playMenuSound } from "./menuSound";
+
+// The navigation below md: the lockup, the theme menu and a menu button over a sheet that unfolds
+// (Makisu, below). Since 2026-10-23 the rows are on the system's tokens: the one stroke under
+// each, the link in the ink at the library's semibold, the site's one focus ring; the account
+// actions are Buttons, the theme switch ThemeToggle's menu. The fold itself is unchanged.
 
 // Same links as the desktop nav
 const links = [
@@ -73,7 +79,7 @@ function Rows({ rows, index = 0 }: { rows: ReactNode[]; index?: number }) {
   if (index >= rows.length) return null;
   return (
     <div className={cx("makisu-node", index === 0 && "makisu-first")} style={timing(index, rows.length)}>
-      <div className={cx("makisu-face relative bg-page", index === rows.length - 1 && "border-b border-border-default")}>
+      <div className={cx("makisu-face relative bg-page", index === rows.length - 1 && "border-b border-border")}>
         {rows[index]}
         <span aria-hidden="true" className="makisu-back" />
         <span aria-hidden="true" className="makisu-shade" />
@@ -204,7 +210,8 @@ export default function MobileNav() {
       <Wrapper key={link.href} variant="standard">
         <Link
           ref={index === 0 ? firstLinkRef : undefined}
-          className="flex min-h-11 items-center gap-2 border-b border-border-default text-body-lg font-medium text-primary-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-border-focus"
+          className="flex min-h-11 items-center gap-2 border-b border-border text-body-lg text-foreground focus-visible:outline-1 focus-visible:-outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]"
+          style={{ fontVariationSettings: fontWeights.semibold }}
           href={link.href}
         >
           {link.text}
@@ -233,7 +240,7 @@ export default function MobileNav() {
               <Link
                 href="/"
                 aria-label="Go to homepage"
-                className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus"
+                className="rounded-[4px] focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--focus-ring)]"
               >
                 <Lockup />
               </Link>

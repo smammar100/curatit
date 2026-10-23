@@ -12,7 +12,9 @@ export const revalidate = 3600;
 
 // Sign in / sign up: no navigation or footer. One card, centred over a drifting wall of the
 // library's posts (after Pinterest's login; chosen from a three-way prototype on 2026-10-10).
-// The card is compact on purpose: with its form it has to fit a 720px-tall viewport.
+// The card is compact on purpose: with its form it has to fit a 720px-tall viewport. Since
+// 2026-10-23 the card is the container shape on the surface ladder's sixth step, and the lockup's
+// focus ring is the site's one ring.
 export default async function AuthLayout({
   children,
 }: {
@@ -40,7 +42,7 @@ export default async function AuthLayout({
           <div className="w-full max-w-md rounded-[24px] bg-surface-3 p-6 shadow-surface-6 sm:p-8">
             <Link
               href="/"
-              className="mx-auto mb-6 block w-fit rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus"
+              className="mx-auto mb-6 block w-fit rounded-[4px] focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--focus-ring)]"
               aria-label="Go to homepage"
             >
               <Lockup />

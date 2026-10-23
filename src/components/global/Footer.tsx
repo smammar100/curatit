@@ -9,35 +9,30 @@ import {
   optimizedImage,
   type LibraryPost,
 } from "@/lib/posts";
-import { SUPPORT_MAILTO } from "@/lib/site";
+import { fontWeights } from "@/lib/font-weight";
 import FooterNewsletter from "./FooterNewsletter";
 
 // The site footer, "Ruled" (chosen from two prototype rounds on 2026-10-15, replacing "Night"'s
 // fanned covers): the page's paper carries on, and the footer is an inset dark panel, one of two
 // deliberately dark surfaces (with Vision's panel) on the marketing site. Hairlines divide it
 // into cells: the full logo (the mark turning beside the wordmark) over a short statement in the
-// first, the link groups in their own; then the newest covers as a filmstrip running edge to
+// first, the links in their own; then the newest covers as a filmstrip running edge to
 // edge and drifting sideways (a CSS marquee, still under reduced motion); then © and legal.
 // A server component, so it costs the page no script beyond the hidden email field; if the
-// library can't be reached, it renders without the strip.
+// library can't be reached, it renders without the strip. The panel keeps its own --f-* palette
+// (global.css: a deliberate dark surface the semantic tokens don't reach); since 2026-10-23 its
+// corners are the container shape, the strip's covers 12px image tiles, the links' focus ring the
+// site's one ring in the panel's focus colour, and the column titles the library's semibold.
 
+// One column of links since 2026-10-23, at the owner's request: Pricing, Submit a brand, Blog,
+// Advertise and Contact came out, with the Company heading; the pages themselves stay
 const LINKS = [
   {
     title: "Product",
     links: [
-      { label: "Pricing", href: "/pricing" },
       { label: "MCP (beta)", href: "/agents" },
-      { label: "Submit a brand to the library", href: "/submit" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
       { label: "Vision", href: "/vision" },
       { label: "Roadmap", href: "/roadmap" },
-      { label: "Blog", href: "/blog" },
-      { label: "Advertise", href: "/advertise" },
-      { label: "Contact", href: SUPPORT_MAILTO },
     ],
   },
 ];
@@ -78,7 +73,7 @@ function pickCovers(posts: LibraryPost[]) {
 }
 
 const linkClass =
-  "inline-flex min-h-10 items-center rounded-sm text-pretty text-[color:var(--f-body)] transition-colors duration-150 ease-out-quint hover:text-[color:var(--f-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--f-focus)] pointer-coarse:min-h-11";
+  "inline-flex min-h-10 items-center rounded-[4px] text-pretty text-[color:var(--f-body)] transition-colors duration-80 hover:text-[color:var(--f-hover)] focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--f-focus)] pointer-coarse:min-h-11";
 const cell = "border-[color:var(--f-line)] p-6 sm:p-8";
 
 function FooterLink({
@@ -109,7 +104,7 @@ export default async function Footer() {
 
   return (
     <footer className="mt-12 bg-page px-4 lg:mt-16 pb-[max(1rem,env(safe-area-inset-bottom))]">
-      <div className="footer-panel relative isolate overflow-clip rounded-4xl sm:rounded-5xl">
+      <div className="footer-panel relative isolate overflow-clip rounded-[24px]">
         <div className="grid grid-cols-2 lg:grid-cols-12">
           {/* The logo and the statement */}
           <div
@@ -118,7 +113,7 @@ export default async function Footer() {
             <Link
               href="/"
               aria-label="Curatit home"
-              className="inline-flex items-center gap-2.5 rounded-sm text-[color:var(--f-ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--f-focus)]"
+              className="inline-flex items-center gap-2.5 rounded-[4px] text-[color:var(--f-ink)] focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--f-focus)]"
             >
               <Symbol
                 className="footer-mark size-6 shrink-0"
@@ -140,13 +135,14 @@ export default async function Footer() {
               </div>
             )}
           </div>
-          {LINKS.map((group, i) => (
+          {/* The one links column takes the width the two used to share */}
+          {LINKS.map((group) => (
             <nav
               key={group.title}
               aria-label={group.title}
-              className={`${cell} border-b lg:col-span-3 lg:border-b-0 ${i === 0 ? "border-r" : ""}`}
+              className={`${cell} col-span-2 border-b lg:col-span-6 lg:border-b-0`}
             >
-              <p className="text-caption-lg/5 font-medium text-[color:var(--f-quiet)]">
+              <p className="text-caption-lg/5 text-[color:var(--f-quiet)]" style={{ fontVariationSettings: fontWeights.semibold }}>
                 {group.title}
               </p>
               <ul className="mt-1">
@@ -172,7 +168,7 @@ export default async function Footer() {
               {strip.map((post, i) => (
                 <div
                   key={`${post.id}-${i}`}
-                  className="relative aspect-4/5 w-24 shrink-0 overflow-hidden rounded-sm bg-[color:var(--f-raise)] sm:w-28 lg:w-32"
+                  className="relative aspect-4/5 w-24 shrink-0 overflow-hidden rounded-[12px] bg-[color:var(--f-raise)] sm:w-28 lg:w-32"
                 >
                   {/* Started after the page has loaded (DeferredImages below): on a short page
                       the strip is close enough to the fold for the browser to fetch its covers

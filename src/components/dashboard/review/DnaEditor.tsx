@@ -8,14 +8,18 @@
 // The fields are the shared Field with Input and Textarea (2026-10-19; hand-built from the auth
 // recipe before), with a FieldGroup over each set (the lists, the slide roles). A save the
 // validator refuses still lists every problem above the buttons, and now also marks the field
-// each one is about (by its path) with the problem under it. The selects stay native, on the
-// recipe in parts.tsx, until the design system has a Select.
+// each one is about (by its path) with the problem under it. Since 2026-10-23 that list and a
+// failed save are Notices, the list rows' remove and add are icon Buttons, and the selects stay
+// native on the field recipe in parts.tsx (28px pill, the one stroke) until the design system
+// has a Select.
 import { useMemo, useState } from "react";
 import Button from "@/components/fundations/elements/Button";
 import Input from "@/components/fundations/elements/Input";
 import Textarea from "@/components/fundations/elements/Textarea";
+import Close from "@/components/fundations/icons/Close";
+import Plus from "@/components/fundations/icons/Plus";
 import Field, { FieldGroup } from "@/components/fundations/molecules/Field";
-import { cx } from "@/lib/cx";
+import Notice from "@/components/fundations/molecules/Notice";
 import { CreativeDna, type SlideObservation } from "@/lib/creative/schema";
 import { DIMENSIONS, TAXONOMY_VERSION, type Dimension } from "@/lib/creative/taxonomy";
 import { validateDna, type Issue } from "@/lib/creative/validate";
@@ -93,16 +97,16 @@ function List({
               className="min-w-0 flex-1"
             />
             {items.length > min && (
-              <Button variant="transparent" size="base" shape="pill" iconOnly aria-label={`Remove ${label.toLowerCase()} ${i + 1}`} onClick={() => onChange(items.filter((_, j) => j !== i))}>
-                ×
+              <Button variant="transparent" iconOnly aria-label={`Remove ${label.toLowerCase()} ${i + 1}`} onClick={() => onChange(items.filter((_, j) => j !== i))}>
+                <Close className="size-3.5" />
               </Button>
             )}
           </div>
         ))}
       </div>
       {items.length < max && (
-        <Button variant="transparent" size="xxs" onClick={() => onChange([...items, ""])} className="mt-2 -ml-2">
-          + Add
+        <Button variant="transparent" size="xxs" leftIcon={<Plus className="size-3.5" />} onClick={() => onChange([...items, ""])} className="mt-2 -ml-2">
+          Add
         </Button>
       )}
     </FieldGroup>
@@ -209,7 +213,7 @@ export default function DnaEditor({
               <select
                 value={dna.primary_archetype.slug}
                 onChange={(e) => set({ primary_archetype: { ...dna.primary_archetype, slug: e.target.value as CreativeDna["primary_archetype"]["slug"] } })}
-                className={cx(select, "w-full")}
+                className={select}
               >
                 <ArchetypeOptions />
               </select>
@@ -218,7 +222,7 @@ export default function DnaEditor({
               <select
                 value={dna.marketing_objective.slug}
                 onChange={(e) => set({ marketing_objective: { ...dna.marketing_objective, slug: e.target.value as CreativeDna["marketing_objective"]["slug"] } })}
-                className={cx(select, "w-full")}
+                className={select}
               >
                 <Options dimension="objective" />
               </select>
@@ -226,7 +230,7 @@ export default function DnaEditor({
           </div>
 
           <FieldGroup legend="Secondary archetypes (up to 3)" error={at("secondary_archetypes")}>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid gap-2 sm:grid-cols-3">
               {[0, 1, 2].map((i) => (
                 <select
                   key={i}
@@ -248,7 +252,7 @@ export default function DnaEditor({
             </div>
           </FieldGroup>
 
-          <div className="grid gap-3 sm:grid-cols-[auto_1fr]">
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,14rem)_1fr]">
             <Field label="Hook technique" error={at("hook.technique")}>
               <select value={dna.hook.technique} onChange={(e) => set({ hook: { ...dna.hook, technique: e.target.value as CreativeDna["hook"]["technique"] } })} className={select}>
                 <Options dimension="hook_technique" />
@@ -265,7 +269,7 @@ export default function DnaEditor({
           </div>
 
           <div>
-            <Field label="Narrative pattern" error={at("narrative.pattern")}>
+            <Field label="Narrative pattern" error={at("narrative.pattern")} className="sm:max-w-56">
               <select value={dna.narrative.pattern} onChange={(e) => set({ narrative: { ...dna.narrative, pattern: e.target.value as CreativeDna["narrative"]["pattern"] } })} className={select}>
                 <Options dimension="narrative_pattern" />
               </select>
@@ -277,14 +281,14 @@ export default function DnaEditor({
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {dna.narrative.slide_roles.map((s, i) => (
                   <label key={s.position} className="flex items-center gap-2">
-                    <span className="w-5 text-right font-mono text-micro text-secondary-foreground">{s.position}</span>
+                    <span className="w-5 text-right font-mono text-micro text-muted-foreground tabular-nums">{s.position}</span>
                     <select
                       aria-label={`Role of position ${s.position}`}
                       value={s.role}
                       onChange={(e) =>
                         set({ narrative: { ...dna.narrative, slide_roles: dna.narrative.slide_roles.map((r, j) => (j === i ? { ...r, role: e.target.value as typeof r.role } : r)) } })
                       }
-                      className={cx(select, "min-w-0 flex-1")}
+                      className={select}
                     >
                       <Options dimension="slide_role" />
                     </select>
@@ -313,34 +317,44 @@ export default function DnaEditor({
           <List label="Adaptation ideas" items={dna.adaptation_ideas} min={1} max={3} error={at("adaptation_ideas")} onChange={(adaptation_ideas) => set({ adaptation_ideas })} />
         </div>
 
-        {(problems.length > 0 || verdict.warnings.length > 0) && (
-          <div className="mt-4 space-y-1 text-caption">
+        {/* What the last save attempt refused, then what the validator asks to be checked.
+            Notice's words are one paragraph, so each line is a block span inside it */}
+        {problems.length > 0 && (
+          <Notice tone="danger" live className="mt-4">
             {problems.map((p, i) => (
-              <p key={`e${i}`} className="text-danger-foreground">
+              <span key={`e${i}`} className="block">
                 {p.message}
                 {p.path && <span className="font-mono"> ({p.path})</span>}
-              </p>
+              </span>
             ))}
-            {verdict.warnings.map((w, i) => (
-              <p key={`w${i}`} className="text-secondary-foreground">
-                Check: {w.message}
-              </p>
-            ))}
-          </div>
+          </Notice>
         )}
-        {error && <p className="mt-3 text-caption text-danger-foreground">{error}</p>}
+        {verdict.warnings.length > 0 && (
+          <Notice className="mt-4">
+            {verdict.warnings.map((w, i) => (
+              <span key={`w${i}`} className="block">
+                Check: {w.message}
+              </span>
+            ))}
+          </Notice>
+        )}
+        {error && (
+          <Notice tone="danger" live className="mt-3">
+            {error}
+          </Notice>
+        )}
 
         <div className="mt-5 flex flex-wrap gap-2">
-          <Button variant="default" size="sm" shape="pill" disabled={!!busy} onClick={() => save(true, true)}>
+          <Button variant="default" size="sm" disabled={!!busy} onClick={() => save(true, true)}>
             {busy === "publish" ? "Publishing…" : "Save, approve and publish"}
           </Button>
-          <Button variant="secondary" size="sm" shape="pill" disabled={!!busy} onClick={() => save(true, false)}>
+          <Button variant="secondary" size="sm" disabled={!!busy} onClick={() => save(true, false)}>
             {busy === "approve" ? "Saving…" : "Save and approve"}
           </Button>
-          <Button type="submit" variant="secondary" size="sm" shape="pill" disabled={!!busy}>
+          <Button type="submit" variant="secondary" size="sm" disabled={!!busy}>
             {busy === "save" ? "Saving…" : "Save for review"}
           </Button>
-          <Button variant="secondary" size="sm" shape="pill" disabled={!!busy} onClick={onCancel}>
+          <Button variant="secondary" size="sm" disabled={!!busy} onClick={onCancel}>
             Cancel
           </Button>
         </div>

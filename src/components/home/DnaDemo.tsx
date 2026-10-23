@@ -11,6 +11,7 @@ import { easeOut, useScript } from "./DemoParts";
 import { dna } from "./demo";
 import { usePost } from "./HomePosts";
 import { cx } from "@/lib/cx";
+import { fontWeights } from "@/lib/font-weight";
 
 /*
  * A post taken apart, on a loop while the panel is on screen: Wise's carousel cover gets its
@@ -20,8 +21,14 @@ import { cx } from "@/lib/cx";
  * post's published analysis (`dna` in demo.ts); where the pins sit is read off the slide by
  * hand. Motion is transform and opacity only. The annotated slide is what the server renders,
  * what the first view holds, and all that reduced motion shows. The loop pauses while pointed
- * at or focused (useScript).
+ * at or focused (useScript). Drawn on the system's tokens since 2026-10-23: the panel takes the
+ * container corner, Copy brief, the pins and the palette are raised pills from the surface
+ * ladder (compact, 28px for the button), the brief a floating card two steps up, and the
+ * pointer the ink with the page's colour as its edge. The leader lines and picking marks keep
+ * paper with a dark edge: they sit over the photo, where the theme's ink would vanish.
  */
+
+const semibold = { fontVariationSettings: fontWeights.semibold };
 
 // 0 the slide alone · 1–4 pins · 5 strategy · 6–9 the pointer picks colours 1–4 · 10 they fly to
 // the palette · 11 pointer to Copy brief · 12 copied · 13 the brief · 14 annotated (rest)
@@ -99,18 +106,19 @@ export default function DnaDemo() {
       aria-label={`Demo: ${post.brand.name}'s carousel cover taken apart by Curatit: its hook, layout, kicker and product pinned, its strategy, four colours picked off the slide, then copied as a brief for an AI tool`}
       // At least 4:3 from lg like the MCP demo beside it (a zero-width spacer 75% of the width
       // tall), taller only if the column is too narrow; an aspect ratio would clip it instead
-      className="relative flex items-center overflow-hidden rounded-2xl bg-card lg:before:block lg:before:w-0 lg:before:shrink-0 lg:before:pt-[75%] lg:before:content-['']"
+      className="relative flex items-center overflow-hidden rounded-[24px] bg-card lg:before:block lg:before:w-0 lg:before:shrink-0 lg:before:pt-[75%] lg:before:content-['']"
     >
       <div ref={stage} aria-hidden="true" className="relative w-full px-4 py-6 select-none sm:px-10 sm:py-8">
         {/* The strategy, and Copy brief */}
         <div className="flex items-start justify-between gap-4">
           <m.div className="max-w-64 min-w-0" {...rise(step >= 5 && !briefOpen)}>
-            <p className="text-caption-base text-secondary-foreground">Strategy</p>
-            <p className="mt-0.5 text-caption-lg font-medium text-pretty text-primary-foreground sm:text-body-sm">{dna.headline}</p>
+            <p className="text-caption-base text-muted-foreground">Strategy</p>
+            <p className="mt-0.5 text-caption-lg text-pretty text-foreground sm:text-body-sm" style={semibold}>{dna.headline}</p>
           </m.div>
           <m.span
             ref={pill}
-            className="flex h-7 shrink-0 items-center gap-1 rounded-full bg-component-on-container-subtle pr-2.5 pl-3 text-caption-lg font-medium whitespace-nowrap text-primary-foreground shadow-sm"
+            className="flex h-7 shrink-0 items-center gap-1.5 rounded-[20px] bg-surface-3 pr-2.5 pl-3 text-caption-lg whitespace-nowrap text-foreground shadow-surface-2"
+            style={semibold}
             initial={false}
             animate={{ scale: step === 12 ? [1, 0.92, 1] : 1 }}
             transition={{ duration: 0.3 }}
@@ -123,7 +131,7 @@ export default function DnaDemo() {
         {/* The slide, with room either side for the pins */}
         <div className="relative mx-auto mt-5 w-[40%] [--reach:0.625rem] sm:mt-6 sm:w-[38%] sm:[--reach:1.5rem]">
           <m.div initial={false} animate={{ scale: briefOpen ? 0.97 : 1, opacity: briefOpen ? 0.5 : 1 }} transition={{ duration: 0.4, ease: easeOut }}>
-            <PostCover post={post} sizes="(min-width: 640px) 240px, 140px" className="rounded shadow-lg" />
+            <PostCover post={post} sizes="(min-width: 640px) 240px, 140px" className="rounded-[12px] shadow-surface-4" />
           </m.div>
 
           {dna.pins.map((pin, i) => {
@@ -148,21 +156,21 @@ export default function DnaDemo() {
                   transition={on ? { duration: 0.35, ease: easeOut } : { duration: 0.2 }}
                 />
                 <m.span
-                  className={cx("absolute top-0 -mt-1 size-2 rounded-full bg-paper ring-2 ring-primary-foreground", left ? "-right-1" : "-left-1")}
+                  className={cx("absolute top-0 -mt-1 size-2 rounded-full bg-paper ring-2 ring-foreground", left ? "-right-1" : "-left-1")}
                   initial={false}
                   animate={{ scale: on ? 1 : 0.4, opacity: on ? 1 : 0 }}
                   transition={{ duration: 0.2 }}
                 />
                 <div className={cx("absolute top-0 -translate-y-1/2", left ? "right-full mr-0.5 sm:mr-1" : "left-full ml-0.5 sm:ml-1")}>
                   <m.span
-                    className="flex h-6 items-center gap-1 rounded-full bg-component-on-container-subtle px-1.5 text-caption-sm whitespace-nowrap shadow-sm sm:px-2 sm:text-caption-base"
+                    className="flex h-6 items-center gap-1 rounded-[20px] bg-surface-3 px-1.5 text-caption-sm whitespace-nowrap shadow-surface-2 sm:px-2 sm:text-caption-base"
                     initial={false}
                     animate={on ? { opacity: 1, x: 0 } : { opacity: 0, x: left ? 6 : -6 }}
                     transition={on ? { duration: 0.4, ease: easeOut, delay: 0.15 } : { duration: 0.2 }}
                   >
-                    <span className="hidden text-secondary-foreground sm:inline">{pin.label}</span>
-                    <span className="font-medium text-primary-foreground sm:hidden">{pin.short}</span>
-                    <span className="hidden font-medium text-primary-foreground sm:inline">{pin.value}</span>
+                    <span className="hidden text-muted-foreground sm:inline">{pin.label}</span>
+                    <span className="text-foreground sm:hidden" style={semibold}>{pin.short}</span>
+                    <span className="hidden text-foreground sm:inline" style={semibold}>{pin.value}</span>
                   </m.span>
                 </div>
               </div>
@@ -192,7 +200,7 @@ export default function DnaDemo() {
             return (
               <m.li
                 key={sample.hex}
-                className="flex h-6 items-center gap-1.5 rounded-full bg-component-on-container-subtle pr-2 pl-1 shadow-sm"
+                className="flex h-6 items-center gap-1.5 rounded-[20px] bg-surface-3 pr-2 pl-1 shadow-surface-2"
                 initial={false}
                 animate={{ opacity: shown ? 1 : 0 }}
                 transition={shown ? { duration: 0.3, delay: i * 0.05 } : { duration: 0.2 }}
@@ -201,14 +209,14 @@ export default function DnaDemo() {
                   ref={(el) => {
                     dots.current[i] = el;
                   }}
-                  className="size-4 rounded-full outline-1 -outline-offset-1 outline-edge"
+                  className="size-4 rounded-full outline-1 -outline-offset-1 outline-border"
                   style={{ background: sample.hex }}
                   initial={false}
                   // Filled in as its colour arrives from the slide
                   animate={{ opacity: shown ? 1 : 0 }}
                   transition={shown && step === 10 ? { duration: 0.15, delay: 0.5 + i * 0.07 } : { duration: 0.15 }}
                 />
-                <span className="font-mono text-caption-sm text-secondary-foreground">{sample.hex}</span>
+                <span className="font-mono text-caption-sm text-muted-foreground">{sample.hex}</span>
               </m.li>
             );
           })}
@@ -224,7 +232,7 @@ export default function DnaDemo() {
             return (
               <m.span
                 key={sample.hex}
-                className="absolute top-0 left-0 -mt-2 -ml-2 size-4 rounded-full shadow-md ring-2 ring-paper"
+                className="absolute top-0 left-0 -mt-2 -ml-2 size-4 rounded-full shadow-surface-3 ring-2 ring-paper"
                 style={{ background: sample.hex }}
                 initial={false}
                 animate={
@@ -247,7 +255,7 @@ export default function DnaDemo() {
         {places && (
           <m.svg
             viewBox="0 0 16 20"
-            className="pointer-events-none absolute top-0 left-0 z-10 -mt-px -ml-px w-3.5 fill-inverted-solid stroke-on-inverted-foreground"
+            className="pointer-events-none absolute top-0 left-0 z-10 -mt-px -ml-px w-3.5 fill-foreground stroke-background"
             initial={false}
             animate={target ? { x: target.x, y: target.y, opacity: 1, scale: [1, 1, 0.85, 1] } : { x: places.park.x, y: places.park.y, opacity: 0, scale: 1 }}
             transition={
@@ -263,20 +271,20 @@ export default function DnaDemo() {
 
         {/* Everything above, written into the brief */}
         <m.div
-          className="absolute inset-x-4 bottom-4 rounded-xl bg-modal p-3 shadow-lg sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[62%]"
+          className="absolute inset-x-4 bottom-4 rounded-[24px] bg-surface-5 p-4 shadow-surface-4 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[62%]"
           initial={false}
           animate={briefOpen ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 24, scale: 0.97 }}
           transition={briefOpen ? { type: "spring", stiffness: 300, damping: 28 } : { duration: 0.25 }}
         >
-          <p className="flex items-center justify-between gap-2 text-caption-base text-secondary-foreground">
+          <p className="flex items-center justify-between gap-2 text-caption-base text-muted-foreground">
             <span className="font-mono">replica-brief.md</span>
             <span className="flex items-center gap-1">
-              <Check className="size-3 text-primary-foreground" /> Copied
+              <Check className="size-3 text-foreground" /> Copied
             </span>
           </p>
-          <div className="mt-2 space-y-0.5 font-mono text-caption-sm text-secondary-foreground">
+          <div className="mt-2 space-y-0.5 font-mono text-caption-sm text-muted-foreground">
             {dna.brief.map((line, i) => (
-              <m.p key={line} className={cx("truncate", i === 0 && "font-medium text-primary-foreground")} {...rise(briefOpen, i + 1)}>
+              <m.p key={line} className={cx("truncate", i === 0 && "text-foreground")} style={i === 0 ? semibold : undefined} {...rise(briefOpen, i + 1)}>
                 {line}
               </m.p>
             ))}

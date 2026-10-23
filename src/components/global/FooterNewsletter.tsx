@@ -3,15 +3,25 @@
 // The footer's email field (Footer). There's no mailing list yet, so it doesn't pretend to
 // subscribe anyone: a valid address goes to sign-up with the email already filled in (handed over
 // through sessionStorage, never the address bar, and read once by SignUpForm). Checked on submit,
-// on leaving the field once something's typed, and live once a note shows.
-import { useEffect, useId, useRef, useState, useTransition, type FormEvent } from "react";
+// on leaving the field once something's typed, and live once a note shows. Since 2026-10-23 it is
+// the system's Field, Input and Button. The footer panel inverts the page through its own --f-*
+// palette, which the semantic tokens don't follow, so the form maps the library's variables onto
+// that palette (the way Button's accent variant swaps its ink): the field, its words and the
+// button then draw in the panel's colours in both themes. Under the field one line is always
+// there, the note or the error, so neither moves what's below.
+import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import WarningCircle from "@/components/fundations/icons/WarningCircle";
+import Button from "@/components/fundations/elements/Button";
+import Input from "@/components/fundations/elements/Input";
+import Field from "@/components/fundations/molecules/Field";
 import { emailProblem, SIGNUP_EMAIL_KEY } from "@/lib/auth";
-import { cx } from "@/lib/cx";
+
+const NOTE = "Free to start. New brands land in your feed as they join.";
+
+const palette =
+  "[--foreground:var(--f-ink)] [--background:var(--f-bg)] [--muted-foreground:var(--f-quiet)] [--border:var(--f-line)] [--hover:var(--f-glint)] [--surface-3:var(--f-bg)] [--destructive:var(--f-danger)] [--focus-ring:var(--f-focus)]";
 
 export default function FooterNewsletter() {
-  const id = useId();
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState("");
@@ -34,14 +44,10 @@ export default function FooterNewsletter() {
   }
 
   return (
-    <form noValidate onSubmit={submit} className="w-full max-w-md">
-      <label htmlFor={`${id}-email`} className="block text-caption-lg/5 font-medium text-[color:var(--f-body)]">
-        Your email
-      </label>
-      <div className="relative mt-2">
-        <input
+    <form noValidate onSubmit={submit} className={`w-full max-w-md ${palette}`}>
+      <Field label="Your email" error={error} description={error ? undefined : NOTE} descriptionAt="control">
+        <Input
           ref={input}
-          id={`${id}-email`}
           name="email"
           type="email"
           inputMode="email"
@@ -51,30 +57,16 @@ export default function FooterNewsletter() {
           enterKeyHint="go"
           placeholder="name@studio.com"
           value={email}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={`${id}-note`}
           onChange={(event) => {
             setEmail(event.target.value);
             if (error) setError(emailProblem(event.target.value));
           }}
           onBlur={() => email.trim() && setError(emailProblem(email))}
-          className="footer-field block h-13 w-full rounded-xl py-0 pr-32 pl-4 text-body-sm pointer-coarse:text-[16px]"
         />
-        <button type="submit" aria-disabled={pending || undefined} className="footer-submit absolute inset-y-1 right-1 grid place-items-center rounded-md px-4 text-body-sm font-medium">
-          {/* Both labels share one cell, so the button keeps its width */}
-          <span className="grid justify-items-center">
-            <span className="invisible [grid-area:1/1]" aria-hidden="true">
-              Opening…
-            </span>
-            <span className="[grid-area:1/1]">{pending ? "Opening…" : "Join free"}</span>
-          </span>
-        </button>
-      </div>
-      {/* Room for two lines on phones and one on wider screens, so a note never moves what's below */}
-      <p id={`${id}-note`} className={cx("mt-3 flex min-h-10 gap-1.5 text-caption-lg/5 text-pretty sm:min-h-5", error ? "text-[color:var(--f-danger)]" : "text-[color:var(--f-quiet)]")}>
-        {error && <WarningCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />}
-        {error ?? "Free to start. New brands land in your feed as they join."}
-      </p>
+      </Field>
+      <Button type="submit" size="sm" variant="default" loading={pending} className="mt-3">
+        Join free
+      </Button>
     </form>
   );
 }

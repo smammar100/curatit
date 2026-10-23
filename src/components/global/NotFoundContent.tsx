@@ -19,7 +19,8 @@ const getCovers = cache(async () => {
 // The 404 page's content: the title and its line, a "404" built from the library's own covers
 // (NotFoundCollage), and the way out, together in one screen. If the library can't be reached
 // the digits still stand, in plain tiles. The root not-found puts it inside the site's navigation
-// and footer; the (site) group's not-found renders it bare, inside the group's own.
+// and footer; the (site) group's not-found renders it bare, inside the group's own. The words are
+// on the system's tokens (2026-10-23): the title in the ink, the line in the muted ink.
 export default async function NotFoundContent() {
   const covers = await getCovers();
 
@@ -27,11 +28,11 @@ export default async function NotFoundContent() {
     <section>
       <Wrapper variant="standard" className="flex min-h-dvh flex-col items-center justify-center pt-24 pb-12 text-center">
         <div className="text-balance">
-          <Text tag="h1" variant="h1" className="text-primary-foreground">
+          <Text tag="h1" variant="h1" className="text-foreground">
             <span className="sr-only">404: </span>
             This page is gone.
           </Text>
-          <Text tag="p" variant="body" className="mt-2 text-secondary-foreground">
+          <Text tag="p" variant="body" className="mt-2 text-muted-foreground">
             Every tile is a real post. <span className="pointer-coarse:hidden">Hover</span>
             <span className="hidden pointer-coarse:inline">Tap</span> to shuffle.
           </Text>
