@@ -1,18 +1,21 @@
 "use client";
 
-// A segmented control: one choice out of two to five, all visible at once (2026-10-18, after
-// Fluid Functionalism's segmented tabs, rebuilt on the site's tokens without its libraries).
-// It's a radiogroup: Tab reaches the chosen option, the arrow keys (and Home / End) move the
-// choice, and a thumb slides to it (useThumb: it snaps on keyboard input, so held arrows never
-// queue up slides, and it never animates on load). Until the thumb has measured, which includes
-// the server's HTML, the chosen option wears the thumb's fill itself.
+// A segmented control: one choice out of two to five, all visible at once. Since 2026-10-23 it is
+// Fluid Functionalism's Tabs (src/components/ui/tabs.tsx): a muted track holding one raised pill
+// for the choice, which travels on the moderate spring; a faint hover pill that previews the next
+// click and glides to the option nearest the pointer; one focus ring that springs between options
+// from the keyboard; and labels that get heavier when chosen without shifting their neighbours
+// (an invisible semibold copy reserves the width). The arrow keys move the choice, Home and End
+// jump to the ends.
 //
 // Use it for a setting with a few short, mutually exclusive values (theme, grid size, token
 // expiry, MCP / REST). Five or more values, or long labels, are a select; actions are Buttons;
-// views of different content are tabs.
-import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { useThumb } from "@/lib/motion";
-import { cx } from "@/lib/cx";
+// views of different content are Tabs.
+import { useMemo, type ReactNode } from "react";
+import { MotionConfig } from "motion/react";
+import { TabItem, Tabs, TabsList } from "@/components/ui/tabs";
+import type { IconComponent } from "@/lib/icon-context";
+import { cn } from "@/lib/utils";
 
 export type SegmentedOption<T extends string> = {
   value: T;
@@ -21,31 +24,10 @@ export type SegmentedOption<T extends string> = {
   icon?: ReactNode;
 };
 
-// Track padding, option height and horizontal padding per size (icon-only options are squares)
-const sizes = {
-  sm: { track: "p-0.5", option: "h-7 px-3 gap-1.5", square: "size-7" },
-  md: { track: "p-1", option: "h-8 px-3 gap-1.5", square: "size-8" },
-  lg: { track: "p-1", option: "h-9 px-3.5 gap-2", square: "size-9" },
-};
-// rounded: Interfere's control radius; pill: fully round (the dashboard's controls)
-const shapes = {
-  rounded: { track: "rounded-lg", thumb: "rounded-md" },
-  pill: { track: "rounded-full", thumb: "rounded-full" },
-};
-// raised: a white thumb lifted by the default shadow on the grey track; inverted: the primary
-// button's solid fill
-const tones = {
-  raised: {
-    thumb: "bg-component-on-container-subtle shadow-sm",
-    on: "text-primary-foreground",
-  },
-  inverted: {
-    thumb: "bg-inverted-solid",
-    on: "text-on-inverted-foreground",
-  },
-};
-
-const STEPS: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+// The site's three sizes on the library's two steps: 28px tall (24px options) up to md, 36px
+// (28px options) at lg
+const sizes = { sm: "compact", md: "compact", lg: "default" } as const;
+const squares = { compact: "w-6", default: "w-7" } as const;
 
 type Props<T extends string> = {
   options: SegmentedOption<T>[];
@@ -58,12 +40,25 @@ type Props<T extends string> = {
   "aria-label"?: string;
   "aria-labelledby"?: string;
   size?: keyof typeof sizes;
-  shape?: keyof typeof shapes;
-  tone?: keyof typeof tones;
+  /** Accepted for older call sites: every control is a pill, and the thumb is always the raised
+   *  surface (the site's shape setting, and one look for every segmented control) */
+  shape?: "rounded" | "pill";
+  tone?: "raised" | "inverted";
   /** Show only the icons; the labels become the options' accessible names and tooltips */
   iconOnly?: boolean;
   className?: string;
 };
+
+// The library takes an icon as a component it can size; the site passes an element, so each one
+// is wrapped once (memoised per options array, or the icon would remount on every render)
+function asIcon(node: ReactNode): IconComponent {
+  const Glyph = ({ size = 14, className }: { size?: number; className?: string }) => (
+    <span className={cn("inline-flex shrink-0 [&>svg]:size-full", className)} style={{ width: size, height: size }}>
+      {node}
+    </span>
+  );
+  return Glyph;
+}
 
 export default function Segmented<T extends string>({
   options,
@@ -71,99 +66,36 @@ export default function Segmented<T extends string>({
   defaultValue,
   onValueChange,
   size = "sm",
-  shape = "rounded",
-  tone = "raised",
+  shape: _shape,
+  tone: _tone,
   iconOnly = false,
   className,
   ...aria
 }: Props<T>) {
-  const [own, setOwn] = useState<T | undefined>(defaultValue ?? options[0]?.value);
-  const current = value ?? own;
-  const thumb = useThumb<HTMLDivElement>(current);
-  const buttons = useRef<(HTMLButtonElement | null)[]>([]);
-  const index = options.findIndex((o) => o.value === current);
-  // Whether the last change came from the arrow keys. Set in the same update as the value, so the
-  // render that recolours the options already knows (the thumb's `snap` only follows a render
-  // later): from the keyboard the colours snap with the thumb, from a pointer they fade with it
-  const [keyed, setKeyed] = useState(false);
-
-  const choose = (next: T) => {
-    if (value === undefined) setOwn(next);
-    onValueChange?.(next);
-  };
-
-  const onKeyDown = (event: KeyboardEvent, at: number) => {
-    let next: number | undefined;
-    if (event.key in STEPS) next = (at + STEPS[event.key] + options.length) % options.length;
-    else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = options.length - 1;
-    if (next === undefined) return;
-    event.preventDefault();
-    setKeyed(true);
-    choose(options[next].value);
-    buttons.current[next]?.focus();
-  };
-
-  const s = sizes[size];
-  const t = tones[tone];
+  const step = sizes[size];
+  const icons = useMemo(() => options.map((option) => (option.icon ? asIcon(option.icon) : undefined)), [options]);
   return (
-    <div
-      ref={thumb.ref}
-      role="radiogroup"
-      {...aria}
-      onKeyDown={thumb.handlers.onKeyDown}
-      onPointerDown={() => {
-        thumb.handlers.onPointerDown();
-        setKeyed(false);
-      }}
-      className={cx("relative inline-flex shrink-0 gap-0.5 bg-component", s.track, shapes[shape].track, className)}
-    >
-      {/* Exempt from the freeze while the theme switches (data-theme-icon), so a theme control
-          still slides when it's the theme that changed */}
-      <span
-        aria-hidden="true"
-        data-theme-icon
-        data-snap={thumb.snap || undefined}
-        style={thumb.style}
-        className={cx(
-          "pointer-events-none absolute top-0 left-0 transition-[translate,width,height] duration-200 ease-out-quint data-snap:transition-none motion-reduce:transition-none",
-          shapes[shape].thumb,
-          t.thumb,
-          !thumb.ready && "opacity-0",
-        )}
-      />
-      {options.map((option, at) => {
-        const checked = at === index;
-        return (
-          <button
-            key={option.value}
-            ref={(element) => {
-              buttons.current[at] = element;
-            }}
-            type="button"
-            role="radio"
-            aria-checked={checked}
-            aria-label={iconOnly ? option.label : undefined}
-            title={iconOnly ? option.label : undefined}
-            tabIndex={checked || (index < 0 && at === 0) ? 0 : -1}
-            data-selected={checked || undefined}
-            onClick={() => choose(option.value)}
-            onKeyDown={(event) => onKeyDown(event, at)}
-            className={cx(
-              "relative flex items-center justify-center text-body-sm font-medium whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus",
-              !keyed && "transition-colors duration-150 ease-out-quint motion-reduce:transition-none",
-              iconOnly ? s.square : s.option,
-              shapes[shape].thumb,
-              checked ? t.on : "text-secondary-foreground hover:text-primary-foreground",
-              // The thumb's fill, worn by the chosen option until the thumb has measured
-              checked && !thumb.ready && t.thumb,
-            )}
-          >
-            {option.icon}
-            {!iconOnly && option.label}
-          </button>
-        );
-      })}
-    </div>
+    <MotionConfig reducedMotion="user">
+      <Tabs
+        value={value}
+        defaultValue={defaultValue ?? options[0]?.value}
+        onValueChange={(next) => onValueChange?.(next as T)}
+        size={step}
+      >
+        <TabsList aria-label={aria["aria-label"]} aria-labelledby={aria["aria-labelledby"]} className={className}>
+          {options.map((option, at) => (
+            <TabItem
+              key={option.value}
+              value={option.value}
+              label={option.label}
+              icon={icons[at]}
+              title={iconOnly ? option.label : undefined}
+              // Icon-only: a square, with the label kept for screen readers alone
+              className={cn(iconOnly && "justify-center px-0 [&>span:last-child]:sr-only", iconOnly && squares[step])}
+            />
+          ))}
+        </TabsList>
+      </Tabs>
+    </MotionConfig>
   );
 }

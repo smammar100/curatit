@@ -50,6 +50,90 @@
   --fs-display-compact: var(--fs-display-compact);
   --lh-display: var(--lh-display);
   --fs-display: var(--fs-display);
+  /* ---- Fluid Functionalism (fluidfunctionalism.com), installed 2026-10-23 with the shadcn CLI
+     (components in src/components/ui, systems in src/lib and src/hooks). Its variables are set
+     in :root and :root[data-theme="dark"] below, on Curatit's primitives. ---- */
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-4: var(--surface-4);
+  --color-surface-5: var(--surface-5);
+  --color-surface-6: var(--surface-6);
+  --color-surface-7: var(--surface-7);
+  --color-surface-8: var(--surface-8);
+  --shadow-surface-1: var(--shadow-1);
+  --shadow-surface-2: var(--shadow-2);
+  --shadow-surface-3: var(--shadow-3);
+  --shadow-surface-4: var(--shadow-4);
+  --shadow-surface-5: var(--shadow-5);
+  --shadow-surface-6: var(--shadow-6);
+  --shadow-surface-7: var(--shadow-7);
+  --shadow-surface-8: var(--shadow-8);
+  --color-hover: var(--hover);
+  --color-active: var(--active);
+  --color-selected: var(--selected);
+  --color-destructive-light: var(--destructive-light);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --color-info: var(--info);
+  --color-tint-hover: var(--tint-hover);
+  --color-tint: var(--tint);
+  --color-focus-ring: var(--focus-ring);
+  /* The library's own colour names (bg-foreground, text-muted-foreground, border-border, …), on the
+     variables set in :root below */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-destructive: var(--destructive);
+  @keyframes sf-reveal-start {
+  from {
+    --sf-start: 1;
+    }
+  to {
+    --sf-start: 0;
+    }
+  }
+  @keyframes sf-reveal-end {
+  from {
+    --sf-end: 0;
+    }
+  to {
+    --sf-end: 1;
+    }
+  }
+  @keyframes sf-divider-start {
+  from {
+    opacity: 0;
+    }
+  to {
+    opacity: 1;
+    }
+  }
+  @keyframes sf-divider-end {
+  from {
+    opacity: 1;
+    }
+  to {
+    opacity: 0;
+    }
+  }
+  @keyframes spinner-move {
+  to {
+    stroke-dashoffset: -100;
+    }
+  }
+  @keyframes spinner-dash {
+  0%, 100% {
+    stroke-dasharray: 15 85;
+    }
+  50% {
+    stroke-dasharray: 40 60;
+    }
+  }
 }
 /* Page rhythm (2026-10-15): every marketing page's first line of content starts at the same
    height (page-start: 112px on phones, 160px from lg, measured from the top of the window, under
@@ -119,7 +203,7 @@
   --color-paper: #ffffff;
   /* 1px edge drawn just inside images and on floating surfaces: pure black at 10% (white at
      10% in dark mode), never a tinted neutral */
-  --color-edge: oklch(0 0 0 / 0.1);
+  --color-edge: var(--border);
   /* The band that sweeps across a loading skeleton: a step lighter than base-100 in both themes */
   --color-shimmer: #f9f9f9;
 
@@ -154,9 +238,11 @@
   --color-on-standout-primary-foreground: var(--i-on-standout);
   --color-on-standout-secondary-foreground: var(--white-a7);
   /* Inverted (the primary button) */
-  --color-inverted-solid: var(--i-inverted);
-  --color-inverted-solid-hover: var(--i-inverted-hover);
-  --color-inverted-solid-active: var(--i-inverted-active);
+  /* Since 2026-10-23 the library's ink: the primary button and the primary text are one colour,
+     and hover and press mix a tenth and a fifth of the page back in, as its own primary button does */
+  --color-inverted-solid: var(--foreground);
+  --color-inverted-solid-hover: color-mix(in oklab, var(--foreground) 90%, var(--background));
+  --color-inverted-solid-active: color-mix(in oklab, var(--foreground) 80%, var(--background));
   /* Brand: Curatit's terracotta in Interfere's roles */
   --color-brand-solid: var(--color-accent-600);
   --color-brand-solid-hover: var(--color-accent-700);
@@ -188,9 +274,11 @@
   --color-danger-border-default: color-mix(in oklab, var(--color-danger-500) 45%, transparent);
   --color-danger-border-subtle: color-mix(in oklab, var(--color-danger-500) 28%, transparent);
   /* Borders */
-  --color-border-default: var(--gray-a3);
-  --color-border-subtle: var(--gray-a2);
-  --color-border-strong: var(--gray-a6);
+  /* One stroke since 2026-10-23: every hairline, ring and divider is the library's --border (12% of
+     the ink), whichever of the three older names draws it */
+  --color-border-default: var(--border);
+  --color-border-subtle: var(--border);
+  --color-border-strong: var(--border);
   --color-border-inverted: var(--i-border-inverted);
   /* Radius: xs 2, sm 4, md 6, lg 8, xl 10, 2xl 12, 3xl 16, 4xl 20, 5xl 24 */
   --radius-xs: 2px;
@@ -206,14 +294,18 @@
      2xl). Their colours are the --shadow-* primitives in :root, which flip in dark mode: drops
      fade out and a half-pixel inner highlight takes over */
   /* The bare `shadow` is the default (sm), with its dark treatment; Tailwind's own would not flip */
-  --shadow: 0 0 0 0.5px var(--shadow-inner-1) inset, 0 0 0 0.5px var(--shadow-drop-1), 0 1px 1px -1px var(--shadow-drop-2), 0 1px 2px 0 var(--shadow-drop-3);
-  --shadow-2xs: 0 0 0 1px var(--shadow-border-color);
-  --shadow-xs: 0 0 0 1px var(--shadow-border-color);
-  --shadow-sm: 0 0 0 0.5px var(--shadow-inner-1) inset, 0 0 0 0.5px var(--shadow-drop-1), 0 1px 1px -1px var(--shadow-drop-2), 0 1px 2px 0 var(--shadow-drop-3);
-  --shadow-md: 0 0 0 0.5px var(--gray-a3), 0 2px 3px -2px var(--gray-a3), 0 3px 12px -4px var(--black-a2), 0 4px 16px -8px var(--black-a1);
-  --shadow-lg: 0 0 0 0.5px var(--gray-a3), 0 2px 3px -2px var(--gray-a3), 0 3px 12px -4px var(--black-a2), 0 4px 16px -8px var(--black-a1);
-  --shadow-xl: 0 0 0 0.5px var(--shadow-xl-inner-1) inset, 0 0 0 0.5px var(--shadow-xl-drop-1), 0 8px 40px 0 var(--shadow-xl-drop-2), 0 12px 32px -16px var(--shadow-xl-drop-3);
-  --shadow-2xl: 0 0 0 0.5px var(--shadow-xl-inner-1) inset, 0 0 0 0.5px var(--shadow-xl-drop-1), 0 8px 40px 0 var(--shadow-xl-drop-2), 0 12px 32px -16px var(--shadow-xl-drop-3);
+  /* One depth since 2026-10-23: Tailwind's shadow names are steps of the library's surface
+     ladder (xs = 1, a hairline; sm and the bare shadow = 2; md = 3; lg = 4; xl = 6; 2xl = 8), so a
+     card, a menu and a dialog differ by depth alone, and in dark mode every one is the same inset
+     highlight and ring */
+  --shadow: var(--shadow-2);
+  --shadow-2xs: var(--shadow-1);
+  --shadow-xs: var(--shadow-1);
+  --shadow-sm: var(--shadow-2);
+  --shadow-md: var(--shadow-3);
+  --shadow-lg: var(--shadow-4);
+  --shadow-xl: var(--shadow-6);
+  --shadow-2xl: var(--shadow-8);
   /* Type scale: headings are Inter medium with tight tracking; body 18 / 15 / 13 on a 24 / 24 / 20
      leading; captions 12 / 11 / 10 / 8 on 16 (12 for the smallest) */
   --text-h1: 3.5rem;
@@ -417,6 +509,63 @@
   --lh-micro: 14px;
   --fs-micro-compact: 10px;
   --lh-micro-compact: 12px;
+
+  /* ---- Fluid Functionalism's variables (2026-10-23), on the primitives above. One ink
+     (--foreground, the primary text and the primary button's fill), one ground (--background, the
+     page), one stroke (--border, 12% of the ink: every hairline, ring and divider), one hover and
+     one pressed overlay, and an eight-step surface ladder (surface-1 is the page) each paired with
+     a shadow recipe: in light every surface is white and the shadow alone carries the depth, in
+     dark (below) each step is a shade lighter. The library's components read these; Curatit's
+     older tokens (border-default, inverted-solid, shadow-sm, …) are mapped onto them in @theme, so
+     everything else on the site shares the same ink, stroke and depth ---- */
+  --background: var(--color-white);
+  --foreground: var(--gray-a12);
+  --muted: var(--gray-a3);
+  --muted-foreground: var(--gray-a11);
+  --accent: var(--gray-a5);
+  --selected: var(--gray-a6);
+  --border: color-mix(in oklab, var(--foreground) 12%, transparent);
+  --ring: var(--border);
+  --input: var(--border);
+  --destructive: var(--color-danger-500);
+  --destructive-light: var(--color-danger-50);
+  /* The focus ring: Curatit's terracotta, the one place the library's blue is replaced */
+  --focus-ring: var(--color-brand-border-focus);
+  --hover: rgb(0 0 0 / 0.04);
+  --active: rgb(0 0 0 / 0.07);
+  --overlay: 0 0 0;
+  --tint: rgb(0 0 0 / 0.08);
+  --tint-hover: rgb(0 0 0 / 0.065);
+  --info: #3b82f6;
+  --success: var(--color-success-600);
+  --warning: var(--color-warning-500);
+  --surface-1: var(--color-white);
+  --surface-2: #ffffff;
+  --surface-3: #ffffff;
+  --surface-4: #ffffff;
+  --surface-5: #ffffff;
+  --surface-6: #ffffff;
+  --surface-7: #ffffff;
+  --surface-8: #ffffff;
+  /* The dark shadow recipes' parts, inert in light (declared so the design system page can scope
+     both themes) */
+  --dm-hi-base: transparent;
+  --dm-hi-mid: transparent;
+  --dm-hi-high: transparent;
+  --dm-hi-peak: transparent;
+  --dm-ring-base: transparent;
+  --dm-ring-mid: transparent;
+  --dm-ring-high: transparent;
+  --dm-drop: transparent;
+  --shadow-color: rgb(0 0 0 / 0.06);
+  --shadow-1: 0 0 0 1px var(--shadow-color);
+  --shadow-2: 0 0 0 1px var(--shadow-color), 0 1px 1px -0.5px var(--shadow-color);
+  --shadow-3: 0 0 0 1px var(--shadow-color), 0 1px 1px -0.5px var(--shadow-color), 0 3px 3px -1.5px var(--shadow-color);
+  --shadow-4: 0 0 0 1px var(--shadow-color), 0 1px 1px -0.5px var(--shadow-color), 0 3px 3px -1.5px var(--shadow-color), 0 6px 6px -3px var(--shadow-color);
+  --shadow-5: 0 0 0 1px var(--shadow-color), 0 1px 1px -0.5px var(--shadow-color), 0 3px 3px -1.5px var(--shadow-color), 0 6px 6px -3px var(--shadow-color), 0 12px 12px -6px var(--shadow-color);
+  --shadow-6: 0 0 0 1px var(--shadow-color), 0 1px 1px -0.5px var(--shadow-color), 0 3px 3px -1.5px var(--shadow-color), 0 6px 6px -3px var(--shadow-color), 0 12px 12px -6px var(--shadow-color), 0 24px 24px -12px var(--shadow-color);
+  --shadow-7: 0 0 0 1px var(--shadow-color), 0 1px 1px -0.5px var(--shadow-color), 0 3px 3px -1.5px var(--shadow-color), 0 6px 6px -3px var(--shadow-color), 0 12px 12px -6px var(--shadow-color), 0 24px 24px -12px var(--shadow-color), 0 48px 48px -24px var(--shadow-color);
+  --shadow-8: 0 0 0 1px var(--shadow-color), 0 1px 1px -0.5px var(--shadow-color), 0 3px 3px -1.5px var(--shadow-color), 0 6px 6px -3px var(--shadow-color), 0 12px 12px -6px var(--shadow-color), 0 24px 24px -12px var(--shadow-color), 0 48px 48px -24px var(--shadow-color), 0 96px 96px -48px var(--shadow-color);
 }
 /* (These dark values are mirrored in .vision-night, the Vision page's panel; change both.)
    Dark theme (Interfere's dark scales since 2026-10-15): a near-black page, the neutral grey
@@ -458,7 +607,6 @@
   --color-success-400: #2f7c57;
   --color-success-600: #30a46c;
   --color-success-700: #3dd68c;
-  --color-edge: oklch(1 0 0 / 0.1);
   --color-shimmer: #2a2a2a;
   --gray-a1: #00000000;
   --gray-a2: #ffffff09;
@@ -495,6 +643,37 @@
   --shadow-xl-drop-1: #0000;
   --shadow-xl-drop-2: #0000000d;
   --shadow-xl-drop-3: #00000026;
+  /* Fluid Functionalism in the dark: the overlays turn white, and the surface ladder climbs from
+     the page in even steps; its shadows are an inset highlight, an inset ring and stacked drops */
+  --hover: rgb(255 255 255 / 0.06);
+  --active: rgb(255 255 255 / 0.1);
+  --overlay: 255 255 255;
+  --tint: rgb(255 255 255 / 0.25);
+  --tint-hover: rgb(255 255 255 / 0.2);
+  --info: #93c5fd;
+  --surface-2: #222222;
+  --surface-3: #292929;
+  --surface-4: #303030;
+  --surface-5: #373737;
+  --surface-6: #3e3e3e;
+  --surface-7: #454545;
+  --surface-8: #4c4c4c;
+  --dm-hi-base: rgba(255,255,255,0.01);
+  --dm-hi-mid: rgba(255,255,255,0.02);
+  --dm-hi-high: rgba(255,255,255,0.04);
+  --dm-hi-peak: rgba(255,255,255,0.06);
+  --dm-ring-base: rgba(255,255,255,0.02);
+  --dm-ring-mid: rgba(255,255,255,0.04);
+  --dm-ring-high: rgba(255,255,255,0.06);
+  --dm-drop: rgba(0,0,0,0.18);
+  --shadow-1: inset 0 0 0 1px var(--dm-ring-base);
+  --shadow-2: inset 0 1px 0 0 var(--dm-hi-base), inset 0 0 0 1px var(--dm-ring-base), 0 1px 1px -0.5px var(--dm-drop);
+  --shadow-3: inset 0 1px 0 0 var(--dm-hi-mid), inset 0 0 0 1px var(--dm-ring-base), 0 0 0 1px rgba(0,0,0,0.12), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop);
+  --shadow-4: inset 0 1px 0 0 var(--dm-hi-mid), inset 0 0 0 1px var(--dm-ring-mid), 0 0 0 1px rgba(0,0,0,0.14), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop);
+  --shadow-5: inset 0 1px 0 0 var(--dm-hi-high), inset 0 0 0 1px var(--dm-ring-mid), 0 0 0 1px rgba(0,0,0,0.16), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop);
+  --shadow-6: inset 0 1px 0 0 var(--dm-hi-high), inset 0 0 0 1px var(--dm-ring-high), 0 0 0 1px rgba(0,0,0,0.18), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop), 0 24px 24px -12px var(--dm-drop);
+  --shadow-7: inset 0 1px 0 0 var(--dm-hi-peak), inset 0 0 0 1px var(--dm-ring-high), 0 0 0 1px rgba(0,0,0,0.20), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop), 0 24px 24px -12px var(--dm-drop), 0 48px 48px -24px var(--dm-drop);
+  --shadow-8: inset 0 1px 0 0 var(--dm-hi-peak), inset 0 0 0 1px var(--dm-ring-high), 0 0 0 1px rgba(0,0,0,0.22), 0 1px 1px -0.5px var(--dm-drop), 0 3px 3px -1.5px var(--dm-drop), 0 6px 6px -3px var(--dm-drop), 0 12px 12px -6px var(--dm-drop), 0 24px 24px -12px var(--dm-drop), 0 48px 48px -24px var(--dm-drop), 0 96px 96px -48px var(--dm-drop);
 }
 /* The scattered scene (home/Scattered): each scrap springs in once, on its own delay, the
    first time the scene is on screen; hidden while it waits. CSS, not framer-motion, so the
@@ -530,6 +709,14 @@
   }
   p, li, dd, dt, figcaption, summary, blockquote, label {
     text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 1px solid var(--focus-ring, #6B97FF);
+    outline-offset: 2px;
+    border-radius: var(--shape-input-radius, 8px);
+  }
+  a:focus-visible {
+    border-radius: 2px;
   }
 }
 /* While the theme switches, nothing tweens: every colour would otherwise animate on its own clock.
@@ -1888,4 +2075,117 @@ img[data-fade="in"] {
   .makisu :is(.makisu-root, .makisu-node, .makisu-shade) {
     animation: none !important;
   }
+}
+  html.transitioning *, html.transitioning *::before, html.transitioning *::after {
+    transition: border-radius 180ms ease-in-out, background-color 180ms ease-in-out, color 180ms ease-in-out, border-color 180ms ease-in-out, fill 180ms ease-in-out, stroke 180ms ease-in-out !important;
+}
+  @property --sf-start {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 1;
+}
+  @property --sf-end {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 1;
+}
+  .scroll-fade, .scroll-fade-x {
+    --scroll-fade-size: 48px;
+}
+
+@supports (timeline-scope: --sf) {
+  .scroll-divider {
+    position: relative;
+    timeline-scope: --sf-scroller;
+    --scroll-divider-size: 48px;
+  }
+  .scroll-divider .scroll-fade {
+    scroll-timeline-name: --sf-scroller;
+  }
+  .scroll-divider::before, .scroll-divider::after {
+    content: "";
+    position: absolute;
+    left: var(--scroll-divider-inset, 0px);
+    right: var(--scroll-divider-inset, 0px);
+    height: 1px;
+    background-color: var(--border);
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+  }
+  .scroll-divider::before {
+    top: 0;
+    animation: sf-divider-start both linear;
+    animation-timeline: --sf-scroller;
+    animation-range: 0 var(--scroll-divider-size);
+  }
+  .scroll-divider:first-child::before {
+    content: none;
+  }
+  .scroll-divider::after {
+    bottom: 0;
+    animation: sf-divider-end both linear;
+    animation-timeline: --sf-scroller;
+    animation-range: calc(100% - var(--scroll-divider-size)) 100%;
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .scroll-fade {
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, var(--sf-start)) 0, #000 var(--scroll-fade-size), #000 calc(100% - var(--scroll-fade-size)), rgba(0, 0, 0, var(--sf-end)) 100%);
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, var(--sf-start)) 0, #000 var(--scroll-fade-size), #000 calc(100% - var(--scroll-fade-size)), rgba(0, 0, 0, var(--sf-end)) 100%);
+    animation: sf-reveal-start both linear, sf-reveal-end both linear;
+    animation-timeline: scroll(self), scroll(self);
+    animation-range-start: 0, calc(100% - var(--scroll-fade-size));
+    animation-range-end: var(--scroll-fade-size), 100%;
+  }
+  .scroll-fade-x {
+    mask-image: linear-gradient(to right, rgba(0, 0, 0, var(--sf-start)) 0, #000 var(--scroll-fade-size), #000 calc(100% - var(--scroll-fade-size)), rgba(0, 0, 0, var(--sf-end)) 100%);
+    -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, var(--sf-start)) 0, #000 var(--scroll-fade-size), #000 calc(100% - var(--scroll-fade-size)), rgba(0, 0, 0, var(--sf-end)) 100%);
+    animation: sf-reveal-start both linear, sf-reveal-end both linear;
+    animation-timeline: scroll(self inline), scroll(self inline);
+    animation-range-start: 0, calc(100% - var(--scroll-fade-size));
+    animation-range-end: var(--scroll-fade-size), 100%;
+  }
+}
+
+@media (pointer: fine) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--overlay) / 0.08) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: rgb(var(--overlay) / 0.08);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:vertical {
+    border-left-width: 1px;
+    border-right-width: 5px;
+  }
+  ::-webkit-scrollbar-thumb:horizontal {
+    border-top-width: 1px;
+    border-bottom-width: 5px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(var(--overlay) / 0.12);
+  }
+  ::-webkit-scrollbar-thumb:active {
+    background-color: rgb(var(--overlay) / 0.16);
+  }
+}
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
 }

@@ -96,7 +96,7 @@ export function SwitchState({
   disabled?: boolean;
 }) {
   const [on, setOn] = useState(defaultChecked);
-  return <Switch aria-label={label} checked={on} onCheckedChange={setOn} disabled={disabled} />;
+  return <Switch label={label} checked={on} onCheckedChange={setOn} disabled={disabled} />;
 }
 
 /** Named by a <label htmlFor>: its words are the name, and a tap on them flips it */
@@ -108,7 +108,7 @@ export function LabelledSwitch() {
       <label htmlFor={id} className="min-w-0 text-body-sm font-medium text-primary-foreground select-none">
         Share with a link
       </label>
-      <Switch id={id} checked={on} onCheckedChange={setOn} />
+      <Switch label="Share with a link" labelHidden checked={on} onCheckedChange={setOn} />
     </div>
   );
 }
@@ -137,7 +137,7 @@ export function FieldDemo() {
   return (
     <form onSubmit={submit} className="flex w-full max-w-80 flex-col gap-4">
       <Field label="Share with a link" layout="inline-end" description="Anyone with the link can view it, read-only">
-        <Switch checked={shared} onCheckedChange={setShared} />
+        <Switch label="Share with a link" labelHidden checked={shared} onCheckedChange={setShared} />
       </Field>
       <Field label="Expires in">
         <Segmented size="md" shape="pill" value={days} onValueChange={setDays} options={DAYS} />

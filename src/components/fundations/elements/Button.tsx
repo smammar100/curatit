@@ -1,89 +1,68 @@
 import Link from "next/link";
-import type {
-  AnchorHTMLAttributes,
-  ButtonHTMLAttributes,
-  MouseEvent,
-  ReactNode,
-  Ref,
-} from "react";
-import CircleNotch from "@/components/fundations/icons/CircleNotch";
-import { cx } from "@/lib/cx";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode, Ref } from "react";
+import { Button as FluidButton } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-// The button, Interfere's since 2026-10-15 (design.interfere.com/button): 13px medium text,
-// heights 24 / 28 / 32 / 40, radius 6 up to the medium size and 8 from large, no borders (the
-// secondary one carries the default shadow instead), hover and active a step each. Since
-// 2026-10-18 two larger sizes carry the dashboard's own controls (44 and 48px, usually with
-// shape="pill", their label in the dashboard's subtitle role, 14px). Variants keep the older
-// names where the role matched (default = primary, muted = tertiary, accent = brand) and add
-// Interfere's others.
-const variantClasses = {
-  // Primary: solid near-black (near-white on the dark site)
-  default:
-    "bg-inverted-solid text-on-inverted-foreground hover:bg-inverted-solid-hover active:bg-inverted-solid-active",
-  // Secondary: a white surface lifted by the default shadow
-  secondary:
-    "bg-component-on-container-subtle text-primary-foreground shadow-sm hover:bg-component-on-container-subtle-hover",
-  // Tertiary: a tint of the ground
-  muted:
-    "bg-component text-secondary-foreground hover:bg-component-hover hover:text-primary-foreground active:bg-component-active",
-  // Brand: Curatit's terracotta
-  accent:
-    "bg-brand-solid text-on-brand-solid-foreground hover:bg-brand-solid-hover active:bg-brand-solid-active",
-  danger:
-    "bg-danger-solid text-on-danger-solid-foreground hover:bg-danger-solid-hover active:bg-danger-solid-active",
-  dangerSubtle:
-    "bg-danger-subtle text-danger-foreground hover:bg-danger-subtle-hover",
-  transparent:
-    "bg-transparent text-secondary-foreground hover:bg-transparent-hover hover:text-primary-foreground active:bg-transparent-active",
-  none: "",
-};
-// Sizes: Interfere's small, medium, large and extra large (xxs 24, xs 28, sm 32, base 40; md is
-// another name for base), then the dashboard's lg 44 and xl 48
+// The button, since 2026-10-23 Fluid Functionalism's (src/components/ui/button.tsx, installed with
+// the shadcn CLI) behind the API the site has used all along. It keeps the library's craft: the
+// surface sits 1px inside the button and a same-colour shadow fills it out, so a press shrinks it
+// exactly 1px a side at any width; a label never wraps; loading keeps the label mounted at opacity
+// 0 under the spinner, so the width never changes; and the corners and size come from the site's
+// shape and size providers (pill, compact: 28px tall, 12px text; the two larger sizes take the
+// library's default step, 36px and 13px, for the hero's calls and the dashboard header).
+//
+// A link that looks like an action is `isLink` with an href (the library's asChild over Next's
+// Link). Icon-only buttons must be named (`aria-label`); the types insist.
+
+// Curatit's variants on the library's four looks. The brand and danger fills are the primary look
+// with its ink swapped for the brand or danger colour (the library's primary reads --foreground
+// for its fill and --background for its text, so the two variables are set on the button alone);
+// the quiet danger is the tinted secondary with the danger tint
+const variants = {
+  /** Primary: the ink. One per view */
+  default: { variant: "primary", className: "" },
+  /** Secondary: a hairline ring, no fill until hovered */
+  secondary: { variant: "tertiary", className: "" },
+  /** Tertiary: a see-through tint of whatever it sits on */
+  muted: { variant: "secondary", className: "" },
+  /** Brand: Curatit's terracotta */
+  accent: {
+    variant: "primary",
+    className: "[--foreground:var(--color-brand-solid)] [--background:var(--color-paper)]",
+  },
+  danger: {
+    variant: "primary",
+    className: "[--foreground:var(--color-danger-solid)] [--background:var(--color-paper)]",
+  },
+  dangerSubtle: {
+    variant: "secondary",
+    className:
+      "[--tint:var(--color-danger-subtle)] [--tint-hover:var(--color-danger-subtle-hover)] text-danger-foreground",
+  },
+  /** Ghost: words alone until hovered */
+  transparent: { variant: "ghost", className: "" },
+  none: { variant: "ghost", className: "" },
+} as const;
+
+// The site's seven size names on the library's two steps: everything up to md is compact (28px,
+// the site's setting), lg and xl the default step (36px)
 const sizes = {
-  xxs: "h-6 px-2 gap-1",
-  xs: "h-7 px-2.5 gap-1.5",
-  sm: "h-8 px-3 gap-1.5",
-  base: "h-10 px-3.5 gap-2",
-  md: "h-10 px-3.5 gap-2",
-  lg: "h-11 px-4 gap-2",
-  xl: "h-12 px-6 gap-2",
-};
-// Icon-only: a square of the same height
-const iconSizes = {
-  xxs: "size-6",
-  xs: "size-7",
-  sm: "size-8",
-  base: "size-10",
-  md: "size-10",
-  lg: "size-11",
-  xl: "size-12",
-};
-// Label size: Interfere's 13px, and the dashboard's subtitle role (14/20) on its two sizes
-const textSizes = {
-  xxs: "text-body-sm",
-  xs: "text-body-sm",
-  sm: "text-body-sm",
-  base: "text-body-sm",
-  md: "text-body-sm",
-  lg: "text-subtitle",
-  xl: "text-subtitle",
-};
-// Radius by size; `shape="pill"` takes its place (kept apart so the two never both land)
-const radius = {
-  xxs: "rounded-md",
-  xs: "rounded-md",
-  sm: "rounded-lg",
-  base: "rounded-lg",
-  md: "rounded-lg",
-  lg: "rounded-xl",
-  xl: "rounded-xl",
-};
-// On touch screens the two small sizes reach 44px tall through an invisible ::after, so nothing
-// moves; an icon-only one grows 4px each side as well (a row's gap-2 still keeps them apart)
-const touchSizes: Partial<Record<keyof typeof sizes, string>> = {
-  xxs: "pointer-coarse:after:absolute pointer-coarse:after:-inset-y-2.5",
-  xs: "pointer-coarse:after:absolute pointer-coarse:after:-inset-y-2",
-};
+  xxs: "compact",
+  xs: "compact",
+  sm: "compact",
+  base: "compact",
+  md: "compact",
+  lg: "default",
+  xl: "default",
+} as const;
+// On touch screens a compact button reaches 44px tall through an invisible ::after, so nothing
+// moves (the library's root is relative, so the box is placed against it)
+const touch = "pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:-inset-y-2";
+// An icon sits 4px closer to its edge than the label does, as the library sets its own icon slots
+const iconInset = {
+  compact: { left: "pl-2", right: "pr-2" },
+  default: { left: "pl-3", right: "pr-3" },
+} as const;
 // Gaps between the icon slots and the label, when a wider one is wanted
 const gaps = {
   xs: "gap-2",
@@ -92,24 +71,16 @@ const gaps = {
   md: "gap-10",
   lg: "gap-12",
 };
-// Presses in to 0.97 (2026-10-18; the homepage's category tabs and the dashboard's pills press to
-// 0.96, a step deeper for their smaller size) only while it can act and only with motion allowed;
-// colours and the press share one 150ms ease-out
-const baseClass =
-  "relative inline-flex shrink-0 items-center justify-center text-center font-medium whitespace-nowrap transition-[color,background-color,box-shadow,scale] duration-150 ease-out-quint select-none touch-manipulation motion-safe:not-disabled:not-aria-disabled:active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus disabled:pointer-events-none disabled:bg-disabled disabled:text-disabled-foreground disabled:shadow-none";
 
 type CommonProps = {
-  variant?: keyof typeof variantClasses;
+  variant?: keyof typeof variants;
   size?: keyof typeof sizes;
-  /** `pill` rounds the ends fully */
+  /** Accepted for older call sites; every button is a pill (the site's shape setting) */
   shape?: "rounded" | "pill";
   gap?: keyof typeof gaps;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
-  /** Busy: a spinner over the label, which keeps its width. The button stays focusable
-   * (aria-disabled, not disabled) and ignores clicks until it's done.
-   * Client components only: the click guard is a function, which a server component can't hand
-   * to a <button> or a Link (React refuses at render). Being busy is client state anyway */
+  /** Busy: the spinner over the label, which keeps its width; the button is disabled meanwhile */
   loading?: boolean;
   className?: string;
   children?: ReactNode;
@@ -135,14 +106,12 @@ type ButtonAsButton = CommonProps & {
 
 export type ButtonProps = (ButtonAsLink | ButtonAsButton) & Naming;
 
-const ignore = (event: MouseEvent) => event.preventDefault();
-
 // Renders a <button> (type="button" unless told otherwise), or a link when `isLink` is set.
 // With `iconOnly`, children are the icon.
 export default function Button({
   variant = "default",
   size = "base",
-  shape,
+  shape: _shape,
   iconOnly = false,
   gap,
   leftIcon,
@@ -152,58 +121,49 @@ export default function Button({
   children,
   ...rest
 }: ButtonProps) {
-  const classes = cx(
-    baseClass,
-    loading ? "cursor-progress" : "cursor-pointer",
-    variantClasses[variant],
-    iconOnly ? iconSizes[size] : sizes[size],
-    textSizes[size],
-    shape === "pill" ? "rounded-full" : radius[size],
-    touchSizes[size],
-    touchSizes[size] &&
-      (iconOnly ? "pointer-coarse:after:-inset-x-1" : "pointer-coarse:after:inset-x-0"),
+  const look = variants[variant];
+  const step = sizes[size];
+  const classes = cn(
+    look.className,
+    step === "compact" && touch,
+    !iconOnly && leftIcon && iconInset[step].left,
+    !iconOnly && rightIcon && iconInset[step].right,
     !iconOnly && gap && gaps[gap],
     className,
   );
+  // The label is one flex row inside the library's trimmed label span, with the library's own
+  // icon gap for its step (6px compact, 8px default; the span can't inherit it through the
+  // trimmed span, which isn't a flex container)
   const label = iconOnly ? (
     children
   ) : (
-    <>
+    <span className={cn("inline-flex items-center", step === "compact" ? "gap-1.5" : "gap-2")}>
       {leftIcon}
       {children}
       {rightIcon}
-    </>
+    </span>
   );
-  // While loading the label stays in place (and in the accessibility tree, so the button keeps
-  // its name) at opacity 0, with the spinner centred over it in the variant's own colour
-  const content = loading ? (
-    <>
-      <span className="inline-flex items-center justify-center gap-[inherit] opacity-0">
-        {label}
-      </span>
-      <span className="absolute inset-0 grid place-items-center">
-        <CircleNotch className="size-4 animate-spin motion-reduce:animate-none" />
-      </span>
-    </>
-  ) : (
-    label
-  );
-  const busy = loading
-    ? { "aria-busy": true, "aria-disabled": true, onClick: ignore }
-    : {};
+  const fluid = {
+    variant: look.variant,
+    size: iconOnly ? (step === "compact" ? "icon-compact" : "icon") : step,
+    loading,
+    className: classes,
+  } as const;
 
   if (rest.isLink) {
-    const { isLink, ...linkProps } = rest;
+    const { isLink: _isLink, ref, ...linkProps } = rest;
     return (
-      <Link className={classes} {...linkProps} {...busy}>
-        {content}
-      </Link>
+      <FluidButton asChild {...fluid}>
+        <Link ref={ref} {...linkProps}>
+          {label}
+        </Link>
+      </FluidButton>
     );
   }
-  const { isLink, type = "button", ...buttonProps } = rest;
+  const { isLink: _isLink, type = "button", ...buttonProps } = rest;
   return (
-    <button className={classes} type={type} {...buttonProps} {...busy}>
-      {content}
-    </button>
+    <FluidButton type={type} {...fluid} {...buttonProps}>
+      {label}
+    </FluidButton>
   );
 }

@@ -1,44 +1,41 @@
 "use client";
 
-// An on/off switch (2026-10-18, after Fluid Functionalism's switch: the thumb slides, and
-// stretches 4px while pressed, growing toward the middle so the edge it rests on stays put). For
-// a setting that takes effect as soon as it's flipped, or a form option read on submit, like
-// "Share with a link". A choice between named values is a Segmented; an action is a Button.
+// An on/off switch, since 2026-10-23 Fluid Functionalism's (src/components/ui/switch.tsx): a whole
+// labelled row that toggles on a click anywhere on it, whose thumb can also be dragged across the
+// track (past the middle flips it), stretches into a pill under the pointer and squashes while
+// pressed, and moves on the library's moderate spring. On, the track is the ink, like the primary
+// button. For a setting that takes effect as soon as it's flipped, or a form option read on
+// submit, like "Share with a link". A choice between named values is a Segmented; an action is a
+// Button.
 //
-// Give it a name: wrap it with its words in a <label>, point a <label htmlFor> at its id, or pass
-// aria-label / aria-labelledby. The hit area reaches 8px past the track for touch.
-import type { ButtonHTMLAttributes } from "react";
-import { cx } from "@/lib/cx";
+// `label` is the row's words and the switch's name. `labelHidden` keeps the name for screen
+// readers but draws nothing, for a switch whose words a Field beside it already shows.
+import type { HTMLAttributes } from "react";
+import { MotionConfig } from "motion/react";
+import { Switch as FluidSwitch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 
-type Props = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onChange" | "value" | "role"> & {
+type Props = Omit<HTMLAttributes<HTMLDivElement>, "onChange" | "onToggle"> & {
+  label: string;
+  labelHidden?: boolean;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
+  disabled?: boolean;
 };
 
-export default function Switch({ checked, onCheckedChange, className, disabled, ...rest }: Props) {
+export default function Switch({ checked, onCheckedChange, label, labelHidden, className, ...rest }: Props) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      disabled={disabled}
-      onClick={() => onCheckedChange(!checked)}
-      className={cx(
-        "group/switch relative flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-150 ease-out-quint before:absolute before:-inset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus disabled:cursor-not-allowed",
-        disabled ? "bg-disabled" : checked ? "bg-inverted-solid" : "bg-component-active",
-        className,
-      )}
-      {...rest}
-    >
-      {/* On, the thumb is placed by its own width (the track's 44px inside, less 100%), so the
-          press stretch grows to the left and its right edge stays put */}
-      <span
-        aria-hidden="true"
-        className={cx(
-          "h-6 w-6 rounded-full bg-page shadow-sm transition-[translate,width] duration-[200ms,150ms] ease-out-quint group-active/switch:w-7 motion-reduce:transition-none",
-          checked && "translate-x-[calc(2.75rem-100%)]",
-        )}
+    <MotionConfig reducedMotion="user">
+      <FluidSwitch
+        label={label}
+        labelHidden={labelHidden}
+        checked={checked}
+        onToggle={() => onCheckedChange(!checked)}
+        // The library pads the row like a menu item; alone, or beside a Field's words, the
+        // switch sits flush
+        className={cn(labelHidden && "px-0 py-0", className)}
+        {...rest}
       />
-    </button>
+    </MotionConfig>
   );
 }

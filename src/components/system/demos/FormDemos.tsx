@@ -126,7 +126,7 @@ export function SettingDemo({
   const [on, setOn] = useState(defaultChecked);
   return (
     <Field label={label} layout="inline-end" description={description} className="w-full">
-      <Switch id={`${id}switch`} checked={on} onCheckedChange={setOn} disabled={disabled} />
+      <Switch label={label} labelHidden checked={on} onCheckedChange={setOn} disabled={disabled} />
     </Field>
   );
 }
@@ -205,7 +205,7 @@ export function FormDemo() {
         />
       </Field>
       <Field label="Share with a link" layout="inline-end" description="Anyone with the link sees the board and its notes.">
-        <Switch id={`${id}share`} checked={shared} onCheckedChange={setShared} />
+        <Switch label="Share with a link" labelHidden checked={shared} onCheckedChange={setShared} />
       </Field>
       <Button type="submit" variant="default" className="w-full">
         Send board

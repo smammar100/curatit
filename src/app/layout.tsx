@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Hedvig_Letters_Serif, Inter } from "next/font/google";
 import ThemeScript from "@/components/global/ThemeScript";
+import FluidRoot from "@/components/global/FluidRoot";
 import type { ReactNode } from "react";
 // Import global styles
 import "@/styles/global.css";
@@ -70,7 +71,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     >
       <body className="bg-page flex flex-col lg:min-h-svh">
         <ThemeScript />
-        {children}
+        <FluidRoot>{children}</FluidRoot>
       </body>
     </html>
   );

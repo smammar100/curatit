@@ -114,7 +114,7 @@ export default function NewBoardDialog({ open, onClose, firstPost }: { open: boo
 
         {/* The words are the switch's label, so a tap on them flips it too */}
         <Field label="Share with a link" layout="inline-end" description="Anyone with the link can view it, read-only">
-          <Switch checked={shared} onCheckedChange={setShared} />
+          <Switch label="Share with a link" labelHidden checked={shared} onCheckedChange={setShared} />
         </Field>
       </form>
     </Dialog>

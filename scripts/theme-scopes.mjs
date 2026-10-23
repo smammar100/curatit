@@ -68,10 +68,14 @@ export function buildThemeScopes(source) {
     if (value === undefined) throw new Error(`No light value for ${name}`);
     lightValues.set(name, value);
   }
-  // Aliases: @theme tokens built from other properties, re-declared so they resolve in the scope
-  const aliases = [...theme].filter(
-    ([name, value]) => /var\(--/.test(value) && /^--(color-|shadow)/.test(name),
-  );
+  // Aliases: @theme tokens built from other properties, re-declared so they resolve in the scope,
+  // and (since 2026-10-23) the :root properties built the same way that the dark theme leaves
+  // alone because their parts flip (Fluid Functionalism's --foreground is var(--gray-a12), its
+  // --border a mix of that); the dark block's own are declared in the dark scope already
+  const aliases = [
+    ...[...theme].filter(([name, value]) => /var\(--/.test(value) && /^--(color-|shadow)/.test(name)),
+    ...[...light].filter(([name, value]) => /var\(--/.test(value) && !dark.has(name)),
+  ];
 
   const block = (selector, entries) =>
     `${selector} {\n${entries.map(([n, v]) => `  ${n}: ${v};`).join("\n")}\n}\n`;

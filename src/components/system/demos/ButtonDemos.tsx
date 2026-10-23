@@ -78,7 +78,7 @@ export function SwitchDemo() {
       <label htmlFor={id} className="text-body-sm text-primary-foreground select-none">
         Share with a link
       </label>
-      <Switch id={id} checked={on} onCheckedChange={setOn} />
+      <Switch label="Share with a link" labelHidden checked={on} onCheckedChange={setOn} />
     </div>
   );
 }

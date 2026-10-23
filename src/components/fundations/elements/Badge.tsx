@@ -1,56 +1,55 @@
-import type { HTMLAttributes, ReactNode } from "react";
-import { cx } from "@/lib/cx";
+import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
+import { Badge as FluidBadge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
-// A badge, Interfere's (design.interfere.com/badge, installed 2026-10-15): a small label with
-// no border at 16 / 20 / 24px (11 / 12 / 13px regular text), radius 4 up to medium and 6 at
-// large, or a pill. Default is a tint of the ground; outline a hairline; inverted solid; brand
-// and danger their subtle tints.
-const variants = {
-  default: "bg-component text-secondary-foreground",
-  transparent: "bg-transparent text-secondary-foreground",
-  inverted: "bg-inverted-solid text-on-inverted-foreground",
-  outline:
-    "bg-transparent text-secondary-foreground ring-1 ring-inset ring-border-strong",
-  brand: "bg-brand-subtle text-on-brand-subtle-foreground",
-  danger: "bg-danger-subtle text-danger-foreground",
+// A badge, since 2026-10-23 Fluid Functionalism's (src/components/ui/badge.tsx) behind the site's
+// own names: a short label for status, category or metadata, 20px tall on the compact step (24px
+// at lg), a pill, its text always the ink. The library's tinted look mixes 15% of a colour into
+// the page, so one colour works in both themes; the brand and danger badges do that with
+// Curatit's terracotta and red, and the rest are neutral: a tint of the ground, nothing, the ink
+// inverted, or a hairline ring.
+const variants: Record<string, { className?: string; style?: CSSProperties }> = {
+  default: {},
+  transparent: { style: { backgroundColor: "transparent" } },
+  inverted: { style: { backgroundColor: "var(--foreground)", color: "var(--background)" } },
+  outline: {
+    className: "ring-1 ring-inset ring-border",
+    style: { backgroundColor: "transparent" },
+  },
+  brand: {
+    style: { backgroundColor: "color-mix(in srgb, var(--color-brand-solid) 15%, var(--background))" },
+  },
+  danger: {
+    style: { backgroundColor: "color-mix(in srgb, var(--color-danger-solid) 15%, var(--background))" },
+  },
 };
-const sizes = {
-  sm: "h-4 px-1.5 text-caption-base",
-  md: "h-5 px-1.5 text-caption-lg",
-  lg: "h-6 px-2 text-body-sm",
-};
-// Radius by size; `shape="pill"` takes its place (kept apart so the two never both land)
-const radius = {
-  sm: "rounded-sm",
-  md: "rounded-sm",
-  lg: "rounded-md",
-};
+// The site's three sizes on the library's two steps
+const sizes = { sm: "compact", md: "compact", lg: "default" } as const;
 
 export default function Badge({
   variant = "default",
   size = "md",
-  shape,
+  shape: _shape,
   className,
+  style,
   children,
   ...rest
-}: HTMLAttributes<HTMLSpanElement> & {
+}: Omit<HTMLAttributes<HTMLSpanElement>, "color"> & {
   variant?: keyof typeof variants;
   size?: keyof typeof sizes;
+  /** Accepted for older call sites; every badge is a pill (the site's shape setting) */
   shape?: "rounded" | "pill";
   children: ReactNode;
 }) {
+  const look = variants[variant];
   return (
-    <span
-      className={cx(
-        "inline-flex shrink-0 items-center gap-1 whitespace-nowrap",
-        variants[variant],
-        sizes[size],
-        shape === "pill" ? "rounded-full" : radius[size],
-        className,
-      )}
+    <FluidBadge
+      size={sizes[size]}
+      className={cn(look.className, className)}
+      style={{ ...look.style, ...style }}
       {...rest}
     >
       {children}
-    </span>
+    </FluidBadge>
   );
 }
