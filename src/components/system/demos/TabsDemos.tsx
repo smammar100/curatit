@@ -4,7 +4,6 @@
 // on load. It's rendered once per theme panel; Tabs makes its own ids, so the two never clash.
 import { useEffect, useId, useRef, useState } from "react";
 import Button from "@/components/fundations/elements/Button";
-import Segmented from "@/components/fundations/elements/Segmented";
 import Tabs, { Tab, TabList, TabPanel } from "@/components/fundations/molecules/Tabs";
 
 const VIEWS = [
@@ -19,7 +18,6 @@ const labelOf = (value: string | null) => VIEWS.find((v) => v.value === value)?.
 /** The row with a switch for its activation, and what a listener on the document sees: the
  *  post overlay's own arrows (PostView) listen there and leave the keys the tabs handled */
 export function KeyboardDemo() {
-  const [activation, setActivation] = useState<"automatic" | "manual">("automatic");
   const [view, setView] = useState("breakdown");
   const [focus, setFocus] = useState<string | null>(null);
   const [seen, setSeen] = useState<{ key: string; handled: boolean } | null>(null);
@@ -46,22 +44,13 @@ export function KeyboardDemo() {
       onBlur={() => setFocus(null)}
       className="flex max-w-xl flex-col gap-5"
     >
-      <div className="flex flex-wrap items-center gap-3">
-        <span id={label} className="text-body-sm font-medium text-primary-foreground">
-          Activation
-        </span>
-        <Segmented
-          aria-labelledby={label}
-          value={activation}
-          onValueChange={setActivation}
-          options={[
-            { value: "automatic", label: "Automatic" },
-            { value: "manual", label: "Manual" },
-          ]}
-        />
-      </div>
+      {/* Activation is the library's, manual: the arrows move focus, Enter or Space selects. The
+          prop is accepted for older call sites and ignored, so there is nothing to switch here */}
+      <p id={label} className="text-body-sm text-secondary-foreground">
+        Activation is manual: the arrows move focus, Enter or Space selects.
+      </p>
 
-      <Tabs value={view} onValueChange={setView} activation={activation}>
+      <Tabs value={view} onValueChange={setView}>
         <TabList aria-label="Creative breakdown" variant="pill">
           {VIEWS.map((v) => (
             <Tab key={v.value} value={v.value} disabled={v.disabled}>

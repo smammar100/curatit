@@ -1,10 +1,12 @@
 // /system/type: Text's variants on the --text-* tokens in src/styles/global.css, the families
 // and weights loaded in src/app/layout.tsx, the features and wrapping set at the root, and the
-// dashboard's six roles from src/lib/type-scale.ts, all live in both themes. A server
-// component: nothing here needs a script
+// six roles from src/lib/type-scale.ts (the dashboard's, and since 2026-10-23 every shared
+// component's, at the compact step) and the library's three weights in src/lib/font-weight.ts,
+// all live in both themes. A server component: nothing here needs a script
 import type { CSSProperties } from "react";
 import Text, { type TextVariant } from "@/components/fundations/elements/Text";
 import { cx } from "@/lib/cx";
+import { fontWeights } from "@/lib/font-weight";
 import { typeClasses, typeStyles, type TypeScaleRole } from "@/lib/type-scale";
 import { Code, Flow, Matrix, Mono, Rules, Sheet, SheetHeader, SheetSection } from "../SheetParts";
 
@@ -78,8 +80,20 @@ const CAPTIONS: { variant: TextVariant; token: Token; use: string }[] = [
 const WEIGHTS = [
   { cls: "font-normal", value: "400", use: "The default: body, captions and every serif heading" },
   { cls: "font-semimedium", value: "450", use: "Interfere's in-between step; nothing uses it yet" },
-  { cls: "font-medium", value: "500", use: "Labels, buttons, card titles, the dashboard's title and subtitle" },
-  { cls: "font-semibold", value: "600", use: "Inter only, and rare: initials and counts in tiny badges" },
+  { cls: "font-medium", value: "500", use: "Labels and card titles on pages, the dashboard's title and subtitle" },
+  { cls: "font-semibold", value: "600", use: "Inter only, and rare on pages: counts in tiny badges" },
+];
+
+// The library's three weights (src/lib/font-weight.ts): a variable-font setting, not a class. Each
+// pairs a weight with an optical size, the library's pairing for an Inter that carries the axis;
+// the Inter next/font serves here is loaded without opsz, so only the weight takes effect
+const LIBRARY_WEIGHTS: { name: keyof typeof fontWeights; use: string }[] = [
+  { name: "normal", use: "Labels at rest, the Tooltip, an unselected tab, every body line in a component" },
+  {
+    name: "semibold",
+    use: "A selected tab, a checked Menu row, CardTitle, EmptyState's title, a Dialog's title, Avatar initials, Notice's title. Held beside an invisible copy of itself so the label keeps its width (Motion)",
+  },
+  { name: "bold", use: "Reserved; nothing uses it yet" },
 ];
 
 const FAMILIES = [
@@ -184,9 +198,11 @@ export default function Type() {
   return (
     <div className="flex flex-col gap-16">
       <SheetHeader title="Type">
-        Hedvig Letters Serif for headings and Inter for everything else, on Interfere&rsquo;s scale. One
-        token sets size, leading and tracking; <Mono>Text</Mono> adds the serif and the steps down on
-        smaller screens.
+        Hedvig Letters Serif for headings and Inter for everything else. Pages set type with <Mono>Text</Mono>{" "}
+        on Interfere&rsquo;s scale (one token sets size, leading and tracking; <Mono>Text</Mono> adds the serif and
+        the steps down on smaller screens); the dashboard and, since 2026-10-23, every shared component use the six
+        roles of Fluid Functionalism&rsquo;s scale, at the compact step, with its three weights set as a variable-font
+        setting rather than a class.
       </SheetHeader>
 
       <Rules
@@ -206,9 +222,10 @@ export default function Type() {
             term: "Instead",
             text: (
               <>
-                The dashboard uses its six roles (<Mono>text-display</Mono> … <Mono>text-micro</Mono>, below),
-                not <Mono>Text</Mono>. Markdown bodies (blog, legal) render inside{" "}
-                <Mono>{`<Wrapper variant="prose">`}</Mono>.
+                The dashboard uses the six roles (<Mono>text-display</Mono> … <Mono>text-micro</Mono>, below),
+                not <Mono>Text</Mono>. The shared components carry their own role and step (a Button&rsquo;s label is
+                the compact body, 12/18; a Tooltip the caption): add no size class to them. Markdown bodies (blog,
+                legal) render inside <Mono>{`<Wrapper variant="prose">`}</Mono>.
               </>
             ),
           },
@@ -242,6 +259,20 @@ export default function Type() {
                 family class to a <Mono>Text</Mono> heading either: it appends your <Mono>className</Mono>{" "}
                 without merging, so two weight classes compete and the stylesheet&rsquo;s order, not yours,
                 picks the winner.
+              </>
+            ),
+          },
+          {
+            term: "Weights",
+            text: (
+              <>
+                Inside a shared component, the library&rsquo;s three: <Mono>fontWeights.normal</Mono>,{" "}
+                <Mono>semibold</Mono> and <Mono>bold</Mono> from <Mono>@/lib/font-weight</Mono>, written as{" "}
+                <Mono>{`style={{ fontVariationSettings: fontWeights.semibold }}`}</Mono>, never Tailwind&rsquo;s{" "}
+                <Mono>font-*</Mono>. A setting can tween (80ms on a selected tab) where a class can&rsquo;t, and a
+                heavier label keeps its width beside an invisible copy of itself (Motion). On pages,{" "}
+                <Mono>font-medium</Mono> on a label or a card title is still the way; <Mono>Text</Mono> headings take no
+                weight at all.
               </>
             ),
           },
@@ -282,10 +313,10 @@ export default function Type() {
             text: (
               <>
                 Tabular figures are on for every element (<Mono>:root</Mono> sets{" "}
-                <Mono>{`font-feature-settings: "tnum" 1, "ss03" 1`}</Mono>), so counts don&rsquo;t shift as
-                they change and columns line up. Add nothing. Hedvig has no tabular figures: keep live or
-                aligned numbers in Inter, not in a heading. An element that sets its own{" "}
-                <Mono>font-feature-settings</Mono> replaces the list, so repeat both in it.
+                <Mono>{`font-feature-settings: "tnum" 1`}</Mono>), so counts don&rsquo;t shift as they change and
+                columns line up. Add nothing. Hedvig has no tabular figures: keep live or aligned numbers in Inter,
+                not in a heading. An element that sets its own <Mono>font-feature-settings</Mono> replaces the list,
+                so repeat <Mono>tnum</Mono> in it.
               </>
             ),
           },
@@ -322,18 +353,19 @@ export default function Type() {
  ├── A section on another page (docs, roadmap, vision) → tag="h2" variant="h3"
  │    └── A closing call to action → variant="h2"
  ├── A heading inside a section → tag="h3" variant="h4" or "h5"
- ├── A card title → variant="h6", or "bodySM" + font-medium
+ ├── A card title → variant="h6", or CardTitle (the library's semibold)
  ├── A lead or running text → variant="body" (the default)
  ├── A label or dense UI copy → variant="bodySM"
  └── A meta line → "captionLG" + uppercase tracking-wider`}
         />
         <Flow
-          tree={`Which dashboard role?
+          tree={`Which role? (the dashboard, and inside a component)
  ├── A page title: board, post, new board → text-display
  ├── A section heading, a dialog title → text-title
- ├── A card title, a primary button, a menu item → text-subtitle
- ├── Body copy, a control's label → text-body (inherited)
- ├── A description, a meta row, an error → text-caption
+ ├── A card title, a menu item → text-subtitle
+ ├── Body copy, a control's label → text-body (inherited;
+ │   a shared control takes the compact step, 12/18)
+ ├── A description, a meta row, an error, a tooltip → text-caption
  └── A key cap, a counter, a tiny badge → text-micro`}
         />
       </div>
@@ -449,8 +481,35 @@ export default function Type() {
       </SheetSection>
 
       <SheetSection
-        title="Weights"
-        description="The serif column is the same four times: Hedvig has one weight and html sets font-synthesis-weight: none, so a heavier class does nothing rather than fake a bold. On Inter, never font-light (thin at 13px) or font-bold (louder than anything else on the page), and never change weight on hover or selection: it reflows the line."
+        title="The library's weights"
+        description="Three settings in src/lib/font-weight.ts, each a weight paired with an optical size, applied through fontVariationSettings in every shared component. The Inter loaded here has no opsz axis, so the second value is inert on this site; the pairing is kept as the library wrote it, for an Inter that carries the axis. Headings keep the serif and take none of these."
+      >
+        <Sheet>
+          {() => (
+            <Matrix
+              first="minmax(10rem,max-content)"
+              template="minmax(11rem,max-content) minmax(12rem,max-content) minmax(16rem,1fr)"
+              columns={["sample", "setting", "use"]}
+              rows={LIBRARY_WEIGHTS.map((w) => ({
+                label: `fontWeights.${w.name}`,
+                cells: [
+                  <span key="s" className="text-body-lg text-primary-foreground" style={{ fontVariationSettings: fontWeights[w.name] }}>
+                    Saved to Launch ideas
+                  </span>,
+                  <Mono key="v">{fontWeights[w.name]}</Mono>,
+                  <span key="u" className="text-body-sm text-secondary-foreground">
+                    {w.use}
+                  </span>,
+                ],
+              }))}
+            />
+          )}
+        </Sheet>
+      </SheetSection>
+
+      <SheetSection
+        title="Weights as classes"
+        description="Tailwind's weight classes, for pages and Text. The serif column is the same four times: Hedvig has one weight and html sets font-synthesis-weight: none, so a heavier class does nothing rather than fake a bold. On Inter, never font-light (thin at 13px) or font-bold (louder than anything else on the page), and never change weight on hover or selection with a class: it reflows the line (a shared component tweens the setting instead)."
       >
         <Sheet>
           {() => (
@@ -608,11 +667,14 @@ export default function Type() {
       </SheetSection>
 
       <SheetSection
-        title="Dashboard roles"
+        title="The six roles"
         description={
           <>
-            The app&rsquo;s own scale (<Mono>src/lib/type-scale.ts</Mono>): six roles, each a size and a leading,
-            with a compact step for dense surfaces. Display is the serif; the rest are Inter.
+            Fluid Functionalism&rsquo;s scale (<Mono>src/lib/type-scale.ts</Mono>): six roles, each a size and a
+            leading, at two steps. The dashboard writes the default step; the shared components take the compact
+            step, which is the site&rsquo;s setting (<Mono>FluidRoot</Mono> wraps the app in{" "}
+            <Mono>{`<SizeProvider defaultSize="compact">`}</Mono>, so <Mono>useSize().text</Mono> is body 12/18 and a
+            control is 28px tall). Display is the serif; the rest are Inter.
           </>
         }
       >
@@ -681,9 +743,12 @@ export default function Type() {
                 term: "Compact",
                 text: (
                   <>
+                    The site&rsquo;s setting for every shared control since 2026-10-23: body 12/18 in a Button, an
+                    Input, a tab or a Menu row (<Mono>useSize().text</Mono>), the caption 11/14 in a compact Badge.
                     No utility of its own: <Mono>{`typeClass(role, "compact")`}</Mono> from{" "}
-                    <Mono>@/lib/type-scale</Mono>, or <Mono>{`useSize("compact").type[role]`}</Mono> from{" "}
-                    <Mono>@/lib/size-context</Mono> in a client component. Nothing uses it yet.
+                    <Mono>@/lib/type-scale</Mono>, or <Mono>useSize().type[role]</Mono> from{" "}
+                    <Mono>@/lib/size-context</Mono> in a client component (<Mono>{`useSize("default")`}</Mono> for the
+                    36px step, which the lg sizes of Button and Input take).
                   </>
                 ),
               },

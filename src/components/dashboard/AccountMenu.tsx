@@ -69,7 +69,7 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
           popover.open && "ring-2 ring-border-strong",
         )}
       >
-        <Avatar className="size-11 text-body" />
+        <Avatar className="size-7 text-caption" />
       </button>
 
       {popover.mounted && (

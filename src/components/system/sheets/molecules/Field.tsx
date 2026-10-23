@@ -28,7 +28,8 @@ function parts(theme: Theme) {
       wires: (
         <>
           <Mono>{"<label htmlFor>"}</Mono> to the control&rsquo;s <Mono>id</Mono> (the child&rsquo;s, or a generated one),
-          and <Mono>aria-labelledby</Mono>, so a Segmented, which a label can&rsquo;t name, is named too
+          and <Mono>aria-labelledby</Mono>, so a Segmented, which a label can&rsquo;t name, is named too. Drawn in the
+          muted ink; click into the field and it brightens to the ink
         </>
       ),
     },
@@ -42,7 +43,7 @@ function parts(theme: Theme) {
       ),
       wires: (
         <>
-          The default: read before typing. Its id joins <Mono>aria-describedby</Mono>
+          The default: read before typing. Its id joins <Mono>aria-describedby</Mono>. A caption in the muted ink
         </>
       ),
     },
@@ -71,7 +72,7 @@ function parts(theme: Theme) {
       ),
       wires: (
         <>
-          <Mono>aria-invalid</Mono> on the control (its ring turns red) and the error first in{" "}
+          <Mono>aria-invalid</Mono> on the control (its ring turns red, and the label with it) and the error first in{" "}
           <Mono>aria-describedby</Mono>: red, <Mono>WarningCircle</Mono> and words, never colour alone
         </>
       ),
@@ -116,7 +117,7 @@ function parts(theme: Theme) {
           <Input id={id("disabled")} defaultValue="Northwind Studio" disabled />
         </Field>
       ),
-      wires: <>Nothing to pass: the label greys itself when the control inside is disabled</>,
+      wires: <>Nothing to pass: the label dims to half opacity, as the control inside does, when it&rsquo;s disabled</>,
     },
   ];
 }
@@ -125,9 +126,11 @@ export default function FieldSheet() {
   return (
     <div className="flex flex-col gap-16">
       <SheetHeader title="Field">
-        A control with its words: the label, tied to it; a hint; an error in red with an icon and the fix in words; a
-        required marker; an aside at the label&rsquo;s right. It wires the ids by cloning its one child, with no context,
-        so it works in server components.
+        A control with its words, set since 2026-10-23 as Fluid Functionalism&rsquo;s InputField sets them: the label
+        in the muted ink, brightening to the ink while its control is focused and red while it has an error, a notch in
+        from the control&rsquo;s edge; a hint as a muted caption; an error in red with an icon and the fix in words; a
+        required marker; an aside at the label&rsquo;s right. It wires the ids by cloning its one child, with no
+        context, so it works in server components.
       </SheetHeader>
 
       <Rules
@@ -156,6 +159,21 @@ export default function FieldSheet() {
                 <Mono>inline</Mono> (the control at the start of the label&rsquo;s line: Checkbox) or{" "}
                 <Mono>inline-end</Mono> (label first, control at the end: Switch). <Mono>descriptionAt</Mono>:{" "}
                 <Mono>label</Mono> (the default) or <Mono>control</Mono>, stacked only. Nothing else.
+              </>
+            ),
+          },
+          {
+            term: "Drawn",
+            text: (
+              <>
+                The stacked label is <Mono>text-body text-muted-foreground</Mono>, turning{" "}
+                <Mono>text-foreground</Mono> through <Mono>group-focus-within/field</Mono> while the control has focus,{" "}
+                <Mono>text-destructive</Mono> while the control is <Mono>aria-invalid</Mono>, and half opacity while
+                it&rsquo;s disabled, each in 80ms. The label row, hint and error are inset <Mono>px-2.5</Mono>, the
+                notch the library sets its labels in from a field&rsquo;s edge, so the words start where the typed text
+                does. The hint is <Mono>text-caption text-muted-foreground</Mono>; the error{" "}
+                <Mono>text-caption text-destructive</Mono> with a 14px <Mono>WarningCircle</Mono>. An inline label is the
+                ink (<Mono>text-foreground</Mono>): it&rsquo;s the thing you click, not a caption over a box.
               </>
             ),
           },
@@ -207,7 +225,8 @@ export default function FieldSheet() {
               <>
                 Two controls in one Field (the second gets no label); a label made from a <Mono>{"<p>"}</Mono> or a{" "}
                 <Mono>{"<span>"}</Mono>; a placeholder doing the label&rsquo;s job; an error with no words, or red text
-                without the icon; a hint that repeats the label.
+                without the icon; a hint that repeats the label; a label set in the ink by hand to make it
+                &ldquo;stand out&rdquo; (the muted ink is the design: the typed value is what&rsquo;s read).
               </>
             ),
           },
@@ -225,7 +244,7 @@ export default function FieldSheet() {
 
       <SheetSection
         title="Layouts"
-        description="The three, with real content. Click any label, or the gap beside a box or a switch."
+        description="The three, with real content. Click into the field and watch its label brighten; click any label, or the gap beside a box or a switch."
       >
         <Sheet split>
           {(theme) => (
@@ -252,7 +271,7 @@ export default function FieldSheet() {
 
       <SheetSection
         title="FieldGroup"
-        description="A heading over several controls: legend, an optional hint under it and an error under the set. Inside, Fields, or bare controls each named with aria-label (Takeaway 1, Takeaway 2), as in the review editor. The legend never greys: one disabled control doesn't disable the question."
+        description="A heading over several controls: the legend in the ink, an optional hint under it and an error under the set. Inside, Fields, or bare controls each named with aria-label (Takeaway 1, Takeaway 2), as in the review editor. The legend never dims: one disabled control doesn't disable the question."
       >
         <Sheet split>
           {(theme) => (
@@ -314,7 +333,7 @@ export default function FieldSheet() {
 </Field>
 
 <Field label="Share with a link" layout="inline-end">
-  <Switch checked={shared} onCheckedChange={setShared} />
+  <Switch label="Share with a link" labelHidden checked={shared} onCheckedChange={setShared} />
 </Field>`}
             incorrect={{
               why: "a wrapper as the child, so the label and the error point at the div",
@@ -324,9 +343,9 @@ export default function FieldSheet() {
   </div>
 </Field>
 
-<p className="text-body-sm font-medium">Email address</p>
+<p className="text-body text-foreground">Email address</p>
 <Input placeholder="Email address" />
-{error && <p className="text-danger-foreground">Invalid</p>}`,
+{error && <p className="text-destructive">Invalid</p>}`,
             }}
           />
         </div>

@@ -68,12 +68,23 @@ const stage = () => container.querySelector('[data-testid="stage"]')!.textConten
 const within = (id: string) => container.querySelector(`[data-testid="${id}"]`)!;
 // The shown view: the shared Tabs gives each view its own panel with a generated id
 const panel = () => container.querySelector('[role="tabpanel"]:not([hidden])')!;
-const tabNames = () => [...container.querySelectorAll('[role="tab"]')].map((t) => t.textContent);
-const tab = (name: string) => [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find((t) => t.textContent === name);
+// A tab's words: its text without the library's invisible (aria-hidden) semibold copy, which
+// reserves the heavier label's width
+const tabName = (t: Element) =>
+  [...t.querySelectorAll("*")]
+    .filter((el) => el.children.length === 0 && !el.closest('[aria-hidden="true"]'))
+    .map((el) => el.textContent)
+    .join("");
+const tabNames = () => [...container.querySelectorAll('[role="tab"]')].map(tabName);
+const tab = (name: string) => [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find((t) => tabName(t) === name);
 const button = (scope: Element, label: RegExp) => [...scope.querySelectorAll<HTMLButtonElement>("button")].find((b) => label.test(b.getAttribute("aria-label") ?? b.textContent ?? ""));
+// A press and a click: Radix's tabs select on mousedown, so a bare click() wouldn't turn one
 const click = (element: Element | undefined) => {
   if (!element) throw new Error("No such element");
-  act(() => (element as HTMLElement).click());
+  act(() => {
+    element.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true, button: 0 }));
+    (element as HTMLElement).click();
+  });
 };
 const key = (target: EventTarget, name: string) => {
   const event = new KeyboardEvent("keydown", { key: name, bubbles: true, cancelable: true });
@@ -155,10 +166,12 @@ describe("CreativeBreakdown: Breakdown", () => {
     expect(text).not.toMatch(/\bVerified\b|\bSound\b/);
   });
 
-  it("turns tabs, not slides, with the arrow keys on the tab list", () => {
+  it("turns tabs, not slides, with the arrow keys on the tab list", async () => {
     render(<Harness analysis={galleryAnalysis()} />);
     act(() => tab("Breakdown")!.focus());
     expect(key(tab("Breakdown")!, "ArrowRight").defaultPrevented).toBe(true);
+    // Radix moves focus to the next tab a tick later, and the selection follows the focus
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
     expect(tab("Visual DNA")!.getAttribute("aria-selected")).toBe("true");
     expect(document.activeElement).toBe(tab("Visual DNA"));
     expect(stage()).toBe("image 0");

@@ -48,10 +48,13 @@ interface TabsSubtleProps extends Omit<HTMLAttributes<HTMLDivElement>, "onSelect
    *  28px — see /docs/sizes). Omitted, they follow the surrounding
    *  SizeProvider. */
   size?: SizeVariant;
+  /** Curatit: whether the arrows select as they move focus ("automatic") or
+   *  only move it ("manual", the library's default). */
+  activationMode?: "automatic" | "manual";
 }
 
 const TabsSubtle = forwardRef<HTMLDivElement, TabsSubtleProps>(
-  ({ children, selectedIndex, onSelect, idPrefix, activeLabel = false, size, className, ...props }, ref) => {
+  ({ children, selectedIndex, onSelect, idPrefix, activeLabel = false, size, activationMode = "manual", className, ...props }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     // Whether the pointer is over the list: a ref for blur, which reads it at
     // the moment it runs, and the same flag as state for the render, which
@@ -136,7 +139,7 @@ const TabsSubtle = forwardRef<HTMLDivElement, TabsSubtleProps>(
           asChild
           value={String(selectedIndex)}
           onValueChange={(value) => onSelect(Number(value))}
-          activationMode="manual"
+          activationMode={activationMode}
         >
           <TabsPrimitive.List
             ref={(node: HTMLDivElement | null) => {

@@ -1,7 +1,7 @@
 # Feedback: Notice, Toast, EmptyState
 
-Sources: `src/components/fundations/molecules/Notice.tsx`, `Toast.tsx`, `EmptyState.tsx`.
-Live: `/system/notice`, `/system/toast`, `/system/empty-state`.
+Sources: `src/components/fundations/molecules/Notice.tsx` (wraps `ui/banner`), `Toast.tsx`,
+`EmptyState.tsx`. Live: `/system/notice`, `/system/toast`, `/system/empty-state`.
 
 ## Which one?
 
@@ -19,21 +19,27 @@ Something to tell the person?
 Still loading is a Skeleton, never an EmptyState (it tells the person they have nothing).
 Failed to load is a danger Notice with a way to try again, not an EmptyState.
 
-## Notice (server)
+## Notice (client, wraps `ui/banner`)
 
-An inline message beside what it's about. Replaces `AuthNotice`.
+An inline message beside what it's about: since 2026-10-23 Fluid Functionalism's Banner at high
+contrast. A light wash of the tone's colour behind the words (a neutral grey for information),
+the tone's filled glyph before them with the mark cut out in the page colour, the words always
+the ink, the container corners, and actions that trail a one-line message and drop under a
+longer one. A notice that appears opens its row on the moderate spring and grows in on the slow
+one; one that's dismissed folds its row away. Replaces `AuthNotice`.
 
-Tones: `neutral` (default; `bg-card`, Info icon), `positive` (Check), `warning`
-(WarningCircle), `danger` (WarningCircle, red words). Nothing else exists: no `info`, `success`,
-`error`. Danger means it went wrong; a risk that hasn't happened yet is `warning`.
+Tones: `neutral` (default; the library's `default`), `positive` (`success`), `warning`,
+`danger` (`error`). Nothing else exists: no `info`, `success`, `error` on the site's API. Danger
+means it went wrong; a risk that hasn't happened yet is `warning`.
 
-- Words stay `primary-foreground` on positive and warning: their `-foreground` shades are under
-  4.5:1 on their own tint. Only the icon wears the tone. Danger keeps red words (4.6:1).
-- Warning and danger say "Warning:" / "Error:" to screen readers. Never colour alone.
-- `live`: off (default) for static page content. On when it appears after an action: danger is
-  `role="alert"`, the rest `role="status"`. Keep a status notice mounted when its words change.
-- `title`: only when the message runs past a line. `action`: one `Button size="xs"
-  variant="secondary"` or a text link; never a default Button.
+- The words are the ink on every tone; only the glyph and the wash wear the colour, so contrast
+  never depends on the tone. Warning and danger are announced as alerts. Never colour alone.
+- `live`: off (default) for static page content (`role="none"`, read in order with the page). On
+  when it appears after an action: danger and warning are `role="alert"`, the rest `role="status"`.
+  Keep a status notice mounted when its words change.
+- `title`: only when the message runs past a line (the semibold line over the description).
+  Without one the message takes the first row in the normal weight. `action`: one
+  `Button size="xs" variant="secondary"` or a text link; never a default Button.
 - `className`: margins and width only.
 
 ```tsx
@@ -60,18 +66,20 @@ danger) for the board writes and their undo-on-failure messages.
 Tones: `neutral` (default: it's done, a check) and `danger` (it failed; read assertively).
 Nothing else: a warning or a success that must stay is a Notice.
 
+- **The surface** is the ink, as the library's tooltip: a pill (`bg-foreground text-background
+  rounded-[20px] shadow-surface-4`), rising 8px and growing from 0.97 on the moderate spring,
+  leaving on its exit tween (120ms); under reduced motion it fades without moving.
 - **One at a time.** A new toast waits (queue of 3, oldest dropped) and replaces the one on
   screen once that one has been seen for 1.5s. The newest gets its full time.
 - **Duration** from the words: 240ms a word (250 wpm) + 1.5s, clamped 2.5–8s; 4s at least for
-  `danger` (a failure is unexpected and says what to do; the dashboard's error toasts always had
-  4s), 5s at least with an action. Pass `duration` only for a reason the words don't show.
+  `danger` (a failure is unexpected and says what to do), 5s at least with an action. Pass
+  `duration` only for a reason the words don't show.
 - **Pauses** while pointed at, while focus is inside and while the tab is hidden; resumes with
   the time left. Escape dismisses it; pressing the action runs it and dismisses; focus goes back
   where it came from.
 - **Action:** at most one, a shortcut (Undo, View board). Never the only way to do something.
-- **Inside an open Dialog** use a Notice: the dialog's top layer covers the toast.
+- **Inside an open Dialog** use a Notice: the dialog covers the toast.
 - Region: bottom centre, 24px above the safe area, always mounted (polite + assertive).
-  `animate-toast-in` / `animate-toast-out`; nothing moves under reduced motion.
 
 ```tsx
 // Correct
@@ -84,14 +92,15 @@ toast({ message: "Error! Invalid input.", tone: "danger", duration: 1000 });
 ## EmptyState (server)
 
 Where a list, grid or panel would be, once you know it's empty. Centred: picture, title, line,
-action.
+action. The title is semibold by `fontVariationSettings`, the line in the muted ink.
 
 - `size`: `md` (default) for a page or section; `sm` inside a panel, card or menu. Nothing else.
-- `context`: `dashboard` (default) uses the app's roles (md title `text-title`, sm `text-body`,
-  medium; line `text-body` / `text-caption`); `site` uses `<Text>` (md title `h6` in the serif,
-  line `body`; sm `bodySM`). Match the page around it (DESIGN.md rule 5).
-- Picture: `icon` (Phosphor, drawn on a `bg-component` tile) or `illustration` (a drawing in
-  tokens), never both (the type refuses it). Hidden from screen readers. sm gets an icon at most.
+- `context`: `dashboard` (default) uses the app's roles (md title `text-title`, sm `text-body`;
+  line `text-body` / `text-caption`); `site` uses `<Text>` (md title `h6` in the serif, line
+  `body`; sm `bodySM`). Match the page around it (DESIGN.md rule 5).
+- Picture: `icon` (Phosphor, drawn on a `bg-muted` tile, 48px with 20px corners at md, 40px with
+  16px at sm) or `illustration` (a drawing in tokens), never both (the type refuses it). Hidden
+  from screen readers. sm gets an icon at most.
 - `action`: the one next step, a `Button size="sm"`. `secondaryAction`: a `transparent`
   Button or a text link. Never two solid buttons.
 - `titleTag`: `p` (default); `h2`–`h4` only when it stands in for a whole page.

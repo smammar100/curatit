@@ -113,7 +113,7 @@ export function SortMenuDemo() {
           ))}
         </MenuRadioGroup>
       </Menu>
-      <Status>Opened from the keyboard, focus starts on the chosen one ({name}).</Status>
+      <Status>Opened from the keyboard, focus starts on the first option; the chosen one ({name}) carries the fill.</Status>
     </div>
   );
 }

@@ -164,7 +164,8 @@ function Submit({
 }) {
   return (
     <Button
-      size="base"
+      // The default step, 36px, the same as the fields above it
+      size="lg"
       variant="default"
       type="submit"
       loading={pending}

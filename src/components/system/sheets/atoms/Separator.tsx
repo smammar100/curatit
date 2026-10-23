@@ -4,16 +4,18 @@
 import Separator from "@/components/fundations/elements/Separator";
 import { Code, Flow, Matrix, Mono, Rules, Sheet, SheetHeader, SheetSection } from "../../SheetParts";
 
+// The one stroke, and the quieter 60% of it the library draws between a menu's groups; strong is
+// kept as a name and is the same stroke
 const TONES: { tone: "default" | "subtle" | "strong"; token: string; use: string }[] = [
-  { tone: "default", token: "bg-border-default · 6%", use: "The default: between a menu's groups, the halves of a toolbar" },
-  { tone: "subtle", token: "bg-border-subtle · 2%", use: "Between the rows of a dense table, where many lines must stay quiet" },
-  { tone: "strong", token: "bg-border-strong · 15%", use: "A boundary that must hold on a grey mat or beside a cover" },
+  { tone: "default", token: "bg-border · 12% of the ink", use: "The default: the halves of a toolbar, a panel's header and body" },
+  { tone: "subtle", token: "bg-border/60 · about 7%", use: "Between a menu's groups, as Fluid Functionalism draws them; the rows of a dense table" },
+  { tone: "strong", token: "bg-border · the same stroke", use: "Kept for older call sites. New code says default" },
 ];
 
 // A toolbar row, to show a vertical line stretching to its row's height
 function Toolbar({ tone }: { tone: "default" | "subtle" | "strong" }) {
   return (
-    <div className="flex h-8 items-center gap-3 text-body-sm text-secondary-foreground">
+    <div className="flex h-8 items-center gap-3 text-body-sm text-muted-foreground">
       <span>12 posts</span>
       <Separator orientation="vertical" tone={tone} />
       <span>Updated today</span>
@@ -25,8 +27,9 @@ export default function SeparatorSheet() {
   return (
     <div className="flex flex-col gap-16">
       <SheetHeader title="Separator">
-        A 1px hairline between two groups, across or down, in the border tokens&rsquo; alpha tints. Decorative unless
-        the boundary needs to be announced. Most groups don&rsquo;t need one: space separates them.
+        A 1px line between two groups, across or down, in the one stroke every edge on the site shares, or a quieter
+        60% of it. Decorative unless the boundary needs to be announced. Most groups don&rsquo;t need one: space
+        separates them.
       </SheetHeader>
 
       <Rules
@@ -45,8 +48,8 @@ export default function SeparatorSheet() {
             text: (
               <>
                 A gap, most of the time (<Mono>gap-6</Mono>, <Mono>mt-8</Mono>): a line is one more thing to read. Lines
-                between every row of a list are <Mono>divide-y divide-border-default</Mono> on the list, not a Separator
-                per row. A new topic is a heading, not a rule above it. An edge round a group is a Card.
+                between every row of a list are <Mono>divide-y divide-border</Mono> on the list, not a Separator per
+                row. A new topic is a heading, not a rule above it. An edge round a group is a Card.
               </>
             ),
           },
@@ -54,7 +57,7 @@ export default function SeparatorSheet() {
             term: "Default",
             text: (
               <>
-                <Mono>{"<Separator />"}</Mono>: horizontal, <Mono>default</Mono> tone (6%), decorative.
+                <Mono>{"<Separator />"}</Mono>: horizontal, <Mono>default</Mono> tone (the one stroke), decorative.
               </>
             ),
           },
@@ -64,8 +67,20 @@ export default function SeparatorSheet() {
               <>
                 <Mono>orientation</Mono> <Mono>horizontal</Mono> or <Mono>vertical</Mono>; <Mono>tone</Mono>{" "}
                 <Mono>default</Mono>, <Mono>subtle</Mono>, <Mono>strong</Mono>; <Mono>semantic</Mono>. Always 1px.
-                Nothing else: no dashed line, no brand line, no 2px line (2px is the focus ring&rsquo;s width, so a thick
-                line reads as focus).
+                Nothing else: no dashed line, no brand line, no 2px line (every stroke on the site is 1px, the focus ring
+                included, so a thicker line reads as a frame, not a divider).
+              </>
+            ),
+          },
+          {
+            term: "One stroke",
+            text: (
+              <>
+                Since 2026-10-23 there is one stroke, <Mono>--border</Mono>: 12% of the ink mixed into whatever is
+                under it, the line Fluid Functionalism draws round fields, outlined badges and raised cards. The Separator
+                is that stroke laid flat (<Mono>bg-border</Mono>). <Mono>strong</Mono> used to be a darker 15% and is now
+                the same stroke, kept so older call sites still compile; <Mono>subtle</Mono> is <Mono>bg-border/60</Mono>,
+                the quieter line the library puts between a menu&rsquo;s groups and between a card group&rsquo;s tiles.
               </>
             ),
           },
@@ -85,7 +100,7 @@ export default function SeparatorSheet() {
               <>
                 Horizontal fills its container&rsquo;s width. Vertical stretches to its flex row&rsquo;s height (
                 <Mono>self-stretch</Mono>); anywhere else give it a height in className (<Mono>h-4</Mono>). Margins are the
-                caller&rsquo;s: <Mono>my-1.5</Mono> in a menu, <Mono>my-6</Mono> in a panel.
+                caller&rsquo;s: <Mono>my-1</Mono> in a menu, <Mono>my-6</Mono> in a panel.
               </>
             ),
           },
@@ -103,20 +118,19 @@ export default function SeparatorSheet() {
       <Flow
         tree={`A line between things?
  ├── Space alone separates them → no line: a gap
- ├── Every row of a list → divide-y divide-border-default
+ ├── Every row of a list → divide-y divide-border
  │     on the list
  ├── A new topic → a heading, not a rule
- ├── Two groups in one menu → <Separator semantic />
+ ├── Two groups in one menu → <Separator semantic tone="subtle" />
  ├── Two halves of a row → orientation="vertical"
  └── Which tone?
-      ├── Rows of a dense table → subtle
-      ├── On a grey mat, beside a cover → strong
-      └── Anything else → default`}
+      ├── Inside a menu, rows of a dense table → subtle
+      └── Anything else → default (strong is the same line)`}
       />
 
       <SheetSection
         title="Tones and orientations"
-        description="Each tone across a white panel, across a grey mat, and down a toolbar row. The alpha tints mix with whatever is under them, so one token reads on the page and on the mat."
+        description="Each tone across a white panel, across a grey mat, and down a toolbar row. The stroke is an alpha of the ink, so one token reads on the page and on the mat, in both themes."
       >
         <Sheet>
           {() => (
@@ -131,11 +145,11 @@ export default function SeparatorSheet() {
                   <div key="p" className="w-full py-4">
                     <Separator tone={t.tone} />
                   </div>,
-                  <div key="m" className="w-full rounded-2xl bg-card px-4 py-4">
+                  <div key="m" className="w-full rounded-[24px] bg-card px-4 py-4">
                     <Separator tone={t.tone} />
                   </div>,
                   <Toolbar key="v" tone={t.tone} />,
-                  <span key="u" className="text-body-sm text-secondary-foreground">
+                  <span key="u" className="text-body-sm text-muted-foreground">
                     {t.use}
                   </span>,
                 ],
@@ -147,18 +161,19 @@ export default function SeparatorSheet() {
 
       <SheetSection
         title="In a menu"
-        description="A board's More menu, drawn still: the destructive action set apart by a semantic separator, since the two groups have no headings to announce them."
+        description="A board's More menu, drawn still on the menu's surface (two steps up the ladder, with the third shadow): the destructive action set apart by a semantic separator in the subtle tone, since the two groups have no headings to announce them."
       >
         <Sheet split>
           {() => (
-            <div className="w-56 rounded-2xl bg-modal p-1.5 shadow-lg">
+            <div className="w-56 rounded-[24px] bg-surface-3 p-1 shadow-surface-3">
+              {/* Menu rows drawn still in the site's shapes: the compact 28px pill */}
               {["Rename", "Edit description"].map((item) => (
-                <span key={item} className="flex h-9 items-center rounded-md px-2.5 text-body-sm text-primary-foreground">
+                <span key={item} className="flex h-7 items-center rounded-[20px] px-2.5 text-body-sm text-foreground">
                   {item}
                 </span>
               ))}
-              <Separator semantic className="my-1.5" />
-              <span className="flex h-9 items-center rounded-md px-2.5 text-body-sm text-danger-foreground">
+              <Separator semantic tone="subtle" className="my-1" />
+              <span className="flex h-7 items-center rounded-[20px] px-2.5 text-body-sm text-destructive">
                 Delete board
               </span>
             </div>
@@ -166,15 +181,18 @@ export default function SeparatorSheet() {
         </Sheet>
         <div className="mt-6">
           <Code
-            correct={`<div role="menu" className="rounded-2xl bg-modal p-1.5 shadow-lg">
-  <button role="menuitem" …>Rename</button>
-  <button role="menuitem" …>Edit description</button>
-  <Separator semantic className="my-1.5" />
-  <button role="menuitem" …>Delete board</button>
-</div>
+            correct={`<Menu trigger={…} label="Board actions">
+  <MenuItem onSelect={rename}>Rename</MenuItem>
+  <MenuItem onSelect={describe}>Edit description</MenuItem>
+  <MenuSeparator />
+  <MenuItem onSelect={remove}>Delete board</MenuItem>
+</Menu>
+
+{/* The same line in a panel of your own */}
+<Separator semantic tone="subtle" className="my-1" />
 
 {/* Rows of a list: one rule on the list */}
-<ul className="divide-y divide-border-default">…</ul>`}
+<ul className="divide-y divide-border">…</ul>`}
             incorrect={{
               why: "a 2px solid grey, and a Separator under every row",
               code: `<hr className="my-4 border-t-2 border-base-200" />

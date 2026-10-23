@@ -1,6 +1,8 @@
 // /system/menu: the shared Menu (fundations/molecules/Menu.tsx) and its parts, live in both
-// themes. The demos are client components in ../../demos/OverlayDemos.tsx; this sheet stays a
-// server component. Every class is written out in full, never built from parts, so Tailwind sees it
+// themes. Since 2026-10-23 the menu is Fluid Functionalism's Dropdown (src/components/ui/dropdown.tsx
+// and menu-item.tsx, on Radix's dropdown menu) behind the same API. The demos are client components
+// in ../../demos/OverlayDemos.tsx; this sheet stays a server component. Every class is written out
+// in full, never built from parts, so Tailwind sees it
 import type { ReactNode } from "react";
 import { Code, Flow, Matrix, Mono, Rules, Sheet, SheetHeader, SheetSection } from "../../SheetParts";
 import {
@@ -36,119 +38,126 @@ function DemoCard({ name, children, demo }: { name: string; children: ReactNode;
   );
 }
 
-// The menu's parts, as Menu.tsx builds them
+// The menu's parts, as the library's DropdownContent and MenuItem draw them under Menu.tsx
 const PARTS: { part: string; sub?: string; classes: string[]; note: ReactNode }[] = [
   {
+    part: "layer",
+    classes: ["Radix DropdownMenu.Portal", "modal={false}", "z-50 outline-none"],
+    note: "In a portal at the end of the body, so no overflow or z-index clips it, and non-modal: the page keeps scrolling and the popup follows its trigger. On this page's side-by-side panels it takes the site's theme, not the panel's.",
+  },
+  {
     part: "surface",
-    classes: ["bg-modal shadow-lg", "rounded-2xl p-1.5", "min-w-44 w-max max-w-72 · w-64 (fixed)", "absolute z-40"],
-    note: "Floats over the page: the modal surface and the large shadow, 176 to 288px wide, as wide as its longest item; width=\"fixed\" holds it at 256px for the person's own names.",
+    sub: "Elevated offset 2, shadowLevel 3",
+    classes: ["bg-surface-3 shadow-surface-3", "rounded-[12px] overflow-hidden", "select-none outline-none"],
+    note: "Two steps up the surface ladder from where it opens (surface 3 on the page, 7 inside a dialog), always with the dropdown's shadow. Light: white with the step-3 drop; dark: a step lighter than the page with the inset highlight and ring. The library's dropdown opts out of the pill shape: 12px corners, 8px rows.",
+  },
+  {
+    part: "width",
+    classes: ["content · w-max min-w-44 max-w-72", "fixed · w-64 min-w-0", "max-h-[min(480px,var(--radix-dropdown-menu-content-available-height))]"],
+    note: "As wide as its longest item, 176 to 288px, or held at 256px for the person's own names (which truncate). Never taller than 480px or the room Radix finds below the trigger.",
   },
   {
     part: "scroll",
-    sub: "scrollable",
-    classes: ["max-h-72 overflow-y-auto", "overscroll-contain"],
-    note: "The items scroll past 288px, under the heading and above the footer; the glide lives inside the scroll, so it moves with the rows.",
-  },
-  {
-    part: "footer",
-    classes: ["outside the scroll", "its own glide"],
-    note: "Fixed at the foot: one MenuItem, which may open into an inline form (New board: Input and Button, 44px like the row).",
+    classes: ["ScrollArea · min-h-0 flex-1 max-h-[inherit]", "scroll-fade · [--scroll-fade-size:32px]", "relative flex flex-col p-1"],
+    note: "The rows sit inside the library's ScrollArea (a thumb that shows on hover, a 32px fade at the edge with more beyond it); the 4px-padded wrapper is the highlights' offset parent, so they scroll with the rows.",
   },
   {
     part: "placement",
     sub: "side · align",
-    classes: ["top-full mt-2 · bottom-full mb-2", "left-0 · right-0", "origin-top-left … origin-bottom-right"],
-    note: "8px from the trigger, lined up with its start or end edge, and growing from the trigger's corner.",
+    classes: ["sideOffset={8}", "origin-top [--popup-enter-y:-4px]", "data-[side=top]:origin-bottom data-[side=top]:[--popup-enter-y:4px]"],
+    note: "8px from the trigger, lined up with its start or end edge; Radix flips it to the other side when there's no room. It grows from the edge nearest the trigger.",
+  },
+  {
+    part: "motion",
+    classes: ["initial · opacity 0, y −4px, scaleY 0.96", "in · spring.fast (80ms, no bounce)", "out · spring.fast.exit (60ms)"],
+    note: "Fluid Functionalism's fast spring: it rises 4px from the trigger's side while unfolding from 96% tall, and leaves on the tier's quicker tween, kept mounted until that finishes. Under reduced motion (MotionConfig reducedMotion=\"user\") the transforms are dropped and only the fade runs.",
   },
   {
     part: "row",
-    classes: ["rounded-md px-2.5 py-2", "pointer-coarse:py-3", "text-body-sm text-primary-foreground", "gap-2.5"],
-    note: "36px tall, 44 on touch screens. Its radius is the menu's less its padding: 12 − 6 = 6.",
+    classes: ["relative z-10 flex h-7 shrink-0 items-center gap-1", "rounded-[8px] px-1.5", "cursor-pointer outline-none", "media · h-11"],
+    note: "28px, the compact control height, so a row lines up with the trigger that opened it. A row with a picture is 44px. shrink-0 keeps a long list scrolling instead of squashing.",
+  },
+  {
+    part: "words",
+    classes: [
+      "text-[length:var(--fs-body-compact,12px)] leading-[var(--lh-body-compact,18px)]",
+      "text-muted-foreground · lit or checked: text-foreground",
+      "transition-[color,font-variation-settings] duration-80",
+      "checked · 'wght' 550, 'opsz' 18",
+    ],
+    note: "Grey at rest, the ink when the row is lit or checked. A checked label gets heavier without moving its neighbours: an invisible semibold copy of the same words sits underneath and fixes the row's width.",
   },
   {
     part: "highlight",
-    sub: "mouse",
-    classes: ["GLIDE_HIGHLIGHT rounded-md", "bg-transparent-hover", "transition-[translate,height,opacity]", "duration-150 ease-out-quint"],
-    note: "One fill that glides between rows under a mouse (useGlide). Rows have no hover fill of their own, so there's never two.",
+    sub: "hover, keyboard",
+    classes: ["pointer-events-none absolute left-0 top-0 bg-hover rounded-[8px]", "travel · spring.fast (x, y as a transform)", "opacity · 80ms"],
+    note: "One fill, the library's fluid hover: it glides to the row nearest the pointer (so a gap between rows still lights one, and a click in the gap lands on it), and fades in from the checked row when the pointer first enters. The arrow keys move the same fill; a row lit by a key fades in where it is. There is no separate focus ring in a menu: the lit row is the focus.",
   },
   {
-    part: "focus",
-    sub: "keyboard",
-    classes: ["focus-visible:bg-transparent-hover", "focus-visible:outline-2", "focus-visible:-outline-offset-2", "outline-brand-border-focus"],
-    note: "The row's own fill and the brand ring, inset so the padding can't clip it. At once: nothing slides for a key.",
+    part: "selected fill",
+    sub: "MenuItemRadio",
+    classes: ["absolute rounded-[8px] bg-active pointer-events-none", "travel · spring.moderate (160ms, critically damped)", "opacity · 80ms"],
+    note: "The chosen option sits on the pressed fill. Choosing another, the fill travels there and the check redraws on the new row.",
   },
   {
-    part: "pressed",
-    sub: "touch",
-    classes: ["active:bg-transparent-hover"],
-    note: "Touch has no glide, so a press fills the row itself.",
+    part: "merged fills",
+    sub: "MenuItemCheckbox",
+    classes: ["absolute bg-active pointer-events-none", "one block per run of checked rows", "corners merge and split on spring.moderate"],
+    note: "Rows that are on next to each other share one fill (the library's merge/split): the inner corners square off while they touch and round again as one turns off.",
+  },
+  {
+    part: "check",
+    classes: ["motion.svg · 14px · text-foreground shrink-0", "draws in 80ms (pathLength), retracts in 40ms", "initial={false}"],
+    note: "After the words on a checked radio or checkbox row. It draws itself when a row turns on and retracts when it turns off; a row already checked when the menu opens shows it finished.",
   },
   {
     part: "icon",
-    classes: ["size-4 shrink-0", "[&>svg]:size-4"],
-    note: "Optional, 16px, in the row's colour. Give every item in a group one, or none.",
+    classes: ["inline-flex shrink-0 items-center justify-center [&>svg]:size-full", "16px · text-muted-foreground", "lit or checked · text-foreground"],
+    note: "Optional, before the words, in the words' colour. Give every item in a group one, or none.",
   },
   {
     part: "media",
-    classes: ["size-7 shrink-0", "the picture: size-full"],
-    note: "A 28px picture in place of the icon (a board's cover), making the row 44px tall.",
+    classes: ["the same wrapper at 28px", "the picture: size-full"],
+    note: "A 28px picture in place of the icon (a board's cover, a plus tile), making the row 44px tall.",
   },
   {
     part: "danger",
-    classes: ['tone="danger"', "text-danger-foreground"],
-    note: "Red words for an item that destroys something. Last, after a separator. The words say it too: Delete board…",
+    classes: ['tone="danger"', "text-danger-foreground", "[&_span]:text-inherit [&_svg]:text-inherit"],
+    note: "Red words and icon whatever the row's state, for an item that destroys something. Last, after a separator. The words say it too: Delete board…",
   },
   {
     part: "disabled",
-    classes: ["disabled", "text-disabled-foreground", "cursor-not-allowed"],
-    note: "Shown so people learn it exists; skipped by the arrows and the glide, and can't be chosen.",
+    classes: ["aria-disabled", "opacity-50 pointer-events-none"],
+    note: "Shown so people learn it exists; skipped by the arrow keys and by the highlight (it never lights), and can't be chosen.",
   },
   {
-    part: "check",
-    sub: "MenuItemRadio",
-    classes: ["Check size-3.5", "invisible when unchecked"],
-    note: "On the right of the chosen option. Always in place, so the width doesn't change with the choice.",
-  },
-  {
-    part: "check",
-    sub: "MenuItemCheckbox",
-    classes: ["Check size-3.5", "invisible when off", "words truncate"],
-    note: "The same check on each thing that's on. Choosing flips it and closes the menu.",
+    part: "label",
+    classes: ["MenuLabel · px-2 py-1.5 shrink-0 text-muted-foreground", "text-[length:var(--fs-caption-compact,11px)] leading-[var(--lh-caption-compact,14px)]"],
+    note: "A heading over a group, in the compact caption role. heading on the Menu is the same part, placed first, and names the menu through aria-labelledby.",
   },
   {
     part: "message",
-    classes: ["MenuMessage", "px-2.5 py-2", "text-body-sm text-secondary-foreground"],
+    classes: ["MenuMessage · the label part", "text-body-sm"],
     note: "A line in place of the items while there's nothing to choose yet: Loading your boards…",
   },
   {
     part: "separator",
-    classes: ['role="separator"', "mx-2.5 my-1 h-px", "bg-border-default"],
-    note: "A hairline between groups, aligned with the words.",
-  },
-  {
-    part: "label",
-    classes: ["MenuLabel", "px-2.5 pt-2 pb-1", "text-caption-lg text-secondary-foreground"],
-    note: "A heading over a group. With MenuRadioGroup's label it names the group for screen readers.",
-  },
-  {
-    part: "motion",
-    classes: ["animate-menu-in · 150ms ease-out-quint", "animate-menu-out · 120ms ease-in-quart", "motion-reduce:animate-none"],
-    note: "Scales from 0.97 and fades in, out faster and inert while it goes (usePresence). Under reduced motion it comes and goes at once.",
+    classes: ['role="separator"', "my-1 -mx-1 h-px shrink-0", "bg-border/60"],
+    note: "A hairline between groups, edge to edge. The footer sits after one.",
   },
 ];
 
 const KEYS: { key: string; sub?: string; does: string }[] = [
-  { key: "Enter, Space", sub: "on the trigger", does: "Opens it with focus on the first item, or the chosen one in a radio group." },
-  { key: "↓", sub: "on the trigger", does: "Opens it on the first item (or moves there if it's open)." },
-  { key: "↑", sub: "on the trigger", does: "Opens it on the last item." },
-  { key: "↓ ↑", sub: "in the menu", does: "The next or previous item, wrapping at the ends. Disabled items are skipped." },
-  { key: "Home, End", does: "The first item and the last." },
-  { key: "a letter", does: "The next item starting with it; a word typed quickly, the first starting with the word." },
-  { key: "Enter, Space", sub: "on an item", does: "Chooses it: runs onSelect or follows href, closes the menu, focus back on the trigger." },
+  { key: "Enter, Space, ↓", sub: "on the trigger", does: "Opens it. The library then puts focus on the first enabled row (two frames later, after Radix's own autofocus), which lights it." },
+  { key: "↑", sub: "on the trigger", does: "Opens it on the last row (Radix)." },
+  { key: "↓ ↑", sub: "in the menu", does: "The next or previous row, wrapping at the ends, disabled rows skipped. The highlight moves with focus; nothing slides in from the checked row." },
+  { key: "Home, End", does: "The first row and the last." },
+  { key: "a letter", does: "Radix's typeahead on the row's words: the next row starting with it; a word typed quickly, the first starting with the word." },
+  { key: "Enter, Space", sub: "on a row", does: "Chooses it: runs onSelect or follows href, closes the menu, focus back on the trigger." },
   { key: "Escape", does: "Closes it, focus back on the trigger." },
-  { key: "Shift+Tab", does: "Closes it, focus back on the trigger." },
-  { key: "Tab", does: "Closes it and goes on to whatever follows the trigger." },
-  { key: "a click outside", does: "Closes it and leaves focus where the click put it." },
+  { key: "Tab, Shift+Tab", does: "Nothing: Radix keeps focus in the menu (the rows aren't tab stops). Escape is the way out." },
+  { key: "a press outside", does: "Closes it and leaves focus where the press put it." },
+  { key: "a click in a gap", does: "Lands on the lit row: what's lit is what a click hits (the library's gap click)." },
 ];
 
 type PropRow = { name: string; values: string; fallback: string; note: ReactNode };
@@ -158,38 +167,38 @@ const MENU_PROPS: PropRow[] = [
     name: "trigger",
     values: "ReactElement",
     fallback: "required",
-    note: "The button that opens it, usually a Button (or a Tooltip round one). Cloned with aria-haspopup, aria-expanded, aria-controls, the toggle and a ref; its own onClick and onKeyDown run first.",
+    note: "The button that opens it, usually a Button (or a Tooltip round one). Radix composes onto it: aria-haspopup, aria-expanded, aria-controls, the toggle and a ref; its own handlers run too.",
   },
-  { name: "label", values: "string", fallback: "label or heading", note: "The menu's name for screen readers: Board actions, Sort by." },
+  { name: "label", values: "string", fallback: "label or heading", note: "The menu's name for screen readers (aria-label on the role=\"menu\" element): Board actions, Sort by." },
   {
     name: "heading",
     values: "string",
     fallback: "label or heading",
-    note: "A visible title over the items, outside their scroll, that names the menu instead of label: Save to board.",
+    note: "A visible title over the items that names the menu instead of label (aria-labelledby): Save to board.",
   },
   { name: "align", values: '"start" | "end"', fallback: '"start"', note: "Lines up with the trigger's left or right edge. end for a trigger at the right of its row." },
-  { name: "side", values: '"bottom" | "top"', fallback: '"bottom"', note: "Above the trigger near the bottom of the screen (a footer, a sticky bar)." },
+  { name: "side", values: '"bottom" | "top"', fallback: '"bottom"', note: "Above the trigger near the bottom of the screen (a footer, a sticky bar). Radix flips either when there's no room." },
   { name: "open", values: "boolean", fallback: "–", note: "Controlled: the page owns it. Pair with onOpenChange." },
   { name: "defaultOpen", values: "boolean", fallback: "false", note: "Uncontrolled: open on the first render." },
-  { name: "onOpenChange", values: "(open) => void", fallback: "–", note: "Every time it opens or closes by itself; not for changes the open prop made." },
+  { name: "onOpenChange", values: "(open) => void", fallback: "–", note: "Every time it opens or closes by itself (the trigger, an item, Escape, a press outside); not for changes the open prop made." },
   {
     name: "width",
     values: '"content" | "fixed"',
     fallback: '"content"',
     note: "content: as wide as the longest item, 176–288px. fixed: 256px, for the person's own names, which truncate.",
   },
-  { name: "scrollable", values: "boolean", fallback: "false", note: "The items scroll past 288px: a list that grows with the person's data (their boards)." },
+  { name: "scrollable", values: "boolean", fallback: "–", note: "Accepted for older call sites and ignored: the rows always scroll once they pass the popup's height." },
   {
     name: "footer",
     values: "ReactNode",
     fallback: "–",
-    note: "Fixed below the items, outside their scroll, with its own glide: one MenuItem that may open into an inline form (New board). The only field a menu holds.",
+    note: "After a hairline below the items: one MenuItem that may open into an inline form (New board). The only field a menu holds.",
   },
   {
     name: "returnFocus",
     values: '"always" | "keyboard"',
     fallback: '"always"',
-    note: "keyboard: after a choice, focus goes back to the trigger only if it was made from the keyboard. For a trigger shown on hover or focus-within (a tile's Save).",
+    note: "keyboard: after a choice, focus goes back to the trigger only if it was made from the keyboard (Radix's close autofocus is prevented for a pointer). For a trigger shown on hover or focus-within (a tile's Save).",
   },
   {
     name: "children",
@@ -197,34 +206,34 @@ const MENU_PROPS: PropRow[] = [
     fallback: "required",
     note: "MenuItem, MenuItemCheckbox, MenuRadioGroup, MenuSeparator, MenuLabel, MenuMessage. Nothing else: no fields, no paragraphs.",
   },
-  { name: "className", values: "string", fallback: "–", note: "On the wrapper round trigger and menu, for layout only (a margin, ml-auto)." },
+  { name: "className", values: "string", fallback: "–", note: "On the wrapper round the trigger (relative inline-flex), for layout only (a margin, ml-auto)." },
 ];
 
 const ITEM_PROPS: PropRow[] = [
-  { name: "children", values: "ReactNode", fallback: "required", note: "The words: a verb or a place, sentence case, an ellipsis when a dialog follows (Delete board…)." },
+  { name: "children", values: "string", fallback: "required", note: "The words: a verb or a place, sentence case, an ellipsis when a dialog follows (Delete board…). A string: the library sets it in its own weight and uses it for typeahead." },
   { name: "onSelect", values: "(event) => void", fallback: "–", note: "Runs on choosing. event.preventDefault() keeps the menu open." },
-  { name: "href", values: "string", fallback: "–", note: "Makes it a next/link. Space works on it like Enter." },
+  { name: "href", values: "string", fallback: "–", note: "Goes there when chosen (router.push, a client-side navigation). Space works on it like Enter." },
   { name: "icon", values: "ReactNode", fallback: "–", note: "A Phosphor icon, drawn at 16px, decorative." },
   { name: "media", values: "ReactNode", fallback: "–", note: "A 28px picture in place of the icon (a board's cover); give it size-full." },
   { name: "tone", values: '"neutral" | "danger"', fallback: '"neutral"', note: "danger: red, for an item that destroys something." },
-  { name: "disabled", values: "boolean", fallback: "false", note: "Shown, skipped by the keyboard, can't be chosen." },
+  { name: "disabled", values: "boolean", fallback: "false", note: "Shown, skipped by the keyboard and the highlight, can't be chosen." },
 ];
 
 const RADIO_PROPS: PropRow[] = [
-  { name: "MenuRadioGroup label", values: "string", fallback: "–", note: "A visible heading that names the group. Leave it out when the menu's label says it." },
+  { name: "MenuRadioGroup label", values: "string", fallback: "–", note: "A visible heading (a MenuLabel) that names the group. Leave it out when the menu's label says it." },
   {
     name: "MenuRadioGroup value",
     values: "T",
     fallback: "required",
-    note: "Always controlled: the menu's contents unmount when it closes, so an uncontrolled choice would be forgotten.",
+    note: "Always controlled: the menu's contents unmount when it closes, so an uncontrolled choice would be forgotten. The chosen row carries the travelling fill.",
   },
   { name: "onValueChange", values: "(value: T) => void", fallback: "required", note: "Called on choosing; the menu then closes." },
-  { name: "MenuItemRadio value", values: "string", fallback: "required", note: "The option's value. Also children, icon and disabled, as MenuItem." },
+  { name: "MenuItemRadio value", values: "string", fallback: "required", note: "The option's value (role=\"menuitemradio\", aria-checked from Radix). Also children, icon and disabled, as MenuItem." },
   {
     name: "MenuItemCheckbox",
     values: "checked, onCheckedChange",
     fallback: "required",
-    note: "One thing on or off (a post on a board). Always controlled; onCheckedChange(checked, event), and event.preventDefault() keeps the menu open. Also children, icon, media, disabled.",
+    note: "One thing on or off (a post on a board), role=\"menuitemcheckbox\". Always controlled; onCheckedChange(checked, event), and event.preventDefault() keeps the menu open. Rows that are on next to each other share one fill. Also children, icon, media, disabled.",
   },
   { name: "MenuLabel", values: "children, id?", fallback: "–", note: "A small heading over a group. Not focusable." },
   { name: "MenuMessage", values: "children", fallback: "–", note: "A line in place of the items while there's nothing to choose yet. Not focusable." },
@@ -252,9 +261,11 @@ export default function MenuSheet() {
   return (
     <div className="flex flex-col gap-16">
       <SheetHeader title="Menu">
-        A short list of actions or choices that opens from a button and closes once one is chosen. It works the
-        same from a mouse, a finger and the keyboard, and it&rsquo;s the only menu: the dashboard&rsquo;s hand-made ones
-        move onto it.
+        A short list of actions or choices that opens from a button and closes once one is chosen. Since 2026-10-23
+        it is Fluid Functionalism&rsquo;s Dropdown on Radix&rsquo;s dropdown menu, behind the API the dashboard
+        already used: a raised surface in a portal, one hover highlight that glides between rows, a selected fill
+        that travels with the choice, and Radix&rsquo;s roles, roving focus, typeahead and Escape. It works the same
+        from a mouse, a finger and the keyboard, and it&rsquo;s the only menu.
       </SheetHeader>
 
       <Rules
@@ -284,10 +295,10 @@ export default function MenuSheet() {
             term: "Default",
             text: (
               <>
-                <Mono>align=&quot;start&quot;</Mono>, <Mono>side=&quot;bottom&quot;</Mono>, uncontrolled. Items are{" "}
-                <Mono>tone=&quot;neutral&quot;</Mono> with no icon. The trigger is a <Mono>Button</Mono>: a{" "}
-                <Mono>secondary</Mono> one with words and <Mono>MenuCaret</Mono>, or an icon-only one (More) with its{" "}
-                <Mono>aria-label</Mono>.
+                <Mono>align=&quot;start&quot;</Mono>, <Mono>side=&quot;bottom&quot;</Mono>, <Mono>width=&quot;content&quot;</Mono>,{" "}
+                <Mono>returnFocus=&quot;always&quot;</Mono>, uncontrolled. Items are <Mono>tone=&quot;neutral&quot;</Mono>{" "}
+                with no icon. The trigger is a <Mono>Button</Mono>: a <Mono>secondary</Mono> one with words and{" "}
+                <Mono>MenuCaret</Mono>, or an icon-only one (More) with its <Mono>aria-label</Mono>.
               </>
             ),
           },
@@ -295,10 +306,11 @@ export default function MenuSheet() {
             term: "Items",
             text: (
               <>
-                Verbs or places, sentence case, one line. An item that opens a dialog ends in &hellip; (Delete
-                board&hellip;). The destructive one is <Mono>tone=&quot;danger&quot;</Mono>, last, after a{" "}
-                <Mono>MenuSeparator</Mono>. Icons on every item of a group or on none. An item that can&rsquo;t be used
-                yet is <Mono>disabled</Mono>, with the reason in its words (soon), rather than missing.
+                Verbs or places, sentence case, one line, as a plain string (the library sets the weight and reads it
+                for typeahead). An item that opens a dialog ends in &hellip; (Delete board&hellip;). The destructive one
+                is <Mono>tone=&quot;danger&quot;</Mono>, last, after a <Mono>MenuSeparator</Mono>. Icons on every item
+                of a group or on none. An item that can&rsquo;t be used yet is <Mono>disabled</Mono>, with the reason in
+                its words (soon), rather than missing.
               </>
             ),
           },
@@ -306,8 +318,10 @@ export default function MenuSheet() {
             term: "Choosing",
             text: (
               <>
-                Closes the menu and puts focus back on the trigger. A choice in a <Mono>MenuRadioGroup</Mono> is always
-                controlled (<Mono>value</Mono> + <Mono>onValueChange</Mono>): the contents unmount when it closes.
+                Closes the menu and puts focus back on the trigger (Radix&rsquo;s close autofocus). A choice in a{" "}
+                <Mono>MenuRadioGroup</Mono> is always controlled (<Mono>value</Mono> + <Mono>onValueChange</Mono>):
+                the contents unmount when it closes. The chosen option&rsquo;s fill travels to the next choice; checked
+                boxes next to each other merge their fills.
               </>
             ),
           },
@@ -315,10 +329,11 @@ export default function MenuSheet() {
             term: "Placement",
             text: (
               <>
-                Inside its own wrapper (<Mono>relative inline-flex</Mono>), so an ancestor with{" "}
-                <Mono>overflow</Mono> clips it: don&rsquo;t put a menu in a scrolling row or a clipped card. Near the
-                bottom of the screen, <Mono>side=&quot;top&quot;</Mono>; at the right of a row,{" "}
-                <Mono>align=&quot;end&quot;</Mono>.
+                The popup renders in a portal, so a scrolling row or a clipped card can&rsquo;t cut it off, and it
+                follows the trigger while the page scrolls. Near the bottom of the screen,{" "}
+                <Mono>side=&quot;top&quot;</Mono>; at the right of a row, <Mono>align=&quot;end&quot;</Mono>; Radix
+                flips either when there&rsquo;s no room. On this page the portal means a menu takes the site&rsquo;s
+                theme, not the panel&rsquo;s it opens from.
               </>
             ),
           },
@@ -326,12 +341,12 @@ export default function MenuSheet() {
             term: "Never",
             text: (
               <>
-                A hand-made <Mono>role=&quot;menu&quot;</Mono> (a second copy of focus, Escape and the glide to keep in
-                step); a field or a paragraph inside a menu (it&rsquo;s a list of choices, and typing fights the
-                typeahead: that&rsquo;s a Dialog, or a disclosure like the account menu; the one exception is the{" "}
-                <Mono>footer</Mono>&rsquo;s item that opens into a name field, the Save menu&rsquo;s New board); a menu for navigation across the
-                site (that&rsquo;s the header&rsquo;s links); rows with a hover fill of their own (two fills under the
-                mouse).
+                A hand-made <Mono>role=&quot;menu&quot;</Mono> (a second copy of focus, Escape, typeahead and the
+                highlight to keep in step); a field or a paragraph inside a menu (it&rsquo;s a list of choices, and
+                typing fights the typeahead: that&rsquo;s a Dialog, or a disclosure like the account menu; the one
+                exception is the <Mono>footer</Mono>&rsquo;s item that opens into a name field, the Save menu&rsquo;s
+                New board); a menu for navigation across the site (that&rsquo;s the header&rsquo;s links); rows with a
+                hover fill of their own (two fills under the mouse); a <Mono>className</Mono> on an item.
               </>
             ),
           },
@@ -372,19 +387,21 @@ export default function MenuSheet() {
       <SheetSection
         id="live"
         title="Live"
-        description="Each one is a real Menu, one per theme. Open them with a click, or Tab to the trigger and press Enter, Space or ↓; then the arrows, a letter, Escape."
+        description="Each one is a real Menu. Open them with a click, or Tab to the trigger and press Enter, Space or ↓; then the arrows, a letter, Escape. Move the pointer slowly down a menu to watch the highlight glide; click between two rows and the lit one is chosen. The popup is in a portal, so both panels' menus wear the site's theme."
       >
         <Sheet>
           {() => (
             <div className="grid gap-4 sm:grid-cols-2">
               <DemoCard name="actions" demo={<MoreMenuDemo />}>
-                BoardView&rsquo;s More: icons, a disabled item, a separator and the danger item last.
+                BoardView&rsquo;s More: icons, a disabled item (never lit), a separator and the danger item last.
               </DemoCard>
               <DemoCard name="MenuRadioGroup" demo={<SortMenuDemo />}>
-                One choice out of a few. The check marks the chosen one; MenuCaret turns while it&rsquo;s open.
+                One choice out of a few. The chosen row sits on the pressed fill, which travels to the next choice;
+                the check draws itself there. MenuCaret turns while it&rsquo;s open.
               </DemoCard>
               <DemoCard name="links and groups" demo={<LinkMenuDemo />}>
-                Items with <Mono>href</Mono> are links. MenuLabel heads a group; a labelled radio group follows.
+                Items with <Mono>href</Mono> navigate when chosen. MenuLabel heads a group; a labelled radio group
+                follows.
               </DemoCard>
               <DemoCard name="open + onOpenChange" demo={<ControlledMenuDemo />}>
                 Controlled: the page owns open, so the button beside it can open the menu too.
@@ -397,7 +414,7 @@ export default function MenuSheet() {
       <SheetSection
         id="placement"
         title="Placement"
-        description="side and align: below or above the trigger, lined up with its start or its end. It grows from the trigger's corner."
+        description="side and align: below or above the trigger, lined up with its start or its end. It rises 4px from the trigger's side on the fast spring, unfolding from 96% tall."
       >
         <Sheet>{() => <PlacementDemo />}</Sheet>
       </SheetSection>
@@ -405,7 +422,7 @@ export default function MenuSheet() {
       <SheetSection
         id="anatomy"
         title="Anatomy"
-        description="What Menu.tsx builds it from. Take the component whole: never rebuild a menu from these classes."
+        description="What the library draws under Menu.tsx. Take the component whole: never rebuild a menu from these classes."
       >
         <Sheet>
           {() => (
@@ -427,7 +444,7 @@ export default function MenuSheet() {
       <SheetSection
         id="keyboard"
         title="Keyboard"
-        description="The WAI-ARIA menu button pattern, through usePopover. Items aren't tab stops: the arrows move between them."
+        description="The WAI-ARIA menu button pattern, owned by Radix: roles, the roving focus, typeahead, Escape, the return of focus to the trigger. Rows aren't tab stops; the arrows move between them, and the highlight follows."
       >
         <Sheet>
           {() => (
@@ -468,13 +485,13 @@ export default function MenuSheet() {
         </Sheet>
       </SheetSection>
 
-      <SheetSection id="code" title="In code" description="The component, against the hand-made menus it replaces.">
+      <SheetSection id="code" title="In code" description="The component, against a menu rebuilt from the library's parts by hand.">
         <Code
           correct={`import Menu, { MenuCaret, MenuItem, MenuItemRadio, MenuRadioGroup, MenuSeparator }
   from "@/components/fundations/molecules/Menu";
 
 <Menu label="Board actions" align="end" trigger={
-  <Button variant="secondary" size="lg" shape="pill" iconOnly aria-label="More"><Dots /></Button>
+  <Button variant="secondary" size="lg" iconOnly aria-label="More"><Dots /></Button>
 }>
   <MenuItem onSelect={onRename}>Rename</MenuItem>
   <MenuItem onSelect={onDescribe}>Add a description</MenuItem>
@@ -489,20 +506,17 @@ export default function MenuSheet() {
   </MenuRadioGroup>
 </Menu>`}
           incorrect={{
-            why: "a menu made by hand: its own popover wiring, rows a step too round (rounded-xl in a rounded-2xl p-1.5 menu), and a hover fill under the glide",
-            code: `const popover = usePopover("menu");
-<div {...popover.rootProps} className="relative">
-  <button aria-haspopup="menu" {...popover.triggerProps}>More</button>
-  {popover.mounted && (
-    <div {...popover.contentProps} role="menu" aria-label="More"
-      className={cx("absolute right-0 mt-2 w-60 rounded-2xl bg-modal p-1.5 shadow-lg", popover.motion)}>
-      <button role="menuitem" tabIndex={-1} onClick={() => { popover.close(); onRename(); }}
-        className="w-full rounded-xl px-3 py-2 text-left hover:bg-base-100">
-        Rename
-      </button>
-    </div>
-  )}
-</div>`,
+            why: "the library's Dropdown wired by hand: a trigger-wide popup, row indexes to keep in step, a hover fill of its own under the highlight, and no close or focus return",
+            code: `import { DropdownMenu, DropdownTrigger, DropdownContent } from "@/components/ui/dropdown";
+import { MenuItem } from "@/components/ui/menu-item";
+
+<DropdownMenu>
+  <DropdownTrigger render={<button>More</button>} />
+  <DropdownContent>
+    <MenuItem index={0} label="Rename" onClick={onRename} className="hover:bg-hover" />
+    <MenuItem index={1} label="Delete board" onClick={remove} className="text-danger-foreground" />
+  </DropdownContent>
+</DropdownMenu>`,
           }}
         />
       </SheetSection>

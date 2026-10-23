@@ -17,9 +17,10 @@
 // spring; a faint hover pill previews the next click and glides to the tab nearest the pointer
 // (it dims the selected one while it does); one focus ring springs between tabs from the
 // keyboard; the selected label gets heavier without moving its neighbours. Radix owns the roles,
-// the roving tabindex and ← / → / Home / End; activation is manual (the arrows move focus, Enter
-// or Space selects), and the row scrolls sideways when it doesn't fit. The panels stay mounted
-// (hidden), so a view keeps its state.
+// the roving tabindex and ← / → / Home / End; selection follows focus by default (the arrows turn
+// the tabs and mark the key handled, which PostView's own arrows check), or with
+// activation="manual" the arrows move focus only and Enter or Space selects. The row scrolls
+// sideways when it doesn't fit. The panels stay mounted (hidden), so a view keeps its state.
 //
 // Use it for views of one thing. A setting with a few short values is Segmented; going to
 // another page is a link (TextLink, or a nav row like /system's); steps in a sequence are never
@@ -54,6 +55,7 @@ const FOCUSABLE =
 
 type TabsState = {
   base: string;
+  activation: Activation;
   value: string | undefined;
   /** The tabs' values in order, reported by the TabList, so a value maps to the library's index */
   order: string[];
@@ -87,8 +89,7 @@ function asIcon(node: ReactNode): IconComponent {
 // Tabs: the root. Holds the selection; renders a plain div for layout
 
 type TabsProps<T extends string> = {
-  /** Accepted for older call sites: the library's tabs activate manually (arrows move focus,
-   *  Enter or Space selects) */
+  /** Selection follows focus (automatic, the default), or waits for Enter / Space (manual) */
   activation?: Activation;
   onValueChange?: (value: T) => void;
   /** Layout only (margins, width, grid placement) */
@@ -103,7 +104,7 @@ type TabsProps<T extends string> = {
 export default function Tabs<T extends string>({
   value,
   defaultValue,
-  activation: _activation,
+  activation = "automatic",
   onValueChange,
   className,
   children,
@@ -126,8 +127,8 @@ export default function Tabs<T extends string>({
     [value, onValueChange],
   );
   const state = useMemo<TabsState>(
-    () => ({ base, value: current, order, setOrder, select }),
-    [base, current, order, setOrder, select],
+    () => ({ base, activation, value: current, order, setOrder, select }),
+    [base, activation, current, order, setOrder, select],
   );
   return (
     <TabsContext.Provider value={state}>
@@ -187,6 +188,7 @@ export function TabList({
         {...rest}
         ref={ref}
         idPrefix={tabs.base}
+        activationMode={tabs.activation}
         selectedIndex={selected}
         onSelect={(index) => {
           const next = values[index];

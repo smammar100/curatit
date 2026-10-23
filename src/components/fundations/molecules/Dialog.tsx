@@ -27,7 +27,8 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-// Widths: a confirmation, a short form, a longer read, on the library's three (400, 540, 880px)
+// Widths: a confirmation, a short form, a longer read, on the library's three, which it narrows a
+// notch in a compact region, the site's setting: 360, 480 and 800px
 const sizes = {
   sm: "sm",
   md: "lg",
@@ -55,7 +56,7 @@ export type DialogProps = {
   title: string;
   /** One or two sentences under the title, read with it */
   description?: ReactNode;
-  /** sm 400px (a confirmation), md 540px (a short form), lg 880px (a longer read) */
+  /** sm 360px (a confirmation), md 480px (a short form), lg 800px (a longer read) */
   size?: keyof typeof sizes;
   /** Accepted for older call sites: every dialog has the container corners (the site's shape) */
   radius?: "default" | "large";

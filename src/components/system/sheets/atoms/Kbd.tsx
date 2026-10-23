@@ -41,8 +41,9 @@ export default function KbdSheet() {
   return (
     <div className="flex flex-col gap-16">
       <SheetHeader title="Kbd">
-        A key to press, drawn as a cap: the search box&rsquo;s slash, &ldquo;J and K to step through the
-        queue&rdquo;. Two sizes, one key or a combination, each key read by its name. It shows a key; it never is one.
+        A key to press, drawn as a cap of the hover tint with no stroke: the search box&rsquo;s slash, &ldquo;J and K to
+        step through the queue&rdquo;. Two sizes, one key or a combination, each key read by its name. It shows a key;
+        it never is one.
       </SheetHeader>
 
       <Rules
@@ -51,10 +52,9 @@ export default function KbdSheet() {
             term: "Use",
             text: (
               <>
-                A keyboard shortcut, shown where it works: the search box&rsquo;s <Mono>/</Mono> (SearchBox.tsx), a
-                help line for the review queue&rsquo;s <Mono>J</Mono> / <Mono>K</Mono> or the post view&rsquo;s
-                arrows and <Mono>Esc</Mono>. The shortcut must exist: a hint for a key that does nothing is a broken
-                promise.
+                A keyboard shortcut, shown where it works: the search box&rsquo;s <Mono>/</Mono>, a help line for the
+                review queue&rsquo;s <Mono>J</Mono> / <Mono>K</Mono> or the post view&rsquo;s arrows and{" "}
+                <Mono>Esc</Mono>. The shortcut must exist: a hint for a key that does nothing is a broken promise.
               </>
             ),
           },
@@ -72,7 +72,7 @@ export default function KbdSheet() {
             term: "Default",
             text: (
               <>
-                <Mono>{"<Kbd>/</Kbd>"}</Mono>: <Mono>md</Mono>, 24px, the search box&rsquo;s cap.
+                <Mono>{"<Kbd>/</Kbd>"}</Mono>: <Mono>md</Mono>, 20px, the search box&rsquo;s cap.
               </>
             ),
           },
@@ -80,12 +80,25 @@ export default function KbdSheet() {
             term: "The set",
             text: (
               <>
-                Sizes <Mono>sm</Mono> 20 (in a menu row or a 12-13px sentence) and <Mono>md</Mono> 24; one key as{" "}
-                <Mono>children</Mono> or a combination as <Mono>keys</Mono>; <Mono>hideOnTouch</Mono>. Named keys:{" "}
-                <Mono>cmd</Mono>, <Mono>shift</Mono>, <Mono>option</Mono>, <Mono>alt</Mono>, <Mono>ctrl</Mono>,{" "}
-                <Mono>enter</Mono>, <Mono>esc</Mono>, <Mono>tab</Mono>, <Mono>space</Mono>, <Mono>backspace</Mono>,{" "}
-                <Mono>up</Mono>, <Mono>down</Mono>, <Mono>left</Mono>, <Mono>right</Mono>; a single letter is
-                capitalised.
+                Sizes <Mono>sm</Mono> 16 (the compact step: in a menu row, beside 12px text) and <Mono>md</Mono> 20
+                (the default step); one key as <Mono>children</Mono> or a combination as <Mono>keys</Mono>;{" "}
+                <Mono>hideOnTouch</Mono>. Named keys: <Mono>cmd</Mono>, <Mono>shift</Mono>, <Mono>option</Mono>,{" "}
+                <Mono>alt</Mono>, <Mono>ctrl</Mono>, <Mono>enter</Mono>, <Mono>esc</Mono>, <Mono>tab</Mono>,{" "}
+                <Mono>space</Mono>, <Mono>backspace</Mono>, <Mono>up</Mono>, <Mono>down</Mono>, <Mono>left</Mono>,{" "}
+                <Mono>right</Mono>; a single letter is capitalised.
+              </>
+            ),
+          },
+          {
+            term: "The cap",
+            text: (
+              <>
+                Since 2026-10-23 a cap is drawn as Fluid Functionalism&rsquo;s CommandMenu draws its shortcuts:{" "}
+                <Mono>bg-hover text-muted-foreground rounded-[5px]</Mono>, no stroke and no shadow, the words in the
+                micro role (<Mono>sm</Mono> the compact 10/12, <Mono>md</Mono> 11/14, Inter at its normal weight). The
+                tint is an overlay of the ink, so the same cap reads on the page, on a mat and inside a menu. A cap is
+                at least as wide as it is tall (<Mono>min-w-4</Mono>, <Mono>min-w-5</Mono>) with 4px of side padding, so
+                a single letter sits in a square and a word gets room.
               </>
             ),
           },
@@ -94,9 +107,9 @@ export default function KbdSheet() {
             text: (
               <>
                 <Mono>{'keys={["cmd", "k"]}'}</Mono>, never <Mono>{"<Kbd>⌘K</Kbd>"}</Mono>: each key gets its own cap,
-                and the symbols are read by name (&ldquo;Command plus K&rdquo;). A bare ⌘ is read as &ldquo;place of
-                interest sign&rdquo;. Keys pressed one after another (G then H) are two Kbds with &ldquo;then&rdquo;
-                between them.
+                2px apart, and the symbols are read by name (&ldquo;Command plus K&rdquo;). A bare ⌘ is read as
+                &ldquo;place of interest sign&rdquo;. Keys pressed one after another (G then H) are two Kbds with
+                &ldquo;then&rdquo; between them.
               </>
             ),
           },
@@ -161,14 +174,14 @@ export default function KbdSheet() {
             <Matrix
               first="minmax(15rem,max-content)"
               template="minmax(7rem,max-content) minmax(7rem,max-content) minmax(12rem,1fr)"
-              columns={["sm · 20", "md · 24", "read as"]}
+              columns={["sm · 16", "md · 20", "read as"]}
               rows={KEYS.map((k) => ({
                 label: k.label,
                 sub: k.sub,
                 cells: [
                   <span key="sm">{k.render("sm")}</span>,
                   <span key="md">{k.render("md")}</span>,
-                  <span key="r" className="text-body-sm text-secondary-foreground">
+                  <span key="r" className="text-body-sm text-muted-foreground">
                     &ldquo;{k.reads}&rdquo;
                   </span>,
                 ],
@@ -180,7 +193,7 @@ export default function KbdSheet() {
 
       <SheetSection
         title="In use"
-        description="Curatit's real shortcuts, where they're shown: in a control, in a help line, in a menu row. The search cap hides on touch screens."
+        description="Curatit's real shortcuts, where they're shown: in a control, in a help line, in a menu row. The search cap hides on touch screens. The pill and the menu row are drawn still, in the site's shapes."
       >
         <Sheet>
           {() => (
@@ -191,15 +204,15 @@ export default function KbdSheet() {
               columns={["specimen", "written as"]}
               rows={[
                 {
-                  label: "SearchBox.tsx",
-                  sub: "the search pill's hint",
+                  label: "the search pill",
+                  sub: "its hint (SearchBox.tsx still draws its own cap; this is the one to use)",
                   cells: [
                     <span
                       key="s"
-                      className="flex h-11 w-72 max-w-full items-center gap-3 rounded-full bg-component-on-container-subtle pr-3 pl-4 shadow-sm"
+                      className="flex h-9 w-72 max-w-full items-center gap-3 rounded-[20px] bg-muted pr-2.5 pl-3"
                     >
-                      <Search className="size-4 shrink-0 text-tertiary-foreground" />
-                      <span className="flex-1 truncate text-body-sm text-tertiary-foreground">
+                      <Search className="size-4 shrink-0 text-muted-foreground" />
+                      <span className="flex-1 truncate text-body-sm text-muted-foreground">
                         Search brands, categories or ideas
                       </span>
                       <Kbd hideOnTouch>/</Kbd>
@@ -211,7 +224,7 @@ export default function KbdSheet() {
                   label: "a help line",
                   sub: "the review queue's J / K (ReviewPost.tsx binds them; nothing says so yet)",
                   cells: [
-                    <p key="s" className="text-body-sm text-secondary-foreground">
+                    <p key="s" className="text-body-sm text-muted-foreground">
                       Press <Kbd size="sm">J</Kbd> and <Kbd size="sm">K</Kbd> to step through the queue.
                     </p>,
                     <Mono key="c">{'<Kbd size="sm">J</Kbd>'}</Mono>,
@@ -221,7 +234,7 @@ export default function KbdSheet() {
                   label: "a help line",
                   sub: "the post view's arrows and Esc (PostView.tsx)",
                   cells: [
-                    <p key="s" className="flex flex-wrap items-center gap-1.5 text-body-sm text-secondary-foreground">
+                    <p key="s" className="flex flex-wrap items-center gap-1.5 text-body-sm text-muted-foreground">
                       <Kbd size="sm" keys={["left"]} />
                       <Kbd size="sm" keys={["right"]} />
                       through slides, <Kbd size="sm" keys={["esc"]} /> to close
@@ -231,11 +244,11 @@ export default function KbdSheet() {
                 },
                 {
                   label: "a menu row",
-                  sub: "a shortcut at the row's end (no menu has one yet)",
+                  sub: "a shortcut at the row's end, in the compact 28px row (no menu has one yet)",
                   cells: [
                     <span
                       key="s"
-                      className="flex w-64 max-w-full items-center justify-between gap-4 rounded-md px-2.5 py-2 text-body-sm text-primary-foreground"
+                      className="flex h-7 w-64 max-w-full items-center justify-between gap-4 rounded-[20px] bg-hover px-2.5 text-body-sm text-foreground"
                     >
                       Search the library
                       <Kbd size="sm" hideOnTouch>
@@ -251,17 +264,17 @@ export default function KbdSheet() {
         </Sheet>
         <div className="mt-6">
           <Code
-            correct={`<p className="text-body-sm text-secondary-foreground">
+            correct={`<p className="text-body-sm text-muted-foreground">
   Press <Kbd size="sm">J</Kbd> and <Kbd size="sm">K</Kbd> to step through the queue.
 </p>
 
 {/* In a control: hidden where there's no keyboard */}
 <Kbd keys={isMac ? ["cmd", "k"] : ["ctrl", "k"]} hideOnTouch />`}
             incorrect={{
-              why: "two keys in one cap, read as a symbol name; the cap by hand",
+              why: "two keys in one cap, read as a symbol name; the cap by hand with a ring (the old recipe)",
               code: `<Kbd>⌘K</Kbd>
 
-<kbd className="absolute right-4 hidden h-6 min-w-6 items-center justify-center rounded-md px-1.5 font-sans text-caption text-secondary-foreground ring-1 ring-border-default md:flex">
+<kbd className="absolute right-4 hidden h-6 min-w-6 items-center justify-center rounded-md px-1.5 font-sans text-caption text-secondary-foreground ring-1 ring-border-strong md:flex">
   /
 </kbd>`,
             }}

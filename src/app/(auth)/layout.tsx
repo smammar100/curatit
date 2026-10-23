@@ -37,7 +37,7 @@ export default async function AuthLayout({
         <div className="relative flex min-h-dvh items-center justify-center px-4 py-8">
           {/* The card floats over imagery on Interfere's extra large shadow, which has its own dark
               treatment (a half-pixel inner highlight), so it needs no ring there */}
-          <div className="w-full max-w-md rounded-2xl bg-container p-6 shadow-xl sm:p-8">
+          <div className="w-full max-w-md rounded-[24px] bg-surface-3 p-6 shadow-surface-6 sm:p-8">
             <Link
               href="/"
               className="mx-auto mb-6 block w-fit rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus"

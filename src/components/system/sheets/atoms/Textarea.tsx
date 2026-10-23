@@ -5,9 +5,11 @@ import Textarea from "@/components/fundations/elements/Textarea";
 import Field from "@/components/fundations/molecules/Field";
 import { Code, Matrix, Mono, Rules, Sheet, SheetHeader, SheetSection, type Theme } from "../../SheetParts";
 
-// Focus forced on with the shadow a focused textarea draws (a descendant selector outranks its
-// own shadow-sm and, with the attribute, its red rest ring)
-const FOCUS = "[&_textarea]:shadow-[0_0_0_2px_var(--color-brand-border-focus)]";
+// Focus forced on with what a focused textarea draws: the card surface (focus:bg-surface-3) and
+// the page's 1px focus outline. A descendant selector outranks its rest fill and, with :hover,
+// its hover tint; the red ring is a separate property and stays
+const FOCUS =
+  "[&_textarea]:bg-surface-3 [&_textarea:hover]:bg-surface-3 [&_textarea]:outline-1 [&_textarea]:outline-offset-2 [&_textarea]:outline-[color:var(--focus-ring)]";
 
 const NOTE =
   "Start with the second slide: the type sits on the photo's horizon, and the colour comes from the product, not the brand.";
@@ -31,8 +33,10 @@ export default function TextareaSheet() {
   return (
     <div className="flex flex-col gap-16">
       <SheetHeader title="Textarea">
-        Several lines of text on the Input&rsquo;s recipe: the same surface, rings and touch-screen size. One row is
-        exactly an Input&rsquo;s height, so the two line up side by side. It can grow with its text, in CSS alone.
+        Several lines of text on the Input&rsquo;s recipe: the same 1px ring on no fill, hover tint, card surface
+        while focused, red ring and touch-screen size. Its corners are the shape&rsquo;s container radius, 24px, a
+        block of text wanting the larger corner as a card does; its first row is exactly an Input&rsquo;s height, so
+        the two line up side by side. It can grow with its text, in CSS alone.
       </SheetHeader>
 
       <Rules
@@ -49,10 +53,23 @@ export default function TextareaSheet() {
             term: "The set",
             text: (
               <>
-                <Mono>size</Mono> <Mono>md</Mono> (the default) or <Mono>lg</Mono>, the Input&rsquo;s two.{" "}
-                <Mono>resize</Mono> <Mono>vertical</Mono> (the default: a person can drag it taller) or{" "}
-                <Mono>none</Mono> (a box whose size the layout owns). <Mono>autoResize</Mono> with an optional{" "}
+                <Mono>size</Mono> <Mono>md</Mono> (the default) or <Mono>lg</Mono>, the Input&rsquo;s two, both the
+                compact step (<Mono>lg</Mono> is kept for call sites and renders the same). <Mono>resize</Mono>{" "}
+                <Mono>vertical</Mono> (the default: a person can drag it
+                taller) or <Mono>none</Mono> (a box whose size the layout owns). <Mono>autoResize</Mono> with an optional{" "}
                 <Mono>maxRows</Mono>. Nothing else: no horizontal resize, which would push out of its column.
+              </>
+            ),
+          },
+          {
+            term: "Drawn",
+            text: (
+              <>
+                Input&rsquo;s <Mono>fieldClass</Mono> (<Mono>ring-1 ring-border bg-transparent hover:bg-hover
+                focus:bg-surface-3 aria-invalid:ring-destructive/50 disabled:opacity-50</Mono>) with{" "}
+                <Mono>rounded-[24px]</Mono> from the shape provider, where Input takes <Mono>rounded-[20px]</Mono>. The
+                padding makes one row the control height: <Mono>px-2.5 py-[5px]</Mono> round an 18px line in md
+                (5 + 18 + 5 = 28), <Mono>px-3 py-2</Mono> round a 20px line in lg (8 + 20 + 8 = 36).
               </>
             ),
           },
@@ -60,8 +77,9 @@ export default function TextareaSheet() {
             term: "Height",
             text: (
               <>
-                <Mono>rows</Mono>, 3 by default: one row is 40px in md and 44px in lg, each row after it 20px. Never an{" "}
-                <Mono>h-*</Mono> class: it fights <Mono>rows</Mono> and clips the last line at 16px on touch screens.
+                <Mono>rows</Mono>, 3 by default: the first row is 28px (the control height, in md and lg alike), each
+                row after it one 18px line. Never an <Mono>h-*</Mono> class: it fights <Mono>rows</Mono> and clips the
+                last line at 16px on touch screens.
               </>
             ),
           },
@@ -70,10 +88,11 @@ export default function TextareaSheet() {
             text: (
               <>
                 <Mono>field-sizing: content</Mono>: the browser grows it while laying out the page, so there&rsquo;s no
-                measuring script and no jump a frame late. It never goes below <Mono>rows</Mono>, stops at{" "}
-                <Mono>maxRows</Mono> and scrolls after that. Where it isn&rsquo;t supported yet (Firefox, older Safari)
-                it stays at <Mono>rows</Mono> and scrolls, which is a plain textarea. It turns the drag handle off. Give
-                it a <Mono>maxRows</Mono>, or one long paste pushes the page down.
+                measuring script and no jump a frame late. It never goes below <Mono>rows</Mono> (a floor of that many
+                lines plus the padding, set in <Mono>lh</Mono> units), stops at <Mono>maxRows</Mono> and scrolls after
+                that. Where it isn&rsquo;t supported yet (Firefox, older Safari) it stays at <Mono>rows</Mono> and
+                scrolls, which is a plain textarea. It turns the drag handle off. Give it a <Mono>maxRows</Mono>, or one
+                long paste pushes the page down.
               </>
             ),
           },
@@ -104,7 +123,7 @@ export default function TextareaSheet() {
 
       <SheetSection
         title="Sizes and states"
-        description="Both sizes in every state, at three rows. Focus is forced on with the shadow a focused textarea draws; the red ring at rest is 1px."
+        description="Both sizes in every state, at three rows. Focus is forced on with what a focused textarea draws: the card surface and the page's 1px outline. The red ring is the danger colour at half strength; disabled is the whole box at half opacity."
       >
         <Sheet>
           {(theme) => (
@@ -113,8 +132,8 @@ export default function TextareaSheet() {
               template="repeat(5, minmax(14rem,1fr))"
               columns={["rest", "filled", "focus", "invalid", "disabled"]}
               rows={[
-                { label: "md", sub: "13/20 · 40px a row", cells: states(theme, "md") },
-                { label: "lg", sub: "the dashboard · 44px a row", cells: states(theme, "lg") },
+                { label: "md", sub: "12/18 · 28px, then 18px a row", cells: states(theme, "md") },
+                { label: "lg", sub: "the same as md, kept for call sites", cells: states(theme, "lg") },
               ]}
             />
           )}
@@ -155,7 +174,7 @@ export default function TextareaSheet() {
               code: `<textarea
   placeholder="Description"
   maxLength={160}
-  className="h-32 w-full resize rounded-lg border-0 bg-card px-3 py-2 text-sm"
+  className="h-32 w-full resize rounded-[24px] bg-surface-3 px-3 py-2 ring-1 ring-border"
 />`,
             }}
           />

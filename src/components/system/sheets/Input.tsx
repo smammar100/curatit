@@ -11,12 +11,13 @@ import { authMessage, emailProblem, PASSWORD_RULES, passwordProblem } from "@/li
 import { Code, Flow, Matrix, Mono, Rules, Sheet, SheetHeader, SheetSection, type Theme } from "../SheetParts";
 import { StrengthSample, ValidationDemo } from "../demos/InputDemos";
 
-// Focus forced on, with the value AuthField gives focus: (focus:shadow-[…] in AuthParts.tsx). A
-// descendant selector outranks inputClass's shadow-sm, so the specimen draws exactly what a
-// focused field does, and a real focus on it looks the same. The error one names
-// [aria-invalid] too, to outrank the aria-invalid: variant that draws the 1px ring at rest
-const FOCUSED = "w-full [&_input]:shadow-[0_0_0_2px_var(--color-brand-border-focus)]";
-const FOCUSED_ERROR = "w-full [&_input[aria-invalid]]:shadow-[0_0_0_2px_var(--color-danger-border-default)]";
+// Focus forced on with what a focused field draws (AuthParts.tsx): the card surface
+// (focus:bg-surface-3) and the page's 1px focus outline. A descendant selector outranks
+// inputClass's rest fill and, with :hover, its hover tint, so the specimen draws exactly what a
+// focused field does, and a real focus on it looks the same. The red ring is a box-shadow on a
+// separate property, so the error specimen keeps it under the same classes
+const FOCUSED =
+  "w-full [&_input]:bg-surface-3 [&_input:hover]:bg-surface-3 [&_input]:outline-1 [&_input]:outline-offset-2 [&_input]:outline-[color:var(--focus-ring)]";
 
 // Specimens on a docs page keep the browser and password managers out, so nobody's saved login
 // is offered or filled into them (as ValidationDemo does). The real values are in the prose and
@@ -42,7 +43,8 @@ function states(theme: Theme) {
       specimen: <AuthField id={`${theme}-empty`} {...EMAIL} />,
       drawn: (
         <>
-          <Mono>shadow-sm</Mono> as its edge; the placeholder in <Mono>text-tertiary-foreground</Mono>
+          <Mono>ring-1 ring-border</Mono> on <Mono>bg-transparent</Mono>: the one stroke is the field, there is no fill;
+          the placeholder in <Mono>text-muted-foreground</Mono>
         </>
       ),
       when: "Nothing typed yet. The placeholder is an example answer, not the label",
@@ -52,7 +54,7 @@ function states(theme: Theme) {
       specimen: <AuthField id={`${theme}-filled`} {...EMAIL} defaultValue="name@example.com" />,
       drawn: (
         <>
-          <Mono>text-primary-foreground</Mono> at <Mono>text-body-sm</Mono>, 16px on touch screens (
+          <Mono>text-foreground</Mono> (the ink) at the compact body size, 12/18; 16px on touch screens (
           <Mono>pointer-coarse:text-[16px]</Mono>)
         </>
       ),
@@ -68,8 +70,9 @@ function states(theme: Theme) {
       ),
       drawn: (
         <>
-          <Mono className="wrap-anywhere">focus:shadow-[0_0_0_2px_var(--color-brand-border-focus)]</Mono>: the
-          drop shadow gives way to a 2px brand ring
+          <Mono>focus:bg-surface-3</Mono>, the card surface (white in light, where the outline alone shows the change;
+          a step lighter than the page in dark), and the page&rsquo;s <Mono>focus-visible</Mono> outline: 1px of{" "}
+          <Mono>--focus-ring</Mono>, 2px out. Under the pointer before that, <Mono>hover:bg-hover</Mono>
         </>
       ),
       when: "While typing goes there, from a click, a tap or Tab",
@@ -81,9 +84,9 @@ function states(theme: Theme) {
       ),
       drawn: (
         <>
-          <Mono>aria-invalid</Mono>, the note under it linked by <Mono>aria-describedby</Mono>, and a 1px{" "}
-          <Mono>danger-border-default</Mono> ring, an <Mono>aria-invalid:</Mono> variant so it outranks{" "}
-          <Mono>shadow-sm</Mono>
+          <Mono>aria-invalid</Mono>, the note under it linked by <Mono>aria-describedby</Mono>, and the ring turned{" "}
+          <Mono>aria-invalid:ring-destructive/50</Mono> (the danger red at half), keyed off the attribute as the shared
+          Input&rsquo;s is
         </>
       ),
       when: "A check found a problem: on submit, on leaving the email field, or from the server",
@@ -92,14 +95,14 @@ function states(theme: Theme) {
       label: "error, focus",
       sub: "forced on here",
       specimen: (
-        <div className={FOCUSED_ERROR}>
+        <div className={FOCUSED}>
           <AuthField id={`${theme}-error-focus`} {...EMAIL} defaultValue={MALFORMED} error={emailProblem(MALFORMED)} />
         </div>
       ),
       drawn: (
         <>
-          <Mono className="wrap-anywhere">focus:shadow-[0_0_0_2px_var(--color-danger-border-default)]</Mono>:
-          the ring stays red while the field is being fixed
+          <Mono>aria-invalid:focus:ring-destructive/50</Mono>: the ring stays red while the field is being fixed; the
+          terracotta outline marks the focus
         </>
       ),
       when: "Editing a field with a note. The note updates as you type and goes once the field passes",
@@ -145,9 +148,11 @@ export default function Input() {
   return (
     <div className="flex flex-col gap-16">
       <SheetHeader title="Auth fields">
-        The sign-in and sign-up forms&rsquo; own field: Interfere&rsquo;s 40px input with a label above it and a red
-        note under it when something&rsquo;s wrong, the password meter, and the notice for a failed attempt.
-        Outside the auth forms, text entry is Field and Input.
+        The sign-in and sign-up forms&rsquo; own field: since 2026-10-23 the shared Input&rsquo;s Fluid Functionalism
+        recipe at the compact step (a 28px pill, the one stroke as a 1px ring on no fill, the card surface and the
+        page&rsquo;s terracotta outline while focused, a red ring when something&rsquo;s wrong), written out in
+        AuthParts.tsx with its label above in the muted ink and a red note under it, the password meter, and the
+        notice for a failed attempt. Outside the auth forms, text entry is Field and Input, which draw the same.
       </SheetHeader>
 
       <Rules
@@ -169,7 +174,8 @@ export default function Input() {
                 Everywhere else, <TextLink href="/system/field">Field</TextLink> and{" "}
                 <TextLink href="/system/input">Input</TextLink>, and <TextLink href="/system/notice">Notice</TextLink>. Don&rsquo;t
                 import AuthField into the dashboard or a marketing page, and don&rsquo;t build a field from{" "}
-                <Mono>inputClass</Mono>: that recipe is AuthField&rsquo;s, and it carries no focus ring of its own.
+                <Mono>inputClass</Mono>: it is the shared Input&rsquo;s recipe copied out for these four forms, and a
+                third copy is one more place for it to drift.
               </>
             ),
           },
@@ -177,10 +183,14 @@ export default function Input() {
             term: "Default",
             text: (
               <>
-                One size: 40px tall (<Mono>h-10</Mono>), full width, 13px text, <Mono>rounded-lg</Mono>, the white
-                control surface (<Mono>bg-component-on-container-subtle</Mono>) with <Mono>shadow-sm</Mono> as its edge.
-                AuthField has no size or variant props, and nothing else exists. The dashboard&rsquo;s 32px and 44px
-                fields are the same parts at another height (below).
+                One size, the library&rsquo;s compact step: 28px tall (<Mono>h-7</Mono>), full width, the compact body
+                text (<Mono>text-[length:var(--fs-body-compact,12px)] leading-[var(--lh-body-compact,18px)]</Mono>,
+                12/18), <Mono>rounded-[20px]</Mono>, <Mono>px-2.5</Mono>,{" "}
+                <Mono>ring-1 ring-border</Mono> on <Mono>bg-transparent</Mono>: the stroke is the edge, there is no fill
+                and no shadow. <Mono>hover:bg-hover</Mono> tints it 4% of the ink under the pointer;{" "}
+                <Mono>focus:bg-surface-3</Mono> lifts it to the card surface. Colour moves in 80ms (
+                <Mono>duration-80</Mono>). AuthField has no size or variant props, and nothing else exists; it is the
+                shared Input at <Mono>size=&quot;lg&quot;</Mono> without the provider.
               </>
             ),
           },
@@ -188,10 +198,12 @@ export default function Input() {
             term: "Label",
             text: (
               <>
-                Above every field, <Mono>text-body-sm font-medium text-primary-foreground</Mono>, tied to it by{" "}
-                <Mono>htmlFor</Mono> and <Mono>id</Mono>, so a tap on the words focuses the field. The placeholder is an
-                example answer (<Mono>you@example.com</Mono>), never the label: it&rsquo;s gone once typing starts, and{" "}
-                <Mono>text-tertiary-foreground</Mono> is under 4.5:1.
+                Above every field, <Mono>text-body text-muted-foreground</Mono>, inset <Mono>px-2.5</Mono> like
+                Field&rsquo;s labels (a notch in from the field&rsquo;s edge, so the words start where the typed text
+                does), tied to it by <Mono>htmlFor</Mono> and <Mono>id</Mono>, so a tap on the words focuses the field.
+                Unlike Field&rsquo;s, it doesn&rsquo;t brighten while the field is focused or turn red with an error.
+                The placeholder is an example answer (<Mono>you@example.com</Mono>), never the label: it&rsquo;s gone
+                once typing starts.
               </>
             ),
           },
@@ -209,8 +221,9 @@ export default function Input() {
             term: "Errors",
             text: (
               <>
-                Red, the <Mono>WarningCircle</Mono> icon and words that say how to fix it, under the field. The{" "}
-                <Mono>error</Mono> prop does all three and sets <Mono>aria-invalid</Mono> and{" "}
+                Red (<Mono>text-destructive</Mono>, <Mono>text-caption</Mono>), the <Mono>WarningCircle</Mono> icon and
+                words that say how to fix it, under the field at the label&rsquo;s inset. The <Mono>error</Mono> prop
+                does all three and sets <Mono>aria-invalid</Mono> (which turns the ring red) and{" "}
                 <Mono>aria-describedby</Mono> (added to any id passed in, like PasswordField&rsquo;s checklist), so the
                 note is read with the field.
               </>
@@ -234,11 +247,12 @@ export default function Input() {
             term: "Never",
             text: (
               <>
-                A border or ring on the field (the shadow is its edge: <Mono>border-0</Mono> clears
-                @tailwindcss/forms&rsquo; grey border and <Mono>focus:ring-0</Mono> its blue focus ring); the
-                browser&rsquo;s own bubbles (the forms are <Mono>noValidate</Mono> and check their own fields); red with
-                no icon or words; a disabled submit as the only sign something&rsquo;s missing (the submit stays
-                pressable, and the press says what&rsquo;s wrong).
+                A fill, a shadow or a second border on the field (the ring is its edge: <Mono>border-0</Mono> clears
+                @tailwindcss/forms&rsquo; grey border and <Mono>focus:ring-border</Mono> keeps the plugin&rsquo;s blue
+                focus ring colour off); an outline of its own (the page&rsquo;s <Mono>focus-visible</Mono> rule draws
+                the one every control wears); the browser&rsquo;s own bubbles (the forms are <Mono>noValidate</Mono> and
+                check their own fields); red with no icon or words; a disabled submit as the only sign something&rsquo;s
+                missing (the submit stays pressable, and the press says what&rsquo;s wrong).
               </>
             ),
           },
@@ -248,9 +262,10 @@ export default function Input() {
               <>
                 inputClass has no disabled styles, so a disabled field looks like an enabled one (the matrix
                 below shows it); only its cursor changes. Input&rsquo;s <Mono>fieldClass</Mono>{" "}
-                (fundations/elements/Input.tsx) has the fix to copy (<Mono>disabled:bg-disabled</Mono>,{" "}
-                <Mono>disabled:text-disabled-foreground</Mono>, <Mono>disabled:shadow-none</Mono>); until AuthParts.tsx
-                takes it, don&rsquo;t disable a field.
+                (fundations/elements/Input.tsx) does it the library&rsquo;s way, the whole field at half opacity (
+                <Mono>disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent</Mono>); until
+                AuthParts.tsx takes the same, don&rsquo;t disable a field. And the label stays muted whatever the field
+                does, where Field&rsquo;s follows focus and error.
               </>
             ),
           },
@@ -285,7 +300,7 @@ export default function Input() {
 
       <SheetSection
         title="States"
-        description="AuthField itself in each state, in both themes. Focus is forced on with the same shadow a focused field gets, so it shows without a click; click any field to compare."
+        description="AuthField itself in each state, in both themes. Focus is forced on with what a focused field draws, the card surface and the page's 1px outline, so it shows without a click; click any field to compare."
       >
         <Sheet>
           {(theme) => (
@@ -337,9 +352,10 @@ export default function Input() {
                 term: "Label",
                 text: (
                   <>
-                    <Mono>mb-1.5</Mono> above the input, in a row with the aside (
-                    <Mono>flex items-baseline justify-between gap-3</Mono>). AuthField uses its <Mono>id</Mono> as the
-                    field&rsquo;s <Mono>name</Mono> too.
+                    <Mono>mb-1</Mono> above the input, in a row with the aside (
+                    <Mono>flex items-baseline justify-between gap-3 px-2.5</Mono>), the label itself{" "}
+                    <Mono>text-body text-muted-foreground</Mono>. AuthField uses its <Mono>id</Mono> as the field&rsquo;s{" "}
+                    <Mono>name</Mono> too.
                   </>
                 ),
               },
@@ -357,7 +373,7 @@ export default function Input() {
                 term: "Input",
                 text: (
                   <>
-                    <Mono>inputClass</Mono>, plus the focus ring, and the danger ring when there&rsquo;s a note.
+                    <Mono>inputClass</Mono>, plus <Mono>aria-invalid:ring-destructive/50</Mono> when there&rsquo;s a note.
                   </>
                 ),
               },
@@ -365,7 +381,7 @@ export default function Input() {
                 term: "Note",
                 text: (
                   <>
-                    <Mono>mt-1.5</Mono> under the input, <Mono>text-caption-lg text-danger-foreground</Mono>, a{" "}
+                    <Mono>mt-1 px-2.5</Mono> under the input, <Mono>text-caption text-destructive</Mono>, a{" "}
                     <Mono>size-3.5</Mono> WarningCircle, id <Mono>{"{id}-error"}</Mono>. It wraps; it never truncates.
                   </>
                 ),
@@ -375,7 +391,7 @@ export default function Input() {
                 text: (
                   <>
                     Fields stacked <Mono>space-y-4</Mono> (16px), the notice and the submit in the same stack; the
-                    submit is a <Mono>w-full</Mono> Button at size <Mono>base</Mono>, as tall as the fields.
+                    submit is a <Mono>w-full</Mono> primary Button at size <Mono>base</Mono>.
                   </>
                 ),
               },
@@ -395,11 +411,11 @@ export default function Input() {
   error={check.errors.email}
 />`}
             incorrect={{
-              why: "the placeholder is the only label, 12px text on every screen so iPhones zoom into it, and a ring as its edge",
+              why: "the placeholder is the only label, 12px text on every screen so iPhones zoom into it, and a white fill lifted by a shadow (the old recipe) in place of the one stroke",
               code: `<input
   type="email"
   placeholder="Email address"
-  className="block h-10 w-full rounded-lg bg-white px-3 text-xs shadow-sm ring-1 ring-base-200 focus:ring-2 focus:ring-accent-500 focus:outline-none"
+  className="block h-10 w-full rounded-lg bg-surface-3 px-3 text-xs shadow-sm focus:outline-hidden"
 />`,
             }}
           />
@@ -469,9 +485,10 @@ export default function Input() {
                 term: "AuthNotice",
                 text: (
                   <>
-                    <Mono>rounded-lg bg-danger-subtle px-3 py-2.5 text-body-sm text-danger-foreground</Mono> with a{" "}
-                    <Mono>size-4</Mono> WarningCircle, and <Mono>role=&quot;alert&quot;</Mono>, so it&rsquo;s read out
-                    the moment it appears. It may end with one link that fixes it (Get a new link, on reset password).
+                    <Mono>rounded-[20px] bg-danger-subtle px-3.5 py-2.5 text-body text-danger-foreground</Mono> (the
+                    field&rsquo;s pill corners, so the two sit as one stack) with a <Mono>size-4</Mono> WarningCircle, and{" "}
+                    <Mono>role=&quot;alert&quot;</Mono>, so it&rsquo;s read out the moment it appears. It may end with
+                    one link that fixes it (Get a new link, on reset password).
                   </>
                 ),
               },
@@ -631,7 +648,7 @@ const error = check.any ? null : state.error;
 
       <SheetSection
         title="Fields outside the auth forms"
-        description="The dashboard's fields were built by hand from this recipe, at its own sizes and type role, before Field and Input existed; a few differ on purpose. What differs and why, for whoever moves them onto Field and Input. Don't copy them into new code."
+        description="Where the rest of the site's text entry stands: most of it is on the shared Field and Input now, and what isn't is listed here with why, for whoever moves it over. Don't copy any of it into new code."
       >
         <Rules
           items={[
@@ -639,9 +656,11 @@ const error = check.any ? null : state.error;
               term: "Review pages",
               text: (
                 <>
-                  Moved onto Field, Input and Textarea (FieldGroup over each set) on 2026-10-19. Only the selects are
-                  still the recipe: review/parts.tsx&rsquo;s <Mono>selectClass</Mono>, built from{" "}
-                  <Mono>fieldParts</Mono> in the dashboard&rsquo;s <Mono>text-body</Mono>, until there&rsquo;s a Select.
+                  On Field, Input and Textarea (FieldGroup over each set) since 2026-10-19. Only the selects are
+                  still hand-built: review/parts.tsx&rsquo;s <Mono>selectClass</Mono>, built from{" "}
+                  <Mono>fieldParts</Mono>, which is still the old Interfere recipe (a white fill with{" "}
+                  <Mono>shadow-sm</Mono> as its edge, 40px, <Mono>rounded-lg</Mono>) in the dashboard&rsquo;s{" "}
+                  <Mono>text-body</Mono>. The last of that recipe in the dashboard, until there&rsquo;s a Select.
                 </>
               ),
             },
@@ -649,9 +668,9 @@ const error = check.any ? null : state.error;
               term: "Save menu",
               text: (
                 <>
-                  The new board&rsquo;s name in boards.tsx: the parts at 32px (<Mono>h-8</Mono>) beside a 32px Create,
-                  so the form fills the 44px row it replaces. Its label is <Mono>sr-only</Mono>, since the row it opened
-                  from said New board.
+                  The new board&rsquo;s name in boards.tsx is the shared <Mono>Input</Mono> at its default size (28px)
+                  beside a 28px Create Button, so the form fills the menu row it replaces. It has no visible label, since
+                  the row it opened from said New board: <Mono>aria-label=&quot;Board name&quot;</Mono> names it.
                 </>
               ),
             },
@@ -659,10 +678,11 @@ const error = check.any ? null : state.error;
               term: "New board",
               text: (
                 <>
-                  NewBoardDialog.tsx sets the name large and centred (<Mono>font-display text-display font-light</Mono>,
-                  28px, so it needs no touch size) over a two-line description. Both stay transparent until focus fills
-                  them with <Mono>bg-card</Mono>, with no ring, and their labels are <Mono>sr-only</Mono> because the
-                  dialog&rsquo;s title names them: the dialog has one subject, and the name is it.
+                  NewBoardDialog.tsx keeps the name and the description as its own fields on purpose: they are the text
+                  in the dialog, not a form, so the name is set large and centred (
+                  <Mono>font-display text-display font-light</Mono>, 28px, so it needs no touch size) over a two-line
+                  description, both transparent until focus fills them with <Mono>bg-card</Mono>, with no ring, and their
+                  labels <Mono>sr-only</Mono> because the dialog&rsquo;s title names them. Its share switch is in a Field.
                 </>
               ),
             },
@@ -670,11 +690,12 @@ const error = check.any ? null : state.error;
               term: "Search pill",
               text: (
                 <>
-                  SearchBox.tsx: a 52px pill (<Mono>h-13 rounded-full</Mono>) whose label wraps the icon and a{" "}
+                  SearchBox.tsx: a 52px pill (<Mono>h-13 rounded-full</Mono>) on the old white surface (
+                  <Mono>bg-component-on-container-subtle shadow-sm</Mono>) whose label wraps the icon and a{" "}
                   <Mono>type=&quot;search&quot;</Mono> input, with an <Mono>sr-only</Mono> &ldquo;Search the
                   library&rdquo; and <Mono>autoComplete=&quot;off&quot;</Mono>. Its 2px ring is an inset shadow on{" "}
                   <Mono>focus-within</Mono>, because the BorderBeam&rsquo;s wrapper clips everything outside the pill,
-                  and Clear puts focus back in the field. The one field with the beam.
+                  and Clear puts focus back in the field. The one field with the beam, and built for that one place.
                 </>
               ),
             },
@@ -682,8 +703,10 @@ const error = check.any ? null : state.error;
               term: "Settings",
               text: (
                 <>
-                  The token name in ApiTokens.tsx is 44px (<Mono>h-11</Mono>) in <Mono>text-body</Mono>, the
-                  dashboard&rsquo;s settings size, with its label above in <Mono>text-caption</Mono>.
+                  The token name in ApiTokens.tsx is the shared <Mono>Input</Mono> at <Mono>size=&quot;lg&quot;</Mono>{" "}
+                  (28px, the same as md; the name is kept for the call site), with a hand-set label above it (
+                  <Mono>text-caption font-medium text-secondary-foreground</Mono>)
+                  rather than a Field; moving it into a Field would give it the muted label and the inset for free.
                 </>
               ),
             },
@@ -691,9 +714,10 @@ const error = check.any ? null : state.error;
               term: "Template",
               text: (
                 <>
-                  sites/SearchDialog.tsx (the template&rsquo;s search) uses the recipe&rsquo;s parts at 36px (
-                  <Mono>h-9</Mono>) in <Mono>text-caption-lg</Mono>, 12px on desktop and 16px on touch screens. Still
-                  wrong: its placeholder (&ldquo;Search posts...&rdquo;) is its only label, with no{" "}
+                  sites/SearchDialog.tsx (the template&rsquo;s search) is the last copy of the old Interfere recipe on
+                  the site: a white fill with <Mono>shadow-sm</Mono> at 36px (<Mono>h-9 rounded-md</Mono>) in{" "}
+                  <Mono>text-caption-lg</Mono>, 12px on desktop and 16px on touch screens, with a 2px brand shadow on
+                  focus. Still wrong: its placeholder (&ldquo;Search posts...&rdquo;) is its only label, with no{" "}
                   <Mono>&lt;label&gt;</Mono> or <Mono>aria-label</Mono>. Moving it onto SearchField fixes both.
                 </>
               ),
@@ -702,10 +726,11 @@ const error = check.any ? null : state.error;
               term: "When copied",
               text: (
                 <>
-                  Every hand-built copy needs <Mono>border-0</Mono> and <Mono>focus:ring-0</Mono> (without them
-                  @tailwindcss/forms draws its grey border, and on focus a 1px blue ring over the brand one that turned it
-                  purple) and <Mono>pointer-coarse:text-[16px]</Mono>. Each copy is one more place for these to go
-                  missing, which is why new code uses the components.
+                  Every hand-built copy of the recipe needs <Mono>border-0</Mono> and <Mono>focus:ring-border</Mono>{" "}
+                  (without them @tailwindcss/forms draws its grey border, and on focus turns the ring blue) and{" "}
+                  <Mono>pointer-coarse:text-[16px]</Mono>, and gets the page&rsquo;s focus outline only if it
+                  doesn&rsquo;t hide it. Each copy is one more place for these to go missing, which is why new code uses
+                  the components.
                 </>
               ),
             },

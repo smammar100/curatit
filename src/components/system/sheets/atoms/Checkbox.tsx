@@ -6,12 +6,13 @@ import Field from "@/components/fundations/molecules/Field";
 import { Code, Flow, Matrix, Mono, Rules, Sheet, SheetHeader, SheetSection, type Theme } from "../../SheetParts";
 import { MixedCheckbox, SelectAllDemo } from "../../demos/FormDemos";
 
-// Keyboard focus forced on: the outline the box draws on focus-visible
-const FOCUS = "[&_input]:outline-2 [&_input]:outline-offset-2 [&_input]:outline-brand-border-focus";
+// Keyboard focus forced on: the page's 1px focus outline, 2px out, as the box draws it on
+// focus-visible
+const FOCUS = "[&_input]:outline-1 [&_input]:outline-offset-2 [&_input]:outline-[color:var(--focus-ring)]";
 
 const SIZES = [
-  { size: "sm", sub: "16px · dense lists, table rows" },
-  { size: "md", sub: "20px · the default" },
+  { size: "sm", sub: "14px · radius 4 · dense lists, table rows" },
+  { size: "md", sub: "16px · radius 5 · the default" },
 ] as const;
 
 function states(theme: Theme, size: "sm" | "md") {
@@ -34,8 +35,9 @@ export default function CheckboxSheet() {
   return (
     <div className="flex flex-col gap-16">
       <SheetHeader title="Checkbox">
-        A real checkbox that draws itself: a white box with the default shadow and a strong hairline, filled with the
-        primary button&rsquo;s ink when it&rsquo;s checked, Phosphor&rsquo;s Check or a bar over it. For choices that
+        A real checkbox drawn, since 2026-10-23, as Fluid Functionalism&rsquo;s CheckboxItem draws its square: a 1.5px
+        stroke of the one border on no fill, darker under the pointer; checked, the stroke goes and the check alone
+        marks the state, drawing itself in 80ms and retracting in 40ms; a bar for some of a group. For choices that
         don&rsquo;t depend on each other, and for the one &ldquo;I agree&rdquo; a form reads when it&rsquo;s sent.
       </SheetHeader>
 
@@ -59,9 +61,25 @@ export default function CheckboxSheet() {
             term: "The set",
             text: (
               <>
-                <Mono>size</Mono> <Mono>md</Mono> (20px, the default) or <Mono>sm</Mono> (16px, for dense lists and table
-                rows). Nothing else exists: no colours, no round one (that&rsquo;s a radio, which the system doesn&rsquo;t
-                have; one of a few is Segmented).
+                <Mono>size</Mono> <Mono>md</Mono> (16px, <Mono>rounded-[5px]</Mono>, the default) or <Mono>sm</Mono>{" "}
+                (14px, <Mono>rounded-[4px]</Mono>, for dense lists and table rows: the compact step&rsquo;s icon size).
+                Nothing else exists: no colours, no round one (that&rsquo;s a radio, which the system doesn&rsquo;t have;
+                one of a few is Segmented).
+              </>
+            ),
+          },
+          {
+            term: "Drawn",
+            text: (
+              <>
+                The stroke is an inset shadow, so it can be 1.5px and go transparent:{" "}
+                <Mono className="wrap-anywhere">shadow-[inset_0_0_0_1.5px_var(--border)]</Mono> at rest, the muted ink
+                under the pointer, transparent when checked, <Mono>--destructive</Mono> when invalid. The check is a 2px
+                stroke of the ink (<Mono>text-foreground</Mono>) on a motion path: it draws from the corner over 80ms
+                (ease out) and retracts over 40ms (ease in), at once under reduced motion; a box checked at mount shows
+                the finished check. The bar is <Mono>bg-foreground</Mono>, 2px tall, 6px or 8px wide. Disabled is half
+                opacity, box and mark. In forced-colours mode it hands back to the system&rsquo;s own checkbox (
+                <Mono>forced-colors:appearance-auto</Mono>).
               </>
             ),
           },
@@ -91,9 +109,9 @@ export default function CheckboxSheet() {
             term: "Touch",
             text: (
               <>
-                The hit area reaches 44px on touch screens through an invisible <Mono>::after</Mono>. Field&rsquo;s inline
-                rows grow to 44px there, so neighbouring boxes never share a tap; a list built without Field spaces its
-                boxes 44px apart.
+                The hit area reaches 44px on touch screens through an invisible <Mono>::after</Mono> (15px out round the
+                14px box, 14px round the 16px one). Field&rsquo;s inline rows grow to 44px there, so neighbouring boxes
+                never share a tap; a list built without Field spaces its boxes 44px apart.
               </>
             ),
           },
@@ -111,9 +129,9 @@ export default function CheckboxSheet() {
             term: "Gap",
             text: (
               <>
-                The unchecked edge is <Mono>ring-border-strong</Mono>, about 1.4:1 on white. WCAG asks 3:1 for a
-                control&rsquo;s boundary, and no border token reaches it yet; the label beside the box is what carries it
-                until one does.
+                The unchecked stroke is the one border, 12% of the ink, about 1.3:1 on the page. WCAG asks 3:1 for a
+                control&rsquo;s boundary; the stroke reaches it only under the pointer (the muted ink), so the label
+                beside the box is what carries it. Checked, the 2px check in the ink is well over.
               </>
             ),
           },
@@ -131,7 +149,7 @@ export default function CheckboxSheet() {
 
       <SheetSection
         title="Sizes and states"
-        description="Each size in every state. Keyboard focus is forced on here with the outline it draws; tab onto any box to compare. The red edge appears only once a form has been tried."
+        description="Each size in every state. Keyboard focus is forced on here with the page's 1px outline; tab onto any box to compare, and point at an unchecked one to see the stroke darken. The red stroke appears only once a form has been tried."
       >
         <Sheet>
           {(theme) => (
@@ -146,7 +164,7 @@ export default function CheckboxSheet() {
 
       <SheetSection
         title="With labels"
-        description="The real use: each box in an inline Field. Click a label or the gap beside the box. A hint sits under its label; the error under the one that needs it."
+        description="The real use: each box in an inline Field. Click a label or the gap beside the box, and watch the check draw. A hint sits under its label; the error under the one that needs it."
       >
         <Sheet split>
           {(theme) => (
@@ -186,11 +204,11 @@ export default function CheckboxSheet() {
   <Checkbox checked={all} indeterminate={some} onCheckedChange={() => setPicked(all ? [] : CATEGORIES)} />
 </Field>`}
             incorrect={{
-              why: "the forms plugin's box recoloured by hand: a brand fill (brand is for interaction) and no disabled, invalid or touch states",
+              why: "the forms plugin's box recoloured by hand: a filled box (the system's keeps no fill and drops the stroke when checked), no disabled, invalid or touch states, and no check that draws",
               code: `<label className="flex items-start gap-3">
   <input
     type="checkbox"
-    className="mt-0.5 size-4 rounded border-border-strong bg-transparent text-brand-solid checked:bg-current focus:ring-0 …"
+    className="mt-0.5 size-4 rounded border-border bg-transparent text-foreground checked:bg-current focus:ring-0 …"
   />
   <span>Briefs</span>
 </label>`,

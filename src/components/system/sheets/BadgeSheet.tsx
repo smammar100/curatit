@@ -1,6 +1,7 @@
-// /system/badge: Badge (src/components/fundations/elements/Badge.tsx), every variant, size and
-// shape live in both themes, the places it's used, and when a badge isn't the answer. Every
-// class is written out in full (never built from parts), so Tailwind sees it
+// /system/badge: Badge (src/components/fundations/elements/Badge.tsx), since 2026-10-23 a wrapper
+// over Fluid Functionalism's badge (src/components/ui/badge.tsx): every variant and size live in
+// both themes, the places it's used, and when a badge isn't the answer. Every class is written out
+// in full (never built from parts), so Tailwind sees it
 import type { ComponentProps, ReactNode } from "react";
 import Badge from "@/components/fundations/elements/Badge";
 import Text from "@/components/fundations/elements/Text";
@@ -8,97 +9,100 @@ import { Code, Flow, Matrix, Mono, Rules, Sheet, SheetHeader, SheetSection } fro
 
 type Variant = NonNullable<ComponentProps<typeof Badge>["variant"]>;
 
-// The six variants (Badge.tsx's `variants`), most used first: their fill and text tokens, and
-// where each one is used today
+// The six variants (Badge.tsx's `variants`), most used first: how each is drawn (the library's
+// own solid look sets the fill and the ink as inline styles; the wrapper's variants replace the
+// fill with a style of their own, and outline adds a class), and where each one is used today
 const VARIANTS: { variant: Variant; fill: string; text: string; use: string }[] = [
   {
     variant: "default",
-    fill: "bg-component",
-    text: "text-secondary-foreground",
-    use: "The default, Beta included: both navigations, McpSection, /agents, a client's status on /docs/mcp, a token's scopes, the count in the account menu",
+    fill: "background-color: var(--accent)",
+    text: "color: var(--foreground)",
+    use: "The default, Beta included: both navigations, McpSection, /agents, a client's status on /docs/mcp, a token's scopes, the count in the account menu. The library's neutral fill, the same grey as the switch's off track",
   },
   {
     variant: "outline",
-    fill: "ring-border-strong",
-    text: "text-secondary-foreground",
-    use: "The plain states in a status row, beside inverted and danger ones: Needs review, Not public, Written by AI (review/parts.tsx)",
+    fill: "ring-1 ring-inset ring-border · background-color: transparent",
+    text: "color: var(--foreground)",
+    use: "The plain states in a status row, beside inverted and danger ones: Needs review, Not public, Written by AI (review/parts.tsx). The ring is the one stroke colour, inset so it never widens the box",
   },
   {
     variant: "inverted",
-    fill: "bg-inverted-solid",
-    text: "text-on-inverted-foreground",
-    use: "What's settled or live: Approved and Public on the review page; a count standing alone at the end of a row, the insights on a slide (SlideBreakdown.tsx)",
+    fill: "background-color: var(--foreground)",
+    text: "color: var(--background)",
+    use: "What's settled or live: Approved and Public on the review page; a count standing alone at the end of a row, the insights on a slide (SlideBreakdown.tsx). The ink, like the primary button",
   },
   {
     variant: "danger",
-    fill: "bg-danger-subtle",
-    text: "text-danger-foreground",
-    use: "Something refused or incomplete, said in words: Rejected, Partial: 3 of 7 slides (review/parts.tsx)",
+    fill: "background-color: color-mix(in srgb, var(--color-danger-solid) 15%, var(--background))",
+    text: "color: var(--foreground)",
+    use: "Something refused or incomplete, said in words: Rejected, Partial: 3 of 7 slides (review/parts.tsx). The library's tinted look: 15% of the red mixed into the page, so one colour sits right in both themes",
   },
   {
     variant: "brand",
-    fill: "bg-brand-subtle",
-    text: "text-on-brand-subtle-foreground",
-    use: "Not used yet. Kept for a brand moment: Curatit's own news, on the page that announces it, one per screen",
+    fill: "background-color: color-mix(in srgb, var(--color-brand-solid) 15%, var(--background))",
+    text: "color: var(--foreground)",
+    use: "Not used yet. Kept for a brand moment: Curatit's own news, on the page that announces it, one per screen. The same tint recipe with the terracotta",
   },
   {
     variant: "transparent",
-    fill: "bg-transparent",
-    text: "text-secondary-foreground",
+    fill: "background-color: transparent",
+    text: "color: var(--foreground)",
     use: "Not used yet: a badge's box and type with no fill",
   },
 ];
 
-// The three sizes (Badge.tsx's `sizes` and `radius`), each beside the text it sits with in a real use
-const SIZES: { size: "sm" | "md" | "lg"; px: string; box: string; type: string; leading: string; radius: string; beside: ReactNode; use: string }[] = [
+// The three sizes (Badge.tsx's `sizes`), all on the library's compact step, each beside the text it sits
+// with in a real use. The classes are the library's `badgeVariants` for the step; the radius is
+// the shape context's pill
+const SIZES: { size: "sm" | "md" | "lg"; px: string; step: string; box: string; type: string; leading: string; beside: ReactNode; use: string }[] = [
   {
     size: "sm",
-    px: "16px",
-    box: "h-4 px-1.5",
-    type: "text-caption-base",
-    leading: "11 / 16",
-    radius: "rounded-sm",
+    px: "20px",
+    step: "compact",
+    box: "h-5 px-2 gap-1",
+    type: "text-[length:var(--fs-caption-compact,11px)]",
+    leading: "11 / 14",
     beside: (
       <span className="inline-flex items-center gap-1.5 text-body-sm whitespace-nowrap text-secondary-foreground">
         AI integration
         <Badge size="sm">Beta</Badge>
       </span>
     ),
-    use: "Inside a link or a dense table cell: the navigations' Beta (beside 13px links on the bar and 18px ones in the phone menu, so the chip is the same in both), a token's scopes (ApiTokens.tsx)",
+    use: "Inside a link or a dense table cell: the navigations' Beta (beside 13px links on the bar and 18px ones in the phone menu, so the chip is the same in both), a token's scopes (ApiTokens.tsx). The same as md",
   },
   {
     size: "md",
     px: "20px",
-    box: "h-5 px-1.5",
-    type: "text-caption-lg",
-    leading: "12 / 16",
-    radius: "rounded-sm",
+    step: "compact",
+    box: "h-5 px-2 gap-1",
+    type: "text-[length:var(--fs-caption-compact,11px)]",
+    leading: "11 / 14",
     beside: (
       <span className="flex flex-wrap items-center gap-2">
         <span className="text-body-base font-medium text-primary-foreground">Claude Desktop</span>
         <Badge>Through the bridge</Badge>
       </span>
     ),
-    use: "The default. Beside 13 to 15px text: the eyebrow on /agents, a client card's title (/docs/mcp), the count in the account menu; or alone above a heading (McpSection.tsx)",
+    use: "The default. Beside 13 to 15px text: the eyebrow on /agents, a client card's title (/docs/mcp), the count in the account menu; or alone above a heading (McpSection.tsx). The same as sm: both are the compact step",
   },
   {
     size: "lg",
-    px: "24px",
-    box: "h-6 px-2",
-    type: "text-body-sm",
-    leading: "13 / 20",
-    radius: "rounded-md",
+    px: "20px",
+    step: "compact",
+    box: "h-5 px-2 gap-1",
+    type: "text-[length:var(--fs-caption-compact,11px)]",
+    leading: "11 / 14",
     beside: (
       <span className="flex flex-wrap items-center gap-1.5">
-        <Badge size="lg" shape="pill" variant="outline">
+        <Badge size="lg" variant="outline">
           Needs review
         </Badge>
-        <Badge size="lg" shape="pill" variant="outline">
+        <Badge size="lg" variant="outline">
           Written by AI
         </Badge>
       </span>
     ),
-    use: "A status on its own row, with round ends: the review pages (review/parts.tsx's Pill)",
+    use: "A status on its own row: the review pages (review/parts.tsx's Pill). The same chip as md, the name kept for call sites",
   },
 ];
 
@@ -201,20 +205,20 @@ const USES: { file: string; where: string; code: string; specimen: ReactNode }[]
   },
   {
     file: "review/parts.tsx",
-    where: "A post's status row on the review page (Pill: outline, inverted or danger)",
+    where: "A post's status row on the review page (Pill: outline, inverted or danger). It still passes shape=\"pill\", which is accepted and ignored",
     code: '<Badge size="lg" shape="pill" variant="outline">',
     specimen: (
       <span className="flex flex-wrap items-center gap-1.5">
-        <Badge size="lg" shape="pill" variant="outline">
+        <Badge size="lg" variant="outline">
           Needs review
         </Badge>
-        <Badge size="lg" shape="pill" variant="outline">
+        <Badge size="lg" variant="outline">
           Written by AI
         </Badge>
-        <Badge size="lg" shape="pill" variant="inverted">
+        <Badge size="lg" variant="inverted">
           Public
         </Badge>
-        <Badge size="lg" shape="pill" variant="danger">
+        <Badge size="lg" variant="danger">
           Partial: 3 of 7 slides
         </Badge>
       </span>
@@ -223,13 +227,12 @@ const USES: { file: string; where: string; code: string; specimen: ReactNode }[]
   {
     file: "SlideBreakdown.tsx",
     where: "How many insights rest on a slide, at the end of its row. Its label is an aria-label on the span, which a span with no role may not carry; moving it into a visually hidden span is requested of its owner (see Counts)",
-    code: '<Badge variant="inverted" shape="pill" aria-label={`${cited} insights point here`} title={…} className="min-w-5 justify-center tabular-nums">',
+    code: '<Badge variant="inverted" aria-label={`${cited} insights point here`} title={…} className="min-w-5 justify-center tabular-nums">',
     specimen: (
       <span className="flex w-full items-center justify-between gap-3 text-body font-medium text-primary-foreground">
         Gallery frame
         <Badge
           variant="inverted"
-          shape="pill"
           aria-label="2 insights point here"
           title="2 insights point here"
           className="min-w-5 justify-center tabular-nums"
@@ -245,8 +248,9 @@ export default function BadgeSheet() {
   return (
     <div className="flex flex-col gap-16">
       <SheetHeader title="Badge">
-        A small label for the state of the thing beside it: Beta, a status, a scope. Six variants at
-        16, 20 and 24px, with corners or round ends. It never takes a click.
+        A small label for the state of the thing beside it: Beta, a status, a scope. Fluid Functionalism&rsquo;s badge
+        (installed 2026-10-23) behind the site&rsquo;s names: a pill, 20px tall on the compact step and 24px on the
+        default, its text always the ink, with six variants that change only the fill. It never takes a click.
       </SheetHeader>
 
       <Rules
@@ -278,8 +282,8 @@ export default function BadgeSheet() {
             term: "Default",
             text: (
               <>
-                <Mono>{"<Badge>"}</Mono>: the <Mono>default</Mono> variant at <Mono>md</Mono> (20px), radius by size.
-                That&rsquo;s the Beta chip on the homepage and /agents. Change only what a rule here names.
+                <Mono>{"<Badge>"}</Mono>: the <Mono>default</Mono> variant at <Mono>md</Mono> (20px, the compact
+                step). That&rsquo;s the Beta chip on the homepage and /agents. Change only what a rule here names.
               </>
             ),
           },
@@ -289,8 +293,10 @@ export default function BadgeSheet() {
               <>
                 Variants <Mono>default</Mono>, <Mono>outline</Mono>, <Mono>inverted</Mono>, <Mono>danger</Mono>,{" "}
                 <Mono>brand</Mono>, <Mono>transparent</Mono>; sizes <Mono>sm</Mono>, <Mono>md</Mono>,{" "}
-                <Mono>lg</Mono>; <Mono>shape=&quot;pill&quot;</Mono> or corners. Nothing else exists: there&rsquo;s
-                no warning or success badge, and no size above 24px. An unlisted variant is a bug.
+                <Mono>lg</Mono>. Nothing else exists: there&rsquo;s no warning or success badge, no size above 24px,
+                and the library&rsquo;s seventeen hue colours and its dot look aren&rsquo;t reachable through Badge.{" "}
+                <Mono>shape</Mono> is accepted for older call sites and ignored: every badge is a pill. An unlisted
+                variant is a bug.
               </>
             ),
           },
@@ -299,7 +305,7 @@ export default function BadgeSheet() {
             text: (
               <>
                 Badge is a <Mono>span</Mono> with no hover, press or focus state. It takes a span&rsquo;s
-                attributes, so <Mono>onClick</Mono> type-checks, and makes a 16 to 24px target that a keyboard
+                attributes, so <Mono>onClick</Mono> type-checks, and makes a 20 to 24px target that a keyboard
                 can&rsquo;t reach and a thumb barely hits (44px is the touch floor). Inside a link it&rsquo;s part of
                 the label, and the link takes the click: the navigations&rsquo; Beta.
               </>
@@ -309,10 +315,23 @@ export default function BadgeSheet() {
             term: "Size",
             text: (
               <>
-                A badge&rsquo;s text is a step smaller than the text it labels (11, 12 and 13px at <Mono>sm</Mono>,{" "}
-                <Mono>md</Mono>, <Mono>lg</Mono>) and its box no taller than that text&rsquo;s line, so it reads as a
-                note on the label, not a second label. <Mono>md</Mono> beside 13 to 15px text; <Mono>sm</Mono>{" "}
-                inside a link or beside 12px; <Mono>lg</Mono> for a status on its own row.
+                One step. <Mono>sm</Mono>, <Mono>md</Mono> and <Mono>lg</Mono> are all the compact step, 20px with 11px
+                type; the names are kept for call sites and change nothing (the library&rsquo;s default step, 24px with
+                12px, goes unused). A badge&rsquo;s text is a step or two smaller
+                than the text it labels and its box no taller than that text&rsquo;s line, so it reads as a note on
+                the label, not a second label. <Mono>md</Mono> beside 13 to 15px text; <Mono>sm</Mono> inside a link
+                (the same chip, named for where it sits); <Mono>lg</Mono> for a status on its own row.
+              </>
+            ),
+          },
+          {
+            term: "The ink",
+            text: (
+              <>
+                The text is always <Mono>--foreground</Mono> (the page on <Mono>inverted</Mono>), the library&rsquo;s
+                rule: a tint carries the meaning and the words keep their contrast on every fill. The brand and
+                danger fills mix 15% of the colour into the page (<Mono>color-mix(in srgb, … 15%, var(--background))</Mono>),
+                so the same colour sits at the right depth in both themes.
               </>
             ),
           },
@@ -336,8 +355,8 @@ export default function BadgeSheet() {
             text: (
               <>
                 Always with words that say what was refused or is missing: &ldquo;Rejected&rdquo;, &ldquo;Partial: 3
-                of 7 slides&rdquo;. Never a red number, a dot or an empty badge, and never red for
-                &ldquo;important&rdquo;: red alone says something&rsquo;s wrong, not what.
+                of 7 slides&rdquo;. The words are in the ink, so the red tint behind them is all that says danger:
+                never a red number, a dot or an empty badge, and never red for &ldquo;important&rdquo;.
               </>
             ),
           },
@@ -345,10 +364,11 @@ export default function BadgeSheet() {
             term: "Pill",
             text: (
               <>
-                For a status on its own row (the review pages, at <Mono>lg</Mono>) and a count standing alone at
-                the end of a row (inverted, <Mono>min-w-5 justify-center</Mono>, so one digit sits in a circle: a
-                slide&rsquo;s insights). A count beside the label that names it keeps its corners and the default
-                variant (the account menu&rsquo;s Saved posts), and so do the Beta chips.
+                Every badge is a pill (<Mono>rounded-[20px]</Mono>, the site&rsquo;s shape setting), the review
+                pages&rsquo; statuses and the navigations&rsquo; Beta alike. A count standing alone at the end of a row
+                is inverted with <Mono>min-w-5 justify-center</Mono>, so one digit sits in a circle (a slide&rsquo;s
+                insights); a count beside the label that names it keeps the default variant (the account menu&rsquo;s
+                Saved posts).
               </>
             ),
           },
@@ -370,8 +390,9 @@ export default function BadgeSheet() {
               <>
                 Layout and figures only: <Mono>w-fit</Mono>, <Mono>min-w-5 justify-center</Mono>,{" "}
                 <Mono>tabular-nums</Mono>, <Mono>font-mono</Mono> for a code value, <Mono>font-medium</Mono> on a
-                count. Never a colour, height, padding or radius: <Mono>cx</Mono> doesn&rsquo;t merge, so both
-                classes land and the stylesheet&rsquo;s order picks one. Never <Mono>dark:</Mono>: the tokens flip.
+                count. Never a colour, height, padding or radius: Badge merges with <Mono>cn</Mono> (tailwind-merge),
+                so yours would replace the library&rsquo;s silently, and the fill and ink are inline styles that a
+                class can&rsquo;t reach anyway. Never <Mono>dark:</Mono>: the tokens flip.
               </>
             ),
           },
@@ -380,8 +401,8 @@ export default function BadgeSheet() {
             text: (
               <>
                 Rebuild a badge by hand (the Beta chips once were: 10px type, a solid ring, a status dot). Put a
-                long or unknown value in one: it&rsquo;s <Mono>whitespace-nowrap</Mono> and <Mono>shrink-0</Mono>,
-                so it widens its row instead of wrapping or truncating.
+                long or unknown value in one: it&rsquo;s <Mono>whitespace-nowrap</Mono>, so it widens its row
+                instead of wrapping or truncating.
               </>
             ),
           },
@@ -395,7 +416,7 @@ export default function BadgeSheet() {
  │     with the words (Rejected, Partial: 3 of 7 slides)
  ├── The settled or live state in a status row,
  │   or a count alone at the end of a row
- │   → inverted (a count as a pill)
+ │   → inverted (a count with min-w-5 justify-center)
  │     (Approved, Public, a slide's insights)
  ├── The other states in that row → outline
  │     (Draft, Needs review, Not public)
@@ -405,26 +426,27 @@ export default function BadgeSheet() {
         />
         <Flow
           tree={`Which size?
- ├── Inside a link, or in a dense table cell → sm
- │     (the navigations' Beta, a token's scopes)
- ├── A status on its own row → lg, shape="pill"
- │     (the review pages)
- └── Beside 13 to 15px text, or alone above
-     a heading → md, the default
-       (/agents, /docs/mcp, McpSection)`}
+ ├── A status on its own row → lg (the same
+ │     20px chip, the name kept for the review
+ │     pages' call sites)
+ └── Beside running text, inside a link, in a
+     table cell, or alone above a heading → md,
+     the default (20px, the compact step; sm is
+     the same chip, used where it sits in a link:
+     the navigations' Beta, a token's scopes)`}
         />
       </div>
 
       <SheetSection
         title="Variants and sizes"
-        description="Every variant at every size, with corners and with round ends. The fill and text tokens are under each name; none of them has a hover, press or focus state."
+        description="Every variant at every size, all pills. Under each name is how it's drawn: the fill (an inline style, or outline's ring class) and the ink. None of them has a hover, press or focus state."
       >
         <Sheet>
           {() => (
             <Matrix
               first="minmax(13rem,max-content)"
-              template="repeat(6, max-content) minmax(16rem,1fr)"
-              columns={["sm · 16", "md · 20", "lg · 24", "sm · pill", "md · pill", "lg · pill", "use"]}
+              template="repeat(3, max-content) minmax(16rem,1fr)"
+              columns={["sm · 20", "md · 20", "lg · 24", "use"]}
               rows={VARIANTS.map((v) => ({
                 label: v.variant,
                 sub: (
@@ -443,15 +465,6 @@ export default function BadgeSheet() {
                   <Badge key="lg" variant={v.variant} size="lg">
                     Label
                   </Badge>,
-                  <Badge key="sm-pill" variant={v.variant} size="sm" shape="pill">
-                    Label
-                  </Badge>,
-                  <Badge key="md-pill" variant={v.variant} size="md" shape="pill">
-                    Label
-                  </Badge>,
-                  <Badge key="lg-pill" variant={v.variant} size="lg" shape="pill">
-                    Label
-                  </Badge>,
                   <span key="use" className="text-body-sm text-secondary-foreground">
                     {v.use}
                   </span>,
@@ -466,14 +479,14 @@ export default function BadgeSheet() {
 <Badge>Beta</Badge>
 
 {/* Red carries the words that say what's wrong */}
-<Badge size="lg" shape="pill" variant="danger">Partial: 3 of 7 slides</Badge>`}
+<Badge size="lg" variant="danger">Partial: 3 of 7 slides</Badge>`}
             incorrect={{
-              why: "Beta in terracotta, a colour class beside the variant's, and a red number",
+              why: "Beta in terracotta, a colour class the inline styles ignore, and a red number",
               code: `<Badge variant="brand">Beta</Badge>
 
 <Badge className="bg-accent-100 text-accent-700">Beta</Badge>
 
-<Badge variant="danger" shape="pill">3</Badge>`,
+<Badge variant="danger">3</Badge>`,
             }}
           />
         </div>
@@ -481,24 +494,24 @@ export default function BadgeSheet() {
 
       <SheetSection
         title="Sizes beside text"
-        description="Each size with the text it sits beside in a real use. The badge's type is always a step below its neighbour's, and its box no taller than that line."
+        description="Each size with the text it sits beside in a real use. The box and type are the library's for the step (badgeVariants); the label inside is cap-trimmed (text-box: trim-both cap alphabetic) so it sits centred in the fixed height."
       >
         <Sheet>
           {() => (
             <Matrix
               first="minmax(5rem,max-content)"
-              template="minmax(7rem,max-content) minmax(9rem,max-content) max-content minmax(16rem,max-content) minmax(16rem,1fr)"
-              columns={["box", "type", "radius", "beside", "used on"]}
+              template="minmax(6rem,max-content) minmax(7rem,max-content) minmax(9rem,max-content) minmax(16rem,max-content) minmax(16rem,1fr)"
+              columns={["step", "box", "type", "beside", "used on"]}
               rows={SIZES.map((s) => ({
                 label: s.size,
                 sub: s.px,
                 cells: [
+                  <Mono key="step">{s.step}</Mono>,
                   <Mono key="box">{s.box}</Mono>,
                   <span key="type" className="flex flex-col">
                     <Mono>{s.type}</Mono>
                     <Mono>{s.leading}</Mono>
                   </span>,
-                  <Mono key="radius">{s.radius}</Mono>,
                   <span key="beside">{s.beside}</span>,
                   <span key="use" className="text-body-sm text-secondary-foreground">
                     {s.use}
@@ -512,7 +525,7 @@ export default function BadgeSheet() {
 
       <SheetSection
         title="In use"
-        description="Every Badge the site and the dashboard show today, drawn with its call site's classes. The Beta chips are the same default badge everywhere: sm inside the navigations' links, md on a page."
+        description="Every Badge the site and the dashboard show today, drawn with its call site's classes. The Beta chips are the same default badge everywhere: sm inside the navigations' links, md on a page, and the two are one size."
       >
         <Sheet>
           {() => (
@@ -580,9 +593,9 @@ export default function BadgeSheet() {
  │    ├── On an icon button → the count bubble (Header.tsx),
  │    │     with the number in the button's aria-label
  │    ├── Beside the label that names it → <Badge className="tabular-nums">,
- │    │     default, corners (the account menu's Saved posts)
- │    └── Alone at the end of a row → inverted, shape="pill"
- │          (SlideBreakdown.tsx's insights)
+ │    │     default (the account menu's Saved posts)
+ │    └── Alone at the end of a row → inverted,
+ │          min-w-5 justify-center (SlideBreakdown.tsx's insights)
  ├── Is it a value of open length: a trait, an attribute?
  │     → a tag: the breakdown's chip (CreativeBreakdown.tsx,
  │       h-7 rounded-full bg-card text-caption), which truncates
@@ -600,7 +613,7 @@ export default function BadgeSheet() {
 <Button size="xxs" variant="muted" onClick={clear}>Clear</Button>`}
             incorrect={{
               why: "a span with a click: no focus, no keyboard, 20px to tap",
-              code: `<Badge onClick={clear} className="cursor-pointer hover:bg-component-hover">Clear</Badge>`,
+              code: `<Badge onClick={clear} className="cursor-pointer hover:bg-hover">Clear</Badge>`,
             }}
           />
           <Code

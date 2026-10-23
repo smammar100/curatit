@@ -1,7 +1,10 @@
 // /system/controls: the shared Segmented and Switch (fundations/elements), live in both themes.
-// The demos that need state of their own are client components in ../demos/ControlDemos.tsx; the
-// uncontrolled specimens are rendered from here, so the sheet stays a server component. Every
-// class is written out in full, never built from parts, so Tailwind sees it
+// Since 2026-10-23 both are wrappers over Fluid Functionalism: Segmented over its Tabs
+// (src/components/ui/tabs.tsx, the library's segmented control), Switch over its Switch
+// (src/components/ui/switch.tsx). The demos that need state of their own are client components in
+// ../demos/ControlDemos.tsx; the uncontrolled specimens are rendered from here, so the sheet stays
+// a server component. Every class is written out in full, never built from parts, so Tailwind
+// sees it
 import type { ReactNode } from "react";
 import Segmented, { type SegmentedOption } from "@/components/fundations/elements/Segmented";
 import CircleHalf from "@/components/fundations/icons/CircleHalf";
@@ -11,8 +14,6 @@ import { Code, Flow, Matrix, Mono, Rules, Sheet, SheetHeader, SheetSection } fro
 import { ControlledDemo, FieldDemo, KeyboardDemo, LabelledSwitch, SwitchState } from "../demos/ControlDemos";
 
 type Size = "sm" | "md" | "lg";
-type Shape = "rounded" | "pill";
-type Tone = "raised" | "inverted";
 
 const TILES: SegmentedOption<string>[] = [
   { value: "small", label: "Small" },
@@ -44,22 +45,20 @@ const GRID: SegmentedOption<string>[] = [
   { value: "small", label: "Small tiles", icon: <Bars count={3} /> },
 ];
 
-// The matrix's rows: every size in both shapes, with the track's height (padding + option + padding)
-const ROWS: { size: Size; shape: Shape; sub: string }[] = [
-  { size: "sm", shape: "rounded", sub: "32px track · the default" },
-  { size: "sm", shape: "pill", sub: "32px track" },
-  { size: "md", shape: "rounded", sub: "40px track" },
-  { size: "md", shape: "pill", sub: "40px track" },
-  { size: "lg", shape: "rounded", sub: "44px track · not beside Button lg" },
-  { size: "lg", shape: "pill", sub: "44px track" },
+// The matrix's rows: the three size names, all on the library's compact step, with the track's height
+// (padding + option + padding). Shape and tone are no longer rows: every control is a pill with
+// the raised thumb
+const ROWS: { size: Size; sub: string }[] = [
+  { size: "sm", sub: "compact · 28px track, 24px options · the default" },
+  { size: "md", sub: "compact · the same as sm" },
+  { size: "lg", sub: "compact · the same as sm, kept for call sites" },
 ];
 
-// The matrix's columns: both tones, with words and as icons
-const COLUMNS: { tone: Tone; iconOnly: boolean; head: string }[] = [
-  { tone: "raised", iconOnly: false, head: 'tone="raised"' },
-  { tone: "inverted", iconOnly: false, head: 'tone="inverted"' },
-  { tone: "raised", iconOnly: true, head: "iconOnly · raised" },
-  { tone: "inverted", iconOnly: true, head: "iconOnly · inverted" },
+// The matrix's columns: with words, with an icon beside each word, and as icons alone
+const COLUMNS: { kind: "words" | "icons" | "iconOnly"; head: string }[] = [
+  { kind: "words", head: "words" },
+  { kind: "icons", head: "icon + word" },
+  { kind: "iconOnly", head: "iconOnly" },
 ];
 
 function Note({ children }: { children: ReactNode }) {
@@ -77,83 +76,116 @@ function MonoList({ items }: { items: string[] }) {
   );
 }
 
-// Segmented's parts, as Segmented.tsx builds them (sizes, shapes, tones)
+// Segmented's parts, as the library's tabs.tsx builds them for the compact step, the one every
+// size name of Segmented.tsx resolves to
 const PARTS: { part: string; sub?: string; classes: string[]; note: ReactNode }[] = [
   {
     part: "track",
-    classes: ["bg-component", "rounded-lg · pill: rounded-full", "p-0.5 at sm · p-1 at md and lg", "gap-0.5"],
-    note: "The grey groove the options sit in, inline-flex and as wide as its options.",
+    sub: "TabsList",
+    classes: [
+      "relative inline-flex items-center select-none bg-muted",
+      "p-0.5",
+      "rounded-[24px]",
+    ],
+    note: "The muted groove the options sit in, inline-flex and as wide as its options. Padding plus option adds up to the step's control height (28px), so it lines up with the buttons and fields beside it.",
   },
   {
     part: "option",
-    classes: ["h-7 px-3 · h-8 px-3 · h-9 px-3.5", "iconOnly: size-7 · size-8 · size-9", "text-body-sm font-medium"],
-    note: "28, 32 or 36px tall, 13px medium at every size, never wrapping. An icon-only option is a square.",
-  },
-  {
-    part: "thumb",
-    sub: "raised",
-    classes: ["bg-component-on-container-subtle", "shadow-sm", "rounded-md · pill: rounded-full"],
-    note: "A white control lifted by the default shadow. In dark mode the shadow is its inner highlight. In the rounded shape it's rounded-md at every size: right inside sm's 2px padding (8 − 2 = 6), 2px too round inside md's and lg's 4px (8 − 4 = 4 would be rounded-sm). A fix is requested in Segmented.tsx.",
-  },
-  {
-    part: "thumb",
-    sub: "inverted",
-    classes: ["bg-inverted-solid"],
-    note: "The primary button's fill: the loudest thing in its row.",
-  },
-  {
-    part: "labels",
+    sub: "TabItem",
     classes: [
-      "chosen: text-primary-foreground",
-      "inverted: text-on-inverted-foreground",
-      "the rest: text-secondary-foreground",
-      "hover: text-primary-foreground",
+      "relative z-10 flex items-center px-3 cursor-pointer bg-transparent border-none outline-none",
+      "h-6 gap-1",
+      "iconOnly: justify-center px-0 w-6",
     ],
-    note: "The chosen label takes the thumb's ink: primary on raised, on-inverted on inverted. The weight never changes, so nothing reflows.",
+    note: "24px tall, transparent: the pills below it draw every state. An icon-only option is a square, with its label kept for screen readers (sr-only) and as its title.",
   },
   {
-    part: "focus",
-    classes: ["outline-2 outline-offset-2", "outline-brand-border-focus"],
-    note: "On the focused option, from the keyboard only, as on every control.",
-  },
-  {
-    part: "motion",
+    part: "label",
     classes: [
-      "transition-[translate,width,height]",
-      "duration-200 ease-out-quint",
-      "data-snap:transition-none",
-      "motion-reduce:transition-none",
+      "inline-grid whitespace-nowrap",
+      "text-[length:var(--fs-body-compact,12px)] leading-[var(--lh-body-compact,18px)]",
+      "transition-[color,font-variation-settings] duration-80",
     ],
     note: (
       <>
-        The thumb, through <Mono>useThumb</Mono>. It carries <Mono>data-theme-icon</Mono>, so it still slides while the
-        theme switches and every other transition is frozen.
+        The chosen label is semibold through <Mono>fontVariationSettings</Mono> (<Mono>&apos;wght&apos; 550,
+        &apos;opsz&apos; 18</Mono>; the rest <Mono>400, 14</Mono>), and an invisible semibold copy under it reserves
+        the width, so nothing reflows. Chosen or hovered it&rsquo;s <Mono>text-foreground</Mono>, otherwise{" "}
+        <Mono>text-muted-foreground</Mono>, over 80ms.
+      </>
+    ),
+  },
+  {
+    part: "thumb",
+    sub: "the selection",
+    classes: ["absolute pointer-events-none", "bg-surface-4 shadow-surface-4", "rounded-[20px]"],
+    note: (
+      <>
+        A raised surface, not a tint: three steps up the surface ladder from what the control sits on (surface 4 on the
+        page, up to 8 inside a dialog), so it lifts off the muted track in both themes. It travels on{" "}
+        <Mono>spring.moderate</Mono> (160ms, no overshoot) and dims to 0.85 while another option is hovered.
+      </>
+    ),
+  },
+  {
+    part: "hover pill",
+    classes: ["absolute pointer-events-none bg-hover", "rounded-[20px]", "opacity 0.4"],
+    note: (
+      <>
+        Born at the thumb and sliding out to the option under the pointer on <Mono>spring.fast</Mono> (80ms), so the
+        preview reads as leaving the current choice; it follows the nearest option sideways, so the track&rsquo;s padding
+        never leaves it without a target. When the pointer leaves it slides back into the thumb; over the chosen option
+        it fades where it is.
+      </>
+    ),
+  },
+  {
+    part: "icon",
+    classes: ["14px · lg: 16px", "transition-[color,stroke-width] duration-80"],
+    note: "Sized by the library whatever it was given, and coloured with its label: the ink when chosen or hovered, muted otherwise. The stroke-width change is for stroked icons; the site's Phosphor bold files are filled paths, so it shows nothing here.",
+  },
+  {
+    part: "focus",
+    classes: [
+      "absolute pointer-events-none z-20",
+      "border border-[color:var(--focus-ring,#6B97FF)]",
+      "rounded-[22px]",
+    ],
+    note: (
+      <>
+        One ring for the whole control, drawn 2px outside the focused option and springing between options on{" "}
+        <Mono>spring.fast</Mono>. Only when the option matches <Mono>:focus-visible</Mono>, so a click leaves none.{" "}
+        <Mono>--focus-ring</Mono> is Curatit&rsquo;s terracotta.
+      </>
+    ),
+  },
+  {
+    part: "motion",
+    classes: ["spring.moderate: 160ms, bounce 0", "spring.fast: 80ms, bounce 0", "MotionConfig reducedMotion=\"user\""],
+    note: (
+      <>
+        The thumb on the moderate spring, the hover pill and the ring on the fast one, every fade a plain 80ms (60ms on
+        the way out). Each Segmented wraps itself in the library&rsquo;s <Mono>MotionConfig</Mono>, so under reduced
+        motion the pills jump (motion makes left, top, width and height instant) while the fades still run.
       </>
     ),
   },
 ];
 
-// The places Segmented is used today, with the props each passes
+// The places Segmented is used today, with the props each passes. shape and tone are still
+// written at some call sites; both are accepted and ignored
 const USES: { name: string; sub: string; specimen: ReactNode; props: string[]; where: ReactNode }[] = [
   {
     name: "Theme",
     sub: "account menu",
     specimen: (
-      <Segmented
-        aria-label="Theme, as in the account menu"
-        iconOnly
-        size="md"
-        shape="pill"
-        tone="inverted"
-        defaultValue="system"
-        options={THEMES}
-      />
+      <Segmented aria-label="Theme, as in the account menu" iconOnly size="md" defaultValue="system" options={THEMES} />
     ),
-    props: ["iconOnly", 'size="md"', 'shape="pill"', 'tone="inverted"'],
+    props: ["iconOnly", 'size="md"', 'shape="pill" · ignored', 'tone="inverted" · ignored'],
     where: (
       <>
         The dashboard&rsquo;s account menu (AccountMenu.tsx), beside the row&rsquo;s word, Theme. The labels Light, Dark
-        and Match system are the options&rsquo; names and tooltips.
+        and Match system are the options&rsquo; names and tooltips. Its thumb is the raised surface now, not the ink.
       </>
     ),
   },
@@ -161,17 +193,9 @@ const USES: { name: string; sub: string; specimen: ReactNode; props: string[]; w
     name: "Grid size",
     sub: "account menu",
     specimen: (
-      <Segmented
-        aria-label="Grid size, as in the account menu"
-        iconOnly
-        size="md"
-        shape="pill"
-        tone="inverted"
-        defaultValue="medium"
-        options={GRID}
-      />
+      <Segmented aria-label="Grid size, as in the account menu" iconOnly size="md" defaultValue="medium" options={GRID} />
     ),
-    props: ["iconOnly", 'size="md"', 'shape="pill"', 'tone="inverted"'],
+    props: ["iconOnly", 'size="md"', 'shape="pill" · ignored', 'tone="inverted" · ignored'],
     where: "The row under Theme: one, two or three bars for large, medium and small tiles.",
   },
   {
@@ -181,7 +205,6 @@ const USES: { name: string; sub: string; specimen: ReactNode; props: string[]; w
       <Segmented
         aria-label="Expires in, as in the token panel"
         size="lg"
-        shape="pill"
         defaultValue="90"
         options={[
           { value: "30", label: "30 days" },
@@ -191,11 +214,12 @@ const USES: { name: string; sub: string; specimen: ReactNode; props: string[]; w
         ]}
       />
     ),
-    props: ['size="lg"', 'shape="pill"', "aria-labelledby", 'className="mt-1"'],
+    props: ['size="lg"', 'shape="pill" · ignored', "aria-labelledby", 'className="mt-1"'],
     where: (
       <>
         The new token panel (ApiTokens.tsx), named by the visible &ldquo;Expires in&rdquo; above it. Read when the token is
-        created.
+        created. Its <Mono>size=&quot;lg&quot;</Mono> is kept for the call site and renders the same 28px track as sm,
+        beside the panel&rsquo;s lg buttons (28px too).
       </>
     ),
   },
@@ -206,7 +230,6 @@ const USES: { name: string; sub: string; specimen: ReactNode; props: string[]; w
       <Segmented
         aria-label="Connect over, as on the MCP page"
         size="md"
-        shape="pill"
         className="w-fit"
         defaultValue="mcp"
         options={[
@@ -215,7 +238,7 @@ const USES: { name: string; sub: string; specimen: ReactNode; props: string[]; w
         ]}
       />
     ),
-    props: ['size="md"', 'shape="pill"', 'className="w-fit"'],
+    props: ['size="md"', 'shape="pill" · ignored', 'className="w-fit"'],
     where: (
       <>
         The MCP page&rsquo;s install block (ClientInstall.tsx), beside the client tabs. The panel below follows it, and
@@ -252,7 +275,6 @@ const USES: { name: string; sub: string; specimen: ReactNode; props: string[]; w
       <div className="w-60">
         <Segmented
           aria-label="Try a brief, as in the homepage demo"
-          tone="inverted"
           className="w-full *:flex-1 *:px-2"
           defaultValue="launch"
           options={[
@@ -263,23 +285,24 @@ const USES: { name: string; sub: string; specimen: ReactNode; props: string[]; w
         />
       </div>
     ),
-    props: ['tone="inverted"', 'className="w-full *:flex-1 *:px-2"'],
+    props: ['tone="inverted" · ignored', 'className="w-full *:flex-1 *:px-2"'],
     where: (
       <>
-        The homepage&rsquo;s search demo (BriefTabs in DemoParts.tsx), stretched across its card. The thumb is absolute,
-        so <Mono>*:flex-1</Mono> only grows the options.
+        The homepage&rsquo;s search demo (BriefTabs in DemoParts.tsx), stretched across its card. The pills are
+        absolute and measured from the options, so <Mono>*:flex-1</Mono> only grows the options and the thumb follows.
       </>
     ),
   },
 ];
 
-// Every prop each component declares. Segmented forwards any other attribute to its radiogroup
+// Every prop each component declares. Segmented's props are a closed set: nothing else is
+// forwarded
 const SEGMENTED_PROPS: { name: string; values: string; fallback: string; note: ReactNode }[] = [
   {
     name: "options",
     values: "{ value, label, icon? }[]",
     fallback: "required",
-    note: "Two to five. label is shown, or with iconOnly becomes the option's name and tooltip.",
+    note: "Two to five. label is shown, or with iconOnly becomes the option's name and tooltip. icon is a ReactNode, wrapped once per options array so it doesn't remount on every render.",
   },
   { name: "value", values: "T", fallback: "–", note: "Controlled: the page owns the value. Pair it with onValueChange." },
   { name: "onValueChange", values: "(value: T) => void", fallback: "–", note: "Called on every change, controlled or not." },
@@ -288,13 +311,28 @@ const SEGMENTED_PROPS: { name: string; values: string; fallback: string; note: R
     name: "aria-label",
     values: "string",
     fallback: "–",
-    note: "The group's name. Pass this or aria-labelledby, always.",
+    note: "The group's name, on the track (role=\"tablist\"). Pass this or aria-labelledby, always.",
   },
   { name: "aria-labelledby", values: "string", fallback: "–", note: "The id of a visible label that names the group." },
-  { name: "size", values: '"sm" | "md" | "lg"', fallback: '"sm"', note: "Track 32, 40 or 44px tall." },
-  { name: "shape", values: '"rounded" | "pill"', fallback: '"rounded"', note: "rounded-lg or rounded-full." },
-  { name: "tone", values: '"raised" | "inverted"', fallback: '"raised"', note: "A white thumb, or the primary button's fill." },
-  { name: "iconOnly", values: "boolean", fallback: "false", note: "Square options showing only their icons." },
+  {
+    name: "size",
+    values: '"sm" | "md" | "lg"',
+    fallback: '"sm"',
+    note: "All three are the library's compact step (a 28px track, 24px options); md and lg are kept for call sites and render as sm.",
+  },
+  {
+    name: "shape",
+    values: '"rounded" | "pill"',
+    fallback: "ignored",
+    note: "Accepted for older call sites and ignored: every control is a pill (rounded-[24px] track, rounded-[20px] thumb).",
+  },
+  {
+    name: "tone",
+    values: '"raised" | "inverted"',
+    fallback: "ignored",
+    note: "Accepted for older call sites and ignored: the thumb is always the raised surface, one look for every segmented control.",
+  },
+  { name: "iconOnly", values: "boolean", fallback: "false", note: "Square options showing only their icons; the labels stay as names and titles." },
   {
     name: "className",
     values: "string",
@@ -303,28 +341,45 @@ const SEGMENTED_PROPS: { name: string; values: string; fallback: string; note: R
   },
   {
     name: "anything else",
-    values: "forwarded",
+    values: "dropped",
     fallback: "–",
-    note: "Not in the types, but spread onto the radiogroup: the id, aria-describedby and aria-invalid that Field adds land there. Pass them through Field, not by hand.",
+    note: "The props are a closed set. The id, aria-describedby and aria-invalid that Field adds to its child don't reach the track; Field still names it through aria-labelledby.",
   },
 ];
 
 const SWITCH_PROPS: { name: string; values: string; fallback: string; note: ReactNode }[] = [
   {
+    name: "label",
+    values: "string",
+    fallback: "required",
+    note: "The row's words and the switch's name (aria-labelledby points at them). A click on the words flips it.",
+  },
+  {
+    name: "labelHidden",
+    values: "boolean",
+    fallback: "false",
+    note: "Keeps the name for screen readers (sr-only) and draws nothing, for a switch whose words a Field beside it already shows. The row's padding goes too (px-0 py-0), so the track sits flush.",
+  },
+  {
     name: "checked",
     values: "boolean",
     fallback: "required",
-    note: "Always controlled: there's no defaultChecked.",
+    note: "Always controlled: there's no defaultChecked. The switch never flips itself.",
   },
-  { name: "onCheckedChange", values: "(checked: boolean) => void", fallback: "required", note: "Called with the new state." },
-  { name: "disabled", values: "boolean", fallback: "false", note: "Grey track, not focusable, can't be pressed." },
+  { name: "onCheckedChange", values: "(checked: boolean) => void", fallback: "required", note: "Called with the new state, from a click, the keyboard or a drag released past the middle." },
+  { name: "disabled", values: "boolean", fallback: "false", note: "The row at half opacity, pointer events off, not focusable." },
   {
-    name: "id, aria-*",
-    values: "button attributes",
+    name: "className",
+    values: "string",
     fallback: "–",
-    note: "Every <button> attribute but onChange, value and role passes through: an id for <label htmlFor>, aria-labelledby, aria-describedby. Never onClick, type or aria-checked: they're spread after the switch's own and replace them, so the switch stops toggling, submits its form or announces the wrong state.",
+    note: "On the row, layout only. Never a colour: the track's colours are inline styles a class can't reach, and cn would replace the row's own classes silently.",
   },
-  { name: "className", values: "string", fallback: "–", note: "Layout only. Never a colour: cx doesn't merge, so it would land beside the track's own." },
+  {
+    name: "anything else",
+    values: "div attributes",
+    fallback: "–",
+    note: "Spread onto the row (a div), not the switch button: an id lands on the row, so <label htmlFor> can't reach the control. Name it with label instead. Never onClick or onPointerDown: they replace the row's own and the toggle or the drag stops working.",
+  },
 ];
 
 function PropsMatrix({ rows }: { rows: typeof SEGMENTED_PROPS }) {
@@ -353,26 +408,34 @@ function StateCard({ name, children, demo }: { name: string; children: ReactNode
   );
 }
 
-// The switch's thumb while held, drawn: 28px wide instead of 24, grown away from the edge it rests on
-function PressedSwitches() {
+// The thumb's shapes, drawn: at rest 12px round, under the pointer 14px wide, and held 15px wide
+// and 9px tall, squashed toward its own centre line; when on, the extra width grows leftward so
+// the outer edge stays 2px from the track's end
+function ThumbShapes() {
   return (
-    <span aria-hidden="true" className="flex gap-3">
-      <span className="flex h-7 w-12 items-center rounded-full bg-component-active p-0.5">
-        <span className="h-6 w-7 rounded-full bg-page shadow-sm" />
+    <span aria-hidden="true" className="flex items-center gap-3">
+      <span className="flex h-4 w-7 items-center rounded-full bg-[var(--accent)] px-0.5">
+        <span className="size-3 rounded-full bg-background shadow-sm" />
       </span>
-      <span className="flex h-7 w-12 items-center justify-end rounded-full bg-inverted-solid p-0.5">
-        <span className="h-6 w-7 rounded-full bg-page shadow-sm" />
+      <span className="flex h-4 w-7 items-center rounded-full bg-[var(--accent)] px-0.5">
+        <span className="h-3 w-3.5 rounded-full bg-background shadow-sm" />
+      </span>
+      <span className="flex h-4 w-7 items-center rounded-full bg-[var(--accent)] px-0.5">
+        <span className="h-[9px] w-[15px] rounded-full bg-background shadow-sm" />
+      </span>
+      <span className="flex h-4 w-7 items-center justify-end rounded-full bg-foreground px-0.5">
+        <span className="h-[9px] w-[15px] rounded-full bg-background shadow-sm" />
       </span>
     </span>
   );
 }
 
-// The switch with its touch target drawn round it: before:-inset-2, a plain 64 × 44 box
+// The switch's target, drawn: the row itself, 28 × 16 with the label hidden, and nothing beyond it
 function SwitchTarget() {
   return (
-    <span aria-hidden="true" className="relative my-2 ml-2 flex h-7 w-12 items-center rounded-full bg-component-active p-0.5">
-      <span className="size-6 rounded-full bg-page shadow-sm" />
-      <span className="absolute -inset-2 outline-1 outline-border-strong outline-dashed" />
+    <span aria-hidden="true" className="relative my-2 ml-2 flex h-4 w-7 items-center rounded-full bg-[var(--accent)] px-0.5">
+      <span className="size-3 rounded-full bg-background shadow-sm" />
+      <span className="absolute -inset-px rounded-full outline-1 outline-border outline-dashed" />
     </span>
   );
 }
@@ -382,12 +445,14 @@ export default function Controls() {
     <div className="flex flex-col gap-16">
       <div className="flex flex-col gap-6">
         <SheetHeader title="Segmented and switch">
-          Two shared controls for settings. Segmented picks one value out of two to five, all in view at once; Switch
-          turns one setting on or off. Both change the moment they&rsquo;re used, and both work from the keyboard.
+          Two shared controls for settings, both Fluid Functionalism&rsquo;s since 2026-10-23. Segmented picks one value
+          out of two to five, all in view at once, with a raised pill that travels to the choice; Switch turns one setting
+          on or off, with a thumb you can drag. Both change the moment they&rsquo;re used, and both work from the keyboard.
         </SheetHeader>
         {/* Shown by CSS alone, so it's in place before any script runs and nothing below it shifts */}
         <p className="hidden max-w-3xl rounded-xl bg-card px-4 py-3 text-body-sm text-secondary-foreground motion-reduce:block">
-          Reduced motion is on, so the thumbs on this sheet jump instead of sliding, as they do across the site.
+          Reduced motion is on, so the pills on this sheet jump instead of travelling, as they do across the site; the
+          colours still fade.
         </p>
       </div>
 
@@ -420,11 +485,12 @@ export default function Controls() {
             term: "Default",
             text: (
               <>
-                With nothing passed, Segmented is <Mono>size=&quot;sm&quot;</Mono>, <Mono>shape=&quot;rounded&quot;</Mono>
-                , <Mono>tone=&quot;raised&quot;</Mono>. Match the row it sits in: its track is as tall as a Button (sm 32,
-                md 40, lg 44). The rounded track is <Mono>rounded-lg</Mono> at every size, the corners of Button sm and
-                base, so lg is pill-only for now: Button lg is <Mono>rounded-xl</Mono>, and an lg rounded Segmented
-                beside it wouldn&rsquo;t match. Switch has one size, 48 &times; 28.
+                With nothing passed, Segmented is <Mono>size=&quot;sm&quot;</Mono>: the library&rsquo;s compact step, a
+                28px track holding 24px options, as tall as a compact Button. <Mono>md</Mono> and <Mono>lg</Mono> are
+                the same, kept for call sites (the token panel says lg beside Button lg, and both are 28px). The
+                library&rsquo;s default step (36px with 28px options) goes unused. Every control is a pill with the raised
+                thumb: <Mono>shape</Mono> and <Mono>tone</Mono> are accepted for older call sites and ignored. Switch has
+                one size, a 28 &times; 16 track with a 12px thumb (the compact step the site runs on).
               </>
             ),
           },
@@ -434,8 +500,8 @@ export default function Controls() {
               <>
                 Neither has a confirm step of its own. A setting takes effect as it&rsquo;s changed (theme, grid size);
                 inside a form the value waits for the form&rsquo;s submit (token expiry, Share with a link). A Switch is a{" "}
-                <Mono>&lt;button&gt;</Mono>, not an input, so a form never carries its value: keep it in state and read
-                that on submit.
+                <Mono>&lt;button role=&quot;switch&quot;&gt;</Mono>, not an input, so a form never carries its value:
+                keep it in state and read that on submit.
               </>
             ),
           },
@@ -443,14 +509,15 @@ export default function Controls() {
             term: "Names",
             text: (
               <>
-                With a visible label, put it in a <Mono>Field</Mono>: a Switch in{" "}
-                <Mono>layout=&quot;inline-end&quot;</Mono>, a Segmented in the default stacked layout. Field gives the
-                control its id, <Mono>aria-labelledby</Mono> (a <Mono>&lt;label&gt;</Mono> can&rsquo;t name a Segmented)
-                and <Mono>aria-describedby</Mono> for the description, so the name stays short. With no visible label, pass{" "}
-                <Mono>aria-label</Mono>. Hand-wiring (<Mono>&lt;label htmlFor&gt;</Mono>, or{" "}
-                <Mono>aria-labelledby</Mono> at a visible label) is what Field does for you; the token panel&rsquo;s
-                &ldquo;Expires in&rdquo; and the new-board dialog still do it by hand. Every option has a <Mono>label</Mono>, with{" "}
-                <Mono>iconOnly</Mono> too: it becomes the option&rsquo;s name and its tooltip.
+                A Switch carries its own words: <Mono>label</Mono> is required, drawn as the row&rsquo;s text and wired
+                with <Mono>aria-labelledby</Mono>, and a tap on the words flips it. Where a <Mono>Field</Mono> already
+                shows the words (<Mono>layout=&quot;inline-end&quot;</Mono>), pass the same text with{" "}
+                <Mono>labelHidden</Mono>, so the name stays and the row draws nothing twice. A Segmented has no words of
+                its own: put it in a <Mono>Field</Mono> (the default stacked layout), which names it with{" "}
+                <Mono>aria-labelledby</Mono> (a <Mono>&lt;label&gt;</Mono> can&rsquo;t name a tablist), or pass{" "}
+                <Mono>aria-label</Mono>. The token panel&rsquo;s &ldquo;Expires in&rdquo; still wires{" "}
+                <Mono>aria-labelledby</Mono> by hand. Every option has a <Mono>label</Mono>, with <Mono>iconOnly</Mono>{" "}
+                too: it becomes the option&rsquo;s name and its tooltip.
               </>
             ),
           },
@@ -458,9 +525,9 @@ export default function Controls() {
             term: "Keyboard",
             text: (
               <>
-                Segmented is a radio group: one tab stop, on the chosen option. The arrows move the choice and focus
-                together, wrapping at the ends; Home and End go to the first and the last. A Switch is a button: Space and
-                Enter flip it.
+                Segmented is Radix&rsquo;s tab list in automatic mode: one tab stop, on the chosen option. ← and →
+                move the choice and focus together, wrapping at the ends; Home and End go to the first and the last
+                (↑ and ↓ do nothing: the list is horizontal). A Switch is a button: Space and Enter flip it.
               </>
             ),
           },
@@ -468,10 +535,12 @@ export default function Controls() {
             term: "Motion",
             text: (
               <>
-                The Segmented thumb slides 200ms on <Mono>ease-out-quint</Mono> for a pointer and snaps for a key, so a held
-                arrow never queues slides. Nothing moves on load: until the thumb has measured, the chosen option wears its
-                fill. The Switch thumb slides 200ms and, while pressed, stretches 4px toward the middle. Under reduced
-                motion both jump; the press still widens the switch&rsquo;s thumb, at once.
+                The Segmented thumb travels on <Mono>spring.moderate</Mono> (160ms, no overshoot) however the change
+                came, a hover pill previews the next click on <Mono>spring.fast</Mono> (80ms), and one focus ring springs
+                between options. Nothing moves on load: the thumb starts on the choice. The Switch thumb springs across
+                on the same moderate spring, stretches 2px under the pointer and 3px while pressed (squashing 3px), and
+                follows a drag 1:1. Under reduced motion the pills and the thumb&rsquo;s shapes jump; colours and
+                opacities still fade.
               </>
             ),
           },
@@ -479,9 +548,10 @@ export default function Controls() {
             term: "Touch",
             text: (
               <>
-                A Switch reaches past its track through <Mono>before:-inset-2</Mono>, a 64 &times; 44 target. Segmented has
-                no touch extension: its options are their own targets, 28, 32 and 36px tall at sm, md and lg. Where phones
-                use it, take the largest size its row allows.
+                Neither extends its target. A Switch&rsquo;s target is its row: 24px tall with its words, the bare 28
+                &times; 16 track with <Mono>labelHidden</Mono>; a drag works there too. Segmented&rsquo;s options are
+                their own targets, 24 or 28px tall. Both are under the 44px floor: where phones use them, give the row
+                room (a Field&rsquo;s inline row, a menu row) or take <Mono>lg</Mono>.
               </>
             ),
           },
@@ -493,7 +563,8 @@ export default function Controls() {
                 it&rsquo;s a second recipe for the focus ring, the motion and the target. A Switch for two named values
                 (Light or Dark, MCP or REST): off would have to stand for one of them, where a Segmented names both. A
                 hand-made radio group, or a row of pressed buttons, for one choice. A colour through{" "}
-                <Mono>className</Mono>: cx doesn&rsquo;t merge, so a second background lands beside the first.
+                <Mono>className</Mono>: the tracks&rsquo; colours are inline styles, and <Mono>cn</Mono> would replace
+                the component&rsquo;s own class with yours.
               </>
             ),
           },
@@ -518,29 +589,24 @@ export default function Controls() {
         />
         <Flow
           tree={`Which Segmented?
- ├── size: the height of the buttons beside it
- │    ├── 32px, Button sm (this page) → sm, the default
- │    ├── 40px, Button base (the MCP page, a menu row)
- │    │    → md
- │    └── 44px, Button lg (the dashboard's forms) → lg,
- │        pill only (Button lg is rounded-xl)
- ├── shape: the corners beside it
- │    ├── rounded-lg buttons and fields (sm, md) →
- │    │   rounded, the default
- │    └── pills (the dashboard, the MCP tab row) → pill
- └── tone
-      ├── a setting among fields or words → raised,
-      │   the default
-      └── icon-only options in a menu row, or a demo
-          inside a card → inverted, never beside a
-          default Button (two solid fills compete)`}
+ ├── size: one step, 28px, as tall as every Button
+ │    ├── Anywhere (this page, the MCP page, a menu
+ │    │   row) → sm, the default (md is the same)
+ │    └── lg: the same, kept for call sites (the
+ │        token panel, the dashboard's forms)
+ ├── iconOnly: a row of glyphs with a word beside
+ │   the control (the account menu's Theme and
+ │   Grid size); every option keeps its label
+ └── shape and tone: nothing to choose. Every
+     control is a pill with the raised thumb;
+     both props are accepted and ignored`}
         />
       </div>
 
       <SheetSection
         id="segmented"
         title="Segmented"
-        description="Every size and shape down, both tones with words and as icons across. Each one is live: click and the thumb slides; tab in and use the arrows and it snaps."
+        description="Every size down, with words, with icons and as icons alone across. Each one is live: point at it and the hover pill follows; click and the thumb travels; tab in and the ring springs with the arrows."
       >
         <Sheet>
           {() => (
@@ -548,27 +614,31 @@ export default function Controls() {
               first="minmax(8rem,max-content)"
               columns={COLUMNS.map((c) => c.head)}
               rows={ROWS.map((row) => ({
-                label: `${row.size} · ${row.shape}`,
+                label: row.size,
                 sub: row.sub,
                 cells: COLUMNS.map((column) =>
-                  column.iconOnly ? (
+                  column.kind === "iconOnly" ? (
                     <Segmented
                       key={column.head}
-                      aria-label={`Theme, ${row.size} ${row.shape} ${column.tone}`}
+                      aria-label={`Theme, ${row.size}, icons only`}
                       iconOnly
                       size={row.size}
-                      shape={row.shape}
-                      tone={column.tone}
+                      defaultValue="dark"
+                      options={THEMES}
+                    />
+                  ) : column.kind === "icons" ? (
+                    <Segmented
+                      key={column.head}
+                      aria-label={`Theme, ${row.size}, icons and words`}
+                      size={row.size}
                       defaultValue="dark"
                       options={THEMES}
                     />
                   ) : (
                     <Segmented
                       key={column.head}
-                      aria-label={`Tile size, ${row.size} ${row.shape} ${column.tone}`}
+                      aria-label={`Tile size, ${row.size}`}
                       size={row.size}
-                      shape={row.shape}
-                      tone={column.tone}
                       defaultValue="medium"
                       options={TILES}
                     />
@@ -578,12 +648,17 @@ export default function Controls() {
             />
           )}
         </Sheet>
+        <p className="mt-4 max-w-[65ch] text-body-sm text-secondary-foreground">
+          <Mono>shape</Mono> and <Mono>tone</Mono> are accepted so older call sites compile, and ignored: the track is
+          always the pill and the thumb always the raised surface. The inverted thumb (the ink) and the rounded track are
+          gone.
+        </p>
       </SheetSection>
 
       <SheetSection
         id="parts"
         title="Parts"
-        description="What Segmented is built from, as Segmented.tsx sets it. Take it whole: never rebuild one from these classes."
+        description="What Segmented is built from, as the library's tabs.tsx sets it for the step Segmented.tsx picks (the first value is the compact step, sm and md; after the dot, lg). Take it whole: never rebuild one from these classes."
       >
         <Sheet>
           {() => (
@@ -605,7 +680,7 @@ export default function Controls() {
       <SheetSection
         id="keyboard"
         title="Keyboard and motion"
-        description="Tab into it, then use the arrows, Home and End; then click. The line under it says how the last change arrived and what the thumb did."
+        description="Tab into it, then use the arrows, Home and End; then click. The line under it says how the last change arrived."
       >
         <Sheet>
           {() => (
@@ -616,34 +691,34 @@ export default function Controls() {
                 template="minmax(16rem,1fr)"
                 columns={["does"]}
                 rows={[
-                  { label: "Tab", cells: [<Note key="d">Lands on the chosen option. The group is one stop: Tab again leaves it.</Note>] },
+                  { label: "Tab", cells: [<Note key="d">Lands on the chosen option and draws the ring round it. The group is one stop: Tab again leaves it.</Note>] },
                   {
-                    label: "← ↑",
-                    cells: [<Note key="d">The option before, wrapping from the first to the last. Focus and the choice move together.</Note>],
+                    label: "←",
+                    cells: [<Note key="d">The option before, wrapping from the first to the last. Focus, the ring and the choice move together.</Note>],
                   },
-                  { label: "→ ↓", cells: [<Note key="d">The option after, wrapping from the last to the first.</Note>] },
+                  { label: "→", cells: [<Note key="d">The option after, wrapping from the last to the first.</Note>] },
                   { label: "Home, End", cells: [<Note key="d">The first option and the last.</Note>] },
                   {
                     label: "a key",
                     sub: "motion",
-                    cells: [<Note key="d">The thumb and the colours change at once, so a held arrow never queues slides.</Note>],
+                    cells: [<Note key="d">The thumb travels on the moderate spring (160ms) and the ring on the fast one (80ms); a held arrow retargets the spring from wherever it is, so nothing queues.</Note>],
                   },
                   {
                     label: "a pointer",
                     sub: "motion",
-                    cells: [<Note key="d">The thumb slides, 200ms on ease-out-quint, and the labels&rsquo; colours fade over 150ms.</Note>],
+                    cells: [<Note key="d">The hover pill slides from the thumb to the option under the pointer (80ms) and the thumb dims to 0.85; a click moves the thumb at once, before the value round-trips. No ring: a click isn&rsquo;t focus-visible.</Note>],
                   },
                   {
                     label: "page load",
                     sub: "motion",
                     cells: [
                       <Note key="d">
-                        Nothing moves. Until the thumb has measured (the server&rsquo;s HTML included), the chosen option
-                        wears the thumb&rsquo;s fill.
+                        Nothing moves. The thumb is placed on the choice as soon as the options are measured, with no
+                        entrance (<Mono>initial={"{false}"}</Mono>).
                       </Note>,
                     ],
                   },
-                  { label: "reduced motion", cells: [<Note key="d">The thumb jumps, however the change came.</Note>] },
+                  { label: "reduced motion", cells: [<Note key="d">The pills jump, however the change came; the dims and fades still run. The library&rsquo;s MotionConfig, which each Segmented wraps itself in.</Note>] },
                 ]}
               />
             </div>
@@ -667,7 +742,8 @@ export default function Controls() {
                   Uncontrolled: it keeps its own choice, and the page only says where it starts.
                 </StateCard>
                 <StateCard name="value + onValueChange" demo={<ControlledDemo />}>
-                  Controlled: the page owns the value, reads it and can change it from outside, as Reset does.
+                  Controlled: the page owns the value, reads it and can change it from outside, as Reset does. The thumb
+                  travels on a click before the new value comes back, then follows whatever the page settles on.
                 </StateCard>
               </div>
             )}
@@ -683,7 +759,7 @@ export default function Controls() {
 // so the thumb starts there (ThemeModeSwitch.tsx)
 <Segmented key={restored ? "restored" : "initial"} value={mode} onValueChange={choose} options={…} />`}
             incorrect={{
-              why: "a saved choice set after mount, so the thumb slides across as the page loads",
+              why: "a saved choice set after mount, so the thumb travels across as the page loads",
               code: `useEffect(() => setMode(localStorage.getItem("mode") ?? "both"), []);
 
 <Segmented aria-label="Show specimens in" value={mode} onValueChange={choose} options={…} />`,
@@ -695,7 +771,7 @@ export default function Controls() {
       <SheetSection
         id="in-use"
         title="Segmented in use"
-        description="Every place it's used today, live, with the props each one passes."
+        description="Every place it's used today, live, with the props each one passes. Where a call site still writes shape or tone, the prop is marked ignored."
       >
         <div className="flex flex-col gap-8">
           <Sheet>
@@ -724,7 +800,6 @@ export default function Controls() {
 <Segmented
   aria-labelledby="token-days-label"
   size="lg"
-  shape="pill"
   className="mt-1"
   value={String(days)}
   onValueChange={(value) => setDays(Number(value))}
@@ -756,42 +831,71 @@ export default function Controls() {
       <SheetSection
         id="switch"
         title="Switch"
-        description="One size, four looks. Flip the live ones; press and hold one to feel the stretch, drawn here as it looks while held."
+        description="One size, a labelled row. Flip the live ones by the track or the words; drag a thumb across; press and hold one to feel the squash, drawn here as the thumb's shapes. The track's colours are inline styles, written out here as the library sets them."
       >
         <Sheet>
           {() => (
             <Matrix
               first="minmax(7rem,max-content)"
-              template="minmax(8rem,max-content) minmax(16rem,max-content) minmax(16rem,1fr)"
+              template="minmax(10rem,max-content) minmax(16rem,max-content) minmax(16rem,1fr)"
               columns={["specimen", "classes", "notes"]}
               rows={[
                 {
                   label: "off",
                   cells: [
                     <SwitchState key="s" label="Off example" />,
-                    <MonoList key="c" items={["track: bg-component-active", "thumb: bg-page shadow-sm"]} />,
-                    <Note key="n">The thumb, 24px, rests at the left.</Note>,
+                    <MonoList
+                      key="c"
+                      items={[
+                        "track: background-color: var(--accent)",
+                        "hover: color-mix(in oklab, var(--accent), rgb(var(--overlay)) 10%)",
+                        "thumb: bg-background shadow-sm",
+                        "label: text-muted-foreground",
+                      ]}
+                    />,
+                    <Note key="n">The 12px thumb rests 2px in from the left of a 28 &times; 16 track in the neutral fill; the words are muted.</Note>,
                   ],
                 },
                 {
                   label: "on",
                   cells: [
                     <SwitchState key="s" label="On example" defaultChecked />,
-                    <MonoList key="c" items={["track: bg-inverted-solid", "translate-x-[calc(2.75rem-100%)]"]} />,
+                    <MonoList
+                      key="c"
+                      items={[
+                        "track: background-color: var(--foreground)",
+                        "hover: color-mix(in oklab, var(--foreground) 90%, var(--background))",
+                        "label: text-foreground",
+                      ]}
+                    />,
                     <Note key="n">
-                      The track takes the primary button&rsquo;s fill. The thumb is placed by its own width (the
-                      track&rsquo;s 44px inside, less 100%), so a press can grow it leftward.
+                      The track is the ink, like the primary button (the library&rsquo;s blue is replaced), and the
+                      words brighten to the ink with it. The thumb springs 12px across on <Mono>spring.moderate</Mono>.
                     </Note>,
                   ],
                 },
                 {
-                  label: "pressed",
-                  sub: "drawn",
+                  label: "thumb",
+                  sub: "drawn: rest, hover, pressed, pressed on",
                   cells: [
-                    <PressedSwitches key="s" />,
-                    <MonoList key="c" items={["group-active/switch:w-7"]} />,
+                    <ThumbShapes key="s" />,
+                    <MonoList key="c" items={["12 × 12 · hover 14 × 12", "pressed 15 × 9, y +1.5", "on: grows leftward"]} />,
                     <Note key="n">
-                      24 to 28px wide while held, toward the middle: the edge it rests on stays put, off or on.
+                      Hover stretches the thumb 2px into a pill (mouse only: a finger has no hover); a press stretches it
+                      3px and squashes it 3px toward its own centre. When on, the extra width grows leftward so the outer
+                      edge stays 2px from the track&rsquo;s end.
+                    </Note>,
+                  ],
+                },
+                {
+                  label: "drag",
+                  cells: [
+                    <SwitchState key="s" label="Drag example" />,
+                    <MonoList key="c" items={["touch-none select-none", "dead zone 2px", "release past the middle flips"]} />,
+                    <Note key="n">
+                      Past 2px of travel a press becomes a drag and the thumb follows the pointer 1:1, clamped to the
+                      track; let go past the midpoint and it flips, short of it and it springs home. The row captures the
+                      pointer, so a drag can overshoot and still release.
                     </Note>,
                   ],
                 },
@@ -802,9 +906,10 @@ export default function Controls() {
                       <SwitchState label="Disabled example, off" disabled />
                       <SwitchState label="Disabled example, on" defaultChecked disabled />
                     </span>,
-                    <MonoList key="c" items={["track: bg-disabled", "disabled:cursor-not-allowed"]} />,
+                    <MonoList key="c" items={["row: opacity-50 pointer-events-none"]} />,
                     <Note key="n">
-                      Grey either way, so only the thumb&rsquo;s side says on or off. It can&rsquo;t be focused or pressed.
+                      The whole row at half opacity, so on and off still read in the track. It can&rsquo;t be focused or
+                      pressed.
                     </Note>,
                   ],
                 },
@@ -813,16 +918,26 @@ export default function Controls() {
                   sub: "drawn",
                   cells: [
                     <SwitchTarget key="s" />,
-                    <MonoList key="c" items={["h-7 w-12 p-0.5 rounded-full", "before:absolute before:-inset-2"]} />,
-                    <Note key="n">48 &times; 28 to the eye, a 64 &times; 44 target for a finger.</Note>,
+                    <MonoList key="c" items={["row: flex items-center cursor-pointer", "gap-1 px-2.5 py-1 · labelHidden: px-0 py-0"]} />,
+                    <Note key="n">
+                      The row is the target: 24px tall with its words, the bare 28 &times; 16 track with the label
+                      hidden. Nothing reaches out to 44px.
+                    </Note>,
                   ],
                 },
                 {
                   label: "focus",
                   cells: [
                     <Note key="s">Tab to one above</Note>,
-                    <MonoList key="c" items={["outline-2 outline-offset-2", "outline-brand-border-focus"]} />,
-                    <Note key="n">From the keyboard only, as on every control.</Note>,
+                    <MonoList
+                      key="c"
+                      items={[
+                        "focus-visible:ring-1",
+                        "focus-visible:ring-[color:var(--focus-ring,#6B97FF)]",
+                        "focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                      ]}
+                    />,
+                    <Note key="n">A 1px terracotta ring 2px out from the track, the gap filled with the page. From the keyboard only, as on every control.</Note>,
                   ],
                 },
                 {
@@ -832,15 +947,16 @@ export default function Controls() {
                     <MonoList
                       key="c"
                       items={[
-                        "track: transition-colors duration-150",
-                        "thumb: transition-[translate,width]",
-                        "duration-[200ms,150ms] ease-out-quint",
-                        "motion-reduce:transition-none",
+                        "track: transition-colors duration-80",
+                        "label: transition-[color] duration-80",
+                        "thumb: spring.moderate (160ms, bounce 0)",
+                        "MotionConfig reducedMotion=\"user\"",
                       ]}
                     />,
                     <Note key="n">
-                      The track&rsquo;s colour fades 150ms; the thumb slides 200ms and stretches 150ms, all on
-                      ease-out-quint. Under reduced motion the thumb jumps; the colour still fades.
+                      The track and the words cross-fade 80ms; the thumb&rsquo;s travel, stretch and squash ride the
+                      moderate spring. Each Switch wraps itself in the library&rsquo;s MotionConfig, so under reduced
+                      motion the shapes jump; the colours still fade.
                     </Note>,
                   ],
                 },
@@ -853,34 +969,41 @@ export default function Controls() {
       <SheetSection
         id="switch-names"
         title="Naming a switch or a Segmented"
-        description="Neither has words of its own. Give each a label in a Field, and let a tap on the words flip a switch too."
+        description="A Switch carries its own words; a Segmented doesn't. Give a Segmented a label in a Field, and keep a Switch's label even where a Field shows the words."
       >
         <div className="flex flex-col gap-8">
           <Sheet>
             {() => (
               <div className="grid gap-4 sm:grid-cols-2">
                 <StateCard name="<Field>" demo={<FieldDemo />}>
-                  The recipe. The label names the control, the description describes it, and Field wires both. Inside a
+                  The recipe. The label names the control, the description describes it, and Field wires both. The Switch
+                  takes the same words with <Mono>labelHidden</Mono>, so its name and the visible label agree. Inside a
                   form, the values are read from state on submit.
                 </StateCard>
-                <StateCard name="<label htmlFor>" demo={<LabelledSwitch />}>
-                  By hand, what Field writes for you: the words are the switch&rsquo;s name. Click them and it flips.
+                <StateCard name="labelHidden beside words" demo={<LabelledSwitch />}>
+                  A hidden label beside words set by hand. The switch is named by <Mono>label</Mono>, not by the{" "}
+                  <Mono>&lt;label&gt;</Mono> (its id lands on the row, which a label can&rsquo;t point at), and a tap on
+                  the words doesn&rsquo;t flip it: only the row does. Prefer the row&rsquo;s own label where there&rsquo;s
+                  room.
                 </StateCard>
               </div>
             )}
           </Sheet>
           <Code
-            correct={`{/* A Switch: label first, the switch at the end; a tap on the words flips it */}
+            correct={`{/* A Switch: its own words, the row flips on a tap anywhere */}
+<Switch label="Share with a link" checked={shared} onCheckedChange={setShared} />
+
+{/* In a Field that shows the words: the same text, hidden */}
 <Field label="Share with a link" layout="inline-end" description="Anyone with the link can view it, read-only">
-  <Switch checked={shared} onCheckedChange={setShared} />
+  <Switch label="Share with a link" labelHidden checked={shared} onCheckedChange={setShared} />
 </Field>
 
 {/* A Segmented: stacked, so the label sits above; Field names it with aria-labelledby */}
 <Field label="Expires in">
-  <Segmented size="lg" shape="pill" value={days} onValueChange={setDays} options={…} />
+  <Segmented size="lg" value={days} onValueChange={setDays} options={…} />
 </Field>`}
             incorrect={{
-              why: "its own switch: the browser's default focus ring instead of the system's, no press, weak curves (the new-board dialog's, before Switch)",
+              why: "its own switch: the browser's default focus ring instead of the system's, no press, no drag, weak curves (the new-board dialog's, before Switch)",
               code: `<button
   type="button"
   role="switch"
@@ -902,7 +1025,7 @@ export default function Controls() {
       <SheetSection
         id="props"
         title="Props"
-        description="Everything each one declares. Segmented forwards any other attribute to its radiogroup; Switch passes on a <button>'s own attributes."
+        description="Everything each one declares. Segmented's props are a closed set; Switch spreads anything else onto its row."
       >
         <Sheet>
           {() => (

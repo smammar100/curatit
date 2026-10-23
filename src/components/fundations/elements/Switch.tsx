@@ -33,7 +33,12 @@ export default function Switch({ checked, onCheckedChange, label, labelHidden, c
         onToggle={() => onCheckedChange(!checked)}
         // The library pads the row like a menu item; alone, or beside a Field's words, the
         // switch sits flush
-        className={cn(labelHidden && "px-0 py-0", className)}
+        // On touch screens the row reaches 44px through an invisible ::before
+        className={cn(
+          "pointer-coarse:before:absolute pointer-coarse:before:inset-x-0 pointer-coarse:before:-inset-y-2.5",
+          labelHidden && "px-0 py-0",
+          className,
+        )}
         {...rest}
       />
     </MotionConfig>

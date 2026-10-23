@@ -37,7 +37,7 @@ const resizes = {
   none: "resize-none",
 } as const;
 
-const sizes = { md: "compact", lg: "default" } as const;
+const sizes = { md: "compact", lg: "compact" } as const;
 
 export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   size?: keyof typeof sizes;

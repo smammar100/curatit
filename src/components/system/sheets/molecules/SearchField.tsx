@@ -5,8 +5,11 @@ import SearchField from "@/components/fundations/molecules/SearchField";
 import { Code, Flow, Matrix, Mono, Rules, Sheet, SheetHeader, SheetSection, type Theme } from "../../SheetParts";
 import { SearchDemo } from "../../demos/FormDemos";
 
-// Focus forced on with the shadow a focused field draws
-const FOCUS = "[&_input]:shadow-[0_0_0_2px_var(--color-brand-border-focus)]";
+// Focus forced on with what a focused field draws: the card surface (focus:bg-surface-3) and the
+// page's 1px focus outline. A descendant selector outranks the field's rest fill and, with
+// :hover, its hover tint
+const FOCUS =
+  "[&_input]:bg-surface-3 [&_input:hover]:bg-surface-3 [&_input]:outline-1 [&_input]:outline-offset-2 [&_input]:outline-[color:var(--focus-ring)]";
 
 function states(theme: Theme, size: "md" | "lg") {
   const id = (state: string) => `${theme}-${size}-${state}`;
@@ -26,8 +29,10 @@ export default function SearchFieldSheet() {
   return (
     <div className="flex flex-col gap-16">
       <SheetHeader title="Search field">
-        An Input with the Search icon inside, a clear button once there&rsquo;s text and, if you give it one, the key that
-        jumps to it. Escape clears it and keeps focus; with nothing to clear, Escape is left for the panel around it.
+        An Input with the Search icon inside, a clear button once there&rsquo;s text and, if you give it one, the key
+        that jumps to it, drawn as a key cap. Since 2026-10-23 it sits on the Input&rsquo;s Fluid Functionalism recipe (a
+        28px pill by default, the one stroke, no fill) and the Kbd&rsquo;s new cap. Escape clears it and keeps focus;
+        with nothing to clear, Escape is left for the panel around it.
       </SheetHeader>
 
       <Rules
@@ -50,9 +55,22 @@ export default function SearchFieldSheet() {
             term: "The set",
             text: (
               <>
-                <Mono>size</Mono> <Mono>md</Mono> (40px, the default) or <Mono>lg</Mono> (44px, the dashboard).{" "}
-                <Mono>value</Mono> / <Mono>defaultValue</Mono> / <Mono>onValueChange</Mono> with a string. Nothing else:
-                the icon, the clear button and its label are fixed.
+                <Mono>size</Mono> <Mono>md</Mono> (28px, the compact step, the default) or <Mono>lg</Mono> (36px, the
+                default step), the Input&rsquo;s two. <Mono>value</Mono> / <Mono>defaultValue</Mono> /{" "}
+                <Mono>onValueChange</Mono> with a string. Nothing else: the icon, the clear button and its label are fixed.
+              </>
+            ),
+          },
+          {
+            term: "Drawn",
+            text: (
+              <>
+                The Input itself (<Mono>ring-1 ring-border bg-transparent hover:bg-hover focus:bg-surface-3</Mono>, the
+                page&rsquo;s 1px outline on focus) with its two slots filled: the Search icon as the{" "}
+                <Mono>leadingIcon</Mono>, 14px in the muted ink and the ink while focused; on the right an{" "}
+                <Mono>xxs</Mono> transparent icon Button once there&rsquo;s text, else the shortcut as a Kbd: the
+                CommandMenu&rsquo;s cap, <Mono>bg-hover text-muted-foreground rounded-[5px]</Mono> in the micro role, no
+                stroke, <Mono>sm</Mono> (16px) in md and <Mono>md</Mono> (20px) in lg.
               </>
             ),
           },
@@ -125,7 +143,7 @@ export default function SearchFieldSheet() {
               why: "a hand-built search: no clear button, no Escape, an icon that steals the click",
               code: `<div className="relative">
   <Search className="absolute left-3 top-3 size-4" />
-  <input type="search" placeholder="Search" className="h-10 w-full rounded-lg pl-9 …" />
+  <input type="search" placeholder="Search" className="h-7 w-full rounded-[20px] pl-9 ring-1 ring-border …" />
 </div>`,
             }}
           />
@@ -133,7 +151,7 @@ export default function SearchFieldSheet() {
       </SheetSection>
       <SheetSection
         title="Sizes and states"
-        description="Both sizes in every state. The clear button appears once there's text; the key hint only while it's empty and unfocused (these hints' / goes to the live list above, the first one drawn). Focus is forced on with the shadow a focused field draws."
+        description="Both sizes in every state. The clear button appears once there's text; the key cap only while it's empty and unfocused (these hints' / goes to the live list above, the first one drawn). Focus is forced on with what a focused field draws: the card surface and the page's 1px outline."
       >
         <Sheet>
           {(theme) => (
@@ -142,8 +160,8 @@ export default function SearchFieldSheet() {
               template="repeat(5, minmax(13rem,1fr))"
               columns={["empty", "shortcut", "filled", "focus", "disabled"]}
               rows={[
-                { label: "md", sub: "40px · the default", cells: states(theme, "md") },
-                { label: "lg", sub: "44px · the dashboard", cells: states(theme, "lg") },
+                { label: "md", sub: "28px · compact, the default", cells: states(theme, "md") },
+                { label: "lg", sub: "36px · the default step", cells: states(theme, "lg") },
               ]}
             />
           )}

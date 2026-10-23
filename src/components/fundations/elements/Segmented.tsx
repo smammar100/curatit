@@ -24,9 +24,8 @@ export type SegmentedOption<T extends string> = {
   icon?: ReactNode;
 };
 
-// The site's three sizes on the library's two steps: 28px tall (24px options) up to md, 36px
-// (28px options) at lg
-const sizes = { sm: "compact", md: "compact", lg: "default" } as const;
+// The site's three size names, all on the library's compact step: 28px tall, 24px options
+const sizes = { sm: "compact", md: "compact", lg: "compact" } as const;
 const squares = { compact: "w-6", default: "w-7" } as const;
 
 type Props<T extends string> = {
@@ -39,6 +38,9 @@ type Props<T extends string> = {
   /** The group's name for screen readers, unless aria-labelledby points at a visible label */
   "aria-label"?: string;
   "aria-labelledby"?: string;
+  /** From a Field: the hint and error it's described by, and the id its label points at */
+  "aria-describedby"?: string;
+  id?: string;
   size?: keyof typeof sizes;
   /** Accepted for older call sites: every control is a pill, and the thumb is always the raised
    *  surface (the site's shape setting, and one look for every segmented control) */
@@ -82,7 +84,13 @@ export default function Segmented<T extends string>({
         onValueChange={(next) => onValueChange?.(next as T)}
         size={step}
       >
-        <TabsList aria-label={aria["aria-label"]} aria-labelledby={aria["aria-labelledby"]} className={className}>
+        <TabsList
+          id={aria.id}
+          aria-label={aria["aria-label"]}
+          aria-labelledby={aria["aria-labelledby"]}
+          aria-describedby={aria["aria-describedby"]}
+          className={className}
+        >
           {options.map((option, at) => (
             <TabItem
               key={option.value}

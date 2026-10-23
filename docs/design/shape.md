@@ -1,52 +1,72 @@
 # Shape and depth
 
-Source: the `--radius-*` and `--shadow-*` tokens in `src/styles/global.css`. Live: `/system/shape`.
+Sources: `src/lib/shape-context.tsx` (the corners), `src/lib/surface-context.tsx`,
+`surface-classes.ts` and `elevated.tsx` (the depth ladder), and the `--surface-*` / `--shadow-*`
+variables in `src/styles/global.css`. Live: `/system/shape`.
 
-## Radius (Interfere's scale)
+## Radius: the shape context
 
-| Class | px | Used for |
+Corners are not chosen per element. `global/FluidRoot` sets `<ShapeProvider defaultShape="pill">`
+for the whole site (the owner's setting, 2026-10-23), and every system component reads
+`useShape()`:
+
+| `useShape()` key | Class | Used for |
 | --- | --- | --- |
-| `rounded-sm` | 4 | Badges at sm/md |
-| `rounded-md` | 6 | Small buttons, menu rows, the segmented thumb |
-| `rounded-lg` | 8 | Buttons, inputs, notices |
-| `rounded-xl` | 10 | The dashboard's 44px inputs and buttons |
-| `rounded-2xl` | 12 | Cards, mats, menus, the auth card |
-| `rounded-3xl` | 16 | Dialogs |
-| `rounded-4xl` / `rounded-5xl` | 20 / 24 | The footer panel |
-| `rounded-full` | | Pills (`shape="pill"`), avatars, switches |
+| `button`, `input`, `item`, `bg` | `rounded-[20px]` | Buttons, fields, the Segmented and Tabs pills, tooltips, toasts, a `rect` Skeleton at `radius="lg"` |
+| `container` | `rounded-[24px]` | Dialogs, cards, textareas, the Notice, a Skeleton at `radius="2xl"` |
+| `focusRing` | `rounded-[22px]` | The focus ring 2px outside a pill, so the two stay concentric |
+| `mergedBg` | `rounded-[16px]` | The joined fill of neighbouring checked menu rows |
 
-**Nested radius:** inner = outer − padding (a `rounded-2xl p-1.5` menu has `rounded-md` rows).
-Never more than `rounded-2xl` on a card. Arbitrary radii only where AGENTS.md records them (the
-dashboard's 28px dialog and account menu).
+Two deliberate exceptions inside the library: the menu popup keeps the `rounded` shape (a 12px
+container with 8px rows: at that scale a pill distorts the padding), and the checkbox is a 4/5px
+square. Small corners that are the site's own: `rounded-[4px]` on a text link's and a card
+title's focus ring, `rounded-[5px]` on a Kbd cap.
 
-## Shadows
+**Nested radius:** inner = outer − inset (`nestedRadius()` in `shape-context.tsx`). A 24px card
+with 8px of padding holds 16px media; with 16px, 8px; with 24px, 4px (`CardMedia` does this
+through `--card-media-radius`). Never the same radius inside and out. Never a radius class on a
+control: if a component's corner looks wrong, the provider or the component is wrong, not the
+call site. Interfere's `--radius-*` scale (`rounded-sm` 4 … `rounded-5xl` 24) remains for
+features that still use it; new system code reads the context.
 
-| Class | Use |
-| --- | --- |
-| `shadow-xs` | A hairline: the edge of a white card (`bg-container`) |
-| `shadow-sm` (= bare `shadow`) | Default: inputs, the secondary button, the segmented thumb, images on a mat |
-| `shadow-lg` | Menus, popovers, toasts |
-| `shadow-xl` | Dialogs, the auth card, large floating cards |
+## Depth: one ladder
 
-Each has its own dark treatment (drops fade, an inner highlight takes over), so **never** add
-`dark:ring-*` to stand in for a shadow and never write `shadow-[…]` for depth. The one arbitrary
-shadow allowed is a selection line, not depth: `shadow-[inset_0_-2px_0_currentColor]`, the 2px
-underline under the selected tab (Tabs' underline variant, the `/system` nav), because
-`border-b-2` would shift the row's layout.
+Eight surfaces, each with a shadow recipe: `bg-surface-N shadow-surface-N`
+(`surfaceClasses(level)`). In light every surface is white and the shadow alone says how high it
+sits (a 1px ring of 6% black, then stacked drops that double each step); in dark each surface is
+a step lighter than the page (`#222` to `#4c4c4c`) and the shadow is an inset highlight, an inset
+ring and drops. `useSurface()` says what level a component sits on (the page is 1); `Elevated`
+adds an offset and provides the new level to what's inside, so stacking walks up by itself.
 
-## Borders and elevation
+| What | Level | Shadow |
+| --- | --- | --- |
+| The page | 1 | none |
+| A white card (`Card variant="raised"`), a focused field | 3 | `shadow-surface-2` (the card), none (the field) |
+| A menu or popover | substrate + 2 | `shadow-surface-3`, whatever it opens over |
+| A toast | — (the ink) | `shadow-surface-4` |
+| A dialog | substrate + 4 | its level's |
 
-- Rings and dividers: `ring-1 ring-border-default`, `divide-y divide-border-default`; strong:
-  `ring-border-strong`. No `border-2`; a selected outline is `ring-primary-foreground`.
-- Elevation order, low to high: `bg-page` → `bg-card` (mat) → `bg-container` + `shadow-xs` →
-  `bg-modal` + `shadow-lg` / `shadow-xl`. In dark mode each step is lighter, not darker.
+Tailwind's shadow names are steps of the same ladder, so older code shares it: `shadow-xs` = 1
+(a hairline), `shadow-sm` and the bare `shadow` = 2, `shadow-md` = 3, `shadow-lg` = 4,
+`shadow-xl` = 6, `shadow-2xl` = 8. Never `shadow-[…]` for depth, never `dark:ring-*` to stand in
+for a shadow. The one arbitrary shadow allowed is a selection line, not depth:
+`shadow-[inset_0_-2px_0_currentColor]`, the `/system` nav's underline (the Checkbox's 1.5px
+stroke is also a box-shadow, so it can go transparent when checked).
+
+## The stroke
+
+One: `--border`, 12% of the ink. `ring-1 ring-border` on fields and the secondary button,
+`bg-border` for a Separator, `outline-border` inside an image, `divide-border-default` on a list
+(the older names resolve to the same value). No `border-2`; a selected outline is the pressed
+pill (`bg-active`), not a ring.
 
 ```tsx
-// Correct
-<div className="rounded-2xl bg-modal p-1.5 shadow-lg"><button className="rounded-md …">Rename</button></div>
+// Correct: the card's corner from the system, the menu's depth from the component
+<Card variant="raised" padding="md"><CardMedia>…</CardMedia></Card>
+<Menu label="Board actions" trigger={…}>…</Menu>
 
-// Incorrect: ad-hoc shadow, a dark: ring standing in for it, the same radius inside and out
-<div className="rounded-2xl bg-white p-1.5 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)] dark:ring-1">
-  <button className="rounded-2xl …">Rename</button>
+// Incorrect: ad-hoc shadow, a dark: ring standing in for it, a pill by hand, the same radius inside and out
+<div className="rounded-full bg-white p-1.5 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)] dark:ring-1">
+  <button className="rounded-full …">Rename</button>
 </div>
 ```

@@ -37,7 +37,7 @@ const sizes = {
 // image, a blue ring with a white offset on focus); border-0, bg-none and ring-offset-0 take
 // those off. The stroke is a box-shadow, so it can be 1.5px and go transparent when checked
 const boxClass =
-  "peer relative col-start-1 row-start-1 m-0 cursor-pointer appearance-none border-0 bg-none bg-transparent p-0 ring-offset-0 shadow-[inset_0_0_0_1.5px_var(--border)] transition-[box-shadow] duration-80 hover:shadow-[inset_0_0_0_1.5px_var(--muted-foreground)] checked:shadow-[inset_0_0_0_1.5px_transparent] focus:outline-hidden focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)] aria-invalid:shadow-[inset_0_0_0_1.5px_var(--destructive)] disabled:pointer-events-none disabled:opacity-50 pointer-coarse:after:absolute forced-colors:appearance-auto";
+  "peer relative col-start-1 row-start-1 m-0 cursor-pointer appearance-none border-0 bg-none bg-transparent p-0 ring-offset-0 shadow-[inset_0_0_0_1.5px_var(--border)] transition-[box-shadow] duration-80 hover:shadow-[inset_0_0_0_1.5px_var(--muted-foreground)] checked:shadow-[inset_0_0_0_1.5px_transparent] focus:outline-hidden focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)] aria-invalid:shadow-[inset_0_0_0_1.5px_var(--destructive)] aria-invalid:checked:shadow-[inset_0_0_0_1.5px_var(--destructive)] disabled:pointer-events-none disabled:opacity-50 pointer-coarse:after:absolute forced-colors:appearance-auto";
 
 export type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "size"> & {
   size?: keyof typeof sizes;

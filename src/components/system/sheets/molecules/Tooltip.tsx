@@ -1,6 +1,8 @@
-// /system/tooltip: the shared Tooltip (fundations/molecules/Tooltip.tsx), live in both themes. The
-// demos are client components in ../../demos/OverlayDemos.tsx; this sheet stays a server
-// component. Every class is written out in full, never built from parts, so Tailwind sees it
+// /system/tooltip: the shared Tooltip (fundations/molecules/Tooltip.tsx), live in both themes.
+// Since 2026-10-23 it is Fluid Functionalism's Tooltip (src/components/ui/tooltip.tsx, on Radix's)
+// behind the same API. The demos are client components in ../../demos/OverlayDemos.tsx; this sheet
+// stays a server component. Every class is written out in full, never built from parts, so
+// Tailwind sees it
 import type { ReactNode } from "react";
 import { Code, Flow, Matrix, Mono, Rules, Sheet, SheetHeader, SheetSection } from "../../SheetParts";
 import {
@@ -37,45 +39,52 @@ function DemoCard({ name, children, demo }: { name: string; children: ReactNode;
 const PARTS: { part: string; sub?: string; classes: string[]; note: ReactNode }[] = [
   {
     part: "surface",
-    classes: ["bg-inverted-solid", "text-on-inverted-foreground", "rounded-md px-2 py-1", "w-max max-w-64"],
-    note: "The primary button's fill: near-black on the light site, near-white on the dark. Up to 256px, then it wraps.",
+    classes: ["bg-foreground text-background", "rounded-[20px] px-2 py-1", "max-w-64 text-pretty"],
+    note: "The ink, with the page's colour for the words: near-black on the light site, white on the dark. The pill corners of the site's shape (shape.bg), the same as a button's. Up to 256px, then it wraps.",
   },
   {
     part: "type",
-    classes: ["text-caption-lg", "text-pretty"],
-    note: "12/16, regular. A name or a short phrase, no full stop.",
+    classes: [
+      "text-[length:var(--fs-caption,12px)] leading-[var(--lh-caption,16px)]",
+      "'wght' 400, 'opsz' 14",
+      "[text-box:trim-both_cap_alphabetic] supports-[text-box:trim-both]:py-2",
+    ],
+    note: "The caption role, 12/16, regular (the library pins the default step here, not the compact one). The text-box trim centres the words in the pill; where a browser supports it the padding grows to keep the pill about 24px tall.",
   },
   {
     part: "layer",
-    classes: ['popover="manual"', 'role="tooltip"', "fixed inset-auto m-0"],
-    note: "In the top layer, so no overflow or z-index clips it, while it stays beside its trigger in the page and takes the tokens there.",
+    classes: ["Radix Tooltip.Portal", 'role="tooltip"', "z-50"],
+    note: "In a portal at the end of the body, so no overflow or z-index clips it, placed by Radix's popper beside its trigger. On this page's side-by-side panels it takes the site's theme, not the panel's.",
   },
   {
     part: "placement",
-    classes: ['side="top" (default)', "6px from the trigger", "8px from the window's edges"],
-    note: "Measured once on show (it hides on scroll, so it never has to follow). It flips to the other side when there's no room.",
+    classes: ['side="top" (default)', "sideOffset={6}", "collision padding · Radix's"],
+    note: "6px from the trigger. Radix keeps it in the window and flips it to the other side when there's no room, following the trigger while the page scrolls.",
   },
   {
     part: "motion",
-    classes: ["animate-fade-in · 150ms", "+ 4px slide from the trigger's side", "animate-fade-out · 120ms"],
-    note: "The slide eases on ease-out-quint. Shown from the keyboard or within 300ms of another: at once, no animation. Reduced motion: the fade only.",
+    classes: ["initial · opacity 0, + 4px from the trigger's side", "in · spring.fast (80ms, no bounce)", "out · spring.fast.exit (60ms)"],
+    note: "Fluid Functionalism's fast spring: it slides 4px toward its rest while fading in (y for top and bottom, x for left and right), and leaves on the tier's quicker tween, kept mounted until that finishes. Under reduced motion (MotionConfig reducedMotion=\"user\") only the fade runs.",
   },
   {
     part: "wiring",
-    classes: ["aria-describedby on the trigger", "aria-hidden when it echoes aria-label"],
-    note: "Read with the control. When the words are the control's own aria-label, it adds nothing for a screen reader, so it's hidden from one.",
+    classes: ["aria-describedby on the trigger while open", "Radix Tooltip.Trigger asChild"],
+    note: "Radix composes onto the child and describes it by the tooltip while it's shown, so a screen reader hears the words after the control's name.",
   },
 ];
 
 const TIMING: { when: string; sub?: string; does: string }[] = [
-  { when: "a mouse rests", does: "Shows after 400ms; moving off before then shows nothing." },
-  { when: "the next trigger", sub: "within 300ms", does: "Shows at once, without animating: a row of icon buttons reads like one strip of labels." },
-  { when: "keyboard focus", does: "Shows at once (focus-visible only: a click's focus shows nothing)." },
-  { when: "touch", does: "Never. A tap has no hover, so nothing a tooltip says may be needed to use the control." },
-  { when: "the pointer leaves", does: "Hides after 100ms, time to cross onto the tooltip and read it (WCAG 1.4.13)." },
+  { when: "a mouse rests", does: "Shows after 200ms (Radix's delayDuration); moving off before then shows nothing." },
+  {
+    when: "the next trigger",
+    does: "Waits the full 200ms again. The library skips the delay for 300ms after one closes only under an app-level TooltipProvider; the site mounts none, so each tooltip carries its own provider and no grouping.",
+  },
+  { when: "keyboard focus", does: "Shows at once (Radix opens on focus that didn't come from a pointer press)." },
+  { when: "touch", does: "Never: Radix ignores touch pointers. A tap has no hover, so nothing a tooltip says may be needed to use the control." },
+  { when: "the pointer leaves", does: "Hides, unless it moved onto the tooltip itself (Radix's hoverable content), so the words can be read up close." },
   { when: "Escape, blur", does: "Hides." },
   { when: "a press or click", does: "Hides, and stays hidden over a menu the trigger opened." },
-  { when: "a scroll, a resize", does: "Hides, anywhere on the page." },
+  { when: "a scroll", does: "Hides (Radix closes a tooltip when its trigger scrolls)." },
 ];
 
 type PropRow = { name: string; values: string; fallback: string; note: ReactNode };
@@ -86,13 +95,13 @@ const PROPS: PropRow[] = [
     name: "children",
     values: "one element",
     fallback: "required",
-    note: "A Button, a link: anything that takes a ref and pointer and focus handlers. Cloned with aria-describedby; its own handlers still run.",
+    note: "A Button, a link: anything that takes a ref and pointer and focus handlers. Radix composes its trigger onto it; its own handlers still run.",
   },
   {
     name: "other props",
     values: "trigger props",
     fallback: "–",
-    note: "Passed on to the trigger, handlers chained after its own, so a Menu can clone a Tooltip as its trigger.",
+    note: "Cloned onto the child before Radix sees it, so a Menu can use a Tooltip as its trigger and the menu's props reach the button.",
   },
 ];
 
@@ -101,7 +110,9 @@ export default function TooltipSheet() {
     <div className="flex flex-col gap-16">
       <SheetHeader title="Tooltip">
         A few words about one control, for a mouse and the keyboard: the name of an icon-only button, or the detail its
-        label leaves out. Never on touch, never holding a control, never the only place something is said.
+        label leaves out. Since 2026-10-23 it is Fluid Functionalism&rsquo;s Tooltip on Radix&rsquo;s: an ink pill
+        in the caption role, sliding 4px from the trigger&rsquo;s side on the fast spring. Never on touch, never
+        holding a control, never the only place something is said.
       </SheetHeader>
 
       <Rules
@@ -138,8 +149,20 @@ export default function TooltipSheet() {
             term: "Words",
             text: (
               <>
-                Sentence case, a few words, no full stop. On an icon button, exactly its <Mono>aria-label</Mono>: the
-                tooltip then only echoes it, hidden from screen readers.
+                Sentence case, a few words, no full stop. On an icon button, exactly its <Mono>aria-label</Mono>: a
+                screen reader then hears the name and, while the tooltip shows, the same words as its description,
+                which is harmless.
+              </>
+            ),
+          },
+          {
+            term: "Timing",
+            text: (
+              <>
+                Fixed by the library: 200ms after the pointer rests, at once from the keyboard, never on touch. Nothing
+                about it is a prop. The 300ms skip between neighbours needs an app-level{" "}
+                <Mono>TooltipProvider</Mono>, which the site doesn&rsquo;t mount, so a row of icon buttons waits
+                200ms on each.
               </>
             ),
           },
@@ -149,7 +172,8 @@ export default function TooltipSheet() {
               <>
                 The <Mono>title</Mono> attribute (a second, slower, unstyled tooltip that touch and keyboard never see);
                 a tooltip on a disabled control (it gets no pointer or focus events: say why it&rsquo;s disabled in
-                words); a tooltip repeating a visible label; a tooltip as the only explanation of a control.
+                words); a tooltip repeating a visible label; a tooltip as the only explanation of a control; a{" "}
+                <Mono>className</Mono> colour or radius on it (the ink pill is the system&rsquo;s).
               </>
             ),
           },
@@ -169,29 +193,32 @@ export default function TooltipSheet() {
       <SheetSection
         id="live"
         title="Live"
-        description="Rest a mouse on a trigger, or Tab to one. Run the pointer along the toolbar: the first waits, the rest show at once."
+        description="Rest a mouse on a trigger, or Tab to one. The tooltip renders in a portal, so both panels' tooltips wear the site's theme."
       >
         <Sheet>
           {() => (
             <div className="grid gap-4 sm:grid-cols-2">
               <DemoCard name="icon-only, echoing aria-label" demo={<ToolbarTooltipDemo />}>
-                The common case. The tooltip shows the name; a screen reader already has it.
+                The common case. The tooltip shows the name; a screen reader already has it. Each button waits its own
+                200ms.
               </DemoCard>
               <DemoCard name="side" demo={<SidesTooltipDemo />}>
-                Each side. Near the window&rsquo;s edge it flips rather than clipping.
+                Each side, each sliding in from its own direction. Near the window&rsquo;s edge it flips rather than
+                clipping.
               </DemoCard>
               <DemoCard name="describing" demo={<DescriptionTooltipDemo />}>
                 Words the label leaves out, read after the name as the button&rsquo;s description.
               </DemoCard>
               <DemoCard name="on a menu's trigger" demo={<MenuTooltipDemo />}>
-                Menu clones the Tooltip, which passes the menu&rsquo;s props on. It doesn&rsquo;t show over the open menu.
+                Menu composes onto the Tooltip, which passes the menu&rsquo;s props on to the button. The press that
+                opens the menu hides it.
               </DemoCard>
             </div>
           )}
         </Sheet>
       </SheetSection>
 
-      <SheetSection id="anatomy" title="Anatomy" description="What Tooltip.tsx builds it from.">
+      <SheetSection id="anatomy" title="Anatomy" description="What the library draws under Tooltip.tsx.">
         <Sheet>
           {() => (
             <Matrix
@@ -209,7 +236,7 @@ export default function TooltipSheet() {
         </Sheet>
       </SheetSection>
 
-      <SheetSection id="timing" title="When it shows and hides" description="The delays are fixed; nothing about them is a prop.">
+      <SheetSection id="timing" title="When it shows and hides" description="Radix's, with the library's 200ms delay; nothing about it is a prop.">
         <Sheet>
           {() => (
             <Matrix

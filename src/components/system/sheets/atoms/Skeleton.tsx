@@ -16,12 +16,14 @@ const LINES: { type: string; px: string; widths: LineWidth[] }[] = [
   { type: "text-h6", px: "20 / 24", widths: ["3/4"] },
 ];
 
+// A rect with the corner of what it stands in for: the site's shapes are the pill (20px, a
+// control) and the container (24px, a card), with 4px for an image inside a padded card
 const RECTS: { radius: "none" | "sm" | "lg" | "2xl" | "full"; px: string; size: string; standsFor: string }[] = [
-  { radius: "sm", px: "4px, the default", size: "aspect-4/5 w-20", standsFor: "A post cover or an image (rounded)" },
-  { radius: "lg", px: "8px", size: "h-10 w-32", standsFor: "A button or a field at 40px" },
-  { radius: "2xl", px: "12px", size: "h-20 w-40", standsFor: "A card or a mat" },
-  { radius: "full", px: "pill", size: "h-11 w-28", standsFor: "A dashboard pill: Create, Saved" },
-  { radius: "none", px: "0", size: "h-12 w-24", standsFor: "A square-cornered image in a p-4 card" },
+  { radius: "sm", px: "4px, the default", size: "aspect-4/5 w-20", standsFor: "A post cover or an image inside a padded card" },
+  { radius: "lg", px: "20px, the pill", size: "h-7 w-32", standsFor: "A control: a button or a field at the compact 28px" },
+  { radius: "2xl", px: "24px, the container", size: "h-20 w-40", standsFor: "A card or a mat" },
+  { radius: "full", px: "a circle's", size: "h-11 w-28", standsFor: "A capsule taller than the pill: the dashboard's Create, Saved" },
+  { radius: "none", px: "0", size: "h-12 w-24", standsFor: "A square-cornered image" },
 ];
 
 const CIRCLES = ["xs", "sm", "md", "lg"] as const;
@@ -31,9 +33,9 @@ export default function SkeletonSheet() {
   return (
     <div className="flex flex-col gap-16">
       <SheetHeader title="Skeleton">
-        The shape of content on its way: grey blocks with a band of light crossing them, in the size and place the
-        real thing will take. Lines, circles and rectangles, hidden from screen readers; the region around them says
-        it&rsquo;s loading, once.
+        The shape of content on its way: blocks of the hover tint, pulsing, in the size and place the real thing will
+        take. Lines, circles and rectangles, hidden from screen readers; the region around them says it&rsquo;s loading,
+        once.
       </SheetHeader>
 
       <Rules
@@ -71,12 +73,23 @@ export default function SkeletonSheet() {
             term: "The set",
             text: (
               <>
-                <Mono>shape</Mono>: <Mono>rect</Mono> (the default; <Mono>radius</Mono> <Mono>sm</Mono>,{" "}
-                <Mono>lg</Mono>, <Mono>2xl</Mono>, <Mono>full</Mono>, <Mono>none</Mono>), <Mono>line</Mono> (
+                <Mono>shape</Mono>: <Mono>rect</Mono> (the default; <Mono>radius</Mono> <Mono>sm</Mono> 4px,{" "}
+                <Mono>lg</Mono> 20px, <Mono>2xl</Mono> 24px, <Mono>full</Mono>, <Mono>none</Mono>), <Mono>line</Mono> (
                 <Mono>width</Mono> <Mono>full</Mono>, <Mono>3/4</Mono>, <Mono>2/3</Mono>, <Mono>1/2</Mono>,{" "}
                 <Mono>1/3</Mono>, <Mono>1/4</Mono>), <Mono>circle</Mono> (<Mono>size</Mono> as Avatar&rsquo;s:{" "}
                 <Mono>xs</Mono> to <Mono>lg</Mono>, <Mono>md</Mono> by default). Each option belongs to its shape: the
                 types refuse a <Mono>width</Mono> on a circle.
+              </>
+            ),
+          },
+          {
+            term: "Corners",
+            text: (
+              <>
+                The radius names are kept from before the rebuild, but they now land on the site&rsquo;s two shapes:{" "}
+                <Mono>lg</Mono> is the pill (<Mono>rounded-[20px]</Mono>, every control), <Mono>2xl</Mono> the container
+                (<Mono>rounded-[24px]</Mono>, every card). <Mono>sm</Mono> stays 4px, the corner CardMedia gives an image
+                inside the default padding. A skeleton wears the corner of what it stands in for, nothing in between.
               </>
             ),
           },
@@ -106,9 +119,11 @@ export default function SkeletonSheet() {
             term: "Motion",
             text: (
               <>
-                <Mono>animate-shimmer</Mono>: a band of <Mono>--color-shimmer</Mono> crossing <Mono>bg-component</Mono>{" "}
-                every 1.6s, ease-in-out, every block in step. It holds still under reduced motion: a plain grey block is
-                still clearly a placeholder.
+                The block is <Mono>bg-hover</Mono> (the 4% overlay of the ink, 6% in dark: it tints whatever it sits on,
+                so one recipe reads on the page and on a mat) on <Mono>animate-pulse</Mono>, fading to half and back over
+                2s: the skeleton Fluid Functionalism&rsquo;s own reveal and sidebar use, since 2026-10-23. There is no
+                shimmer band any more. It holds still under reduced motion (<Mono>motion-reduce:animate-none</Mono>): a
+                plain tinted block is still clearly a placeholder.
               </>
             ),
           },
@@ -126,9 +141,9 @@ export default function SkeletonSheet() {
             term: "Never",
             text: (
               <>
-                <Mono>animate-pulse</Mono> on a grey div (no dark treatment, no reduced motion, a second recipe). A
-                skeleton left up after the request failed: show the error. A skeleton for something that takes under
-                300ms: it flashes.
+                Tailwind&rsquo;s grey with a pulse by hand (a palette colour that doesn&rsquo;t flip, no reduced motion,
+                a second recipe). A skeleton left up after the request failed: show the error. A skeleton for something
+                that takes under 300ms: it flashes.
               </>
             ),
           },
@@ -143,10 +158,10 @@ export default function SkeletonSheet() {
  ├── A person → shape="circle", the Avatar's size
  └── Anything else → a rect, sized with className,
        with the corner of what it stands in for
-        ├── an image or a cover → radius="sm" (the default)
-        ├── a button or a field → radius="lg"
-        ├── a card or a mat → radius="2xl"
-        └── a pill → radius="full"`}
+        ├── an image or a cover → radius="sm" (4px, the default)
+        ├── a button or a field → radius="lg" (the 20px pill)
+        ├── a card or a mat → radius="2xl" (the 24px container)
+        └── a capsule taller than 40px → radius="full"`}
       />
 
       <SheetSection
@@ -178,7 +193,7 @@ export default function SkeletonSheet() {
 
       <SheetSection
         title="Circles and rects"
-        description="Circles at the Avatar's four sizes; rects with the corner of what they stand in for, sized by className."
+        description="Circles at the Avatar's four sizes; rects with the corner of what they stand in for (the pill, the container, an image's 4px), sized by className."
       >
         <Sheet>
           {() => (
@@ -204,7 +219,7 @@ export default function SkeletonSheet() {
                   cells: [
                     <Skeleton key="s" radius={rect.radius} className={rect.size} />,
                     <Mono key="c">{rect.size}</Mono>,
-                    <span key="u" className="text-body-sm text-secondary-foreground">
+                    <span key="u" className="text-body-sm text-muted-foreground">
                       {rect.standsFor}
                     </span>,
                   ],
@@ -233,7 +248,7 @@ export default function SkeletonSheet() {
   ))}
 </div>`}
             incorrect={{
-              why: "Tailwind's grey and pulse, a guessed height, a label on every block",
+              why: "Tailwind's grey and a pulse by hand, a guessed height, a label on every block",
               code: `<div className="grid gap-6 sm:grid-cols-2">
   {Array.from({ length: 4 }, (_, i) => (
     <div key={i} role="status" aria-label="Loading" className="rounded-2xl bg-base-50 p-6">

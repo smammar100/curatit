@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 // A hairline between groups: menu sections, the rows of a settings list, two halves of a
 // toolbar. Use it where space alone doesn't separate two groups; most of the time a gap does,
 // and a line is one more thing to read. Lines between every row of a list are
-// `divide-y divide-border-default` on the list, not a Separator per row. Never a 2px line:
-// 2px is the focus ring's width, so a thick line reads as focus.
+// `divide-y divide-border-default` on the list, not a Separator per row. Never a thick line:
+// a line that is more than the stroke reads as a rule the layout is making a point of.
 //
 // Decorative by default (role="none": a screen reader skips it), which is right when the groups
 // already have headings or are separate lists. `semantic` makes it a real separator

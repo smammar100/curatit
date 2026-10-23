@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 // fixed values is Segmented; on or off is Switch or Checkbox. Give it its label, hint and error
 // with Field, which wires the ids.
 //
-//   size     md, the compact step: 28px (the default); lg, the default step: 36px
+//   size     md and lg are both the compact step, 28px (the site's setting; lg is kept for call sites)
 //   invalid  sets aria-invalid; the red ring keys off the attribute, so Field's error does the same
 //   leadingIcon  a decorative icon inside on the left (a Phosphor icon; drawn at 14px, never read)
 //   trailing     one small thing inside on the right: a Kbd, or an xxs icon Button. Clicks on
@@ -39,7 +39,8 @@ export const fieldClass =
 const searchClass = "[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none";
 
 // The site's two sizes on the library's two steps
-const sizes = { md: "compact", lg: "default" } as const;
+// Both names on the compact step: the site's setting, the dashboard's settings forms included
+const sizes = { md: "compact", lg: "compact" } as const;
 
 export type InputSize = keyof typeof sizes;
 

@@ -31,9 +31,10 @@ scrolls the page sideways.
 ## Cards and grids
 
 - Grid: `grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3`.
-- A card is `<Card>` (`docs/design/display.md`): the grey mat (`bg-card`, `rounded-2xl`) or the
-  white card (`bg-container shadow-xs`); the image inside is rounded with the default shadow; the
-  title's own link stretches over the card.
+- A card is `<Card>` (`docs/design/display.md`): the grey mat (`variant="mat"`) or the white
+  card (`variant="raised"`), on the container corners (24px, from the shape context); the image
+  inside (`CardMedia`) takes the concentric corner for the padding; the title's own link stretches
+  over the card.
 - Images use `next/image` with `width` and `height`.
 
 ```tsx

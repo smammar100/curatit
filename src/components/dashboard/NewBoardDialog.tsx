@@ -25,7 +25,7 @@ export const DESCRIPTION_MAX = 160;
 // The fills are alpha tints (card), so they read on the modal surface in both themes. Each field
 // sets its own text colour (cx doesn't merge, so a second one here would fight it)
 const field =
-  "w-full rounded-xl border-0 bg-transparent px-3 text-center transition-colors duration-150 ease-out-quint focus:bg-card focus:ring-0 focus:outline-hidden";
+  "w-full rounded-[20px] border-0 bg-transparent px-3 text-center transition-colors duration-80 focus:bg-hover focus:ring-0 focus:outline-hidden";
 
 export default function NewBoardDialog({ open, onClose, firstPost }: { open: boolean; onClose: () => void; firstPost?: string }) {
   const { createBoard } = useBoards();

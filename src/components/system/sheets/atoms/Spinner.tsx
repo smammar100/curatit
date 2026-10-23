@@ -1,8 +1,7 @@
 // /system/spinner: Spinner (src/components/fundations/elements/Spinner.tsx), its sizes in the
-// colours it takes from its parent, and the waits it isn't for. Every class is written out in
-// full, so Tailwind sees it
+// colours it takes from its parent, how it rests, and the waits it isn't for. Every class is
+// written out in full, so Tailwind sees it
 import Spinner from "@/components/fundations/elements/Spinner";
-import CircleNotch from "@/components/fundations/icons/CircleNotch";
 import { Code, Flow, Matrix, Mono, Rules, Sheet, SheetHeader, SheetSection } from "../../SheetParts";
 
 const SIZES = ["sm", "md", "lg"] as const;
@@ -10,23 +9,41 @@ const PX = { sm: "14", md: "16", lg: "20" };
 
 // The spinner takes its colour from the text around it: the grounds and inks it meets
 const INKS: { label: string; sub: string; box: string }[] = [
-  { label: "text-secondary-foreground", sub: "the default beside a status line", box: "text-secondary-foreground" },
-  { label: "text-primary-foreground", sub: "inside a heading or a strong label", box: "text-primary-foreground" },
+  { label: "text-muted-foreground", sub: "the default beside a status line", box: "text-muted-foreground" },
+  { label: "text-foreground", sub: "inside a heading or a strong label", box: "text-foreground" },
   {
-    label: "text-on-inverted-foreground",
-    sub: "on the primary fill (Button's loading)",
-    box: "rounded-lg bg-inverted-solid p-2 text-on-inverted-foreground",
+    label: "text-background",
+    sub: "on the ink (Button's loading, the toast)",
+    box: "rounded-[20px] bg-foreground p-2 text-background",
   },
-  { label: "a grey mat", sub: "bg-card, secondary ink", box: "rounded-lg bg-card p-2 text-secondary-foreground" },
+  { label: "a grey mat", sub: "bg-card, the muted ink", box: "rounded-[20px] bg-card p-2 text-muted-foreground" },
 ];
+
+/** The figure of eight at rest, as reduced motion shows it: the same path with its 15/85 dash
+ *  and no animation. A specimen for this sheet only; the component draws the real one */
+function Resting() {
+  return (
+    <svg className="size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M 12 12 C 14 8.5 19 8.5 19 12 C 19 15.5 14 15.5 12 12 C 10 8.5 5 8.5 5 12 C 5 15.5 10 15.5 12 12 Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        pathLength="100"
+        className="[stroke-dasharray:15_85]"
+      />
+    </svg>
+  );
+}
 
 export default function SpinnerSheet() {
   return (
     <div className="flex flex-col gap-16">
       <SheetHeader title="Spinner">
-        An inline wait: Phosphor&rsquo;s notch turning in the colour of the text around it, at 14, 16 or 20px. For
-        something that finishes in a second or two, right where you&rsquo;re looking. It names the wait once, or
-        stays silent inside a control that already says it&rsquo;s busy.
+        An inline wait: Fluid Functionalism&rsquo;s figure of eight, a short dash running round one path in the colour
+        of the text around it, at 14, 16 or 20px. For something that finishes in a second or two, right where
+        you&rsquo;re looking. It names the wait once, or stays silent inside a control that already says it&rsquo;s
+        busy.
       </SheetHeader>
 
       <Rules
@@ -45,8 +62,9 @@ export default function SpinnerSheet() {
             term: "Instead",
             text: (
               <>
-                A button&rsquo;s own request is <Mono>{"<Button loading>"}</Mono>: the same notch over the label, the
-                width held, the click ignored. A region whose content is on its way (the feed, a card, a list) is{" "}
+                A button&rsquo;s own request is <Mono>{"<Button loading>"}</Mono>: the same figure over the label, which
+                stays mounted at opacity 0 so the width holds; the button is disabled while it&rsquo;s busy (the
+                library&rsquo;s way). A region whose content is on its way (the feed, a card, a list) is{" "}
                 <Mono>Skeleton</Mono>, which holds the layout so nothing jumps. A page never waits behind one spinner.
               </>
             ),
@@ -86,8 +104,19 @@ export default function SpinnerSheet() {
             term: "Colour",
             text: (
               <>
-                <Mono>currentColor</Mono>: set the ink on the parent (<Mono>text-secondary-foreground</Mono> beside a
-                status line). Never brand: terracotta is for interaction, and a wait isn&rsquo;t one.
+                <Mono>currentColor</Mono>: set the ink on the parent (<Mono>text-muted-foreground</Mono> beside a status
+                line). Never brand: terracotta is for interaction, and a wait isn&rsquo;t one.
+              </>
+            ),
+          },
+          {
+            term: "The figure",
+            text: (
+              <>
+                One SVG path, a figure of eight in a 24px box, stroked 1.5 with round caps and a{" "}
+                <Mono>pathLength</Mono> of 100, so its dash is measured in percent: the path the library draws inside its
+                Button, installed with it on 2026-10-23. A 15/85 dash (<Mono>[stroke-dasharray:15_85]</Mono>) runs round it
+                while the dash breathes longer and shorter, so the figure reads as moving rather than turning.
               </>
             ),
           },
@@ -95,9 +124,10 @@ export default function SpinnerSheet() {
             term: "Motion",
             text: (
               <>
-                Tailwind&rsquo;s <Mono>animate-spin</Mono>, one turn a second at a constant speed (an eased spin would
-                seem to stall each turn). Under reduced motion it holds still: an open ring that still reads as
-                &ldquo;not done&rdquo;.
+                Two keyframes in <Mono>global.css</Mono>, both on the stroke: <Mono>spinner-move</Mono> slides the dash
+                one lap every 2s, linear (an eased lap would seem to stall), and <Mono>spinner-dash</Mono> grows the dash
+                from 15 to 40 and back over 4s, ease-in-out. Under reduced motion both stop (
+                <Mono>motion-reduce:[animation:none]</Mono>): a short dash on the figure, still clearly unfinished.
               </>
             ),
           },
@@ -106,9 +136,9 @@ export default function SpinnerSheet() {
             text: (
               <>
                 A spinner for a wait under 300ms: it flashes, and the flash reads as a glitch. Two on one screen. A
-                disabled button with a spinner in it (disabled drops focus and says nothing; that&rsquo;s{" "}
-                <Mono>loading</Mono>). The notch by hand: <Mono>{'<CircleNotch className="animate-spin" />'}</Mono>{" "}
-                misses reduced motion and the name.
+                disabled button with a spinner in it beside the label (that&rsquo;s <Mono>loading</Mono>, which keeps
+                the width). The figure by hand, or Phosphor&rsquo;s notch on <Mono>animate-spin</Mono>: both miss
+                reduced motion and the name, and the notch is no longer the site&rsquo;s wait.
               </>
             ),
           },
@@ -162,7 +192,7 @@ export default function SpinnerSheet() {
 
       <SheetSection
         title="Named, silent, still"
-        description="The same notch three ways: read out as a status, silent inside something that already says it's busy, and as it rests under reduced motion."
+        description="The same figure three ways: read out as a status, silent inside something that already says it's busy, and as it rests under reduced motion."
       >
         <Sheet>
           {() => (
@@ -175,10 +205,10 @@ export default function SpinnerSheet() {
                   label: "label",
                   sub: 'label="Copying link"',
                   cells: [
-                    <span key="s" className="text-secondary-foreground">
+                    <span key="s" className="text-muted-foreground">
                       <Spinner label="Copying link" />
                     </span>,
-                    <span key="r" className="text-body-sm text-secondary-foreground">
+                    <span key="r" className="text-body-sm text-muted-foreground">
                       A status, read once: &ldquo;Copying link&rdquo;. The words are hidden on screen.
                     </span>,
                   ],
@@ -187,12 +217,12 @@ export default function SpinnerSheet() {
                   label: "decorative",
                   sub: "inside a status line",
                   cells: [
-                    <p key="s" role="status" className="flex items-center gap-2 text-body-sm text-secondary-foreground">
+                    <p key="s" role="status" className="flex items-center gap-2 text-body-sm text-muted-foreground">
                       <Spinner size="sm" decorative />
                       Checking the link…
                     </p>,
-                    <span key="r" className="text-body-sm text-secondary-foreground">
-                      The line around it is the status and says it in words; the notch is hidden.
+                    <span key="r" className="text-body-sm text-muted-foreground">
+                      The line around it is the status and says it in words; the figure is hidden.
                     </span>,
                   ],
                 },
@@ -200,11 +230,12 @@ export default function SpinnerSheet() {
                   label: "reduced motion",
                   sub: "how it rests",
                   cells: [
-                    <span key="s" className="flex text-secondary-foreground">
-                      <CircleNotch aria-hidden className="size-4" />
+                    <span key="s" className="flex text-muted-foreground">
+                      <Resting />
                     </span>,
-                    <span key="r" className="text-body-sm text-secondary-foreground">
-                      <Mono>motion-reduce:animate-none</Mono>: an open ring, still clearly unfinished.
+                    <span key="r" className="text-body-sm text-muted-foreground">
+                      <Mono>motion-reduce:[animation:none]</Mono>: the dash stops where it starts, 15% of the figure,
+                      still clearly not done.
                     </span>,
                   ],
                 },
@@ -214,8 +245,8 @@ export default function SpinnerSheet() {
         </Sheet>
         <div className="mt-6">
           <Code
-            correct={`{/* A status line: the words say it, the notch is decoration */}
-<p role="status" className="flex items-center gap-2 text-body-sm text-secondary-foreground">
+            correct={`{/* A status line: the words say it, the figure is decoration */}
+<p role="status" className="flex items-center gap-2 text-body-sm text-muted-foreground">
   <Spinner size="sm" decorative />
   Saving note…
 </p>
@@ -226,7 +257,7 @@ export default function SpinnerSheet() {
 {/* A button's own request */}
 <Button loading={saving} onClick={save}>Save</Button>`}
             incorrect={{
-              why: "the notch by hand, and a disabled button standing in for loading",
+              why: "the notch by hand in brand colour, and a disabled button standing in for loading",
               code: `<CircleNotch className="size-4 animate-spin text-brand-foreground" />
 
 <Button disabled={saving}>

@@ -4,8 +4,9 @@
 // Functionalism's Banner (src/components/ui/banner.tsx): a light wash of the tone's colour behind
 // the words (a neutral grey for information), the tone's filled glyph before them with the mark
 // cut out in the page colour, the words always the ink, the container corners, and actions that
-// trail a one-line message and drop under a longer one. A notice that appears opens its row on
-// the moderate spring and grows in on the slow one; one that's dismissed folds its row away.
+// trail a one-line message and drop under a longer one. A notice arrives in place with the
+// content it belongs to (the library's opening spring runs only when a banner is shown after
+// its page has rendered, which Notice doesn't do).
 //
 // A form's server error ("Wrong email or password"), a state of the page ("Sharing is off"), a
 // warning before an action ("This token expires in 3 days"), a result that should stay put

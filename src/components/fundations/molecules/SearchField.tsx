@@ -8,7 +8,7 @@
 // (its suggestions panel, the border beam) is dashboard/SearchBox, which is built for that one
 // place.
 //
-//   size      md 40px (the default) or lg 44px, the Input's two
+//   size      md 28px (the default, the compact step) or lg 36px, the Input's two
 //   value / defaultValue / onValueChange   controlled or uncontrolled; the value is a string
 //   shortcut  one key, like "/", that focuses it from anywhere on the page except while typing
 //             in another field (it isn't taken with Cmd, Ctrl or Alt held, nor while the field

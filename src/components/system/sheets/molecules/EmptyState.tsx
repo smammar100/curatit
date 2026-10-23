@@ -1,6 +1,7 @@
 // /system/empty-state: fundations/molecules/EmptyState.tsx, both sizes and both contexts with
 // real copy, live in both themes. Server only: nothing here needs a script
 import Button from "@/components/fundations/elements/Button";
+import Card from "@/components/fundations/molecules/Card";
 import EmptyState from "@/components/fundations/molecules/EmptyState";
 import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
 import Search from "@/components/fundations/icons/Search";
@@ -9,37 +10,40 @@ import { Code, Flow, Matrix, Mono, Rules, Sheet, SheetHeader, SheetSection } fro
 import { FEEDBACK_FLOW } from "./Notice";
 
 /** A board waiting for its first post: two cards fanned behind a dashed one. Drawn in the
- *  tokens, so it follows the theme; decorative (EmptyState hides it), as the words say the same */
+ *  tokens (the raised surface, the one stroke, the muted tile), so it follows the theme;
+ *  decorative (EmptyState hides it), as the words say the same */
 function BoardArt() {
   const card = (x: number, angle: number) => (
     <g transform={`translate(${x} 34) rotate(${angle} 36 46)`}>
-      <rect x="0.75" y="0.75" width="70.5" height="90.5" rx="8" className="fill-container stroke-border-strong" strokeWidth="1.5" />
-      <rect x="8" y="8" width="56" height="50" rx="4" className="fill-component" />
-      <rect x="8" y="67" width="36" height="5" rx="2.5" className="fill-component" />
-      <rect x="8" y="77" width="24" height="5" rx="2.5" className="fill-component" />
+      <rect x="0.75" y="0.75" width="70.5" height="90.5" rx="8" className="fill-surface-3 stroke-border" strokeWidth="1.5" />
+      <rect x="8" y="8" width="56" height="50" rx="4" className="fill-muted" />
+      <rect x="8" y="67" width="36" height="5" rx="2.5" className="fill-muted" />
+      <rect x="8" y="77" width="24" height="5" rx="2.5" className="fill-muted" />
     </g>
   );
   return (
     <svg viewBox="0 0 224 140" className="w-52">
-      <ellipse cx="112" cy="132" rx="74" ry="4" className="fill-component" />
+      <ellipse cx="112" cy="132" rx="74" ry="4" className="fill-muted" />
       {card(36, -10)}
       {card(116, 10)}
       <g transform="translate(76 22)">
-        <rect x="0.75" y="0.75" width="70.5" height="102.5" rx="8" className="fill-container stroke-border-strong" strokeWidth="1.5" strokeDasharray="5 5" />
-        <path d="M36 32v20M26 42h20" className="stroke-secondary-foreground" strokeWidth="2.5" strokeLinecap="round" />
-        <rect x="8" y="76" width="36" height="5" rx="2.5" className="fill-component" />
-        <rect x="8" y="86" width="24" height="5" rx="2.5" className="fill-component" />
+        <rect x="0.75" y="0.75" width="70.5" height="102.5" rx="8" className="fill-surface-3 stroke-border" strokeWidth="1.5" strokeDasharray="5 5" />
+        <path d="M36 32v20M26 42h20" className="stroke-muted-foreground" strokeWidth="2.5" strokeLinecap="round" />
+        <rect x="8" y="76" width="36" height="5" rx="2.5" className="fill-muted" />
+        <rect x="8" y="86" width="24" height="5" rx="2.5" className="fill-muted" />
       </g>
     </svg>
   );
 }
 
-// What each size and context sets (sizes, dashboardType and siteType in EmptyState.tsx)
+// What each size and context sets (sizes, dashboardType and siteType in EmptyState.tsx). The
+// weight is the library's semibold through fontVariationSettings, except the site's md title,
+// which is the serif at its one weight
 const SPEC: { label: string; sub: string; title: string; line: string; space: string }[] = [
-  { label: "md · dashboard", sub: "the default", title: "text-title font-medium · 16/22", line: "text-body · 13/20", space: "max-w-sm · py-16 · art mb-6 · actions mt-6" },
-  { label: "sm · dashboard", sub: "a panel or menu", title: "text-body font-medium · 13/20", line: "text-caption · 12/16", space: "max-w-xs · px-4 py-8 · art mb-3 · actions mt-4" },
+  { label: "md · dashboard", sub: "the default", title: "text-title · semibold · 16/22", line: "text-body · 13/20", space: "max-w-sm · py-16 · art mb-6 · actions mt-6" },
+  { label: "sm · dashboard", sub: "a panel or menu", title: "text-body · semibold · 13/20", line: "text-caption · 12/16", space: "max-w-xs · px-4 py-8 · art mb-3 · actions mt-4" },
   { label: "md · site", sub: "marketing, auth, share", title: "Text h6 · the serif, 20/24", line: "Text body · 15/24", space: "max-w-sm · py-16 · art mb-6 · actions mt-6" },
-  { label: "sm · site", sub: "a card on the site", title: "Text bodySM font-medium · 13/20", line: "Text bodySM · 13/20", space: "max-w-xs · px-4 py-8 · art mb-3 · actions mt-4" },
+  { label: "sm · site", sub: "a card on the site", title: "Text bodySM · semibold · 13/20", line: "Text bodySM · 13/20", space: "max-w-xs · px-4 py-8 · art mb-3 · actions mt-4" },
 ];
 
 export default function EmptyStateSheet() {
@@ -92,13 +96,28 @@ export default function EmptyStateSheet() {
             ),
           },
           {
+            term: "Type",
+            text: (
+              <>
+                The title is the ink (<Mono>text-foreground</Mono>) in the library&rsquo;s semibold, set through{" "}
+                <Mono>fontVariationSettings: fontWeights.semibold</Mono> (wght 550 with its optical size), never a{" "}
+                <Mono>font-*</Mono> class; the site&rsquo;s md title is the serif at its one regular weight and takes no
+                weight at all. The line is <Mono>text-muted-foreground</Mono>, a step down, so the place&rsquo;s name
+                leads and the how-to follows.
+              </>
+            ),
+          },
+          {
             term: "Picture",
             text: (
               <>
                 One of <Mono>icon</Mono> (a Phosphor icon on a quiet tile; the type refuses both) or{" "}
-                <Mono>illustration</Mono> (a drawing in the tokens, as it is), or none. It&rsquo;s hidden from screen
-                readers: the words must say everything without it. An md page section earns an illustration; sm gets an
-                icon at most.
+                <Mono>illustration</Mono> (a drawing in the tokens, as it is), or none. The tile is{" "}
+                <Mono>bg-muted</Mono> with the icon in <Mono>text-muted-foreground</Mono>, at <Mono>md</Mono> 48px with
+                the pill&rsquo;s <Mono>rounded-[20px]</Mono>, at <Mono>sm</Mono> 40px with <Mono>rounded-[16px]</Mono>, so
+                the tile&rsquo;s corner is the shape everything else on the site shares. Either picture is hidden from
+                screen readers: the words must say everything without it. An md page section earns an illustration; sm
+                gets an icon at most.
               </>
             ),
           },
@@ -150,7 +169,7 @@ export default function EmptyStateSheet() {
 
       <SheetSection
         title="md, with a second way out"
-        description="A search that found nothing: the next step, and a quiet way back. An icon instead of a drawing, and no secondary solid."
+        description="A search that found nothing: the next step, and a quiet way back. An icon on the 48px muted tile instead of a drawing, and no secondary solid."
       >
         <Sheet>
           {() => (
@@ -171,12 +190,12 @@ export default function EmptyStateSheet() {
 
       <SheetSection
         title="sm · dashboard"
-        description="Inside a panel, a card or a menu: smaller type, tighter spacing, an icon at most."
+        description="Inside a panel, a card or a menu: smaller type, tighter spacing, the 40px tile, an icon at most. Each sits in a raised Card at its smallest padding."
       >
         <Sheet split>
           {() => (
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl bg-container shadow-xs">
+              <Card variant="raised" padding="sm">
                 <EmptyState
                   size="sm"
                   icon={<BookmarkSimple />}
@@ -184,15 +203,15 @@ export default function EmptyStateSheet() {
                   description="Make one to keep posts for a brief together."
                   action={<Button size="sm">New board</Button>}
                 />
-              </div>
-              <div className="rounded-2xl bg-container shadow-xs">
+              </Card>
+              <Card variant="raised" padding="sm">
                 <EmptyState
                   size="sm"
                   icon={<SquaresFour />}
                   title="Nothing to review"
                   description="Every analysis has a decision. New ones arrive after each import."
                 />
-              </div>
+              </Card>
             </div>
           )}
         </Sheet>
@@ -200,7 +219,7 @@ export default function EmptyStateSheet() {
 
       <SheetSection
         title="md · site"
-        description="On the marketing, auth and share pages the type is Text: the title in the serif. The share page's empty board."
+        description="On the marketing, auth and share pages the type is Text: the title in the serif, which takes no weight. The share page's empty board."
       >
         <Sheet>
           {() => (
@@ -218,7 +237,10 @@ export default function EmptyStateSheet() {
         </Sheet>
       </SheetSection>
 
-      <SheetSection title="What each size and context sets" description="Centred, text-balance on the title and text-pretty on the line, so neither ends on a lone word.">
+      <SheetSection
+        title="What each size and context sets"
+        description="Centred, text-balance on the title and text-pretty on the line, so neither ends on a lone word. Semibold is the library's, through fontVariationSettings."
+      >
         <Sheet>
           {() => (
             <Matrix

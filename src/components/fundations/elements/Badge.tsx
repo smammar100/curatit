@@ -24,7 +24,7 @@ const variants: Record<string, { className?: string; style?: CSSProperties }> = 
   },
 };
 // The site's three sizes on the library's two steps
-const sizes = { sm: "compact", md: "compact", lg: "default" } as const;
+const sizes = { sm: "compact", md: "compact", lg: "compact" } as const;
 
 export default function Badge({
   variant = "default",

@@ -13,6 +13,7 @@ import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
 import Plus from "@/components/fundations/icons/Plus";
 import Button from "@/components/fundations/elements/Button";
 import Menu, { MenuCaret, MenuItemRadio, MenuRadioGroup } from "@/components/fundations/molecules/Menu";
+import Tabs, { Tab, TabList } from "@/components/fundations/molecules/Tabs";
 import AccountMenu from "./AccountMenu";
 import { useBoards } from "./boards";
 import NewBoardDialog from "./NewBoardDialog";
@@ -51,20 +52,17 @@ export default function Header({
         >
           <Symbol className="size-8" aria-hidden="true" />
         </Link>
-        {/* Tabs on wide screens, a menu below that */}
-        <nav aria-label="Feed" className="hidden items-center gap-6 lg:flex">
-          {TABS.map((option) => (
-            <button
-              key={option}
-              type="button"
-              aria-current={option === view ? "page" : undefined}
-              onClick={() => onView(option)}
-              className="relative rounded-sm text-title font-medium whitespace-nowrap text-secondary-foreground after:absolute after:-inset-x-2 after:-inset-y-3 transition-colors duration-150 ease-out-quint hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-[current=page]:text-primary-foreground"
-            >
-              {option}
-            </button>
-          ))}
-        </nav>
+        {/* Tabs on wide screens (the shared Tabs since 2026-10-23: the view you're on sits on the
+            pressed pill; the feed below is what they switch), a menu below lg */}
+        <Tabs value={view ?? ""} onValueChange={(next) => onView(next as View)} className="hidden lg:block">
+          <TabList aria-label="Feed">
+            {TABS.map((option) => (
+              <Tab key={option} value={option}>
+                {option}
+              </Tab>
+            ))}
+          </TabList>
+        </Tabs>
         <div className="hidden sm:block lg:hidden">
           <ViewMenu view={view} onChange={onView} />
         </div>
@@ -74,27 +72,28 @@ export default function Header({
 
       <div className="flex items-center justify-end gap-2">
         <CreateBoard />
-        {/* Saved: filled while you're on it (or on one of your boards), with the count. Filled is
-            the primary button's solid, without the secondary one's shadow */}
-        <Button
-          variant="secondary"
-          size="lg"
-          shape="pill"
-          iconOnly
-          onClick={() => onView("Saved")}
-          aria-label={savedCount ? `Saved, ${savedCount} ${savedCount === 1 ? "post" : "posts"}` : "Saved"}
-          aria-current={view === "Saved" ? "page" : undefined}
-          title="Saved"
-          className="aria-[current=page]:bg-inverted-solid aria-[current=page]:text-on-inverted-foreground aria-[current=page]:shadow-none"
-        >
-          <BookmarkSimple className="size-4.5" />
+        {/* Saved: the primary (the ink) while you're on it (or on one of your boards), the outlined
+            secondary otherwise, with the count. The badge sits beside the button in a positioned
+            wrapper, since the library's button places its own content and would hold it inside */}
+        <span className="relative inline-flex">
+          <Button
+            variant={view === "Saved" ? "default" : "secondary"}
+            size="lg"
+            iconOnly
+            onClick={() => onView("Saved")}
+            aria-label={savedCount ? `Saved, ${savedCount} ${savedCount === 1 ? "post" : "posts"}` : "Saved"}
+            aria-current={view === "Saved" ? "page" : undefined}
+            title="Saved"
+          >
+            <BookmarkSimple className="size-3.5" />
+          </Button>
           {/* The count: the brand's solid, cut out of the header by a ring of the page's colour */}
           {savedCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-solid px-1 text-micro font-medium text-on-brand-solid-foreground tabular-nums ring-2 ring-page">
+            <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-solid px-1 text-micro text-on-brand-solid-foreground tabular-nums ring-2 ring-page">
               {savedCount}
             </span>
           )}
-        </Button>
+        </span>
         <AccountMenu savedCount={savedCount} onShowSaved={() => onView("Saved")} />
       </div>
     </header>

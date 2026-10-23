@@ -4,6 +4,7 @@
 import type { ReactNode } from "react";
 import Avatar from "@/components/fundations/elements/Avatar";
 import Button from "@/components/fundations/elements/Button";
+import { fontWeights } from "@/lib/font-weight";
 import { Code, Flow, Matrix, Mono, Rules, Sheet, SheetHeader, SheetSection } from "../../SheetParts";
 
 // The template's portrait, through the image optimizer at 96px (the 2400px original is half a
@@ -25,13 +26,16 @@ const CASES: { label: string; sub: string; src?: string | null; name: string }[]
   { label: "accents, hyphens", sub: "first letter of the first two", name: "Émile Zola-Durand" },
 ];
 
+// The library's semibold, for a name set beside its avatar (no Tailwind font-* on new code)
+const semibold = { fontVariationSettings: fontWeights.semibold };
+
 // Where each size goes, beside the text it sits with
 const BESIDE: { size: (typeof SIZES)[number]; type: string; specimen: ReactNode; use: string }[] = [
   {
     size: "xs",
     type: "text-caption-lg",
     specimen: (
-      <span className="flex items-center gap-1.5 text-caption-lg text-secondary-foreground">
+      <span className="flex items-center gap-1.5 text-caption-lg text-muted-foreground">
         <Avatar size="xs" src={PICTURE} name="Daniel Okafor" decorative />
         Daniel Okafor · 2 days ago
       </span>
@@ -42,7 +46,7 @@ const BESIDE: { size: (typeof SIZES)[number]; type: string; specimen: ReactNode;
     size: "sm",
     type: "text-body-sm",
     specimen: (
-      <span className="flex items-center gap-2 text-body-sm text-primary-foreground">
+      <span className="flex items-center gap-2 text-body-sm text-foreground">
         <Avatar size="sm" name="Priya Raman" decorative />
         Priya Raman
       </span>
@@ -56,8 +60,10 @@ const BESIDE: { size: (typeof SIZES)[number]; type: string; specimen: ReactNode;
       <span className="flex items-center gap-3">
         <Avatar src={PICTURE} name="Daniel Okafor" decorative />
         <span className="flex min-w-0 flex-col">
-          <span className="truncate text-body-sm font-medium text-primary-foreground">Daniel Okafor</span>
-          <span className="truncate text-caption-lg text-secondary-foreground">daniel@okafor.studio</span>
+          <span className="truncate text-body-sm text-foreground" style={semibold}>
+            Daniel Okafor
+          </span>
+          <span className="truncate text-caption-lg text-muted-foreground">daniel@okafor.studio</span>
         </span>
       </span>
     ),
@@ -69,7 +75,9 @@ const BESIDE: { size: (typeof SIZES)[number]; type: string; specimen: ReactNode;
     specimen: (
       <span className="flex items-center gap-3">
         <Avatar size="lg" name="Syed Mohammad Ammar" decorative />
-        <span className="text-body-base font-medium text-primary-foreground">Syed Mohammad Ammar</span>
+        <span className="text-body-base text-foreground" style={semibold}>
+          Syed Mohammad Ammar
+        </span>
       </span>
     ),
     use: "Where the person is the subject: a profile or settings heading, the welcome flow's name step",
@@ -80,8 +88,9 @@ export default function AvatarSheet() {
   return (
     <div className="flex flex-col gap-16">
       <SheetHeader title="Avatar">
-        A person: their picture in a circle, or their initials on the brand&rsquo;s tint when there&rsquo;s no
-        picture or it won&rsquo;t load. Four sizes, 20 to 44px. It names itself unless the name is written beside it.
+        A person: their picture in a circle with the one stroke round it, or their initials in the library&rsquo;s
+        semibold on the brand&rsquo;s tint when there&rsquo;s no picture or it won&rsquo;t load. Four sizes, 20 to 44px.
+        It names itself unless the name is written beside it.
       </SheetHeader>
 
       <Rules
@@ -137,10 +146,23 @@ export default function AvatarSheet() {
             term: "Initials",
             text: (
               <>
-                Up to two letters, the first of the first two words; an email&rsquo;s dots and @ split words. Inter
-                medium on <Mono>bg-brand-subtle</Mono> with <Mono>text-on-brand-subtle-foreground</Mono>, as the
-                dashboard has shown them since 2026-10-10: the one brand fill that isn&rsquo;t an interaction, kept
-                because it marks a person apart from the grey chrome.
+                Up to two letters, the first of the first two words; an email&rsquo;s dots and @ split words. Set in
+                the library&rsquo;s semibold (Fluid Functionalism&rsquo;s <Mono>fontWeights.semibold</Mono>, wght 550
+                with its optical size, through <Mono>fontVariationSettings</Mono>, never a <Mono>font-*</Mono> class) on{" "}
+                <Mono>bg-brand-subtle</Mono> with <Mono>text-on-brand-subtle-foreground</Mono>, as the dashboard has
+                shown them since 2026-10-10: the one brand fill that isn&rsquo;t an interaction, kept because it marks a
+                person apart from the grey chrome.
+              </>
+            ),
+          },
+          {
+            term: "Edge",
+            text: (
+              <>
+                The picture&rsquo;s edge is the one stroke, <Mono>outline-1 -outline-offset-1 outline-border</Mono>,
+                drawn inside the circle over the pixels (12% of the ink, so it reads on the page and on a mat in both
+                themes). Under it, while the picture loads, the circle is <Mono>bg-muted</Mono>, so nothing flashes
+                white. The initials need no stroke: their tint is their edge.
               </>
             ),
           },
@@ -160,8 +182,8 @@ export default function AvatarSheet() {
             text: (
               <>
                 Avatar is a <Mono>span</Mono>. Something that opens on it is a Button around it (
-                <Mono>{'variant="none" iconOnly shape="pill"'}</Mono>), which brings the focus ring, the press and the
-                44px target.
+                <Mono>{'variant="none" iconOnly size="lg"'}</Mono>), which brings the focus ring, the press and the
+                target.
               </>
             ),
           },
@@ -171,7 +193,7 @@ export default function AvatarSheet() {
               <>
                 A plain <Mono>img</Mono>, never <Mono>next/image</Mono>: avatar hosts aren&rsquo;t in next.config&rsquo;s
                 image list, so the optimizer answers 400. It carries its width and height (no shift while it loads) and
-                the edge line, so a white photo still has an edge on the white page.
+                the stroke, so a white photo still has an edge on the white page.
               </>
             ),
           },
@@ -232,7 +254,7 @@ export default function AvatarSheet() {
 
       <SheetSection
         title="Beside a name"
-        description="Each size with the text it sits beside. These are decorative: the name is right there, so the Avatar is hidden from screen readers."
+        description="Each size with the text it sits beside, the name in the library's semibold. These are decorative: the name is right there, so the Avatar is hidden from screen readers."
       >
         <Sheet>
           {() => (
@@ -248,7 +270,7 @@ export default function AvatarSheet() {
                   <span key="s" className="min-w-0">
                     {b.specimen}
                   </span>,
-                  <span key="u" className="text-body-sm text-secondary-foreground">
+                  <span key="u" className="text-body-sm text-muted-foreground">
                     {b.use}
                   </span>,
                 ],
@@ -260,18 +282,21 @@ export default function AvatarSheet() {
 
       <SheetSection
         title="Inside a control"
-        description="The account button: Button gives the target, the focus ring and the press; the Avatar is the picture inside it. Tab to it to see the ring."
+        description="The account button: Button gives the target, the focus ring (the 1px terracotta outline, 2px out) and the press; the Avatar is the picture inside it. Tab to it to see the ring."
       >
         <Sheet split>
           {() => (
             <div className="flex flex-wrap items-center gap-6">
-              <Button variant="none" iconOnly shape="pill" size="lg" aria-label="Account menu">
+              <Button variant="none" iconOnly size="lg" aria-label="Account menu">
                 <Avatar src={PICTURE} name="Daniel Okafor" decorative />
               </Button>
-              <Button variant="none" iconOnly shape="pill" size="lg" aria-label="Account menu">
+              <Button variant="none" iconOnly size="lg" aria-label="Account menu">
                 <Avatar src={BROKEN} name="Priya Raman" decorative />
               </Button>
-              <span className="text-body-sm text-secondary-foreground">44px buttons, 32px avatars</span>
+              <span className="text-body-sm text-muted-foreground">
+                28px icon buttons (every size name is the compact step; <Mono>lg</Mono> is kept for the call site)
+                around 32px avatars
+              </span>
             </div>
           )}
         </Sheet>
@@ -280,18 +305,22 @@ export default function AvatarSheet() {
             correct={`{/* The menu's head: the name is beside it */}
 <span className="flex items-center gap-3">
   <Avatar src={user.avatar} name={user.name} decorative />
-  <span className="text-body-sm font-medium text-primary-foreground">{user.name}</span>
+  <span className="text-body-sm text-foreground" style={{ fontVariationSettings: fontWeights.semibold }}>
+    {user.name}
+  </span>
 </span>
 
 {/* The trigger: the button is named, the picture is decoration */}
-<Button variant="none" iconOnly shape="pill" size="lg" aria-label="Account menu">
+<Button variant="none" iconOnly size="lg" aria-label="Account menu">
   <Avatar src={user.avatar} name={user.name} decorative />
 </Button>`}
             incorrect={{
-              why: "no alt and no fallback; next/image on a host it refuses",
+              why: "no alt and no fallback; next/image on a host it refuses; a weight class",
               code: `<img src={user.avatar} className="size-8 rounded-full" />
 
-<Image src={user.avatar} alt={user.name} width={32} height={32} className="rounded-full" />`,
+<Image src={user.avatar} alt={user.name} width={32} height={32} className="rounded-full" />
+
+<span className="text-body-sm font-medium">{user.name}</span>`,
             }}
           />
         </div>

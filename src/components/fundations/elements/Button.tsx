@@ -44,16 +44,17 @@ const variants = {
   none: { variant: "ghost", className: "" },
 } as const;
 
-// The site's seven size names on the library's two steps: everything up to md is compact (28px,
-// the site's setting), lg and xl the default step (36px)
+// The site's seven size names, every one on the library's compact step (28px, 12px text: the
+// site's setting, the dashboard's header and the hero's calls included; the names are kept for
+// the call sites)
 const sizes = {
   xxs: "compact",
   xs: "compact",
   sm: "compact",
   base: "compact",
   md: "compact",
-  lg: "default",
-  xl: "default",
+  lg: "compact",
+  xl: "compact",
 } as const;
 // On touch screens a compact button reaches 44px tall through an invisible ::after, so nothing
 // moves (the library's root is relative, so the box is placed against it)
@@ -128,7 +129,6 @@ export default function Button({
     step === "compact" && touch,
     !iconOnly && leftIcon && iconInset[step].left,
     !iconOnly && rightIcon && iconInset[step].right,
-    !iconOnly && gap && gaps[gap],
     className,
   );
   // The label is one flex row inside the library's trimmed label span, with the library's own
@@ -137,7 +137,7 @@ export default function Button({
   const label = iconOnly ? (
     children
   ) : (
-    <span className={cn("inline-flex items-center", step === "compact" ? "gap-1.5" : "gap-2")}>
+    <span className={cn("inline-flex items-center", gap ? gaps[gap] : step === "compact" ? "gap-1.5" : "gap-2")}>
       {leftIcon}
       {children}
       {rightIcon}

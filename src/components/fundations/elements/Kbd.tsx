@@ -64,7 +64,7 @@ const ALIASES: Record<string, string> = {
 };
 
 const cap =
-  "inline-flex items-center justify-center rounded-[5px] bg-hover font-sans font-normal whitespace-nowrap text-muted-foreground";
+  "inline-flex items-center justify-center rounded-[5px] bg-hover font-sans whitespace-nowrap text-muted-foreground";
 
 type Content =
   | { /** One key: its label as children */ children: ReactNode; keys?: never }

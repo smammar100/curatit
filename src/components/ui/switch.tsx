@@ -9,7 +9,7 @@ import {
   useId,
   type HTMLAttributes,
 } from "react";
-import { motion, useMotionValue, animate, type Transition } from "motion/react";
+import { motion, useMotionValue, animate, useReducedMotion, type Transition } from "motion/react";
 import * as SwitchPrimitive from "@radix-ui/react-switch";
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/springs";
@@ -71,8 +71,12 @@ const THUMB_OFFSET = 2;
 const DRAG_DEAD_ZONE = 2;
 
 const Switch = forwardRef<HTMLDivElement, SwitchProps>(
-  ({ label, labelHidden = false, checked, onToggle, disabled = false, thumbTransition, size, className, ...props }, ref) => {
+  ({ label, labelHidden = false, checked, onToggle, disabled = false, thumbTransition, size, className, id, "aria-describedby": describedBy, ...props }, ref) => {
     const labelId = useId();
+    // Curatit: a standalone animate() is outside MotionConfig's reach, so the thumb reads the
+    // setting itself and snaps instead of springing
+    const reduceMotion = useReducedMotion();
+    const travel = reduceMotion ? { duration: 0 } : (thumbTransition ?? spring.moderate);
     const hasMounted = useRef(false);
     const [hovered, setHovered] = useState(false);
     const [pressed, setPressed] = useState(false);
@@ -130,9 +134,9 @@ const Switch = forwardRef<HTMLDivElement, SwitchProps>(
       if (!hasMounted.current) {
         motionX.set(thumbX);
       } else {
-        animate(motionX, thumbX, thumbTransition ?? spring.moderate);
+        animate(motionX, thumbX, travel);
       }
-    }, [thumbX, motionX, thumbTransition]);
+    }, [thumbX, motionX, travel]);
 
     // --- Pointer handlers ---
 
@@ -211,7 +215,7 @@ const Switch = forwardRef<HTMLDivElement, SwitchProps>(
             const snapTarget = checked
               ? THUMB_OFFSET + thumbTravel
               : THUMB_OFFSET;
-            animate(motionX, snapTarget, thumbTransition ?? spring.moderate);
+            animate(motionX, snapTarget, travel);
           }
 
           requestAnimationFrame(() => {
@@ -221,7 +225,7 @@ const Switch = forwardRef<HTMLDivElement, SwitchProps>(
 
         pointerStart.current = null;
       },
-      [checked, onToggle, motionX, thumbTransition, m, thumbTravel]
+      [checked, onToggle, motionX, travel, m, thumbTravel]
     );
 
     const handlePointerCancel = useCallback(
@@ -235,12 +239,12 @@ const Switch = forwardRef<HTMLDivElement, SwitchProps>(
           const snapTarget = checked
             ? THUMB_OFFSET + thumbTravel
             : THUMB_OFFSET;
-          animate(motionX, snapTarget, thumbTransition ?? spring.moderate);
+          animate(motionX, snapTarget, travel);
         }
 
         pointerStart.current = null;
       },
-      [checked, motionX, thumbTransition, thumbTravel]
+      [checked, motionX, travel, thumbTravel]
     );
 
     return (
@@ -277,6 +281,10 @@ const Switch = forwardRef<HTMLDivElement, SwitchProps>(
       >
         {/* Switch */}
         <SwitchPrimitive.Root
+          // Curatit: the id and description go on the control, so a <label htmlFor> and a
+          // Field's hint reach the switch rather than its row
+          id={id}
+          aria-describedby={describedBy}
           checked={checked}
           aria-labelledby={labelId}
           onCheckedChange={() => {

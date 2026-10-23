@@ -1,7 +1,10 @@
 // /system/button: every variant, size, state and slot of fundations/elements/Button.tsx, live in
-// both themes. The demos that need state (loading, the switch, the menu) are client components in
-// ../demos/ButtonDemos.tsx; the sheet itself stays a server component. Every class is written out
-// in full, never built from parts, so Tailwind sees it
+// both themes. Since 2026-10-23 Button is a wrapper over Fluid Functionalism's button
+// (src/components/ui/button.tsx, installed with the shadcn CLI): the site's eight variant names
+// land on the library's four looks, its seven size names all on the library's compact step. The demos
+// that need state (loading, the switch, the menu) are client components in ../demos/ButtonDemos.tsx;
+// the sheet itself stays a server component. Every class is written out in full, never built from
+// parts, so Tailwind sees it
 import type { ReactNode } from "react";
 import Button, { type ButtonProps } from "@/components/fundations/elements/Button";
 import Segmented from "@/components/fundations/elements/Segmented";
@@ -19,109 +22,172 @@ import { LoadingButton, LoadingForm, MenuDemo, SwitchDemo } from "../demos/Butto
 type Variant = NonNullable<ButtonProps["variant"]>;
 type Size = Exclude<NonNullable<ButtonProps["size"]>, "md">;
 
-// The closed set, in Button.tsx's order: the label each specimen wears, the tokens it's built from
-// (variantClasses) and its job, with the real call sites that do it
+// The closed set, in Button.tsx's order: the library look each name lands on, the label each
+// specimen wears, what the wrapper adds (Button.tsx's `variants`), what the library draws (the
+// root's text colour from `buttonVariants`, then the surface layer from `bgVariants`: at rest,
+// on hover, pressed) and its job, with the real call sites that do it
 const VARIANTS: {
   name: Variant;
   sub: string;
   label: string;
+  /** The classes Button.tsx adds for this name, if any */
+  wrapper: string[];
+  /** The root's own colour, from buttonVariants */
+  root: string[];
+  /** The surface layer at rest */
   rest: string[];
-  /** Its hover and press classes as Button.tsx writes them; the scale to 0.97 comes on top of every one */
+  /** The surface layer on hover and while pressed */
   moves: string[];
   job: string;
 }[] = [
   {
     name: "default",
-    sub: "primary, the default",
+    sub: "primary · the ink",
     label: "Save",
-    rest: ["bg-inverted-solid", "text-on-inverted-foreground"],
-    moves: ["hover:bg-inverted-solid-hover", "active:bg-inverted-solid-active"],
+    wrapper: [],
+    root: ["text-background"],
+    rest: ["[--btn-bg:var(--foreground)]", "bg-[var(--btn-bg)]", "shadow-[0_0_0_1px_var(--btn-bg)]"],
+    moves: [
+      "group-hover:[--btn-bg:color-mix(in_oklab,var(--foreground)_90%,var(--background))]",
+      "group-active:[--btn-bg:color-mix(in_oklab,var(--foreground)_80%,var(--background))]",
+      "group-active:shadow-[0_0_0_0px_var(--btn-bg)]",
+    ],
     job: "The one next step in a view: Create account, Sign in, Create board, Browse the feed.",
   },
   {
     name: "secondary",
-    sub: "white, lifted",
+    sub: "tertiary · a hairline ring",
     label: "Share",
-    rest: ["bg-component-on-container-subtle", "text-primary-foreground", "shadow-sm"],
-    moves: ["hover:bg-component-on-container-subtle-hover"],
+    wrapper: [],
+    root: ["text-foreground"],
+    rest: ["bg-transparent", "shadow-[0_0_0_1px_var(--border),inset_0_0_0_0px_var(--border)]"],
+    moves: [
+      "group-hover:bg-hover",
+      "group-active:bg-active",
+      "group-active:shadow-[0_0_0_0px_var(--border),inset_0_0_0_1px_var(--border)]",
+    ],
     job: "A dashboard control that stands on its own: the header's Create and Saved, a board's Share and More, Copy token.",
   },
   {
     name: "muted",
-    sub: "tertiary, a tint",
+    sub: "secondary · a see-through tint",
     label: "Cancel",
-    rest: ["bg-component", "text-secondary-foreground"],
-    moves: ["hover:bg-component-hover", "hover:text-primary-foreground", "active:bg-component-active"],
+    wrapper: [],
+    root: ["text-foreground"],
+    rest: ["[--btn-bg:var(--tint)]", "bg-[var(--btn-bg)]", "shadow-[0_0_0_1px_var(--btn-bg)]"],
+    moves: [
+      "group-hover:[--btn-bg:var(--tint-hover)]",
+      "group-active:[--btn-bg:var(--tint)]",
+      "group-active:shadow-[0_0_0_0px_var(--btn-bg)]",
+    ],
     job: "The other choice beside a default: See how it works, Get a token, Cancel in the board's Delete question.",
   },
   {
     name: "accent",
-    sub: "brand, terracotta",
+    sub: "primary, the ink swapped for terracotta",
     label: "Continue",
-    rest: ["bg-brand-solid", "text-on-brand-solid-foreground"],
-    moves: ["hover:bg-brand-solid-hover", "active:bg-brand-solid-active"],
+    wrapper: ["[--foreground:var(--color-brand-solid)]", "[--background:var(--color-paper)]"],
+    root: ["text-background"],
+    rest: ["[--btn-bg:var(--foreground)]", "bg-[var(--btn-bg)]", "shadow-[0_0_0_1px_var(--btn-bg)]"],
+    moves: [
+      "group-hover:[--btn-bg:color-mix(in_oklab,var(--foreground)_90%,var(--background))]",
+      "group-active:[--btn-bg:color-mix(in_oklab,var(--foreground)_80%,var(--background))]",
+      "group-active:shadow-[0_0_0_0px_var(--btn-bg)]",
+    ],
     job: "The next step in the brand's colour, where nothing else on the page is solid. Rare: only the template's Submit page uses it.",
   },
   {
     name: "danger",
-    sub: "can't be undone",
+    sub: "primary, the ink swapped for red",
     label: "Delete",
-    rest: ["bg-danger-solid", "text-on-danger-solid-foreground"],
-    moves: ["hover:bg-danger-solid-hover", "active:bg-danger-solid-active"],
+    wrapper: ["[--foreground:var(--color-danger-solid)]", "[--background:var(--color-paper)]"],
+    root: ["text-background"],
+    rest: ["[--btn-bg:var(--foreground)]", "bg-[var(--btn-bg)]", "shadow-[0_0_0_1px_var(--btn-bg)]"],
+    moves: [
+      "group-hover:[--btn-bg:color-mix(in_oklab,var(--foreground)_90%,var(--background))]",
+      "group-active:[--btn-bg:color-mix(in_oklab,var(--foreground)_80%,var(--background))]",
+      "group-active:shadow-[0_0_0_0px_var(--btn-bg)]",
+    ],
     job: "The confirming click of something that can't be undone, after a question: Delete in the board's Delete question, beside a muted Cancel, and a Dialog's confirm (see Dialog).",
   },
   {
     name: "dangerSubtle",
-    sub: "asks first",
+    sub: "secondary, the tint swapped for red",
     label: "Delete…",
-    rest: ["bg-danger-subtle", "text-danger-foreground"],
-    moves: ["hover:bg-danger-subtle-hover"],
+    wrapper: [
+      "[--tint:var(--color-danger-subtle)]",
+      "[--tint-hover:var(--color-danger-subtle-hover)]",
+      "text-danger-foreground",
+    ],
+    root: ["text-foreground"],
+    rest: ["[--btn-bg:var(--tint)]", "bg-[var(--btn-bg)]", "shadow-[0_0_0_1px_var(--btn-bg)]"],
+    moves: [
+      "group-hover:[--btn-bg:var(--tint-hover)]",
+      "group-active:[--btn-bg:var(--tint)]",
+      "group-active:shadow-[0_0_0_0px_var(--btn-bg)]",
+    ],
     job: "Starts something destructive that asks first; the ellipsis says a question follows. With danger it's one pattern: it opens the Dialog whose confirm is danger (see Dialog). No product call site yet.",
   },
   {
     name: "transparent",
-    sub: "no fill at rest",
+    sub: "ghost · words until hovered",
     label: "Sign in",
-    rest: ["bg-transparent", "text-secondary-foreground"],
-    moves: ["hover:bg-transparent-hover", "hover:text-primary-foreground", "active:bg-transparent-active"],
+    wrapper: [],
+    root: ["text-muted-foreground", "hover:text-foreground"],
+    rest: ["bg-transparent", "shadow-[0_0_0_1px_transparent]"],
+    moves: [
+      "group-hover:bg-hover",
+      "group-hover:shadow-[0_0_0_1px_var(--hover)]",
+      "group-active:bg-active",
+      "group-active:shadow-[0_0_0_0px_var(--active)]",
+    ],
     job: "Quiet, inside something else: Sign in in the header, Close in a dialog, clearing the search, Back in the welcome flow.",
   },
   {
     name: "none",
-    sub: "no colours",
+    sub: "ghost, the same",
     label: "Skip",
-    rest: [],
-    moves: [],
-    job: "Shape, size, focus ring, press and disabled fill only, for a control that brings its own colours: the post panel's Saved confirmation (PostView.tsx), a quiet grey that stays legible. Check a variant fits first.",
+    wrapper: [],
+    root: ["text-muted-foreground", "hover:text-foreground"],
+    rest: ["bg-transparent", "shadow-[0_0_0_1px_transparent]"],
+    moves: [
+      "group-hover:bg-hover",
+      "group-hover:shadow-[0_0_0_1px_var(--hover)]",
+      "group-active:bg-active",
+      "group-active:shadow-[0_0_0_0px_var(--active)]",
+    ],
+    job: "Kept for the call sites that bring their own colours through className (the post panel's Close on the dimmed feed, PostView.tsx; onboarding's chips). It renders as transparent: a colour in className replaces the ghost's rest ink, and the hover wash stays. Check a variant fits first.",
   },
 ];
 
+// The six names, every one on the library's compact step (Button.tsx's `sizes`)
 const SIZES: { name: Size; head: string }[] = [
-  { name: "xxs", head: "xxs · 24" },
+  { name: "xxs", head: "xxs · 28" },
   { name: "xs", head: "xs · 28" },
-  { name: "sm", head: "sm · 32" },
-  { name: "base", head: "base · 40" },
-  { name: "lg", head: "lg · 44" },
-  { name: "xl", head: "xl · 48" },
+  { name: "sm", head: "sm · 28" },
+  { name: "base", head: "base · 28" },
+  { name: "lg", head: "lg · 28" },
+  { name: "xl", head: "xl · 28" },
 ];
 
-// The numbers behind each size (sizes, textSizes, radius and touchSizes in Button.tsx)
+// The numbers behind each size: the step it resolves to and what the library's `buttonVariants`
+// sets for that step, the wrapper's icon inset and label gap, and the touch target
 const SIZE_SPEC: {
   name: Size;
   sub: string;
+  step: string;
   height: string;
   padding: string;
-  gap: string;
-  radius: string;
+  icons: string;
   label: string;
   touch: string;
 }[] = [
-  { name: "xxs", sub: "inline, dense", height: "h-6 · 24", padding: "px-2 · 8", gap: "gap-1 · 4", radius: "rounded-md · 6", label: "text-body-sm · 13/20", touch: "44 tall; icon only 32 wide" },
-  { name: "xs", sub: "the site header", height: "h-7 · 28", padding: "px-2.5 · 10", gap: "gap-1.5 · 6", radius: "rounded-md · 6", label: "text-body-sm · 13/20", touch: "44 tall; icon only 36 wide" },
-  { name: "sm", sub: "cards, menus, toolbars", height: "h-8 · 32", padding: "px-3 · 12", gap: "gap-1.5 · 6", radius: "rounded-lg · 8", label: "text-body-sm · 13/20", touch: "its own 32" },
-  { name: "base", sub: "the default; md is the same", height: "h-10 · 40", padding: "px-3.5 · 14", gap: "gap-2 · 8", radius: "rounded-lg · 8", label: "text-body-sm · 13/20", touch: "its own 40" },
-  { name: "lg", sub: "the dashboard", height: "h-11 · 44", padding: "px-4 · 16", gap: "gap-2 · 8", radius: "rounded-xl · 10", label: "text-subtitle · 14/20", touch: "its own 44" },
-  { name: "xl", sub: "the dashboard", height: "h-12 · 48", padding: "px-6 · 24", gap: "gap-2 · 8", radius: "rounded-xl · 10", label: "text-subtitle · 14/20", touch: "its own 48" },
+  { name: "xxs", sub: "compact", step: "compact", height: "h-7 · 28", padding: "px-3 · 12", icons: "pl-2 / pr-2 · gap-1.5", label: "12 / 18", touch: "44 tall, through ::after" },
+  { name: "xs", sub: "compact", step: "compact", height: "h-7 · 28", padding: "px-3 · 12", icons: "pl-2 / pr-2 · gap-1.5", label: "12 / 18", touch: "44 tall, through ::after" },
+  { name: "sm", sub: "compact", step: "compact", height: "h-7 · 28", padding: "px-3 · 12", icons: "pl-2 / pr-2 · gap-1.5", label: "12 / 18", touch: "44 tall, through ::after" },
+  { name: "base", sub: "compact; the default, and md", step: "compact", height: "h-7 · 28", padding: "px-3 · 12", icons: "pl-2 / pr-2 · gap-1.5", label: "12 / 18", touch: "44 tall, through ::after" },
+  { name: "lg", sub: "compact; same as base, kept for call sites (the hero, the dashboard)", step: "compact", height: "h-7 · 28", padding: "px-3 · 12", icons: "pl-2 / pr-2 · gap-1.5", label: "12 / 18", touch: "44 tall, through ::after" },
+  { name: "xl", sub: "compact; same as base, kept for call sites (the dashboard)", step: "compact", height: "h-7 · 28", padding: "px-3 · 12", icons: "pl-2 / pr-2 · gap-1.5", label: "12 / 18", touch: "44 tall, through ::after" },
 ];
 
 // The props, from CommonProps, Naming, ButtonAsLink and ButtonAsButton
@@ -130,21 +196,22 @@ const PROPS: { name: string; values: ReactNode; fallback: string; note: ReactNod
     name: "variant",
     values: "default, secondary, muted, accent, danger, dangerSubtle, transparent, none",
     fallback: "default",
-    note: "The closed set. Anything else is a type error.",
+    note: "The closed set, on the library's primary, tertiary, secondary and ghost. Anything else is a type error.",
   },
   {
     name: "size",
     values: "xxs, xs, sm, base, md, lg, xl",
     fallback: "base",
-    note: "md is another name for base. lg and xl are the dashboard's.",
+    note: "One step: every name is the compact step (28px, 12px text). md, lg and xl render exactly as base and are kept for call sites.",
   },
   {
     name: "shape",
     values: "rounded, pill",
-    fallback: "the size's radius",
+    fallback: "ignored",
     note: (
       <>
-        <Mono>pill</Mono> puts <Mono>rounded-full</Mono> in place of the size&rsquo;s radius. The dashboard&rsquo;s.
+        Accepted for older call sites and ignored: every button is a pill (<Mono>rounded-[20px]</Mono>, the site&rsquo;s
+        shape setting). Leave it out of new code.
       </>
     ),
   },
@@ -154,8 +221,8 @@ const PROPS: { name: string; values: ReactNode; fallback: string; note: ReactNod
     fallback: "false",
     note: (
       <>
-        A square of the size&rsquo;s height; children are the icon. Needs <Mono>aria-label</Mono> or{" "}
-        <Mono>aria-labelledby</Mono>, or it doesn&rsquo;t compile.
+        A 28px square (<Mono>h-7 w-7</Mono>); children are the icon, drawn at 14px whatever size it was given. Needs{" "}
+        <Mono>aria-label</Mono> or <Mono>aria-labelledby</Mono>, or it doesn&rsquo;t compile.
       </>
     ),
   },
@@ -165,7 +232,9 @@ const PROPS: { name: string; values: ReactNode; fallback: string; note: ReactNod
     fallback: "none",
     note: (
       <>
-        An icon either side of the label, 16px (<Mono>size=&quot;sm&quot;</Mono> or <Mono>size-4</Mono>); the dashboard header&rsquo;s lg pills use 18px (<Mono>size-4.5</Mono>). Decorative: the label names it.
+        An icon either side of the label, 6px from it on the compact step and 8px on the default, and 4px closer to its
+        edge than the label is (<Mono>pl-2</Mono> / <Mono>pr-2</Mono>, <Mono>pl-3</Mono> / <Mono>pr-3</Mono>: the
+        library&rsquo;s inset). Decorative: the label names it.
       </>
     ),
   },
@@ -173,7 +242,7 @@ const PROPS: { name: string; values: ReactNode; fallback: string; note: ReactNod
     name: "loading",
     values: "boolean",
     fallback: "false",
-    note: "Spinner over the label, still focusable, clicks ignored. Client components only.",
+    note: "The figure-eight spinner over the label, which stays mounted at opacity 0 so the width holds. The button is disabled meanwhile (the library's way). Client components: being busy is client state.",
   },
   {
     name: "isLink, href",
@@ -181,7 +250,9 @@ const PROPS: { name: string; values: ReactNode; fallback: string; note: ReactNod
     fallback: "a <button>",
     note: (
       <>
-        Renders <Mono>next/link</Mono> with the same classes. A link has no <Mono>disabled</Mono>.
+        Renders <Mono>next/link</Mono> as the root (the library&rsquo;s <Mono>asChild</Mono>) with the same classes and
+        internals. A link has no <Mono>disabled</Mono>, so <Mono>loading</Mono> draws its spinner but doesn&rsquo;t stop
+        the click.
       </>
     ),
   },
@@ -198,14 +269,14 @@ const PROPS: { name: string; values: ReactNode; fallback: string; note: ReactNod
   {
     name: "gap",
     values: "xs, sm, base, md, lg",
-    fallback: "the size's gap",
-    note: "8 to 48px between icon and label, kept from the template. No call site uses it: leave it out.",
+    fallback: "none",
+    note: "Kept from the template. It lands on the root, outside the label row that holds the icons, so it changes nothing. No call site uses it: leave it out.",
   },
   {
     name: "className",
     values: "string",
     fallback: "none",
-    note: "Width, margins and layout. Never a radius, a border or a position (see Width and placement).",
+    note: "Width, margins and layout. Merged with tailwind-merge (cn), so a class for something Button sets replaces it silently: never a colour, a radius, a padding or a ring (see Width and placement).",
   },
   {
     name: "ref",
@@ -215,20 +286,22 @@ const PROPS: { name: string; values: ReactNode; fallback: string; note: ReactNod
   },
 ];
 
-/** A variant's classes, one per line and never broken at a hyphen: at rest, then hover and press */
-function Classes({ rest, moves }: { rest: string[]; moves: string[] }) {
-  if (!rest.length) return <Note>No colours, and nothing on hover or press</Note>;
+/** A variant's classes, one per line and never broken at a hyphen: what the wrapper adds, the
+ *  root's ink, the surface at rest, then hover and press */
+function Classes({ wrapper, root, rest, moves }: { wrapper: string[]; root: string[]; rest: string[]; moves: string[] }) {
   return (
     <span className="flex flex-col gap-2">
-      {[rest, moves].map((group, i) => (
-        <span key={i} className="flex flex-col gap-0.5">
-          {group.map((item) => (
-            <Mono key={item} className="whitespace-nowrap">
-              {item}
-            </Mono>
-          ))}
-        </span>
-      ))}
+      {[wrapper, root, rest, moves].map((group, i) =>
+        group.length ? (
+          <span key={i} className="flex flex-col gap-0.5">
+            {group.map((item) => (
+              <Mono key={item} className="whitespace-nowrap">
+                {item}
+              </Mono>
+            ))}
+          </span>
+        ) : null,
+      )}
     </span>
   );
 }
@@ -286,9 +359,10 @@ export default function ButtonSheet() {
   return (
     <div className="flex flex-col gap-16">
       <SheetHeader title="Button">
-        Interfere&rsquo;s button: a 13px medium label on heights from 24 to 40, no borders, and a press that
-        sinks to 0.97. The dashboard adds 44 and 48, usually as pills. One component for every action, and
-        with <Mono>isLink</Mono> for a link that&rsquo;s a page&rsquo;s next step.
+        Fluid Functionalism&rsquo;s button (installed 2026-10-23) behind the site&rsquo;s names: a pill, 28px tall with a
+        12px label at every size name (the library&rsquo;s compact step; its 36px default step goes unused), no borders,
+        and a press that sinks the surface 1px a side instead of scaling. One component for every action, and with{" "}
+        <Mono>isLink</Mono> for a link that&rsquo;s a page&rsquo;s next step.
       </SheetHeader>
 
       <Rules
@@ -299,8 +373,8 @@ export default function ButtonSheet() {
               <>
                 For an action: Save, Copy token, Create board. With <Mono>isLink</Mono> and <Mono>href</Mono>, for a link
                 that is the page&rsquo;s next step (Create account, Connect your assistant). Never a hand-made{" "}
-                <Mono>&lt;button&gt;</Mono> styled to look like one: it misses the focus ring, the reduced-motion press
-                and the touch area, and it&rsquo;s a second recipe to keep in step.
+                <Mono>&lt;button&gt;</Mono> styled to look like one: it misses the focus ring, the press, the spinner and
+                the touch area, and it&rsquo;s a second recipe to keep in step.
               </>
             ),
           },
@@ -319,11 +393,12 @@ export default function ButtonSheet() {
             term: "Variants",
             text: (
               <>
-                Eight, and nothing else: <Mono>default</Mono> (the primary, and the default), <Mono>secondary</Mono>,{" "}
-                <Mono>muted</Mono> (tertiary), <Mono>accent</Mono> (brand), <Mono>danger</Mono>,{" "}
-                <Mono>dangerSubtle</Mono>, <Mono>transparent</Mono>, <Mono>none</Mono>. There&rsquo;s no{" "}
-                <Mono>primary</Mono>, <Mono>ghost</Mono>, <Mono>outline</Mono> or <Mono>destructive</Mono>: the type
-                refuses them.
+                Eight names, and nothing else, on the library&rsquo;s four looks: <Mono>default</Mono> is its primary (the
+                ink), <Mono>secondary</Mono> its tertiary (a hairline ring), <Mono>muted</Mono> its secondary (a
+                see-through tint), <Mono>accent</Mono> and <Mono>danger</Mono> the primary with the ink swapped for
+                terracotta or red, <Mono>dangerSubtle</Mono> the tint in red, <Mono>transparent</Mono> and{" "}
+                <Mono>none</Mono> its ghost. There&rsquo;s no <Mono>primary</Mono>, <Mono>ghost</Mono>,{" "}
+                <Mono>outline</Mono> or <Mono>destructive</Mono> on Button itself: the type refuses them.
               </>
             ),
           },
@@ -342,10 +417,11 @@ export default function ButtonSheet() {
             term: "Sizes",
             text: (
               <>
-                <Mono>xxs</Mono> 24, <Mono>xs</Mono> 28, <Mono>sm</Mono> 32, <Mono>base</Mono> 40 (the default;{" "}
-                <Mono>md</Mono> is another name for it), <Mono>lg</Mono> 44, <Mono>xl</Mono> 48. The label is 13px
-                medium up to base and 14px, the dashboard&rsquo;s subtitle role, at lg and xl. It never wraps or shrinks
-                (<Mono>whitespace-nowrap</Mono>, <Mono>shrink-0</Mono>): if it doesn&rsquo;t fit, shorten the words.
+                Seven names on one step. <Mono>xxs</Mono>, <Mono>xs</Mono>, <Mono>sm</Mono>, <Mono>base</Mono> (the
+                default), <Mono>md</Mono>, <Mono>lg</Mono> and <Mono>xl</Mono> all render the compact step: 28px tall, a
+                12px label. <Mono>md</Mono>, <Mono>lg</Mono> and <Mono>xl</Mono> are kept for call sites and change
+                nothing. The label is regular weight and never wraps or shrinks (<Mono>whitespace-nowrap</Mono>): if it
+                doesn&rsquo;t fit, shorten the words.
               </>
             ),
           },
@@ -353,11 +429,12 @@ export default function ButtonSheet() {
             term: "Dashboard",
             text: (
               <>
-                <Mono>lg</Mono>, <Mono>xl</Mono> and <Mono>shape=&quot;pill&quot;</Mono> are the dashboard&rsquo;s: the
-                header&rsquo;s pills, a board&rsquo;s toolbar, the token page, onboarding&rsquo;s Back, and the submit
-                of a dashboard form or dialog. The marketing site stays on <Mono>xxs</Mono> to <Mono>base</Mono> with
-                the size&rsquo;s own radius, with one exception: the homepage category row&rsquo;s scroll arrows
-                (Categories.tsx) are secondary, <Mono>lg</Mono>, round and icon only.
+                <Mono>lg</Mono> and <Mono>xl</Mono> are the names the dashboard and the hero use: the header&rsquo;s
+                pills, a board&rsquo;s toolbar, the token page, onboarding&rsquo;s Back, the submit of a dashboard form or
+                dialog, the homepage calls to action. They render the same 28px button as <Mono>base</Mono>; the
+                marketing site&rsquo;s other buttons say <Mono>xxs</Mono> to <Mono>base</Mono>.{" "}
+                <Mono>shape=&quot;pill&quot;</Mono> is accepted and ignored: every button is a pill now, so leave it out
+                of new code.
               </>
             ),
           },
@@ -376,9 +453,10 @@ export default function ButtonSheet() {
             term: "No borders",
             text: (
               <>
-                No <Mono>border</Mono>, <Mono>ring-*</Mono> or <Mono>outline-*</Mono> in its className. The fills and the
-                secondary&rsquo;s <Mono>shadow-sm</Mono> are its edges, in both themes; a line makes it read as a field,
-                and a 2px one as the focus ring.
+                No <Mono>border</Mono>, <Mono>ring-*</Mono> or <Mono>outline-*</Mono> in its className. The surface is a
+                layer 1px inside the button whose shadow spread fills it out; the secondary&rsquo;s edge is that
+                layer&rsquo;s 1px shadow in <Mono>--border</Mono>, the one stroke colour. A border would sit outside the
+                surface, and a ring class replaces the focus ring (both are <Mono>ring-1</Mono>).
               </>
             ),
           },
@@ -386,12 +464,11 @@ export default function ButtonSheet() {
             term: "className",
             text: (
               <>
-                Width, margins and layout only. <Mono>cx</Mono> doesn&rsquo;t merge, so a second value for something
-                Button already sets lands beside it and the stylesheet&rsquo;s order picks the winner:{" "}
-                <Mono>rounded-full</Mono> loses to the size&rsquo;s radius (write <Mono>shape=&quot;pill&quot;</Mono>),
-                and <Mono>absolute</Mono> loses to its own <Mono>relative</Mono> (wrap it in a positioned span). A
-                colour only for a state the variants don&rsquo;t have: the header&rsquo;s Saved fills while you&rsquo;re
-                on it (Header.tsx). One known exception to the padding: the header&rsquo;s Create sets its own
+                Width, margins and layout only. Button merges classes with <Mono>cn</Mono> (tailwind-merge), so a class
+                for something it already sets wins over it silently: a padding undoes the icon inset, a colour undoes the
+                variant, and a radius undoes the pill. A colour only for a state the variants don&rsquo;t have: the
+                header&rsquo;s Saved fills while you&rsquo;re on it (Header.tsx), and <Mono>none</Mono> is the variant
+                for it. One known exception to the padding: the header&rsquo;s Create sets its own
                 (<Mono>max-md:px-3 md:px-5</Mono>) on purpose, because its label only joins the icon from md; don&rsquo;t
                 copy it elsewhere.
               </>
@@ -401,10 +478,14 @@ export default function ButtonSheet() {
             term: "States",
             text: (
               <>
-                Hover is a step darker, only where a pointer can hover (Tailwind&rsquo;s <Mono>hover:</Mono> sits
-                behind <Mono>@media (hover: hover)</Mono>, so a tap never leaves it stuck). Press sinks to 0.97 over
-                150ms on <Mono>ease-out-quint</Mono>, only while it can act and only with motion allowed: never add
-                your own <Mono>active:scale</Mono>. Focus is a 2px brand ring, 2px out, on keyboard focus only.
+                Hover mixes a tenth of the page into the primary&rsquo;s ink, lightens the tint, and washes the ring and
+                ghost looks with <Mono>bg-hover</Mono>, over 80ms, only where a pointer can hover (<Mono>hover:</Mono>{" "}
+                sits behind <Mono>@media (hover: hover)</Mono>, so a tap never leaves it stuck). Press collapses the
+                surface&rsquo;s 1px shadow spread, so the surface shrinks exactly 1px a side at any width (a scale would
+                warp a wide button), 80ms in and 180ms back on <Mono>cubic-bezier(0.23,1,0.32,1)</Mono>; the primary
+                darkens a step more and the ring moves inward with the surface. Never add your own{" "}
+                <Mono>active:scale</Mono>. Focus is a 1px terracotta ring (<Mono>--focus-ring</Mono>) at the edge, on
+                keyboard focus only.
               </>
             ),
           },
@@ -412,9 +493,10 @@ export default function ButtonSheet() {
             term: "Disabled",
             text: (
               <>
-                <Mono>disabled</Mono> while it can&rsquo;t act yet: no name typed (Create board), no reset link. It leaves
-                the tab order and every variant takes the same grey fill. Never for a request in flight: that&rsquo;s{" "}
-                <Mono>loading</Mono>, which keeps focus.
+                <Mono>disabled</Mono> while it can&rsquo;t act yet: no name typed (Create board), no reset link. Every
+                variant keeps its colours at half opacity (<Mono>disabled:opacity-50</Mono>), ignores the pointer and
+                leaves the tab order. A request in flight is <Mono>loading</Mono>, which disables the button too but keeps
+                its label and draws the spinner.
               </>
             ),
           },
@@ -422,11 +504,11 @@ export default function ButtonSheet() {
             term: "Loading",
             text: (
               <>
-                Client components only: it swaps the click for a guard function, which a server component can&rsquo;t
-                hand to a <Mono>&lt;button&gt;</Mono> (React refuses at render), and being busy is client state anyway.
-                The label stays, invisible, so the width holds; the button keeps focus (<Mono>aria-disabled</Mono>,{" "}
-                <Mono>aria-busy</Mono>) and ignores clicks. Put what&rsquo;s happening in the label, &ldquo;Signing
-                in…&rdquo;: it&rsquo;s still the name a screen reader reads.
+                Being busy is client state, so it lives in client components. The label stays mounted at opacity 0 under
+                the figure-eight spinner, so the width holds; the button is disabled meanwhile (the library&rsquo;s way),
+                so focus leaves it and clicks are ignored. Put what&rsquo;s happening in the label, &ldquo;Signing
+                in…&rdquo;, and for a form in a status line too: the spinner alone says nothing to a screen reader.
+                Under reduced motion the spinner holds still.
               </>
             ),
           },
@@ -436,7 +518,9 @@ export default function ButtonSheet() {
               <>
                 <Mono>iconOnly</Mono> with <Mono>aria-label</Mono> (or <Mono>aria-labelledby</Mono>) saying what it does:
                 &ldquo;Close&rdquo;, &ldquo;Copy token&rdquo;, never &ldquo;icon&rdquo;. Without one it doesn&rsquo;t
-                compile. The icon is 16px (<Mono>size=&quot;sm&quot;</Mono>) and decorative: the shell hides it.
+                compile. The button is a square of its step&rsquo;s height and the library draws the icon at 14px on the
+                compact step and 16px on the default (<Mono>[&amp;_svg]:h-3.5</Mono>, <Mono>[&amp;_svg]:h-4</Mono>),
+                whatever size it was given. The icon is decorative: the shell hides it.
               </>
             ),
           },
@@ -444,11 +528,11 @@ export default function ButtonSheet() {
             term: "Touch",
             text: (
               <>
-                <Mono>xxs</Mono> and <Mono>xs</Mono> reach 44px tall on touch screens through an invisible{" "}
-                <Mono>::after</Mono> (<Mono>pointer-coarse:</Mono>), so nothing moves; icon-only ones grow 4px each side
-                as well. From <Mono>sm</Mono> up the button is its own target. To reach further, use{" "}
-                <Mono>before:</Mono> (the post panel&rsquo;s remove buttons: <Mono>before:absolute before:-inset-1</Mono>
-                ), never <Mono>after:</Mono>, which the small sizes use.
+                Every button reaches 44px tall on touch screens through an invisible <Mono>::after</Mono> (
+                <Mono>pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:-inset-y-2</Mono>
+                ), so nothing moves; an icon-only one stays 28px wide. To reach further, use <Mono>before:</Mono> (the
+                post panel&rsquo;s remove buttons: <Mono>before:absolute before:-inset-1</Mono>), never{" "}
+                <Mono>after:</Mono>, which the touch target uses.
               </>
             ),
           },
@@ -475,30 +559,31 @@ export default function ButtonSheet() {
       │   Saved, Share, More, Copy token → secondary
       ├── Quiet, inside something else: Sign in,
       │   Close, clearing a field → transparent
-      └── Brings its own colours → none`}
+      └── Brings its own colours through className
+          → none (the ghost; check a variant fits first)`}
         />
         <Flow
           tree={`Which size?
- ├── Inline in a dense editor (+ Add) → xxs (24)
- ├── The site header, beside the nav → xs (28)
- ├── An action in a card, a menu or a small
- │   empty state → sm (32)
- ├── A page's call to action, a form's submit
- │   → base (40, the default)
- ├── The dashboard's header, a board's toolbar,
- │   the token page, onboarding's Back → lg (44),
- │   shape="pill"
- └── The submit of a dashboard form or dialog
-     → xl (48), shape="pill": Create board in
-     NewBoardDialog (w-full), Save at the foot of
-     the post panel (in a row, no width)`}
+ └── One step for every name (28px, 12px label)
+      ├── Inline in a dense editor (+ Add) → xxs
+      ├── The site header, beside the nav → xs
+      ├── An action in a card, a menu or a small
+      │   empty state → sm
+      ├── A page's call to action, a form's submit
+      │   → base (the default; md is the same)
+      └── lg and xl: the same as base, kept for
+          call sites (the hero's calls, the
+          dashboard's header, a board's toolbar,
+          the token page, onboarding's Back → lg;
+          Create board in NewBoardDialog, Save at
+          the foot of the post panel → xl)`}
         />
       </div>
 
       <SheetSection
         id="variants"
         title="Variants"
-        description="The closed set, at the default size. Point at a specimen and press it. Its classes are as Button.tsx writes them: at rest, then hover and press. Every press also scales to 0.97."
+        description="The closed set, at the default size. Point at a specimen and press it. The classes are what the wrapper adds (Button.tsx's variants), then what the library writes: the root's ink (buttonVariants) and the surface layer (bgVariants) at rest, on hover and while pressed."
       >
         <Sheet>
           {() => (
@@ -513,7 +598,7 @@ export default function ButtonSheet() {
                   <Button key="s" variant={v.name}>
                     {v.label}
                   </Button>,
-                  <Classes key="c" rest={v.rest} moves={v.moves} />,
+                  <Classes key="c" wrapper={v.wrapper} root={v.root} rest={v.rest} moves={v.moves} />,
                   <Note key="j">{v.job}</Note>,
                 ],
               }))}
@@ -525,7 +610,7 @@ export default function ButtonSheet() {
             correct={`<Button>Create account</Button>
 <Button variant="muted">See how it works</Button>`}
             incorrect={{
-              why: "primary and ghost don't exist",
+              why: "primary and ghost are the library's names, not Button's",
               code: `<Button variant="primary">Create account</Button>
 <Button variant="ghost">See how it works</Button>`,
             }}
@@ -558,7 +643,7 @@ export default function ButtonSheet() {
       <SheetSection
         id="sizes"
         title="Sizes"
-        description="Every variant at every size. Up to base the label is 13px; lg and xl are the dashboard's, with its 14px subtitle label. md renders exactly as base."
+        description="Every variant at every size. All seven names are one step, the compact 28px button with its 12px label; md, lg and xl render exactly as base and are kept for call sites."
       >
         <Sheet>
           {() => (
@@ -583,9 +668,11 @@ export default function ButtonSheet() {
         title="Size spec"
         description={
           <>
-            What each size sets. The radius steps up with the height (6, 8, then 10), and{" "}
-            <Mono>shape=&quot;pill&quot;</Mono> replaces it at any size. An icon-only button is a square of the
-            height. The last column is the target on a touch screen.
+            What each size resolves to: every name is the compact step. The library sets its height, padding and type (
+            <Mono>h-7 px-3 text-[length:var(--fs-body-compact,12px)] leading-[var(--lh-body-compact,18px)] gap-1</Mono>
+            ); the wrapper adds the icon inset and the gap of the label row. The radius is the pill&rsquo;s{" "}
+            <Mono>rounded-[20px]</Mono> at every size. An icon-only button is a 28px square. The last column is the
+            target on a touch screen.
           </>
         }
       >
@@ -593,8 +680,8 @@ export default function ButtonSheet() {
           {() => (
             <Matrix
               first="minmax(8rem,max-content)"
-              template="max-content max-content max-content max-content max-content minmax(10rem,1fr)"
-              columns={["specimen", "height", "padding, gap", "radius", "label", "on touch"]}
+              template="max-content max-content max-content max-content max-content max-content minmax(10rem,1fr)"
+              columns={["specimen", "step", "height", "padding", "icon inset, gap", "label", "on touch"]}
               rows={SIZE_SPEC.map((s) => ({
                 label: s.name,
                 sub: s.sub,
@@ -602,15 +689,17 @@ export default function ButtonSheet() {
                   <Button key="s" size={s.name}>
                     Save
                   </Button>,
+                  <Mono key="st" className="whitespace-nowrap">
+                    {s.step}
+                  </Mono>,
                   <Mono key="h" tone="primary" className="whitespace-nowrap">
                     {s.height}
                   </Mono>,
-                  <span key="p" className="flex flex-col gap-0.5">
-                    <Mono className="whitespace-nowrap">{s.padding}</Mono>
-                    <Mono className="whitespace-nowrap">{s.gap}</Mono>
-                  </span>,
-                  <Mono key="r" className="whitespace-nowrap">
-                    {s.radius}
+                  <Mono key="p" className="whitespace-nowrap">
+                    {s.padding}
+                  </Mono>,
+                  <Mono key="i" className="whitespace-nowrap">
+                    {s.icons}
                   </Mono>,
                   <Mono key="l" className="whitespace-nowrap">
                     {s.label}
@@ -624,15 +713,15 @@ export default function ButtonSheet() {
         <div className="mt-6">
           <Code
             correct={`{/* The new-board dialog's submit (NewBoardDialog.tsx) */}
-<Button type="submit" variant="default" size="xl" shape="pill" disabled={!name.trim()} className="mt-6 w-full">
+<Button type="submit" variant="default" size="xl" disabled={!name.trim()} className="mt-6 w-full">
   Create board
 </Button>`}
             incorrect={{
-              why: "copied by hand: no focus ring, a press under reduced motion",
+              why: "copied by hand: no focus ring, a scale for a press, no spinner",
               code: `<button
   type="submit"
   disabled={!name.trim()}
-  className="mt-6 h-12 w-full rounded-full bg-base-900 text-subtitle font-medium text-white transition-[background-color,scale] duration-150 hover:bg-base-800 active:scale-[0.96] disabled:bg-component disabled:text-base-500"
+  className="mt-6 h-9 w-full rounded-full bg-foreground text-body text-background transition-[background-color,scale] duration-150 hover:bg-inverted-solid-hover active:scale-[0.96] disabled:opacity-50"
 >
   Create board
 </button>`,
@@ -644,7 +733,7 @@ export default function ButtonSheet() {
       <SheetSection
         id="states"
         title="States"
-        description="Rest is live: point at it and press it. Focus is drawn on with the ring's own classes here; Tab onto any specimen for the real one. Disabled is the same grey in every variant. Loading runs for two seconds when you click it."
+        description="Rest is live: point at it and press it. Focus is drawn on with the ring's own classes here; Tab onto any specimen for the real one. Disabled keeps every variant's colours at half opacity. Loading runs for two seconds when you click it, and the button is disabled while it does."
       >
         <Sheet>
           {() => (
@@ -657,12 +746,7 @@ export default function ButtonSheet() {
                   <Button key="r" variant={v.name}>
                     {v.label}
                   </Button>,
-                  <Button
-                    key="f"
-                    variant={v.name}
-                    tabIndex={-1}
-                    className="outline-2 outline-offset-2 outline-brand-border-focus"
-                  >
+                  <Button key="f" variant={v.name} tabIndex={-1} className="ring-1 ring-focus-ring">
                     {v.label}
                   </Button>,
                   <Button key="d" variant={v.name} disabled>
@@ -681,7 +765,7 @@ export default function ButtonSheet() {
       <SheetSection
         id="loading"
         title="Loading"
-        description="A form's submit, as the sign-in forms do it. The label says what's happening and keeps the width; the button keeps focus and ignores clicks until it's done. Under reduced motion the spinner holds still."
+        description="A form's submit, as the sign-in forms do it. The label says what's happening and keeps the width under the spinner; the button is disabled until it's done, so the status line below says so too. Under reduced motion the spinner holds still."
       >
         <Sheet split>{() => <LoadingForm />}</Sheet>
         <div className="mt-6">
@@ -691,7 +775,7 @@ export default function ButtonSheet() {
   {pending ? busy : idle}
 </Button>`}
             incorrect={{
-              why: "disabled while the request runs (the auth forms until 2026-10-18)",
+              why: "disabled alone while the request runs (the auth forms until 2026-10-18)",
               code: `<Button
   size="base"
   variant="default"
@@ -705,8 +789,9 @@ export default function ButtonSheet() {
             }}
           />
           <p className="mt-3 max-w-[65ch] text-body-sm text-secondary-foreground">
-            Disabled drops focus out of the form mid-request and dims the words that should say what&rsquo;s happening,
-            and the opacity sits on top of the disabled fill.
+            Disabled alone draws no spinner and dims the words that should say what&rsquo;s happening, and the opacity
+            class sits on top of the library&rsquo;s own <Mono>disabled:opacity-50</Mono>. <Mono>loading</Mono> disables
+            the button as well, and keeps the label legible under the spinner.
           </p>
         </div>
       </SheetSection>
@@ -716,11 +801,12 @@ export default function ButtonSheet() {
         title="Icons and shape"
         description={
           <>
-            The slots and the pill across the sizes. Icons here are <Mono>size=&quot;sm&quot;</Mono>, 16px, the size
-            most call sites draw (<Mono>size-4</Mono>); the dashboard header&rsquo;s lg pills draw theirs at 18px
-            (<Mono>size-4.5</Mono>), and a small glyph such as the search&rsquo;s clear or an external-link arrow at
-            14px (<Mono>size-3.5</Mono>). An icon-only button is a square of the size&rsquo;s height; with{" "}
-            <Mono>shape=&quot;pill&quot;</Mono> it&rsquo;s a circle.
+            The slots and the icon-only square across the sizes. An icon beside the label keeps the size it was given
+            (here <Mono>size=&quot;sm&quot;</Mono>, 16px; the dashboard header&rsquo;s lg pills draw theirs at 18px,{" "}
+            <Mono>size-4.5</Mono>, and a small glyph such as the search&rsquo;s clear at 14px, <Mono>size-3.5</Mono>),
+            6px from the label on the compact step and 8px on the default, inset 4px closer to the edge. An icon-only
+            button is a circle of its step&rsquo;s height, and the library sizes its icon to 14 or 16px.{" "}
+            <Mono>shape=&quot;pill&quot;</Mono> changes nothing: every button is a pill.
           </>
         }
       >
@@ -732,7 +818,7 @@ export default function ButtonSheet() {
               rows={[
                 {
                   label: "iconOnly",
-                  sub: "a square, named",
+                  sub: "a circle, named",
                   cells: SIZES.map((s) => (
                     <Button key={s.name} variant="secondary" size={s.name} iconOnly aria-label="Copy">
                       <Copy size="sm" />
@@ -741,7 +827,7 @@ export default function ButtonSheet() {
                 },
                 {
                   label: "iconOnly pill",
-                  sub: "a circle, named",
+                  sub: "the same: shape is ignored",
                   cells: SIZES.map((s) => (
                     <Button key={s.name} variant="secondary" size={s.name} shape="pill" iconOnly aria-label="Saved">
                       <BookmarkSimple size="sm" />
@@ -750,7 +836,7 @@ export default function ButtonSheet() {
                 },
                 {
                   label: "pill",
-                  sub: "the dashboard's",
+                  sub: "the same: shape is ignored",
                   cells: SIZES.map((s) => (
                     <Button key={s.name} size={s.name} shape="pill">
                       Save
@@ -782,12 +868,12 @@ export default function ButtonSheet() {
         <div className="mt-6 flex flex-col gap-6">
           <Code
             correct={`{/* NewBoardDialog.tsx */}
-<Button variant="transparent" size="base" shape="pill" iconOnly onClick={onClose} aria-label="Close" className="-mr-2">
+<Button variant="transparent" size="base" iconOnly onClick={onClose} aria-label="Close" className="-mr-2">
   <Close className="size-4" />
 </Button>`}
             incorrect={{
               why: "no name: a type error, and only “button” to a screen reader",
-              code: `<Button variant="transparent" size="base" shape="pill" iconOnly onClick={onClose} className="-mr-2">
+              code: `<Button variant="transparent" size="base" iconOnly onClick={onClose} className="-mr-2">
   <Close className="size-4" />
 </Button>`,
             }}
@@ -797,7 +883,6 @@ export default function ButtonSheet() {
 <Button
   variant="secondary"
   size="lg"
-  shape="pill"
   iconOnly
   onClick={copy}
   aria-label={copied ? "Copied" : "Copy token"}
@@ -826,7 +911,7 @@ export default function ButtonSheet() {
       <SheetSection
         id="links"
         title="As a link"
-        description="isLink renders next/link with the same classes, so a link and a button look alike: the words have to say where it goes. These are real links. A link opening a new tab says so to screen readers."
+        description="isLink renders next/link as the button's root (the library's asChild) with the same classes and internals, so a link and a button look alike: the words have to say where it goes. These are real links. A link opening a new tab says so to screen readers."
       >
         <Sheet>
           {() => (
@@ -913,12 +998,11 @@ export default function ButtonSheet() {
         </Sheet>
         <div className="mt-6">
           <Code
-            correct={`{/* Placed by a plain span: Button is relative itself (SearchBox.tsx) */}
+            correct={`{/* Placed by a plain span: the Button's own box places its surface, spinner and touch area (SearchBox.tsx) */}
 <span className="absolute right-3 flex">
   <Button
     variant="transparent"
     size="sm"
-    shape="pill"
     iconOnly
     aria-label="Clear search"
     onClick={() => {
@@ -930,11 +1014,10 @@ export default function ButtonSheet() {
   </Button>
 </span>`}
             incorrect={{
-              why: "absolute on the Button: its own relative wins",
+              why: "a position on the Button itself: cn lets it replace the root's relative, which the surface layer, the spinner and the touch box are placed against",
               code: `<Button
   variant="transparent"
   size="sm"
-  shape="pill"
   iconOnly
   aria-label="Clear search"
   onClick={clear}
@@ -990,8 +1073,7 @@ export default function ButtonSheet() {
               </Instead>
               <Instead name="Menu" demo={<MenuDemo />} sheet={{ href: "/system/menu", title: "Menu" }} menu>
                 Several actions behind one trigger: a <Mono>Menu</Mono>. The trigger is a Button; the rows are{" "}
-                <Mono>MenuItem</Mono>s, 44px on touch, with arrow keys, a letter jump and one gliding highlight. Its
-                rules:
+                <Mono>MenuItem</Mono>s with arrow keys, a letter jump and one fluid highlight. Its rules:
               </Instead>
             </div>
           )}
@@ -1002,7 +1084,6 @@ export default function ButtonSheet() {
 <Segmented
   aria-label="Connect over"
   size="md"
-  shape="pill"
   className="w-fit"
   value={mode}
   onValueChange={setMode}
