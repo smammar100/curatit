@@ -3,14 +3,19 @@
 import Fuse from "fuse.js";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+// Fundation
+import Button from "@/components/fundations/elements/Button";
 // Icons
 import Close from "@/components/fundations/icons/Close";
 import Command from "@/components/fundations/icons/Command";
 
 type SearchItem = { title: string; tagline: string; id: string };
 
+// The field recipe's parts (inputClass in auth/AuthParts) at this field's 36px: border-0 clears
+// the forms plugin's border, and focus swaps the default shadow for the 2px brand ring, so the
+// shadow is what fades
 const inputClass =
-  "block w-full px-4 py-2 text-xs leading-tight align-middle bg-white border border-transparent transition duration-300 ease-in-out focus:z-10 h-9 rounded-md text-base-500 ring-1 ring-base-200 placeholder-base-400 focus:border-accent-500 focus:ring-accent-100 focus:ring-2 focus:outline-none shadow-sm";
+  "block h-9 w-full rounded-md border-0 bg-component-on-container-subtle px-4 text-caption-lg text-primary-foreground shadow-sm placeholder:text-tertiary-foreground transition-[box-shadow] duration-150 ease-out-quint focus:z-10 focus:shadow-[0_0_0_2px_var(--color-brand-border-focus)] focus:ring-0 focus:outline-hidden pointer-coarse:text-[16px]";
 
 export default function SearchDialog({ items }: { items: SearchItem[] }) {
   const [open, setOpen] = useState(false);
@@ -64,10 +69,14 @@ export default function SearchDialog({ items }: { items: SearchItem[] }) {
 
   return (
     <div className="relative">
-      <div className="fixed bottom-6 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-xs -translate-x-1/2 justify-center rounded-xl bg-base-100 p-2">
+      {/* A floating bar over the page, so a solid surface with the large shadow: a tint would let
+          the covers scrolling under it show through */}
+      <div className="fixed bottom-6 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-xs -translate-x-1/2 justify-center rounded-xl bg-modal p-2 shadow-lg">
+        {/* Looks like the field it opens: a tinted well, so it reads inset on the solid bar in
+            both themes */}
         <button
           type="button"
-          className="mx-auto flex gap-2 items-center block w-full px-4 py-2 text-xs text-left leading-tight align-middle bg-white border border-transparent transition duration-300 ease-in-out focus:z-10 h-9 rounded-md text-base-500 ring-1 ring-base-200 placeholder-base-400 focus:border-accent-500 focus:ring-accent-100 focus:ring-2 focus:outline-none shadow-sm"
+          className="mx-auto flex gap-2 items-center w-full px-4 py-2 text-caption-lg text-left leading-tight align-middle cursor-pointer bg-component hover:bg-component-hover transition-colors duration-150 ease-out-quint h-9 rounded-md text-secondary-foreground focus:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
           aria-label="Search for tools"
           onClick={() => setOpen(true)}
         >
@@ -82,26 +91,31 @@ export default function SearchDialog({ items }: { items: SearchItem[] }) {
         className={open ? "fixed inset-0 z-50 overflow-y-auto" : "fixed inset-0 z-50 overflow-y-auto hidden"}
         role="dialog"
         aria-modal="true"
+        aria-label="Search"
       >
         <div className="min-h-screen px-4 text-center">
           <div
-            className="fixed inset-0 bg-black/50 backdrop-blur transition-opacity"
+            className="fixed inset-0 bg-black/50 backdrop-blur"
             onClick={close}
           ></div>
-          <div className="inline-block w-full max-w-2xl p-8 b- mb-8 mt-12 lg:mt-48 bg-base-50 rounded-lg text-left align-middle transition-all transform relative">
+          {/* Shown and hidden with display, so nothing on the panel transitions */}
+          <div className="inline-block w-full max-w-2xl p-8 mb-8 mt-12 lg:mt-48 bg-modal rounded-3xl shadow-xl text-left align-middle relative">
             <div className="hidden">
-              <button
-                type="button"
-                className="text-base-400 hover:text-base-500 cursor-pointer ml-auto"
+              <Button
+                variant="transparent"
+                size="xs"
+                iconOnly
                 aria-label="Close search"
                 onClick={close}
+                className="ml-auto"
               >
                 <Close className="size-4" />
-              </button>
+              </Button>
             </div>
             <input
               ref={inputRef}
               type="text"
+              aria-label="Search sites"
               placeholder="Search posts..."
               className={inputClass}
               value={query}
@@ -110,13 +124,13 @@ export default function SearchDialog({ items }: { items: SearchItem[] }) {
             <div
               className={
                 trimmed
-                  ? "max-h-100 rounded-lg mt-2 overflow-y-auto bg-base-50 overflow-hidden w-full space-y-2 scrollbar-hide"
-                  : "max-h-100 rounded-lg mt-2 overflow-y-auto bg-base-50 overflow-hidden w-full space-y-2 scrollbar-hide hidden"
+                  ? "max-h-100 rounded-lg mt-2 overflow-y-auto bg-card overflow-hidden w-full space-y-2 scrollbar-hide"
+                  : "max-h-100 rounded-lg mt-2 overflow-y-auto bg-card overflow-hidden w-full space-y-2 scrollbar-hide hidden"
               }
             >
               {trimmed && results.length === 0 && (
                 <div className="p-8">
-                  <h3 className="font-medium text-base text-base-500">There&apos;s nothing here,...</h3>
+                  <h3 className="font-medium text-body-base text-secondary-foreground">There&apos;s nothing here,...</h3>
                 </div>
               )}
               {results.map(({ item }) => (
@@ -124,12 +138,12 @@ export default function SearchDialog({ items }: { items: SearchItem[] }) {
                   key={item.id}
                   href={`/sites/site/${item.id}`}
                   onClick={close}
-                  className="block bg-white rounded-lg px-8 py-4 hover:bg-base-100 duration-300 group"
+                  className="block bg-container rounded-lg px-8 py-4 hover:bg-transparent-hover transition-colors duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus group"
                 >
-                  <h3 className="font-medium text-base uppercase text-base-900 group-hover:text-accent-600">
+                  <h3 className="font-medium text-body-base uppercase tracking-wider text-primary-foreground group-hover:text-brand-foreground transition-colors duration-150 ease-out-quint">
                     {item.title}
                   </h3>
-                  <p className="text-base-600 text-sm block">{item.tagline}</p>
+                  <p className="text-secondary-foreground text-body-sm block">{item.tagline}</p>
                 </Link>
               ))}
             </div>

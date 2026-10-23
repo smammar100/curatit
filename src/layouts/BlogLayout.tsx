@@ -24,10 +24,10 @@ export default function BlogLayout({
         <Wrapper variant="standard" className="page-start">
           <div className="text-balance">
             <div className="text-center max-w-3xl mx-auto text-balance">
-              <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
+              <Text tag="h1" variant="h1" className="text-primary-foreground">
                 {frontmatter.title}
               </Text>
-              <Text tag="p" variant="textBase" className="text-base-600 mt-4">
+              <Text tag="p" variant="body" className="text-secondary-foreground mt-4">
                 {frontmatter.description}
               </Text>
             </div>
@@ -41,14 +41,14 @@ export default function BlogLayout({
                   variant="muted"
                   aria-label={tag}
                   href={`/blog/tags/${tag}`}
-                  className="text-accent-500  font-medium text-xs hover:text-base-900   capitalize  "
+                  className="capitalize"
                 >
                   {tag}
                 </Button>
               ))}
             </div>
           </div>
-          <div className="p-8 bg-base-50 rounded-lg mt-12">
+          <div className="p-8 bg-card rounded-2xl mt-12">
             <Image
               width={1400}
               height={1400}
@@ -67,7 +67,7 @@ export default function BlogLayout({
       <section>
         <Wrapper variant="standard" className="section-y">
           <div className="flex flex-wrap gap-4 justify-between items-center">
-            <Text tag="h2" variant="displaySM" className="text-base-900 font-display font-thin">
+            <Text tag="h2" variant="h3" className="text-primary-foreground">
               Latest posts
             </Text>
             <Button isLink size="sm" variant="muted" href="/blog">

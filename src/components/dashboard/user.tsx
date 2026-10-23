@@ -66,20 +66,21 @@ const initials = (name: string) =>
     .map((part) => part[0]!.toUpperCase())
     .join("");
 
-// The signed-in person's picture, or their initials; an empty circle until the session is read
+// The signed-in person's picture, or their initials on the brand's tint; an empty circle until the
+// session is read
 export function Avatar({ className }: { className?: string }) {
   const user = useUser();
   const [broken, setBroken] = useState(false);
   const base = cx("flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full text-caption font-medium", className);
-  if (!user) return <span aria-hidden="true" className={cx(base, "bg-base-100")} />;
+  if (!user) return <span aria-hidden="true" className={cx(base, "bg-component")} />;
   if (user.avatar && !broken) {
     return (
       // Google's avatar host isn't in next.config's image list, and it's 96px: a plain img
-      <img src={user.avatar} alt={user.name} referrerPolicy="no-referrer" onError={() => setBroken(true)} className={cx(base, "bg-base-100 object-cover")} />
+      <img src={user.avatar} alt={user.name} referrerPolicy="no-referrer" onError={() => setBroken(true)} className={cx(base, "bg-component object-cover")} />
     );
   }
   return (
-    <span role="img" aria-label={user.name} className={cx(base, "bg-accent-100 text-accent-700")}>
+    <span role="img" aria-label={user.name} className={cx(base, "bg-brand-subtle text-on-brand-subtle-foreground")}>
       {initials(user.name)}
     </span>
   );

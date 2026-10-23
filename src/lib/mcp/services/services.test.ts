@@ -126,6 +126,46 @@ describe("classification and categories", () => {
 });
 
 describe("search", () => {
+  it("reports typo corrections and actionable refinements without running them", async () => {
+    const repo = createFixtureCatalog();
+    const { data, warnings } = await searchPosts(repo, { query: "fintehc carousels about zqxv" }, ctx);
+    expect(data.posts).toEqual([]);
+    expect(warnings.join(" ")).toContain('Read "fintehc" as "Finance"');
+    expect(data.suggested_queries?.length).toBeGreaterThan(0);
+    expect(data.suggested_queries?.[0].query).toContain("finance industry");
+    expect(repo.calls.filter((call) => call.startsWith("search:"))).toHaveLength(1);
+    expect(TOOLS.curatit_search_posts.output.parse(data)).toBeTruthy();
+  });
+
+  it("interprets everyday requests, and reports the actual filters and leftover text", async () => {
+    const repo = createFixtureCatalog();
+    const { data } = await searchPosts(repo, { query: "Show me fintech carousels about cash" }, ctx);
+    expect(data.posts).toHaveLength(1);
+    expect(data.applied).toMatchObject({ original_query: "Show me fintech carousels about cash", query: "cash", query_mode: "natural", filters: { industries: ["finance"], formats: ["carousel"] } });
+    expect(repo.calls.at(-1)).toContain('"category":"finance"');
+    expect(TOOLS.curatit_search_posts.output.parse(data)).toBeTruthy();
+  });
+
+  it("explicit filters win without mutating the caller's input", async () => {
+    const input = { query: "fintech carousels", filters: { formats: ["static"] } };
+    const { data, warnings } = await searchPosts(createFixtureCatalog(), input, ctx);
+    expect(data.applied.filters).toEqual({ industries: ["finance"], formats: ["static"] });
+    expect(data.posts.every((post) => post.format === "static")).toBe(true);
+    expect(warnings.join(" ")).toContain("takes precedence");
+    expect(input.filters).toEqual({ formats: ["static"] });
+  });
+
+  it("keeps the explicit literal mode and natural-mode cursors separate", async () => {
+    const repo = createFixtureCatalog();
+    const natural = await searchPosts(repo, { query: "fintech posts", limit: 1 }, ctx);
+    expect(natural.data.next_cursor).toBeTruthy();
+    const second = await searchPosts(repo, { query: "fintech posts", limit: 1, cursor: natural.data.next_cursor! }, ctx);
+    expect(second.data.posts[0].post_id).not.toBe(natural.data.posts[0].post_id);
+    await expectError(searchPosts(repo, { query: "fintech posts", query_mode: "all_words", limit: 1, cursor: natural.data.next_cursor! }, ctx), "INVALID_ARGUMENT", /different search/);
+    await searchPosts(repo, { query: "show me fintech carousels", query_mode: "all_words" }, ctx);
+    expect(repo.calls.at(-1)).toContain('"query":"show me fintech carousels"');
+  });
+
   it("needs a query or a filter", async () => {
     await expectError(searchPosts(createFixtureCatalog(), {}, ctx), "INVALID_ARGUMENT", /query or at least one filter/);
     await expectError(searchPosts(createFixtureCatalog(), { filters: { platforms: ["instagram"] } }, ctx), "INVALID_ARGUMENT");
@@ -140,7 +180,7 @@ describe("search", () => {
     expect(data.posts[0].thumbnail.media_id).toBe(`${FIXTURE_IDS.carousel}.0`);
     expect(data.posts[0].thumbnail.url).toBe("https://storage.example/library/fixture/fixture-co/carousel/FIX00001/01.webp");
     expect(data.posts[0].classification).toMatchObject({ creative_approach: "explainer", approach_family: "education", tones: ["educational"], persuasion: ["comparison"], cta: null });
-    expect(data.applied).toMatchObject({ query: "cash", query_mode: "all_words", sort: "relevance", filters: { layouts: ["framed-card"] } });
+    expect(data.applied).toMatchObject({ query: "cash", query_mode: "natural", sort: "relevance", filters: { layouts: ["framed-card"] } });
   });
 
   it("resolves industry aliases and refuses unknown ones instead of returning nothing", async () => {

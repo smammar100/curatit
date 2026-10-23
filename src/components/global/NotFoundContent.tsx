@@ -27,11 +27,11 @@ export default async function NotFoundContent() {
     <section>
       <Wrapper variant="standard" className="flex min-h-dvh flex-col items-center justify-center pt-24 pb-12 text-center">
         <div className="text-balance">
-          <Text tag="h1" variant="displayLG" className="text-base-900">
+          <Text tag="h1" variant="h1" className="text-primary-foreground">
             <span className="sr-only">404: </span>
             This page is gone.
           </Text>
-          <Text tag="p" variant="textBase" className="mt-2 text-base-600">
+          <Text tag="p" variant="body" className="mt-2 text-secondary-foreground">
             Every tile is a real post. <span className="pointer-coarse:hidden">Hover</span>
             <span className="hidden pointer-coarse:inline">Tap</span> to shuffle.
           </Text>

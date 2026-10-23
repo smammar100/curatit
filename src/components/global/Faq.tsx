@@ -2,87 +2,29 @@ import Text from "@/components/fundations/elements/Text";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 import Plus from "@/components/fundations/icons/Plus";
 
-// Shown when no faqs are passed (pricing page)
-const defaultFaqs = [
-  {
-    question: "What is a website tool curation platform?",
-    answer:
-      "A website tool curation platform is a site that collects and organizes the best tools available online to help users find resources for their specific needs, such as productivity, design, development, or marketing.",
-  },
-  {
-    question: "How are the tools selected for curation?",
-    answer:
-      "The tools are carefully selected based on their features, user reviews, popularity, and overall utility. Our team evaluates each tool to ensure it meets quality standards and provides value.",
-  },
-  {
-    question: "Can I suggest a tool to be added to the curation?",
-    answer:
-      "Yes, we encourage user suggestions! You can recommend tools through our 'Suggest a Tool' form. Each submission is reviewed to ensure it aligns with our platform’s focus and quality criteria.",
-  },
-  {
-    question: "Are the tools on your website free to use?",
-    answer:
-      "Our curated tools include a mix of free, freemium, and paid options. Each tool listing clearly mentions its pricing model to help you decide which fits your needs.",
-  },
-  {
-    question: "How do I know if a tool is trustworthy?",
-    answer:
-      "We provide detailed descriptions, reviews, and ratings for each tool. Additionally, tools are vetted for reliability, security, and user feedback before being listed on our platform.",
-  },
-  {
-    question: "Do you provide tutorials or guides for the tools?",
-    answer:
-      "Yes, for many tools, we offer links to official documentation, video tutorials, and user guides to help you get started quickly and efficiently.",
-  },
-  {
-    question: "Can I leave reviews or feedback on the tools listed?",
-    answer:
-      "Absolutely! We encourage users to leave reviews and feedback on tool pages. This helps others make informed decisions and ensures we maintain a high-quality curation.",
-  },
-  {
-    question: "Are there categories to help me find tools more easily?",
-    answer:
-      "Yes, tools are categorized by purpose, such as design, development, marketing, or productivity. You can also use our search function to find specific tools quickly.",
-  },
-  {
-    question: "Is there a cost to access the curated tools on your website?",
-    answer:
-      "Accessing our curated tool lists is completely free. However, individual tools may have their own pricing models, which are indicated in their descriptions.",
-  },
-  {
-    question: "Can I share curated tools with others?",
-    answer:
-      "Yes, each tool page has sharing options that allow you to easily send links to your colleagues, friends, or team members.",
-  },
-];
-
-export default function Faq({
-  faqs = defaultFaqs,
-}: {
-  faqs?: { question: string; answer: string }[];
-}) {
+// Questions as native disclosures. As one opens the plus turns to a cross and the answer drops
+// into place (closing is instant); neither moves under reduced motion
+export default function Faq({ faqs }: { faqs: { question: string; answer: string }[] }) {
   return (
     <section>
       <Wrapper variant="standard" className="section-y">
         <div className="text-center">
-          <Text tag="h2" variant="displayLG" className="text-base-900">
-            Frequently Asked Questions
+          <Text tag="h2" variant="h1" className="text-primary-foreground">
+            Frequently asked questions
           </Text>
         </div>
         <div className="mx-auto mt-12 max-w-xl sm:px-8">
           <div>
             {faqs.map((faq) => (
-              <details key={faq.question} className="group cursor-pointer">
-                <summary className="flex w-full items-center justify-between py-4 text-left text-body-base font-medium text-primary-foreground select-none transition-colors duration-150 hover:text-brand-foreground focus-visible:text-brand-foreground sm:px-8">
+              <details key={faq.question} className="group">
+                <summary className="flex w-full cursor-pointer items-center justify-between gap-4 rounded-sm py-4 text-left text-body-base font-medium text-primary-foreground select-none transition-colors duration-150 ease-out-quint hover:text-brand-foreground focus-visible:text-brand-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus sm:px-8 [&::-webkit-details-marker]:hidden">
                   {faq.question}
-                  <Plus className="size-4 duration-300 ease-out transform group-open:-rotate-45" />
+                  <Plus className="size-4 shrink-0 transition-[rotate] duration-200 ease-out-quint group-open:-rotate-45 motion-reduce:transition-none" />
                 </summary>
-                <div className="py-4 sm:px-8">
-                  <Text
-                    tag="p"
-                    variant="textSM"
-                    className="text-base-600 text-balance"
-                  >
+                {/* motion-safe rather than motion-reduce:animate-none, which group-open's
+                    selector would outrank */}
+                <div className="py-4 sm:px-8 motion-safe:group-open:animate-rise-in">
+                  <Text tag="p" variant="bodySM" className="text-secondary-foreground">
                     {faq.answer}
                   </Text>
                 </div>

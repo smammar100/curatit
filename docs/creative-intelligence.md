@@ -328,3 +328,33 @@ Changing the prompts bumps `prompt`. Either makes analysed posts eligible again 
 - The MCP server's tools for the v2 functions (the server isn't in this repository).
 - Video posts (marked unsupported; no frame extraction).
 - Labels for a calibrated auto-approval policy, and pgvector hybrid search.
+
+## Editorial quality update — 2026.10.17-1
+
+The complete authoring brief is [creative-analysis-prompt.md](./creative-analysis-prompt.md).
+This update supersedes the earlier broad instruction to add checks whenever a post contains a
+price, claim or sensitive industry. Checks now require a concrete, material issue; ordinary
+jokes, galleries, seasonal copy and product photographs normally have no data-check section.
+
+An audit of all 217 existing analyses found 202 with the same public caveat repeated in their
+data checks and constraints, and 162 with the same color-sampling disclaimer. The issue was
+saved editorial content, reinforced by a public projection that fell back to internal
+`quality.uncertainties`. The cleanup corrected 203 current analyses, retained 14 unchanged,
+kept useful presentation and coverage limitations, and preserved the old immutable versions.
+It did not claim to perform a fresh visual review of all 217 posts.
+
+The executable prompt now gives each caveat one home. Validation rejects verification-only
+boilerplate and normalized duplicate public caveats. The public projection deduplicates checks,
+omits caveats already represented by checks or decision watch-outs, and never falls back to
+internal quality metadata. Concrete missing-source notes remain supported.
+
+The 20 newly imported posts (10 Postmates, 10 GoFundMe) received a separate visual review of all
+47 stored images. Their authored notes are in `docs/creative-eval/session-2026-10-17/`; the
+serializer in `scripts/maintenance/build-session-analyses.ts` measures colors, validates the
+current contracts and writes save-ready analysis records. It is not a caption-based generator.
+These new analyses are saved as drafts for the existing editor review workflow.
+
+Maintenance uses new versions and copies the original slide records. The SQL template in
+`scripts/maintenance/apply-editorial-cleanup.sql` checks the expected current version under a
+per-post lock, so it refuses to overwrite newer work. It runs through a rolled-back transaction
+before applying. Review notes identify the AI editorial cleanup without assigning a human actor.

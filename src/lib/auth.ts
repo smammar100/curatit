@@ -50,9 +50,17 @@ export const SIGNUP_EMAIL_KEY = "curatit-signup-email";
 export function emailProblem(email: string) {
   const value = email.trim();
   if (!value) return "Enter your email address.";
+  // 254 characters is the longest address mail servers accept (RFC 5321)
+  if (value.length > 254) return "This email address is too long. Use a shorter one.";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Enter a valid email address, like name@example.com.";
   return null;
 }
+
+// What the auth forms say when a guard in src/lib/auth-guard.ts turns an attempt down
+export const GUARD_MESSAGES = {
+  limited: "Too many attempts from your connection. Wait a few minutes, then try again.",
+  disposable: "Use a permanent email address. Temporary inboxes can’t receive the emails your account needs.",
+};
 
 // The project's password rules, as set in the Supabase dashboard (Authentication → Sign In /
 // Providers → Email: minimum length 8, and "Lowercase, uppercase letters, digits and symbols").

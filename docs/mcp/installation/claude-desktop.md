@@ -26,7 +26,7 @@ Images: Claude Desktop renders image content blocks, so `curatit_get_media` with
 
 ## Claude.ai and Claude Desktop custom connectors (remote URL)
 
-Custom connectors sign in with OAuth against the authorization server the MCP server advertises. That needs Supabase's OAuth server turned on for the project (see `../security.md`). Until then, use the bridge.
+Custom connectors sign in with OAuth against the authorization server the MCP server advertises; Supabase's OAuth server is on (see `../security.md`), and Claude connected this way on 12 Oct 2026. In Claude: Customize → Connectors → Add custom connector, name it Curatit, paste `https://www.curatit.app/mcp`, Add, then Connect, sign in to Curatit and Allow. If the dialog asks for an OAuth client, choose Register automatically: Supabase doesn't support Client ID Metadata Documents (#2850), which is what Claude's published identity uses. The connector then shows in Claude Desktop and on mobile too. The free plan allows one custom connector.
 
 ## Disconnect
 

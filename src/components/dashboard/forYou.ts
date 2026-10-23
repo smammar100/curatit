@@ -62,3 +62,17 @@ export function learnedChips(posts: DashPost[], taste: string[], max = 5) {
   const l = learned(posts, taste);
   return [...l.categories.slice(0, 2).map((c) => c.name), ...l.brands.slice(0, 2).map((b) => b.name), ...l.formats.slice(0, 1)].slice(0, max);
 }
+
+// Keeps the order but never lets a brand come back within `gap` places while another brand could
+// go there instead, so one brand's run of posts (a new import, or a brand the answers favour) can't
+// fill a row. A brand with nothing else left to place keeps its order at the end
+export function spread<P extends { brand: { slug: string } }>(posts: P[], gap: number): P[] {
+  const rest = [...posts];
+  const out: P[] = [];
+  while (rest.length) {
+    const recent = new Set(out.slice(-gap).map((post) => post.brand.slug));
+    const i = rest.findIndex((post) => !recent.has(post.brand.slug));
+    out.push(rest.splice(i === -1 ? 0 : i, 1)[0]);
+  }
+  return out;
+}

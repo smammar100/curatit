@@ -29,9 +29,9 @@ export default async function SharedBoardPage({ params }: Props) {
 
   return (
     <BaseLayout hideNavigation hideFooter>
-      <div className="min-h-dvh bg-white">
+      <div className="min-h-dvh bg-page">
         <header className="flex h-20 items-center justify-between gap-4 px-4 sm:px-6">
-          <Link href="/" aria-label="Curatit home" className="text-base-900">
+          <Link href="/" aria-label="Curatit home" className="text-primary-foreground">
             <Lockup />
           </Link>
           <Button isLink href="/signup" size="sm" variant="default">
@@ -40,14 +40,18 @@ export default async function SharedBoardPage({ params }: Props) {
         </header>
         <main className="px-4 pb-24 sm:px-6">
           <div className="mx-auto max-w-3xl pt-6 pb-12 text-center">
-            <p className="text-sm text-base-500">Shared board · Read-only</p>
-            <Text tag="h1" variant="displayLG" className="mt-3 font-display font-light text-base-900 text-balance">
+            <Text variant="bodySM" className="text-secondary-foreground">
+              Shared board · Read-only
+            </Text>
+            <Text tag="h1" variant="h1" className="mt-3 text-balance text-primary-foreground">
               {board.name}
             </Text>
-            {board.description && <p className="mx-auto mt-4 max-w-xl text-pretty whitespace-pre-line text-base-600">{board.description}</p>}
-            <p className="mt-3 text-sm text-base-500 tabular-nums">
+            {board.description && (
+              <Text className="mx-auto mt-4 max-w-xl text-pretty whitespace-pre-line text-secondary-foreground">{board.description}</Text>
+            )}
+            <Text variant="bodySM" className="mt-3 text-secondary-foreground tabular-nums">
               {count} {count === 1 ? "reference" : "references"}
-            </p>
+            </Text>
           </div>
           {count ? (
             // Plain CSS columns: the page has no client code of its own, and order matters less here
@@ -64,23 +68,29 @@ export default async function SharedBoardPage({ params }: Props) {
                           width={post.width ?? 1080}
                           height={post.height ?? 1350}
                           sizes="(min-width: 1536px) 20vw, (min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw"
-                          className="h-auto w-full rounded bg-base-100 outline-1 -outline-offset-1 outline-edge"
+                          className="h-auto w-full rounded bg-component outline-1 -outline-offset-1 outline-edge"
                         />
                       ) : (
-                        <span className="block aspect-[4/5] rounded bg-base-100" />
+                        <span className="block aspect-[4/5] rounded bg-component" />
                       )}
                     </a>
-                    <p className="mt-2 flex min-w-0 items-center gap-1.5 text-xs font-medium text-base-900">
+                    <Text variant="captionLG" className="mt-2 flex min-w-0 items-center gap-1.5 font-medium text-primary-foreground">
                       {post.brand?.logo && <Image src={post.brand.logo} alt="" width={16} height={16} className="size-4 shrink-0 rounded-sm outline-1 -outline-offset-1 outline-edge" />}
                       <span className="truncate">{name}</span>
-                    </p>
-                    {post.note && <p className="mt-1 text-sm text-pretty whitespace-pre-line text-base-600">{post.note}</p>}
+                    </Text>
+                    {post.note && (
+                      <Text variant="bodySM" className="mt-1 text-pretty whitespace-pre-line text-secondary-foreground">
+                        {post.note}
+                      </Text>
+                    )}
                   </li>
                 );
               })}
             </ul>
           ) : (
-            <p className="py-16 text-center text-sm text-base-500">Nothing on this board yet.</p>
+            <Text variant="bodySM" className="py-16 text-center text-secondary-foreground">
+              Nothing on this board yet.
+            </Text>
           )}
         </main>
       </div>

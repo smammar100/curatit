@@ -20,7 +20,7 @@ export const compact = (s: string) => normalise(s).replace(/ /g, "");
 // "ai" would find every hook with "again" in it
 export function matches(post: DashPost, query: string) {
   const words = normalise(query).split(" ").filter(Boolean);
-  const text = normalise(`${post.hook} ${post.brand.name} ${post.format}`);
+  const text = normalise(`${post.hook} ${post.brand.name} ${post.format} ${post.breakdown?.headline ?? ""} ${post.breakdown?.type ?? ""} ${post.breakdown?.hook ?? ""}`);
   const categoryWords = new Set(normalise(post.categories.flatMap((category) => [category.name, ...(OLD_NAMES[category.slug] ?? [])]).join(" ")).split(" "));
   return words.every((word) => text.includes(word) || categoryWords.has(word)) || compact(post.brand.name) === compact(query);
 }
@@ -40,4 +40,20 @@ export function brandNamed(posts: DashPost[], query: string) {
   const q = compact(query);
   if (!q) return null;
   return posts.find((post) => compact(post.brand.name) === q || compact(post.brand.slug) === q)?.brand ?? null;
+}
+
+// The type of post a query names exactly ("Social impact", as a Playbooks card sends it),
+// if any posts' breakdowns use it: that search shows those posts alone
+export function typeNamed(posts: DashPost[], query: string) {
+  const q = compact(query);
+  if (!q) return null;
+  return posts.find((post) => post.breakdown?.type && compact(post.breakdown.type) === q)?.breakdown?.type ?? null;
+}
+
+// The hook a query names exactly ("Number or statistic", as a hook chip sends it), if any posts'
+// breakdowns use it: that search shows those posts alone
+export function hookNamed(posts: DashPost[], query: string) {
+  const q = compact(query);
+  if (!q) return null;
+  return posts.find((post) => post.breakdown?.hook && compact(post.breakdown.hook) === q)?.breakdown?.hook ?? null;
 }

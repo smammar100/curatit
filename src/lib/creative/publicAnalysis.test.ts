@@ -17,6 +17,20 @@ const record = (dna: unknown, count: number, overrides: Partial<AnalysisRecord> 
 });
 const rows = (slides: SlideObservation[], version = CURRENT): SlideRecord[] => slides.map((observation) => ({ version_id: version, position: observation.position, observation }));
 
+it("shows public caveats once and never exposes internal quality notes", () => {
+  const dna = clone(FIXTURE_DNA);
+  const note = "The survey footnote omits the sample size.";
+  dna.integrity_notes = [{ aspect: "Sample", status: "cannot_verify", note, evidence: ["slide:0"] }];
+  dna.integrity_notes.push({ ...dna.integrity_notes[0] });
+  dna.constraints_or_uncertainties = [note, "The final frame is blank.", "The final frame is blank!"];
+  dna.quality.uncertainties = ["Internal editorial review pending"];
+  const result = toPublicAnalysis(record(dna, 3), rows(FIXTURE_PERCEPTION.slides), 3)!;
+  expect(result.caveats).toEqual(["The final frame is blank."]);
+  expect(result.integrity).toHaveLength(1);
+  dna.constraints_or_uncertainties = [];
+  expect(toPublicAnalysis(record(dna, 3), rows(FIXTURE_PERCEPTION.slides), 3)!.caveats).toEqual([]);
+});
+
 describe("parseEvidence and evidenceGroups", () => {
   it("maps zero-based slide refs to the image they name, and names them from one", () => {
     const targets = parseEvidence(["slide:6", "slide:0", "caption"], 7);
@@ -190,11 +204,11 @@ describe("briefMarkdown", () => {
   };
   const origin = "https://curatit.example";
 
-  it("exports an ordered reconstruction brief with real copy, colours and absolute reference images", () => {
+  it("exports an ordered visual adaptation brief with reference data and absolute images", () => {
     const { dna, slides } = galleryFixture();
     const analysis = toPublicAnalysis(record(dna, 7), rows(slides), 7)!;
     const brief = briefMarkdown(analysis, source, origin);
-    expect(brief.startsWith("# Instagram post — 1:1 replica brief")).toBe(true);
+    expect(brief.startsWith("# Instagram post — visual adaptation brief")).toBe(true);
     expect(brief).toContain("exactly 7 separate images");
     expect(brief.match(/^### Slide \d+$/gm)).toHaveLength(7);
     for (let i = 0; i < 7; i++) {
@@ -207,7 +221,13 @@ describe("briefMarkdown", () => {
     expect(brief).toContain("1080 × 1350 px");
     expect(brief).toContain("not a per-slide measurement");
     expect(brief).toContain("not a square aspect ratio");
-    expect(brief).toContain("Preserve the original copy, branding, imagery, composition and colours");
+    expect(brief).toContain("Replace all text with fresh copy");
+    expect(brief).not.toContain("1:1 replica");
+    expect(brief).toContain("every logo with a distinct dummy logo");
+    expect(brief).toContain("every photograph or illustration with replacement imagery");
+    expect(brief).toContain("reference only — rewrite for output");
+    expect(brief).toContain("show this disclaimer in the response, outside the artwork");
+    expect(brief).toContain("The original post’s content and images have not been copied.");
     expect(brief).toContain("do not impose a new safe-area template");
     expect(brief).toContain(source.url);
     expect(brief).not.toMatch(/\[your brand\]|Core idea to borrow|Write new words|in my own palette/);
@@ -217,13 +237,13 @@ describe("briefMarkdown", () => {
   it("carries the photo substitution rule even when older analysis has no person metadata", () => {
     const analysis = toPublicAnalysis(record({ concept: "A post" }, 1), [], 1)!;
     const brief = briefMarkdown(analysis, { ...source, slides: 1, images: source.images.slice(0, 1) }, origin);
-    expect(brief).toContain("Public-figure photos — treatment only");
+    expect(brief).toContain("Replacement content and assets — every post");
     expect(brief).toContain("Do not recreate their face, generate a lookalike");
     expect(brief).toContain("Unsplash photo-page URL, photographer");
-    expect(brief).toContain("Unsplash photo placeholder");
+    expect(brief).toContain("Photo placeholder");
     expect(brief).toContain("Replace names, handles, signatures, quotations, achievements");
-    expect(brief).toContain("do not restore the original person during comparison");
-    expect(brief).toContain("For references without public figures or uncertain subjects, retain the normal reconstruction workflow");
+    expect(brief).toContain("Never restore original content during comparison");
+    expect(brief).toContain("These replacements apply to every post.");
     expect(brief).not.toContain("Use an Unsplash photo of the same person");
   });
 

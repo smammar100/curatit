@@ -156,7 +156,7 @@ export function analysisSummary(creative: RawDetailAnalysis, analysis: PublicAna
   };
 }
 
-// What the 1:1 reconstruction prompt needs besides the analysis: the stored images as public URLs
+// What the visual adaptation prompt needs besides the analysis: the stored images as public URLs
 // in stage order, which of them were videos, and the post's size (the first slide's, as recorded)
 function briefSourceOf(post: RawPost, slides: RawSlide[], publicUrl: (path: string) => string): BriefSource {
   const byPosition = new Map(slides.map((s) => [s.position, s]));

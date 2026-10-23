@@ -7,12 +7,24 @@
 // opens up on hover or focus, and "Add a note" appears on hover. The name, description and notes
 // edit in place. Everything comes from BoardsProvider, so changes show at once and are written
 // in the background.
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 // Fundations
 import Button from "@/components/fundations/elements/Button";
+import Input from "@/components/fundations/elements/Input";
+import TextLink from "@/components/fundations/elements/TextLink";
+import Menu, { MenuItem, MenuSeparator } from "@/components/fundations/molecules/Menu";
 import BrandName from "@/components/home/BrandName";
 import { cx } from "@/lib/cx";
 import { NAME_MAX, SaveMenu, useBoards } from "./boards";
@@ -22,6 +34,7 @@ import Header from "./Header";
 import { DESCRIPTION_MAX } from "./NewBoardDialog";
 import { Block, GridSkeleton } from "./Skeleton";
 import type { Board, DashPost } from "./types";
+import { usePopover } from "./usePopover";
 
 export const boardHref = (id: string) => `/dashboard/b/${id}`;
 export const shareHref = (token: string) => `/s/${token}`;
@@ -68,7 +81,7 @@ export default function BoardView({ id }: { id: string }) {
   }, [name]);
 
   return (
-    <div className="min-h-dvh bg-white">
+    <div className="min-h-dvh bg-page">
       {/* Boards live under Saved, so that tab is the current one */}
       <Header
         view="Saved"
@@ -85,13 +98,14 @@ export default function BoardView({ id }: { id: string }) {
         ) : (
           <>
             <header className="pt-2 pb-6">
-              <Link href={feedHref("Saved")} className="text-body text-base-500 hover:text-base-900">
+              {/* An invisible 44px tap area round the short word */}
+              <TextLink variant="quiet" href={feedHref("Saved")} className="after:absolute after:-inset-x-2 after:-inset-y-3">
                 Saved
-              </Link>
+              </TextLink>
               {/* The name and the actions share a row; the rest of the header hangs under the name */}
               <div className="mt-1 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
                 <div className="min-w-0 flex-1">
-                  <h1 className="-mx-2 font-display text-display font-light text-balance text-base-900">
+                  <h1 className="-mx-2 font-display text-display font-light text-balance text-primary-foreground">
                     <Editable
                       value={board.name}
                       editing={editing === "name"}
@@ -103,7 +117,7 @@ export default function BoardView({ id }: { id: string }) {
                   </h1>
                   {/* Only when there is one; More has "Add a description" */}
                   {(board.description || editing === "description") && (
-                    <div className="-mx-2 mt-1.5 max-w-2xl text-subtitle text-pretty text-base-600">
+                    <div className="-mx-2 mt-1.5 max-w-2xl text-subtitle text-pretty text-secondary-foreground">
                       <Editable
                         value={board.description ?? ""}
                         editing={editing === "description"}
@@ -114,11 +128,13 @@ export default function BoardView({ id }: { id: string }) {
                       />
                     </div>
                   )}
-                  <p className="mt-2 text-body text-base-500 tabular-nums">
+                  <p className="mt-2 text-body text-secondary-foreground tabular-nums">
                     {items.length} {items.length === 1 ? "post" : "posts"} · Updated {ago(board.updatedAt)}
                     {board.shareToken && " · Shared"}
                   </p>
                 </div>
+                {/* Share and More: the dashboard's secondary pills (Button lg), like the header's
+                    Create, each opening a popover */}
                 <div className="flex shrink-0 items-center gap-2">
                   <SharePanel board={board} />
                   <MoreMenu board={board} onRename={() => setEditing("name")} onDescribe={() => setEditing("description")} />
@@ -184,21 +200,21 @@ function Masonry({ board, items }: { board: Board; items: { note: string; post: 
 function Tile({ board, post, note, sizes }: { board: Board; post: DashPost; note: string; sizes: string }) {
   const { setNote } = useBoards();
   const [editing, setEditing] = useState(false);
-  const reveal = "opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100";
+  const reveal = "opacity-0 transition-opacity duration-150 ease-out-quint group-focus-within:opacity-100 group-hover:opacity-100 motion-reduce:transition-none [@media(hover:none)]:opacity-100";
   return (
     <li className="group relative">
       <Link
         href={postHref(post.shortCode)}
         scroll={false}
         onClick={rememberOpener}
-        className="relative block overflow-hidden rounded-sm bg-base-100"
+        className="relative block overflow-hidden rounded-sm bg-component"
         style={{ aspectRatio: ratio(post) }}
       >
         <Image src={post.cover} alt={post.hook} fill sizes={sizes} className="object-cover" />
       </Link>
       <div className="pointer-events-none absolute inset-0 flex flex-col justify-between gap-2 p-2">
         <div className={cx("flex items-start justify-between gap-2", reveal)}>
-          <span className="min-w-0 rounded-md bg-white/95 px-2 py-1 shadow-sm">
+          <span className="min-w-0 rounded-md bg-page/95 px-2 py-1 shadow-sm">
             <BrandName brand={post.brand} />
           </span>
           <SaveMenu post={post.shortCode} tone="overlay" className="pointer-events-auto shrink-0" />
@@ -207,7 +223,7 @@ function Tile({ board, post, note, sizes }: { board: Board; post: DashPost; note
             taller than the tile (it scrolls inside), long words broken. "Add a note" only on hover. */}
         <div
           className={cx(
-            "pointer-events-auto min-h-0 shrink overflow-y-auto rounded-md bg-white/95 text-caption text-base-900 shadow-sm scrollbar-hide",
+            "pointer-events-auto min-h-0 shrink overflow-y-auto rounded-md bg-page/95 text-caption text-primary-foreground shadow-sm scrollbar-hide",
             !note && !editing && reveal,
           )}
         >
@@ -220,7 +236,9 @@ function Tile({ board, post, note, sizes }: { board: Board; post: DashPost; note
             maxLength={NOTE_MAX}
             label={`Note on ${post.brand.name}’s post`}
             multiline
-            className="block px-2 py-1.5 text-caption hover:bg-transparent"
+            hoverFill={false}
+            padding="px-2 py-1.5"
+            className="block text-caption"
             textClassName="[overflow-wrap:anywhere] line-clamp-1 group-hover:line-clamp-none group-focus-within:line-clamp-none"
           />
         </div>
@@ -240,6 +258,8 @@ function Editable({
   maxLength,
   label,
   multiline = false,
+  hoverFill = true,
+  padding = "px-2 py-0.5",
   className,
   textClassName,
 }: {
@@ -251,6 +271,12 @@ function Editable({
   maxLength: number;
   label: string;
   multiline?: boolean;
+  // A grey fill under the pointer; off for a note, which sits on its own label over the cover
+  // (a second hover background in className would fight this one, since cx doesn't merge)
+  hoverFill?: boolean;
+  // The padding, at rest and while editing: its own prop so a caller never sets a second py-*
+  // through className (cx doesn't merge, and the stylesheet's order would pick the winner)
+  padding?: string;
   className?: string;
   // For the text inside the button: a line clamp must sit on an element without padding, or
   // the next line shows through the padding
@@ -273,8 +299,11 @@ function Editable({
         onClick={() => onEdit(true)}
         title={`Edit ${label.toLowerCase()}`}
         className={cx(
-          "w-full rounded-lg px-2 py-0.5 text-left transition-colors duration-150 hover:bg-base-50",
-          !value && "text-base-400",
+          "w-full rounded-lg text-left transition-colors duration-150 ease-out-quint",
+          padding,
+          hoverFill && "hover:bg-transparent-hover",
+          // The placeholder ("Add a note") in the placeholder's colour
+          !value && "text-tertiary-foreground",
           multiline && "whitespace-pre-line",
           className,
         )}
@@ -304,18 +333,27 @@ function Editable({
         (event.currentTarget as HTMLElement).blur();
       }
     },
-    className: cx("w-full rounded-lg bg-base-50 px-2 py-0.5 text-left outline-none ring-2 ring-accent-100 [font:inherit]", className),
+    // The text in place, on the grey mat, with the focus ring (it only exists while it has focus).
+    // border-0 takes off the grey border @tailwindcss/forms gives text fields
+    className: cx(
+      "w-full rounded-lg border-0 bg-card text-left ring-2 ring-brand-border-focus outline-hidden [font:inherit]",
+      padding,
+      className,
+    ),
   };
   return multiline ? <textarea rows={3} {...shared} className={cx(shared.className, "resize-none")} /> : <input {...shared} />;
 }
 
-// Share: a read-only link anyone can open, made and turned off here
+// Share: a read-only link anyone can open, made and turned off here. A popover dialog beside its
+// button (the dashboard's usePopover("dialog"): there's no shared popover molecule) built from the
+// shared atoms: the link in an Input, Copy, Create link and Stop sharing as Buttons, Open as a
+// TextLink. Opening it moves focus to its first control; Escape takes focus back to Share.
 function SharePanel({ board }: { board: Board }) {
   const { setSharing, notify } = useBoards();
-  const [open, setOpen] = useState(false);
+  const popover = usePopover("dialog");
   const [copied, setCopied] = useState(false);
-  const ref = usePopover(open, setOpen);
   const origin = useOrigin();
+  const shared = Boolean(board.shareToken);
   const url = board.shareToken ? `${origin}${shareHref(board.shareToken)}` : "";
 
   useEffect(() => {
@@ -323,6 +361,13 @@ function SharePanel({ board }: { board: Board }) {
     const timer = setTimeout(() => setCopied(false), 1500);
     return () => clearTimeout(timer);
   }, [copied]);
+
+  // Making the link or turning it off swaps the panel's controls, taking the focused one away;
+  // focus goes to the new first control rather than falling back to the page
+  const { open, focusIn } = popover;
+  useEffect(() => {
+    if (open && (!document.activeElement || document.activeElement === document.body)) focusIn();
+  }, [open, shared, focusIn]);
 
   const copy = async () => {
     try {
@@ -334,43 +379,47 @@ function SharePanel({ board }: { board: Board }) {
   };
 
   return (
-    <div ref={ref} className="relative">
-      <Pill onClick={() => setOpen((o) => !o)} expanded={open}>
+    <div {...popover.rootProps} className="relative">
+      <Button aria-haspopup="dialog" {...popover.triggerProps} variant="secondary" size="lg" shape="pill">
         Share
-      </Pill>
-      {open && (
+      </Button>
+      {popover.mounted && (
         <div
+          {...popover.contentProps}
           role="dialog"
           aria-label="Share this board"
-          className="absolute top-full right-0 z-30 mt-2 w-80 origin-top-right animate-[menu-in_150ms_cubic-bezier(0.23,1,0.32,1)] rounded-2xl bg-white p-4 text-left shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)] ring-1 ring-edge motion-reduce:animate-none"
+          className={cx("absolute top-full right-0 z-30 mt-2 w-80 origin-top-right rounded-2xl bg-modal p-4 text-left shadow-lg", popover.motion)}
         >
-          <p className="text-body font-medium text-base-900">{board.shareToken ? "Anyone with the link can view" : "Share a read-only link"}</p>
-          <p className="mt-1 text-body text-pretty text-base-600">
+          <p className="text-body font-medium text-primary-foreground">{board.shareToken ? "Anyone with the link can view" : "Share a read-only link"}</p>
+          <p className="mt-1 text-body text-pretty text-secondary-foreground">
             {board.shareToken
               ? "They see the posts and your notes, and can’t change anything."
               : "Anyone with the link sees this board’s posts and your notes. They can’t change anything."}
           </p>
           {board.shareToken ? (
             <>
+              {/* The link and Copy side by side, both at the Input's 40px */}
               <div className="mt-3 flex gap-2">
-                <input
+                <Input
                   readOnly
                   value={url}
                   aria-label="Share link"
+                  spellCheck={false}
                   onFocus={(event) => event.currentTarget.select()}
-                  className="h-9 min-w-0 flex-1 rounded-md border-0 bg-white px-3 text-caption text-base-600 ring-1 ring-base-200 focus:ring-2 focus:ring-accent-100 focus:outline-none"
+                  className="min-w-0 flex-1"
                 />
-                <Button type="button" size="sm" variant="default" onClick={copy} className="w-18 shrink-0">
+                <Button type="button" size="base" variant="default" onClick={copy} className="w-18 shrink-0">
                   {copied ? "Copied" : "Copy"}
                 </Button>
               </div>
               <div className="mt-3 flex items-center justify-between text-body">
-                <a href={url} target="_blank" rel="noopener noreferrer" className="font-medium text-base-900 hover:text-accent-600">
+                <TextLink href={url} external>
                   Open the link
-                </a>
-                <button type="button" onClick={() => setSharing(board.id, false)} className="text-base-500 hover:text-base-900">
+                </TextLink>
+                {/* An action, so a Button; pulled out by its padding so the words keep the edge */}
+                <Button type="button" size="xs" variant="transparent" onClick={() => setSharing(board.id, false)} className="-mr-2.5">
                   Stop sharing
-                </button>
+                </Button>
               </div>
             </>
           ) : (
@@ -384,107 +433,92 @@ function SharePanel({ board }: { board: Board }) {
   );
 }
 
-// More: rename, describe, delete (which asks first, with focus on Cancel)
+// More: the shared Menu (Rename, Add/Edit description, Delete board…). Delete asks first, where the
+// menu was: choosing it closes the menu and opens the question in its place, a small alertdialog
+// popover with focus on Cancel, so Enter can't delete by accident. It's a popover of its own, not
+// the Menu's contents, because a role="menu" may hold only items: a question and two plain buttons
+// inside it would be read as a broken menu, and Menu's arrow keys and typeahead would fight them.
+// Cancel and Escape take focus back to More.
 function MoreMenu({ board, onRename, onDescribe }: { board: Board; onRename: () => void; onDescribe: () => void }) {
   const router = useRouter();
   const { deleteBoard } = useBoards();
-  const [open, setOpen] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  const ref = usePopover(open, (value) => {
-    setOpen(value);
-    if (!value) setConfirming(false);
-  });
-  const item = "flex w-full rounded-xl px-3 py-2 text-left text-body text-base-900 hover:bg-base-50";
+  const confirm = usePopover("dialog");
+  const id = useId();
 
   return (
-    <div ref={ref} className="relative">
-      <Pill onClick={() => setOpen((o) => !o)} expanded={open} label="More">
-        <span aria-hidden="true" className="flex gap-[3px]">
-          {[0, 1, 2].map((i) => (
-            <span key={i} className="size-[3px] rounded-full bg-current" />
-          ))}
-        </span>
-      </Pill>
-      {open && (
+    <div {...confirm.rootProps} className="relative">
+      <Menu
+        label="Board actions"
+        align="end"
+        trigger={
+          <Button
+            ref={confirm.triggerProps.ref}
+            // While the question is up, More takes it down (as it would close its menu)
+            onClick={(event) => {
+              if (!confirm.open) return;
+              event.preventDefault();
+              confirm.close(false);
+            }}
+            variant="secondary"
+            size="lg"
+            shape="pill"
+            iconOnly
+            aria-label="More"
+          >
+            <span aria-hidden="true" className="flex gap-[3px]">
+              {[0, 1, 2].map((i) => (
+                <span key={i} className="size-[3px] rounded-full bg-current" />
+              ))}
+            </span>
+          </Button>
+        }
+      >
+        <MenuItem onSelect={onRename}>Rename</MenuItem>
+        <MenuItem onSelect={onDescribe}>{board.description ? "Edit description" : "Add a description"}</MenuItem>
+        <MenuSeparator />
+        {/* Opens the question. Its trigger's click with no detail, as Enter makes, so the question
+            takes focus (to Cancel) however the item was chosen; the menu then closes, putting
+            focus on More, and the question's first frame moves it on to Cancel */}
+        <MenuItem tone="danger" onSelect={() => confirm.triggerProps.onClick({ detail: 0 } as ReactMouseEvent)}>
+          Delete board…
+        </MenuItem>
+      </Menu>
+      {confirm.mounted && (
         <div
-          role="menu"
-          className="absolute top-full right-0 z-30 mt-2 w-60 origin-top-right animate-[menu-in_150ms_cubic-bezier(0.23,1,0.32,1)] rounded-2xl bg-white p-1.5 text-left shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)] ring-1 ring-edge motion-reduce:animate-none"
+          {...confirm.contentProps}
+          role="alertdialog"
+          aria-labelledby={`${id}-question`}
+          aria-describedby={`${id}-consequence`}
+          className={cx("absolute top-full right-0 z-40 mt-2 w-60 origin-top-right rounded-2xl bg-modal p-3.5 text-left shadow-lg", confirm.motion)}
         >
-          {confirming ? (
-            <div className="p-2" role="alertdialog" aria-label={`Delete ${board.name}`}>
-              <p className="text-body font-medium text-pretty text-base-900">Delete “{board.name}”?</p>
-              <p className="mt-1 text-body text-pretty text-base-600">The board and its notes go for good. The posts stay in the library.</p>
-              <div className="mt-3 flex gap-2">
-                {/* Focus starts on Cancel, so Enter can't delete by accident */}
-                <Button type="button" size="sm" variant="muted" autoFocus onClick={() => setConfirming(false)} className="flex-1">
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="default"
-                  onClick={() => {
-                    router.push(feedHref("Saved"));
-                    deleteBoard(board.id);
-                  }}
-                  className="flex-1"
-                >
-                  Delete
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <button type="button" role="menuitem" className={item} onClick={() => (setOpen(false), onRename())}>
-                Rename
-              </button>
-              <button type="button" role="menuitem" className={item} onClick={() => (setOpen(false), onDescribe())}>
-                {board.description ? "Edit description" : "Add a description"}
-              </button>
-              <div className="mx-3 my-1 h-px bg-base-100" />
-              <button type="button" role="menuitem" className={item} onClick={() => setConfirming(true)}>
-                Delete board…
-              </button>
-            </>
-          )}
+          <p id={`${id}-question`} className="text-body font-medium text-pretty text-primary-foreground">
+            Delete “{board.name}”?
+          </p>
+          <p id={`${id}-consequence`} className="mt-1 text-body text-pretty text-secondary-foreground">
+            The board and its notes go for good. The posts stay in the library.
+          </p>
+          <div className="mt-3 flex gap-2">
+            {/* First, so the popover's focus lands on it */}
+            <Button type="button" size="sm" variant="muted" onClick={() => confirm.close()} className="flex-1">
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="danger"
+              onClick={() => {
+                router.push(feedHref("Saved"));
+                deleteBoard(board.id);
+              }}
+              className="flex-1"
+            >
+              Delete
+            </Button>
+          </div>
         </div>
       )}
     </div>
   );
-}
-
-function Pill({ onClick, expanded, label, children }: { onClick: () => void; expanded: boolean; label?: string; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      aria-haspopup="true"
-      aria-expanded={expanded}
-      className="flex h-11 min-w-11 items-center justify-center rounded-full px-5 text-subtitle font-medium text-base-900 ring-1 ring-base-200 transition-[background-color,scale] duration-150 hover:bg-base-50 active:scale-[0.96]"
-    >
-      {children}
-    </button>
-  );
-}
-
-// Closes a popover on a click outside it or Escape
-function usePopover(open: boolean, setOpen: (open: boolean) => void) {
-  const ref = useRef<HTMLDivElement>(null);
-  const setRef = useRef(setOpen);
-  setRef.current = setOpen;
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (event: PointerEvent) => !ref.current?.contains(event.target as Node) && setRef.current(false);
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setRef.current(false);
-    document.addEventListener("pointerdown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-  return ref;
 }
 
 // The board's empty state: the illustration, what belongs here, and the way to fill it
@@ -492,8 +526,8 @@ function EmptyBoard() {
   return (
     <div className="mx-auto flex max-w-sm flex-col items-center py-16 text-center">
       <EmptyBoardArt className="w-64" />
-      <p className="mt-6 text-title font-medium text-base-900">Nothing on this board yet</p>
-      <p className="mt-2 text-body text-pretty text-base-600">Save posts to it from the feed: Save is on every post, and this board is in its list.</p>
+      <p className="mt-6 text-title font-medium text-primary-foreground">Nothing on this board yet</p>
+      <p className="mt-2 text-body text-pretty text-secondary-foreground">Save posts to it from the feed: Save is on every post, and this board is in its list.</p>
       <Button isLink href="/dashboard" size="sm" variant="default" className="mt-6 w-fit">
         Browse the feed
       </Button>
@@ -536,8 +570,8 @@ function EmptyBoardArt({ className }: { className?: string }) {
 function Message({ title, body, action, href }: { title: string; body: string; action: string; href: string }) {
   return (
     <div className="mx-auto max-w-sm py-24 text-center">
-      <p className="text-subtitle font-medium text-base-900">{title}</p>
-      <p className="mt-2 text-body text-base-600">{body}</p>
+      <p className="text-subtitle font-medium text-primary-foreground">{title}</p>
+      <p className="mt-2 text-body text-secondary-foreground">{body}</p>
       <Button isLink href={href} size="sm" variant="muted" className="mx-auto mt-6 w-fit">
         {action}
       </Button>
@@ -557,7 +591,7 @@ function BoardSkeleton() {
           <Block className="mt-3 h-3.5 w-40 rounded-full" />
         </div>
         <div className="flex gap-2">
-          <Block className="h-11 w-24 rounded-full" />
+          <Block className="h-11 w-18 rounded-full" />
           <Block className="size-11 rounded-full" />
         </div>
       </div>

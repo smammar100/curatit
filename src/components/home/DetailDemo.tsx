@@ -42,7 +42,7 @@ export default function DetailDemo() {
                 setSlide(i);
               }}
               className={cx(
-                "relative block w-full rounded transition-opacity duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400",
+                "relative block w-full rounded transition-opacity duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus",
                 i === slide ? "opacity-100" : "opacity-60 hover:opacity-100",
               )}
             >
@@ -57,7 +57,7 @@ export default function DetailDemo() {
                 <m.span
                   layoutId={ringId}
                   aria-hidden="true"
-                  className="absolute -inset-1 rounded-md ring-2 ring-base-800"
+                  className="absolute -inset-1 rounded-md ring-2 ring-primary-foreground"
                   transition={
                     reduceMotion
                       ? { duration: 0 }
@@ -98,10 +98,10 @@ export default function DetailDemo() {
         {/* The slide's role and count, a pill resting on the image's bottom edge */}
         <m.p
           variants={introItem}
-          className="absolute inset-x-0 bottom-3 z-10 mx-auto w-fit rounded-md bg-white/90 px-2.5 py-1 text-xs text-base-600 shadow-sm backdrop-blur-sm"
+          className="absolute inset-x-0 bottom-3 z-10 mx-auto w-fit rounded-md bg-modal/90 px-2.5 py-1 text-caption-lg text-secondary-foreground shadow-sm backdrop-blur-sm"
           aria-live={playing ? "off" : "polite"}
         >
-          <span className="font-medium text-base-900">
+          <span className="font-medium text-primary-foreground">
             {detail.sequence[slide]}
           </span>{" "}
           · {slide + 1} / {count}

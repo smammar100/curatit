@@ -132,9 +132,9 @@ describe("the 3.0 analysis", () => {
     ]);
     expect(JSON.stringify(analysis.colour_roles)).not.toMatch(/cover sample/i);
     expect(analysis.copywriting).toMatch(/^Short questions/);
-    // The same 1:1 reconstruction prompt the post page copies, with the stored images as public
+    // The same visual adaptation prompt the post page copies, with the stored images as public
     // URLs in stage order
-    expect(analysis.brief_markdown).toMatch(/^# Instagram post — 1:1 replica brief/);
+    expect(analysis.brief_markdown).toMatch(/^# Instagram post — visual adaptation brief/);
     expect(analysis.brief_markdown).not.toMatch(/cover sample/i);
     expect(analysis.brief_markdown).toContain("https://storage.example/library/fixture/fixture-co/carousel/FIX00001/01.webp");
     expect(analysis.brief_markdown).toContain("https://storage.example/library/fixture/fixture-co/carousel/FIX00001/02.webp");
@@ -208,7 +208,7 @@ describe("tool inputs", () => {
     const published = search["~standard"].jsonSchema!.input({ target: "draft-2020-12" }) as { properties: Record<string, { default?: unknown; description?: string }> };
     expect(published.properties.limit.default).toBe(8);
     expect(published.properties.sort.default).toBe("relevance");
-    expect(published.properties.query_mode.default).toBe("all_words");
+    expect(published.properties.query_mode.default).toBe("natural");
     expect(published.properties.filters.description).toContain('{"industries":["finance"],"formats":["carousel"],"hook_techniques":["question"]}');
     expect(search.parse({ query: "x" })).toEqual({ query: "x" });
     const carousel = z.toJSONSchema(TOOLS.curatit_get_carousel.input) as { properties: Record<string, { default?: unknown }> };

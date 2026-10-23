@@ -26,12 +26,11 @@ export default function SitesPreviewGrid({
         ))}
       </div>
       {visible < cards.length && (
-        <div className="flex justify-center mt-10">
+        <div className="flex justify-center mt-12">
           <Button
             type="button"
             variant="muted"
             size="sm"
-            className="px-6"
             onClick={() => setVisible(visible + initialVisible)}
           >
             Show more

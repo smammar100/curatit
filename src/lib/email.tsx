@@ -2,7 +2,6 @@ import type { ReactElement } from "react";
 import { Resend } from "resend";
 import WelcomeNote, { subject as welcomeSubject } from "@/emails/welcome-note";
 import { appUrl } from "@/emails/_components/tokens";
-import { SUPPORT_EMAIL } from "@/lib/site";
 import { isUnsubscribed, unsubscribeUrl } from "@/lib/unsubscribe";
 
 // Server only (it reads RESEND_API_KEY). Every email the app itself sends goes through here, to
@@ -19,10 +18,12 @@ function resend() {
 
 // The sender is on curatit.app, verified in Resend (docs/emails.md); EMAIL_FROM overrides it,
 // and must also be on a domain verified there.
-// EMAIL_REPLY_TO is where replies land; the welcome is signed by Ammar, so people answer it,
-// and it should be an inbox someone reads.
+// Replies go to the sender, whose inbox is Resend's Receiving tab for curatit.app (the welcome is
+// signed by Ammar, so people answer it; check it there). EMAIL_REPLY_TO sends them elsewhere, but
+// keep it on curatit.app: a free-mail Reply-To (Hotmail, Gmail) under a curatit.app sender is a
+// common spam-filter penalty, which is why SUPPORT_EMAIL stopped being the default (2026-10-18).
 const from = () => process.env.EMAIL_FROM || "Curatit <hello@curatit.app>";
-const replyTo = () => process.env.EMAIL_REPLY_TO || SUPPORT_EMAIL;
+const replyTo = () => process.env.EMAIL_REPLY_TO || undefined;
 
 type Email = {
   to: string;
@@ -71,7 +72,11 @@ export async function sendEmail({ to, subject, react, optional, idempotencyKey }
  * person is signed in by then. */
 export function sendWelcomeEmail(user: { id: string; email?: string; user_metadata?: { full_name?: unknown } }) {
   if (!user.email) return Promise.resolve(false);
-  const name = typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name.trim().split(/\s+/)[0] : undefined;
+  const first = typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name.trim().split(/\s+/)[0] : undefined;
+  // Anyone can set this metadata when calling Supabase Auth directly, so only a name-shaped word
+  // goes into the email: "evil.example/verify" would otherwise arrive from hello@curatit.app as a
+  // link mail clients make clickable
+  const name = first && first.length <= 40 && /^[\p{L}\p{M}'’-]+$/u.test(first) ? first : undefined;
   return sendEmail({
     to: user.email,
     subject: welcomeSubject,

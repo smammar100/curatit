@@ -240,8 +240,8 @@ export const SearchInput = z
   .object({
     query: text(z.string().trim().max(300))
       .optional()
-      .describe("Free text matched against captions, on-slide text and published analyses, at most 300 characters. Every word must match unless query_mode is any_word."),
-    query_mode: z.enum(["all_words", "any_word"]).optional().meta({ default: "all_words" }).describe("all_words (default): every word must match. any_word: any word may match (wider; reported in applied.query_mode)."),
+      .describe("Describe the posts you want in everyday English, at most 300 characters. Recognized brands, industries, formats and creative attributes become filters; remaining words search captions, on-slide text and published analyses. Quote phrases to search them literally."),
+    query_mode: z.enum(["natural", "all_words", "any_word"]).optional().meta({ default: "natural" }).describe("natural (default): interpret supported English descriptions as filters plus keywords. all_words: literal keyword search. any_word: wider literal keyword search. Explicit filters override inferred filters; applied reports the interpretation."),
     filters: SearchFiltersSchema.optional(),
     sort: z.enum(["relevance", "newest"]).optional().meta({ default: "relevance" }).describe("relevance (default when there is a query or filters) or newest by posting date."),
     limit: z.number().int().min(1).max(20).optional().meta({ default: 8 }).describe("Results per page, 1 to 20, default 8."),
@@ -277,12 +277,14 @@ export const SearchOutput = z.object({
   next_cursor: z.string().nullable(),
   applied: z.object({
     query: z.string().nullable(),
-    query_mode: z.enum(["all_words", "any_word"]),
+    original_query: z.string().nullable().optional().describe("The submitted text; query is the remaining keyword search after interpretation."),
+    query_mode: z.enum(["natural", "all_words", "any_word"]),
     filters: z.record(z.string(), z.array(z.string())).describe("The filters actually applied, as resolved slugs."),
     sort: z.enum(["relevance", "newest"]),
     limit: z.number().int(),
   }),
   suggestions: z.array(z.string()).describe("When nothing matched: ways to relax the search. Nothing is relaxed for you."),
+  suggested_queries: z.array(z.object({ label: z.string(), query: z.string() })).optional().describe("Ready-to-run natural queries that remove one constraint. These are suggestions, not executed searches or promises of matches."),
 });
 
 // --- curatit_get_post -----------------------------------------------------------------------

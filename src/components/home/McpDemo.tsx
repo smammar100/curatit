@@ -1,31 +1,36 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { m, useInView, useReducedMotion } from "framer-motion";
+import { m } from "framer-motion";
 // Assets
 import Symbol from "@/components/assets/Symbol";
 // Components
 import ThoughtLine from "@/components/ui/thought-line";
 import BrandName from "./BrandName";
+import { useScript } from "./DemoParts";
 import PostCover from "./PostCover";
 import { briefs } from "./demo";
 import { usePosts } from "./HomePosts";
 
 const brief = briefs[0];
 const trace = ["Reading the brief", "Searching the library"];
-// How long the search takes in the script below (step 2 to step 4), for the settled line
-// when it shows without having run: on first view and under reduced motion
+// How long the search takes in the script below (step 2 to step 4). The settled line always
+// reads this, so it says the same on first view, under reduced motion and after any pause
+// (a background tab's throttled timers can land the results late)
 const SEARCH_SECONDS = 2.3;
 
 /*
  * An agent asking Curatit for references, on a loop while the panel is on
  * screen: the brief is sent, the agent's line starts working and ticks through
  * its trace, then it settles into "Found 3 posts in 2.3s" as the results slide
- * in and hold, then it clears and starts again. Reduced motion shows the
- * results only.
+ * in and hold, then it clears and starts again. It pauses while pointed at or
+ * focused (useScript), but never mid-search: the clock would keep running
+ * through the pause, so a pause that comes then waits for the results.
+ * Reduced motion shows the results only.
  */
 
 type Step = 0 | 1 | 2 | 3 | 4; // empty · brief sent · trace step 1 · trace step 2 · results
+// The steps the agent's line is working in, its clock running
+const searching = (step: Step) => step === 2 || step === 3;
 
 const SCRIPT: [number, Step][] = [
   [0, 0],
@@ -39,38 +44,21 @@ const CYCLE = 8000;
 const FIRST_HOLD = 3000;
 
 export default function McpDemo() {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { amount: 0.4 });
-  const reduceMotion = useReducedMotion();
-  const [step, setStep] = useState<Step>(4);
-  // Until the loop has run once, the settled line shows the scripted time instead of a clock
-  const [looped, setLooped] = useState(false);
+  const { ref, step, handlers } = useScript(SCRIPT, {
+    cycle: CYCLE,
+    hold: FIRST_HOLD,
+    rest: 4,
+    busy: searching,
+  });
   const posts = usePosts(brief.results.map((result) => result.post));
-
-  useEffect(() => {
-    if (step < 4) setLooped(true);
-  }, [step]);
-
-  useEffect(() => {
-    if (!inView || reduceMotion) return;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const run = (offset: number) => {
-      for (const [at, next] of SCRIPT) {
-        if (at >= offset)
-          timers.push(setTimeout(() => setStep(next), at - offset));
-      }
-      timers.push(setTimeout(() => run(0), CYCLE - offset));
-    };
-    run(CYCLE - FIRST_HOLD);
-    return () => timers.forEach(clearTimeout);
-  }, [inView, reduceMotion]);
 
   return (
     <div
       ref={ref}
+      {...handlers}
       role="group"
       aria-label="Demo: an AI agent asking Curatit for references and getting three posts back"
-      className="relative overflow-hidden rounded-2xl bg-base-50 lg:aspect-4/3"
+      className="relative overflow-hidden rounded-2xl bg-card lg:aspect-4/3"
       data-step={step}
     >
       {/* Grows with its content on small screens; centred in a fixed 4:3 panel from lg up */}
@@ -78,7 +66,7 @@ export default function McpDemo() {
         <div className="flex justify-end">
           {/* Sent like a message: rises in from its bottom-right corner */}
           <m.p
-            className="max-w-sm origin-bottom-right rounded-2xl rounded-br-sm bg-base-100 px-5 py-4 text-sm leading-relaxed text-base-900 sm:text-base"
+            className="max-w-sm origin-bottom-right rounded-2xl rounded-br-sm bg-component px-5 py-4 text-sm leading-relaxed text-primary-foreground sm:text-base"
             initial={false}
             animate={
               step >= 1
@@ -99,7 +87,7 @@ export default function McpDemo() {
             results will take, and folds away as they arrive, so the panel never changes height */}
         <div className="mt-6 grid">
           <m.div
-            className="self-start pt-1 text-base-600 [grid-area:1/1]"
+            className="self-start pt-1 text-secondary-foreground [grid-area:1/1]"
             initial={false}
             animate={{ opacity: step >= 2 ? 1 : 0 }}
             transition={{ duration: 0.25 }}
@@ -107,20 +95,22 @@ export default function McpDemo() {
             {/* Not a toggle or a live region here: the loop drives it, and the panel's label
                 describes the demo */}
             <ThoughtLine
-              working={step === 2 || step === 3}
+              working={searching(step)}
               // Shorter than the settled line, which sets the width the server renders it at
               label="Searching…"
               doneLabel={`Found ${posts.length} posts in`}
               steps={step === 2 ? trace.slice(0, 1) : trace}
               glyph={<Symbol />}
               // Real colours, not currentColor: the shimmer mixes the ink with transparent, and
-              // color-mix() can't take currentColor, which would leave the label invisible
-              color="var(--color-base-600)"
-              glyphColor="var(--color-base-900)"
+              // color-mix() can't take currentColor, which would leave the label invisible. The
+              // tokens are alpha greys, which color-mix() takes as they are
+              color="var(--color-secondary-foreground)"
+              glyphColor="var(--color-primary-foreground)"
               fontSize={14}
               collapsible={false}
               live={false}
-              elapsed={looped ? undefined : SEARCH_SECONDS}
+              // The clock ticks live while it searches; settled, the line reads the scripted time
+              elapsed={step === 4 ? SEARCH_SECONDS : undefined}
             />
           </m.div>
           <m.ul
@@ -162,7 +152,7 @@ export default function McpDemo() {
                     className="rounded shadow"
                   />
                   <BrandName brand={post.brand} className="mt-2" />
-                  <p className="mt-0.5 line-clamp-1 text-xs text-base-600">
+                  <p className="mt-0.5 line-clamp-1 text-caption-lg text-secondary-foreground">
                     {post.hook}
                   </p>
                 </m.li>

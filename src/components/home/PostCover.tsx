@@ -30,7 +30,7 @@ export default function PostCover({
     <div
       aria-hidden="true"
       className={cx(
-        "relative aspect-4/5 overflow-hidden bg-base-100 ring-1 ring-base-900/5 select-none",
+        "relative aspect-4/5 overflow-hidden bg-component ring-1 ring-border-default select-none",
         className,
       )}
     >

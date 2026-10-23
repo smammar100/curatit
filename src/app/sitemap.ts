@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getCollection } from "@/lib/content";
 import { SITE_URL } from "@/lib/site";
+import { TOPICS } from "@/components/system/topics";
 
 const staticRoutes = [
   "/",
@@ -18,11 +19,7 @@ const staticRoutes = [
   "/blog/tags",
   "/store",
   "/sites/tags",
-  "/system/overview",
-  "/system/colors",
-  "/system/typography",
-  "/system/buttons",
-  "/system/links",
+  "/system",
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -36,6 +33,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...sites.map((site) => `/sites/site/${site.id}`),
     ...[...new Set(sites.flatMap((site) => site.data.tags ?? []))].map((tag) => `/sites/tags/${tag}`),
     ...getCollection("legal").map((page) => `/legal/${page.id}`),
+    ...TOPICS.map((topic) => `/system/${topic.slug}`),
   ];
   return routes.map((route) => ({ url: new URL(route, SITE_URL).toString() }));
 }

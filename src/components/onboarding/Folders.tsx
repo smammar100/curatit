@@ -32,7 +32,7 @@ export function FolderTile({ category, on, onClick }: { category: Category; on: 
       aria-pressed={on}
       onClick={onClick}
       style={tone(category.hue)}
-      className="folder group relative h-36 w-full touch-manipulation rounded-xl transition-[scale] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-900 active:scale-[0.97]"
+      className="folder group relative h-36 w-full touch-manipulation rounded-xl transition-[scale] duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.97]"
     >
       <span className="sr-only">
         {category.name}, {category.posts.length} posts
@@ -52,7 +52,7 @@ export function FolderTile({ category, on, onClick }: { category: Category; on: 
             return (
               <span
                 key={post.shortCode}
-                className="folder-card absolute bottom-0 aspect-4/5 w-14 origin-bottom overflow-hidden rounded-md bg-white shadow-md outline-1 -outline-offset-1 outline-edge"
+                className="folder-card absolute bottom-0 aspect-4/5 w-14 origin-bottom overflow-hidden rounded-md bg-container shadow-md outline-1 -outline-offset-1 outline-edge"
                 style={
                   {
                     zIndex: i + 1,
@@ -68,13 +68,13 @@ export function FolderTile({ category, on, onClick }: { category: Category; on: 
         </span>
 
         {/* The front, with the icon and the name; it tilts open on hover */}
-        <span className="folder-front absolute inset-x-0 bottom-0 z-10 flex h-[4.5rem] flex-col items-center justify-end gap-1 rounded-xl bg-(--folder-front) pb-2.5 shadow-sm ring-1 ring-base-900/10">
+        <span className="folder-front absolute inset-x-0 bottom-0 z-10 flex h-[4.5rem] flex-col items-center justify-end gap-1 rounded-xl bg-(--folder-front) pb-2.5 shadow-sm ring-1 ring-border-default">
           {Glyph && <Glyph className="size-5 text-(--folder-ink)" />}
-          <span className="flex max-w-[calc(100%-1rem)] items-center gap-1.5 rounded-md bg-white px-2.5 py-1 text-caption font-medium text-base-900 shadow-sm ring-1 ring-base-200">
+          <span className="flex max-w-[calc(100%-1rem)] items-center gap-1.5 rounded-md bg-container px-2.5 py-1 text-caption font-medium text-primary-foreground shadow-sm ring-1 ring-border-default">
             <span className="truncate">{category.name}</span>
-            <span className="shrink-0 text-base-600 tabular-nums">{category.posts.length}</span>
+            <span className="shrink-0 text-secondary-foreground tabular-nums">{category.posts.length}</span>
           </span>
-          {on && <Tick className="absolute top-2 right-2 size-6 ring-2 ring-white" />}
+          {on && <Tick className="absolute top-2 right-2 size-6 ring-2 ring-container" />}
         </span>
       </span>
     </button>

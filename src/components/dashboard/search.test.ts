@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { rank } from "./forYou";
-import { brandNamed, categoryNamed, compact, matches, normalise } from "./search";
+import { rank, spread } from "./forYou";
+import { brandNamed, categoryNamed, compact, hookNamed, matches, normalise, typeNamed } from "./search";
 import type { DashPost } from "./types";
 
 const post = (shortCode: string, brand: string, slug: string, hook: string, category = "fintech", addedAt = "2026-10-10T09:00:00Z"): DashPost => ({
@@ -105,5 +105,32 @@ describe("category words and names (review, 2026-10-13)", () => {
     expect(categoryNamed("travel transportation")?.slug).toBe("travel-transportation");
     expect(categoryNamed("Food & Drink")?.slug).toBe("food-drink");
     expect(categoryNamed("launch")).toBeNull();
+  });
+});
+
+describe("spread", () => {
+  it("keeps a brand out of the next places while another brand can go there", () => {
+    const posts = [post("a1", "A", "a", ""), post("a2", "A", "a", ""), post("a3", "A", "a", ""), post("b1", "B", "b", ""), post("c1", "C", "c", "")];
+    expect(spread(posts, 2).map((p) => p.shortCode)).toEqual(["a1", "b1", "c1", "a2", "a3"]);
+  });
+  it("keeps the order when no brand repeats", () => {
+    const posts = [post("a1", "A", "a", ""), post("b1", "B", "b", "")];
+    expect(spread(posts, 3).map((p) => p.shortCode)).toEqual(["a1", "b1"]);
+  });
+});
+
+describe("breakdown search", () => {
+  const withBreakdown = { ...post("x1", "X", "x", "Big news"), breakdown: { headline: "Lead with a runner's challenge", type: "Social impact", hook: "Number or statistic" } };
+  it("finds a post by its strategy line, type and hook", () => {
+    expect(matches(withBreakdown, "runner")).toBe(true);
+    expect(matches(withBreakdown, "statistic")).toBe(true);
+  });
+  it("names a type of post exactly, however it's spaced", () => {
+    expect(typeNamed([withBreakdown], "social impact")).toBe("Social impact");
+    expect(typeNamed([withBreakdown], "social")).toBe(null);
+  });
+  it("names a hook exactly", () => {
+    expect(hookNamed([withBreakdown], "Number or statistic")).toBe("Number or statistic");
+    expect(hookNamed([withBreakdown], "number")).toBe(null);
   });
 });

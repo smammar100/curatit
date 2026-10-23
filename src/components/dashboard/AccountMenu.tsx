@@ -4,8 +4,16 @@
 // profile, saved posts, the welcome flow again (Personalise your feed), API tokens (for MCP
 // clients), contact and log out,
 // then the theme (light, dark, system) and the grid
-// size, both remembered on this device.
-import { useEffect, useRef, useState, type ReactNode } from "react";
+// size, both remembered on this device. A disclosure rather than a role="menu" (2026-10-18): a
+// menu may hold only menu items, and this panel mixes links, a form's button and two radio
+// groups, so it opens in the tab order after the avatar and Tab walks through it. So it isn't the
+// shared Menu (whose items are role="menuitem" and tab stops of none): it's usePopover's
+// disclosure, with the shared pieces where they apply (2026-10-19): the glide highlight and row
+// recipe the Menu uses (GLIDE_HIGHLIGHT, GLIDE_ROW), the Separator atom between the links and the
+// settings, Badge for the count and Segmented for the two settings. The rows stay its own: they're
+// links, a form's submit and buttons, full width with the icon at the far end in the subtitle
+// role, which no Button size or TextLink draws, and the 28px panel radius is the account menu's.
+import { useEffect, useState } from "react";
 import Link from "next/link";
 // Icons
 import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
@@ -20,121 +28,120 @@ import Sun from "@/components/fundations/icons/Sun";
 import { getThemeMode, setThemeMode, type ThemeMode } from "@/components/global/theme";
 import { SUPPORT_MAILTO } from "@/lib/site";
 import { cx } from "@/lib/cx";
+import Badge from "@/components/fundations/elements/Badge";
+import Segmented from "@/components/fundations/elements/Segmented";
+import Separator from "@/components/fundations/elements/Separator";
 import { signOut } from "@/app/auth/actions";
 import { resetAnalytics } from "@/lib/analytics";
 import { Avatar, useUser } from "./user";
 import { useGridSize } from "./prefs";
 import { useProfile } from "./profile";
+import { GLIDE_HIGHLIGHT, GLIDE_ROW, usePopover } from "./usePopover";
 
 export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: number; onShowSaved: () => void }) {
   const { size: gridSize, setSize: onGridSize } = useGridSize();
   const user = useUser();
   const { profile } = useProfile();
   const editor = profile.editor;
-  const [open, setOpen] = useState(false);
+  const popover = usePopover("disclosure");
+  const { glide } = popover;
   const [theme, setTheme] = useState<ThemeMode>("system");
-  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => setTheme(getThemeMode()), []);
-
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
 
   const chooseTheme = (mode: ThemeMode) => {
     setThemeMode(mode);
     setTheme(mode);
   };
 
-  const item = "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-subtitle font-medium text-base-900 hover:bg-base-50";
+  // Rows (and their highlight) are the panel's radius less its padding: 28 − 12 = 16
+  const item = cx("flex w-full items-center justify-between gap-3 rounded-3xl px-3 py-2.5 text-left text-subtitle font-medium text-primary-foreground", GLIDE_ROW);
 
   return (
-    <div ref={ref} className="relative flex items-center">
+    <div {...popover.rootProps} className="relative flex items-center">
       {/* A ring marks it as a button: on hover, and held while the menu is open */}
       <button
         type="button"
         aria-label="Account menu"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        {...popover.triggerProps}
         className={cx(
-          "flex rounded-full ring-offset-2 ring-offset-white transition-[box-shadow,scale] duration-150 hover:ring-2 hover:ring-base-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-base-900 active:scale-[0.96]",
-          open && "ring-2 ring-base-300 hover:ring-base-300",
+          "flex rounded-full ring-offset-2 ring-offset-page transition-[box-shadow,scale] duration-150 ease-out-quint hover:ring-2 hover:ring-border-strong focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.96]",
+          popover.open && "ring-2 ring-border-strong",
         )}
       >
         <Avatar className="size-11 text-body" />
       </button>
 
-      {open && (
+      {popover.mounted && (
         <div
-          role="menu"
-          className="absolute top-full right-0 z-40 mt-3 w-80 origin-top-right animate-[menu-in_150ms_cubic-bezier(0.23,1,0.32,1)] rounded-[28px] bg-white p-3 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.35)] dark:ring-1 dark:ring-edge motion-reduce:animate-none"
+          {...popover.contentProps}
+          className={cx("absolute top-full right-0 z-40 mt-3 w-80 origin-top-right rounded-[28px] bg-modal p-3 shadow-lg", popover.motion)}
         >
           <div className="flex items-center justify-between gap-3 px-3 py-2.5">
             <div className="min-w-0">
-              <p className="truncate text-subtitle font-medium text-base-900">{user?.name ?? " "}</p>
-              <p className="truncate text-body text-base-500">{user?.email ?? " "}</p>
+              {/* A non-breaking space holds each line's height until the session is read */}
+              <p className="truncate text-subtitle font-medium text-primary-foreground">{user?.name ?? " "}</p>
+              <p className="truncate text-body text-secondary-foreground">{user?.email ?? " "}</p>
             </div>
             <Avatar />
           </div>
-          <button
-            type="button"
-            role="menuitem"
-            className={item}
-            onClick={() => {
-              onShowSaved();
-              setOpen(false);
-            }}
-          >
-            <span className="flex items-center gap-2">
-              Saved posts
-              <span className="rounded-md bg-base-100 px-1.5 py-0.5 text-caption font-medium text-base-600 tabular-nums">{savedCount}</span>
-            </span>
-            <BookmarkSimple className="size-5" />
-          </button>
-          <Link role="menuitem" href="/dashboard/welcome" className={item} onClick={() => setOpen(false)}>
-            Personalise your feed
-            <Sparkle className="size-5" />
-          </Link>
-          {editor && (
-            <Link role="menuitem" href="/dashboard/review" className={item} onClick={() => setOpen(false)}>
-              Analysis review
-              <SealCheck className="size-5" />
-            </Link>
-          )}
-          <Link role="menuitem" href="/dashboard/settings/tokens" className={item} onClick={() => setOpen(false)}>
-            API tokens
-            <Key className="size-5" />
-          </Link>
-          <a role="menuitem" href={SUPPORT_MAILTO} className={item}>
-            Contact us
-            <ChatDots className="size-5" />
-          </a>
-          <form action={signOut} onSubmit={resetAnalytics}>
-            <button type="submit" role="menuitem" className={item}>
-              Log out
-              <SignOut className="size-5" />
+          <div ref={glide.ref} {...glide.handlers} className="relative">
+            <span aria-hidden="true" className={cx(GLIDE_HIGHLIGHT, "rounded-3xl")} style={glide.highlight.style} data-fresh={glide.highlight.fresh || undefined} />
+            <button
+              type="button"
+              data-glide-item
+              className={item}
+              onClick={() => {
+                onShowSaved();
+                popover.close();
+              }}
+            >
+              <span className="flex items-center gap-2">
+                Saved posts
+                <Badge className="font-medium tabular-nums">{savedCount}</Badge>
+              </span>
+              <BookmarkSimple className="size-5" />
             </button>
-          </form>
+            <Link data-glide-item href="/dashboard/welcome" className={item} onClick={() => popover.close()}>
+              Personalise your feed
+              <Sparkle className="size-5" />
+            </Link>
+            {editor && (
+              <Link data-glide-item href="/dashboard/review" className={item} onClick={() => popover.close()}>
+                Analysis review
+                <SealCheck className="size-5" />
+              </Link>
+            )}
+            <Link data-glide-item href="/dashboard/settings/tokens" className={item} onClick={() => popover.close()}>
+              API tokens
+              <Key className="size-5" />
+            </Link>
+            <a data-glide-item href={SUPPORT_MAILTO} className={item}>
+              Contact us
+              <ChatDots className="size-5" />
+            </a>
+            <form action={signOut} onSubmit={resetAnalytics}>
+              <button data-glide-item type="submit" className={item}>
+                Log out
+                <SignOut className="size-5" />
+              </button>
+            </form>
+          </div>
 
-          <div className="mx-3 my-2 h-px bg-base-100" />
+          <div className="px-3 py-2">
+            <Separator />
+          </div>
 
           <div className="flex items-center justify-between px-3 py-2">
-            <span className="text-subtitle font-medium text-base-900">Theme</span>
+            <span className="text-subtitle font-medium text-primary-foreground">Theme</span>
             <Segmented
-              label="Theme"
+              aria-label="Theme"
+              iconOnly
+              size="md"
+              shape="pill"
+              tone="inverted"
               value={theme}
-              onChange={chooseTheme}
+              onValueChange={chooseTheme}
               options={[
                 { value: "light", label: "Light", icon: <Sun className="size-4" /> },
                 { value: "dark", label: "Dark", icon: <Moon className="size-4" /> },
@@ -143,11 +150,15 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
             />
           </div>
           <div className="flex items-center justify-between px-3 py-2">
-            <span className="text-subtitle font-medium text-base-900">Grid size</span>
+            <span className="text-subtitle font-medium text-primary-foreground">Grid size</span>
             <Segmented
-              label="Grid size"
+              aria-label="Grid size"
+              iconOnly
+              size="md"
+              shape="pill"
+              tone="inverted"
               value={gridSize}
-              onChange={onGridSize}
+              onValueChange={onGridSize}
               options={[
                 { value: "large", label: "Large tiles", icon: <Bars count={1} /> },
                 { value: "medium", label: "Medium tiles", icon: <Bars count={2} /> },
@@ -157,38 +168,6 @@ export default function AccountMenu({ savedCount, onShowSaved }: { savedCount: n
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-// A row of icon buttons where one is on, like a radio group
-function Segmented<T extends string>({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: T;
-  onChange: (value: T) => void;
-  options: { value: T; label: string; icon: ReactNode }[];
-}) {
-  return (
-    <div role="radiogroup" aria-label={label} className="flex gap-0.5 rounded-full bg-base-100 p-1">
-      {options.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          role="radio"
-          aria-checked={option.value === value}
-          aria-label={option.label}
-          title={option.label}
-          onClick={() => onChange(option.value)}
-          className="flex size-8 items-center justify-center rounded-full text-base-500 transition-colors duration-150 hover:text-base-900 aria-checked:bg-base-900 aria-checked:text-white"
-        >
-          {option.icon}
-        </button>
-      ))}
     </div>
   );
 }

@@ -60,9 +60,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       data-scroll-behavior="smooth"
       // ThemeScript sets data-theme before React runs; the server never knows it
       suppressHydrationWarning
-      className={`${inter.variable} ${hedvig.variable} scroll-smooth selection:bg-accent-50 selection:text-accent-500`}
+      // Selection is a pale accent (accent-100, which flips with the theme) under the
+      // primary ink, which flips with it too: 13:1 on the light site, 11:1 on the dark. The ink is
+      // set rather than left as the text's own, because the footer panel and the CopyBlock slab
+      // carry light text on the light site; and it's primary-foreground, not base-900, because
+      // .vision-night re-scopes the base scale but not the accent (base-900 would read 1:1 there).
+      // Smooth anchor scrolling only with motion allowed
+      className={`${inter.variable} ${hedvig.variable} motion-safe:scroll-smooth selection:bg-accent-100 selection:text-primary-foreground`}
     >
-      <body className="bg-white flex flex-col lg:min-h-svh">
+      <body className="bg-page flex flex-col lg:min-h-svh">
         <ThemeScript />
         {children}
       </body>

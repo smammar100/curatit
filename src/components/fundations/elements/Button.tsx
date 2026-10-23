@@ -2,15 +2,20 @@ import Link from "next/link";
 import type {
   AnchorHTMLAttributes,
   ButtonHTMLAttributes,
+  MouseEvent,
   ReactNode,
+  Ref,
 } from "react";
+import CircleNotch from "@/components/fundations/icons/CircleNotch";
 import { cx } from "@/lib/cx";
 
-// The button, Interfere's since 2026-10-15 (design.interfere.com/button): 13px medium text at
-// every size, heights 24 / 28 / 32 / 40, radius 6 up to the medium size and 8 from large, no
-// borders (the secondary one carries the default shadow instead), hover and active a step each.
-// Variants keep the older names where the role matched (default = primary, muted = tertiary,
-// accent = brand) and add Interfere's others.
+// The button, Interfere's since 2026-10-15 (design.interfere.com/button): 13px medium text,
+// heights 24 / 28 / 32 / 40, radius 6 up to the medium size and 8 from large, no borders (the
+// secondary one carries the default shadow instead), hover and active a step each. Since
+// 2026-10-18 two larger sizes carry the dashboard's own controls (44 and 48px, usually with
+// shape="pill", their label in the dashboard's subtitle role, 14px). Variants keep the older
+// names where the role matched (default = primary, muted = tertiary, accent = brand) and add
+// Interfere's others.
 const variantClasses = {
   // Primary: solid near-black (near-white on the dark site)
   default:
@@ -32,26 +37,52 @@ const variantClasses = {
     "bg-transparent text-secondary-foreground hover:bg-transparent-hover hover:text-primary-foreground active:bg-transparent-active",
   none: "",
 };
-// Sizes: Interfere's small, medium, large and extra large. The older keys map onto them
-// (xxs → small, xs → medium, sm → large, base and up → extra large)
+// Sizes: Interfere's small, medium, large and extra large (xxs 24, xs 28, sm 32, base 40; md is
+// another name for base), then the dashboard's lg 44 and xl 48
 const sizes = {
-  xxs: "h-6 px-2 gap-1 rounded-md",
-  xs: "h-7 px-2.5 gap-1.5 rounded-md",
-  sm: "h-8 px-3 gap-1.5 rounded-lg",
-  base: "h-10 px-3.5 gap-2 rounded-lg",
-  md: "h-10 px-3.5 gap-2 rounded-lg",
-  lg: "h-10 px-3.5 gap-2 rounded-lg",
-  xl: "h-10 px-3.5 gap-2 rounded-lg",
+  xxs: "h-6 px-2 gap-1",
+  xs: "h-7 px-2.5 gap-1.5",
+  sm: "h-8 px-3 gap-1.5",
+  base: "h-10 px-3.5 gap-2",
+  md: "h-10 px-3.5 gap-2",
+  lg: "h-11 px-4 gap-2",
+  xl: "h-12 px-6 gap-2",
 };
 // Icon-only: a square of the same height
 const iconSizes = {
-  xxs: "size-6 rounded-md",
-  xs: "size-7 rounded-md",
-  sm: "size-8 rounded-lg",
-  base: "size-10 rounded-lg",
-  md: "size-10 rounded-lg",
-  lg: "size-10 rounded-lg",
-  xl: "size-10 rounded-lg",
+  xxs: "size-6",
+  xs: "size-7",
+  sm: "size-8",
+  base: "size-10",
+  md: "size-10",
+  lg: "size-11",
+  xl: "size-12",
+};
+// Label size: Interfere's 13px, and the dashboard's subtitle role (14/20) on its two sizes
+const textSizes = {
+  xxs: "text-body-sm",
+  xs: "text-body-sm",
+  sm: "text-body-sm",
+  base: "text-body-sm",
+  md: "text-body-sm",
+  lg: "text-subtitle",
+  xl: "text-subtitle",
+};
+// Radius by size; `shape="pill"` takes its place (kept apart so the two never both land)
+const radius = {
+  xxs: "rounded-md",
+  xs: "rounded-md",
+  sm: "rounded-lg",
+  base: "rounded-lg",
+  md: "rounded-lg",
+  lg: "rounded-xl",
+  xl: "rounded-xl",
+};
+// On touch screens the two small sizes reach 44px tall through an invisible ::after, so nothing
+// moves; an icon-only one grows 4px each side as well (a row's gap-2 still keeps them apart)
+const touchSizes: Partial<Record<keyof typeof sizes, string>> = {
+  xxs: "pointer-coarse:after:absolute pointer-coarse:after:-inset-y-2.5",
+  xs: "pointer-coarse:after:absolute pointer-coarse:after:-inset-y-2",
 };
 // Gaps between the icon slots and the label, when a wider one is wanted
 const gaps = {
@@ -61,56 +92,80 @@ const gaps = {
   md: "gap-10",
   lg: "gap-12",
 };
+// Presses in to 0.97 (2026-10-18; the homepage's category tabs and the dashboard's pills press to
+// 0.96, a step deeper for their smaller size) only while it can act and only with motion allowed;
+// colours and the press share one 150ms ease-out
 const baseClass =
-  "inline-flex shrink-0 cursor-pointer items-center justify-center text-center text-body-sm font-medium whitespace-nowrap transition-colors duration-150 ease-out select-none touch-manipulation focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus disabled:pointer-events-none disabled:bg-disabled disabled:text-disabled-foreground disabled:shadow-none";
+  "relative inline-flex shrink-0 items-center justify-center text-center font-medium whitespace-nowrap transition-[color,background-color,box-shadow,scale] duration-150 ease-out-quint select-none touch-manipulation motion-safe:not-disabled:not-aria-disabled:active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus disabled:pointer-events-none disabled:bg-disabled disabled:text-disabled-foreground disabled:shadow-none";
 
 type CommonProps = {
   variant?: keyof typeof variantClasses;
   size?: keyof typeof sizes;
   /** `pill` rounds the ends fully */
   shape?: "rounded" | "pill";
-  iconOnly?: boolean;
   gap?: keyof typeof gaps;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
+  /** Busy: a spinner over the label, which keeps its width. The button stays focusable
+   * (aria-disabled, not disabled) and ignores clicks until it's done.
+   * Client components only: the click guard is a function, which a server component can't hand
+   * to a <button> or a Link (React refuses at render). Being busy is client state anyway */
+  loading?: boolean;
   className?: string;
   children?: ReactNode;
 };
 
-type ButtonAsLink = CommonProps & { isLink: true; href: string } & Omit<
-    AnchorHTMLAttributes<HTMLAnchorElement>,
-    keyof CommonProps | "href"
-  >;
+// An icon-only button has no words of its own, so whenever `iconOnly` can be true the button
+// must be named for screen readers
+type Naming =
+  | { iconOnly?: false }
+  | { iconOnly?: boolean; "aria-label": string }
+  | { iconOnly?: boolean; "aria-labelledby": string };
 
-type ButtonAsButton = CommonProps & { isLink?: false } & Omit<
-    ButtonHTMLAttributes<HTMLButtonElement>,
-    keyof CommonProps
-  >;
+type ButtonAsLink = CommonProps & {
+  isLink: true;
+  href: string;
+  ref?: Ref<HTMLAnchorElement>;
+} & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof CommonProps | "href">;
 
-export type ButtonProps = ButtonAsLink | ButtonAsButton;
+type ButtonAsButton = CommonProps & {
+  isLink?: false;
+  ref?: Ref<HTMLButtonElement>;
+} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof CommonProps>;
 
-// Renders a <button>, or a link when `isLink` is set. With `iconOnly`, children are the icon.
+export type ButtonProps = (ButtonAsLink | ButtonAsButton) & Naming;
+
+const ignore = (event: MouseEvent) => event.preventDefault();
+
+// Renders a <button> (type="button" unless told otherwise), or a link when `isLink` is set.
+// With `iconOnly`, children are the icon.
 export default function Button({
-  variant,
-  size,
+  variant = "default",
+  size = "base",
   shape,
   iconOnly = false,
   gap,
   leftIcon,
   rightIcon,
+  loading = false,
   className,
   children,
   ...rest
 }: ButtonProps) {
   const classes = cx(
     baseClass,
-    variant && variantClasses[variant],
-    size && (iconOnly ? iconSizes[size] : sizes[size]),
-    shape === "pill" && "rounded-full",
+    loading ? "cursor-progress" : "cursor-pointer",
+    variantClasses[variant],
+    iconOnly ? iconSizes[size] : sizes[size],
+    textSizes[size],
+    shape === "pill" ? "rounded-full" : radius[size],
+    touchSizes[size],
+    touchSizes[size] &&
+      (iconOnly ? "pointer-coarse:after:-inset-x-1" : "pointer-coarse:after:inset-x-0"),
     !iconOnly && gap && gaps[gap],
     className,
   );
-  const content = iconOnly ? (
+  const label = iconOnly ? (
     children
   ) : (
     <>
@@ -119,18 +174,35 @@ export default function Button({
       {rightIcon}
     </>
   );
+  // While loading the label stays in place (and in the accessibility tree, so the button keeps
+  // its name) at opacity 0, with the spinner centred over it in the variant's own colour
+  const content = loading ? (
+    <>
+      <span className="inline-flex items-center justify-center gap-[inherit] opacity-0">
+        {label}
+      </span>
+      <span className="absolute inset-0 grid place-items-center">
+        <CircleNotch className="size-4 animate-spin motion-reduce:animate-none" />
+      </span>
+    </>
+  ) : (
+    label
+  );
+  const busy = loading
+    ? { "aria-busy": true, "aria-disabled": true, onClick: ignore }
+    : {};
 
   if (rest.isLink) {
     const { isLink, ...linkProps } = rest;
     return (
-      <Link className={classes} {...linkProps}>
+      <Link className={classes} {...linkProps} {...busy}>
         {content}
       </Link>
     );
   }
-  const { isLink, ...buttonProps } = rest;
+  const { isLink, type = "button", ...buttonProps } = rest;
   return (
-    <button className={classes} {...buttonProps}>
+    <button className={classes} type={type} {...buttonProps} {...busy}>
       {content}
     </button>
   );

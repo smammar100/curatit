@@ -5,8 +5,8 @@ export default function Logo() {
     <Text
       tag="a"
       href="/"
-      variant="textBase"
-      className="inline-flex items-center font-bold text-base-1300 uppercase gap-3 group-hover:opacity-80"
+      variant="body"
+      className="inline-flex items-center font-bold text-primary-foreground uppercase tracking-wider gap-3 group-hover:opacity-80"
     >
       trendspotter
     </Text>

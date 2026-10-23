@@ -8,7 +8,8 @@ import Link from "next/link";
 import BrandName from "@/components/home/BrandName";
 import { cx } from "@/lib/cx";
 import { SaveMenu } from "./boards";
-import { Block, GridSkeleton } from "./Skeleton";
+import Skeleton from "@/components/fundations/elements/Skeleton";
+import { GridSkeleton } from "./Skeleton";
 import { useGridSize, type GridSize } from "./prefs";
 import type { DashPost } from "./types";
 
@@ -95,8 +96,14 @@ function Tile({ post, priority, sizes }: { post: DashPost; priority: boolean; si
   return (
     <li className="group relative">
       <Link href={postHref(post.shortCode)} scroll={false} onClick={rememberOpener} className="block">
-        <div className="relative w-full overflow-hidden rounded bg-base-100" style={{ aspectRatio: ratio(post) }}>
-          {!loaded && <Block className="absolute inset-0" />}
+        {/* No fill of its own: the shimmering Skeleton is the placeholder, and its alpha tint over
+            another would double. Square: the tile's own corner clips it */}
+        {/* Off screen the browser skips the cover, shimmer and image alike: with a couple of hundred
+            tiles it was restyling every waiting tile's shimmer on every frame of a scroll
+            (2026-10-20). Its size comes from the aspect ratio, so nothing shifts. On the cover, not
+            the tile, so the Save menu that opens from the tile is never clipped */}
+        <div className="relative w-full overflow-hidden rounded" style={{ aspectRatio: ratio(post), contentVisibility: "auto" }}>
+          {!loaded && <Skeleton radius="none" className="absolute inset-0" />}
           <Image
             src={post.cover}
             alt={post.hook}
@@ -111,12 +118,14 @@ function Tile({ post, priority, sizes }: { post: DashPost; priority: boolean; si
       {/* Revealed on hover or keyboard focus; always there where there is no hover */}
       <div
         className={cx(
-          "pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-opacity duration-150",
+          "pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-opacity duration-150 ease-out-quint",
           "group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100",
         )}
       >
         <SaveMenu post={post.shortCode} tone="overlay" className="pointer-events-auto self-end" />
-        <span className="self-start rounded-md bg-white/95 px-2 py-1 shadow-sm">
+        {/* A label over the cover: the page's colour (white, near-black in dark) and the default
+            shadow */}
+        <span className="self-start rounded-md bg-page/95 px-2 py-1 shadow-sm">
           <BrandName brand={post.brand} />
         </span>
       </div>

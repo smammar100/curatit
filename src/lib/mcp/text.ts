@@ -116,7 +116,11 @@ export function searchText(data: SearchOutputT): string {
     ...(p.match_reasons.length ? [`   Matched: ${p.match_reasons.slice(0, 2).join("; ")}`] : []),
   ]);
   const tail = data.suggestions.length ? [`Suggestions: ${data.suggestions.join(" ")}`] : [];
-  return [head, ...lines, ...tail].join("\n");
+  const interpretation = data.applied.query_mode === "natural" ? [
+    `Interpreted search: ${Object.entries(data.applied.filters).map(([key, values]) => `${key}=${values.join(", ")}`).join("; ") || "no filters"}; keywords=${data.applied.query ?? "none"}.`,
+  ] : [];
+  const refinements = (data.suggested_queries ?? []).map((item) => `${item.label}: ${JSON.stringify(item.query)}`);
+  return [head, ...interpretation, ...lines, ...tail, ...refinements].join("\n");
 }
 
 // Instagram's automatic alt text ("Photo by Brand on May 1, 2026…") says nothing about the slide

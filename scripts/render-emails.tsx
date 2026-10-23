@@ -2,19 +2,20 @@
 // the Supabase dashboard (Authentication → Emails; docs/emails.md has the subjects). Supabase
 // fills the {{ .Placeholders }} when it sends. The HTML is left unformatted on purpose, so no
 // placeholder is split across lines. Links and images point at CURATIT_PUBLIC_BASE_URL (the
-// production site unless set), so render again if the domain changes.
+// production site unless set), so render again if the domain changes. The files are plain ASCII
+// (asciiHtml), so no copy into the dashboard can garble them.
 //
 //   npm run email:render
 import fs from "node:fs";
 import path from "node:path";
 import { render } from "@react-email/render";
-import { supabaseTemplates } from "../src/emails/_components/supabase";
+import { asciiHtml, supabaseTemplates } from "../src/emails/_components/supabase";
 
 const outDir = path.resolve("supabase/templates");
 
 fs.mkdirSync(outDir, { recursive: true });
 for (const [name, element] of supabaseTemplates) {
   const file = path.join(outDir, `${name}.html`);
-  fs.writeFileSync(file, await render(element));
+  fs.writeFileSync(file, asciiHtml(await render(element)));
   console.log("wrote", path.relative(process.cwd(), file));
 }

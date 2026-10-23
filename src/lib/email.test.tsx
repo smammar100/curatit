@@ -53,15 +53,15 @@ describe("sendEmail", () => {
     expect(options()).toEqual({ idempotencyKey: "k1" });
   });
 
-  it("falls back to hello@curatit.app and the support inbox", async () => {
+  it("falls back to hello@curatit.app, with replies to the sender rather than a free-mail inbox", async () => {
     vi.stubEnv("RESEND_API_KEY", "re_test");
     vi.stubEnv("EMAIL_FROM", "");
     vi.stubEnv("EMAIL_REPLY_TO", "");
     send.mockResolvedValue({ data: { id: "e1" }, error: null });
     const { sendEmail } = await load();
-    const { SUPPORT_EMAIL } = await import("./site");
     await sendEmail(email);
-    expect(message()).toMatchObject({ from: "Curatit <hello@curatit.app>", replyTo: SUPPORT_EMAIL });
+    expect(message()).toMatchObject({ from: "Curatit <hello@curatit.app>" });
+    expect(message().replyTo).toBeUndefined();
   });
 
   it("reports false and logs when Resend refuses the email", async () => {
@@ -110,6 +110,23 @@ describe("sendWelcomeEmail", () => {
     const { sendWelcomeEmail } = await load();
     await sendWelcomeEmail({ id: "u2", email: "new@studio.co", user_metadata: {} });
     expect(await render(message().react)).toContain("Welcome to Curatit.");
+  });
+
+  it("leaves out a name that isn't name-shaped, so a URL can't become a link in the email", async () => {
+    const { sendWelcomeEmail } = await load();
+    for (const full_name of ["evil.example/verify now", "https://evil.example", "<b>Sara</b>", "x".repeat(41)]) {
+      send.mockClear();
+      await sendWelcomeEmail({ id: "u4", email: "new@studio.co", user_metadata: { full_name } });
+      const html = await render(message().react);
+      expect(html).toContain("Welcome to Curatit.");
+      expect(html).not.toContain("evil.example");
+    }
+  });
+
+  it("keeps names with accents, apostrophes and hyphens", async () => {
+    const { sendWelcomeEmail } = await load();
+    await sendWelcomeEmail({ id: "u5", email: "z@studio.co", user_metadata: { full_name: "Zoë-Anne O’Neil" } });
+    expect(await render(message().react)).toContain("Welcome to Curatit, Zoë-Anne.");
   });
 
   it("sends nothing to an account without an email address", async () => {

@@ -49,3 +49,29 @@ export function register() {
     logs.setGlobalLoggerProvider(posthogLoggerProvider);
   }
 }
+
+// Errors thrown while the server renders a page or runs a server action or route handler
+// (2026-10-18). The browser only ever sees a digest for these, so without this they reached
+// nothing but Vercel's logs. Sent to PostHog as exceptions, with the path and the kind of
+// request; off without a project token and host, and it never throws.
+export async function onRequestError(
+  error: unknown,
+  request: { path: string; method: string },
+  context: { routerKind: string; routePath: string; routeType: string },
+) {
+  if (process.env.NEXT_RUNTIME !== "nodejs" || !projectToken || !posthogHost) return;
+  try {
+    const { PostHog } = await import("posthog-node");
+    const posthog = new PostHog(projectToken, { host: posthogHost, flushAt: 1, flushInterval: 0 });
+    posthog.captureException(error, undefined, {
+      path: request.path,
+      method: request.method,
+      route: context.routePath,
+      route_type: context.routeType,
+      router: context.routerKind,
+    });
+    await posthog.shutdown(2_000);
+  } catch {
+    // Monitoring must never break the request it's reporting on
+  }
+}

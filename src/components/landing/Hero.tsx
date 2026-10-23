@@ -7,11 +7,11 @@ export default function Hero() {
     <section>
       <Wrapper variant="standard" className="page-start">
         <div className="text-balance max-w-3xl mx-auto text-center">
-          <Text tag="h1" variant="displayLG" className="font-display font-light text-base-900">
+          <Text tag="h1" variant="h1" className="text-primary-foreground">
             <span className="block"> No concepts.</span>
             <span className="block">Just real websites.</span>
           </Text>
-          <Text tag="p" variant="textBase" className="text-base-600 mt-4">
+          <Text tag="p" variant="body" className="text-secondary-foreground mt-4">
             A curated collection of production websites worth studying — layout, hierarchy,
             interaction, and execution. Use them to benchmark your own work, not to copy it.
           </Text>

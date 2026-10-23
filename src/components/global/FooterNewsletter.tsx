@@ -35,7 +35,7 @@ export default function FooterNewsletter() {
 
   return (
     <form noValidate onSubmit={submit} className="w-full max-w-md">
-      <label htmlFor={`${id}-email`} className="block text-xs/5 font-medium text-[color:var(--f-body)]">
+      <label htmlFor={`${id}-email`} className="block text-caption-lg/5 font-medium text-[color:var(--f-body)]">
         Your email
       </label>
       <div className="relative mt-2">
@@ -58,9 +58,9 @@ export default function FooterNewsletter() {
             if (error) setError(emailProblem(event.target.value));
           }}
           onBlur={() => email.trim() && setError(emailProblem(email))}
-          className="footer-field block h-13 w-full rounded-xl py-0 pr-32 pl-4 text-sm pointer-coarse:text-[16px]"
+          className="footer-field block h-13 w-full rounded-xl py-0 pr-32 pl-4 text-body-sm pointer-coarse:text-[16px]"
         />
-        <button type="submit" aria-disabled={pending || undefined} className="footer-submit absolute inset-y-1 right-1 grid place-items-center rounded-lg px-4 text-sm font-medium">
+        <button type="submit" aria-disabled={pending || undefined} className="footer-submit absolute inset-y-1 right-1 grid place-items-center rounded-md px-4 text-body-sm font-medium">
           {/* Both labels share one cell, so the button keeps its width */}
           <span className="grid justify-items-center">
             <span className="invisible [grid-area:1/1]" aria-hidden="true">
@@ -71,7 +71,7 @@ export default function FooterNewsletter() {
         </button>
       </div>
       {/* Room for two lines on phones and one on wider screens, so a note never moves what's below */}
-      <p id={`${id}-note`} className={cx("mt-3 flex min-h-10 gap-1.5 text-xs/5 text-pretty sm:min-h-5", error ? "text-[color:var(--f-danger)]" : "text-[color:var(--f-quiet)]")}>
+      <p id={`${id}-note`} className={cx("mt-3 flex min-h-10 gap-1.5 text-caption-lg/5 text-pretty sm:min-h-5", error ? "text-[color:var(--f-danger)]" : "text-[color:var(--f-quiet)]")}>
         {error && <WarningCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />}
         {error ?? "Free to start. New brands land in your feed as they join."}
       </p>

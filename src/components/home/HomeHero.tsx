@@ -37,17 +37,13 @@ export default function HomeHero({ posts }: { posts: LibraryPost[] }) {
     // of it match at every width. Its cards overflow the band (overflow-visible) and the section
     // clips them sideways; on phones the band is sized to the corridor (which scales with width),
     // from sm up it takes the hero's spare height.
-    <section className="flex flex-col overflow-x-clip bg-white sm:h-svh sm:min-h-[40rem]">
+    <section className="flex flex-col overflow-x-clip bg-page sm:h-svh sm:min-h-[40rem]">
       <Wrapper
         variant="standard"
         className="relative z-10 pt-28 text-center lg:pt-40"
       >
         <div className="text-balance max-w-3xl mx-auto">
-          <Text
-            tag="h1"
-            variant="displayLG"
-            className="text-base-900"
-          >
+          <Text tag="h1" variant="h1" className="text-primary-foreground">
             Find ideas for your next social media post.
           </Text>
         </div>
@@ -59,7 +55,7 @@ export default function HomeHero({ posts }: { posts: LibraryPost[] }) {
       />
       <Wrapper variant="standard" className="relative z-10 pb-20 text-center">
         <div className="text-balance max-w-xl mx-auto">
-          <Text tag="p" variant="textBase" className="text-base-600">
+          <Text tag="p" variant="body" className="text-secondary-foreground">
             A searchable library of real brand posts, reviewed by editors. See
             how each one is built, then save and share the best.
           </Text>

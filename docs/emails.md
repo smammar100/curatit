@@ -5,7 +5,7 @@ Curatit's emails are React Email templates in `src/emails/`, sent through [Resen
 Two routes send them:
 
 - **The app** sends its own emails with `sendEmail()` in `src/lib/email.tsx`, through Resend's API. Today that's only the welcome email.
-- **Supabase Auth** sends the six account emails (confirm, reset password and so on) itself. They're the same templates, rendered to HTML with `npm run email:render` into `supabase/templates/`, pasted into the Supabase dashboard and sent through Resend's SMTP.
+- **Supabase Auth** sends the six account emails (confirm, reset password and so on) itself. They're the same templates, rendered to HTML with `npm run email:render` into `supabase/templates/`, pasted into the Supabase dashboard and sent through Resend's SMTP. The files are plain ASCII, every other character written as an HTML entity: the first confirm email Supabase sent (2026-10-17) arrived with its invisible preheader padding and footer dot garbled ("Â â€Œ" in the inbox preview), from a paste that went through the wrong encoding.
 
 ## Commands
 
@@ -60,7 +60,7 @@ No inbox runs scripts, so a button inside an email can't copy anything. The veri
 - `/auth/callback`, when the link confirmed the address within the last 15 minutes;
 - the sign-up action, when the project doesn't confirm addresses and the account is signed in at once.
 
-Its idempotency key is `welcome/<user id>`, so a second click on the link within 24 hours doesn't send it twice. It's the note: a hero of library posts (`hero`: scatter by default, or grid, board, carousel), three short paragraphs, Search the library, and Ammar's signature. It's sent from `EMAIL_FROM` with replies to `EMAIL_REPLY_TO` (else `SUPPORT_EMAIL`), carries no unsubscribe link (it's transactional), and its button opens the dashboard, since the person is signed in by then.
+Its idempotency key is `welcome/<user id>`, so a second click on the link within 24 hours doesn't send it twice. It's the note: a hero of library posts (`hero`: scatter by default, or grid, board, carousel), three short paragraphs, Search the library, and Ammar's signature. It's sent from `EMAIL_FROM` with replies to `EMAIL_REPLY_TO`, else to the sender itself (Resend's Receiving inbox for curatit.app; since 2026-10-18 the Hotmail `SUPPORT_EMAIL` is no longer the default, because a free-mail Reply-To under a curatit.app sender is a common spam-filter penalty), carries no unsubscribe link (it's transactional), and its button opens the dashboard, since the person is signed in by then.
 
 ## Setup (the owner's steps)
 

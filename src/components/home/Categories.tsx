@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 // Fundation
 import Text from "@/components/fundations/elements/Text";
+import Button from "@/components/fundations/elements/Button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 // Components
 import { CATEGORY_ICONS } from "@/components/dashboard/categoryIcons";
@@ -82,21 +83,18 @@ export default function Categories({
       left: dir * row.current.clientWidth * 0.6,
       behavior: reduceMotion ? "auto" : "smooth",
     });
-  const caret =
-    "absolute top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-base-900 shadow ring-1 ring-base-200 transition-transform duration-150 active:scale-[0.96] hover:bg-base-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400";
+  // A caret is the secondary Button, round and 44px; this places it over the row's edge (the
+  // Button sets its own `relative`, so the placing is on a wrapper)
+  const caret = "absolute top-1/2 z-10 flex -translate-y-1/2";
 
   return (
     <section>
       <Wrapper variant="standard" className="section-y">
         <div className="text-balance max-w-3xl mx-auto text-center">
-          <Text
-            tag="h2"
-            variant="displayLG"
-            className="text-base-900"
-          >
+          <Text tag="h2" variant="h1" className="text-primary-foreground">
             Explore posts by industry.
           </Text>
-          <Text tag="p" variant="textBase" className="text-base-600 mt-4">
+          <Text tag="p" variant="body" className="text-secondary-foreground mt-4">
             Browse examples from finance, food, travel and more.
           </Text>
         </div>
@@ -105,24 +103,32 @@ export default function Categories({
             width (2026-10-15, at the person's request): centred while it fits, scrolling sideways once it doesn't. */}
         <div className="relative -mx-4 mt-12 sm:-mx-8">
           {more.left && (
-            <button
-              type="button"
-              aria-label="Scroll categories left"
-              onClick={() => nudge(-1)}
-              className={cx(caret, "left-4 sm:left-8")}
-            >
-              <CaretLeft className="size-4" />
-            </button>
+            <span className={cx(caret, "left-4 sm:left-8")}>
+              <Button
+                variant="secondary"
+                size="lg"
+                shape="pill"
+                iconOnly
+                aria-label="Scroll categories left"
+                onClick={() => nudge(-1)}
+              >
+                <CaretLeft className="size-4" />
+              </Button>
+            </span>
           )}
           {more.right && (
-            <button
-              type="button"
-              aria-label="Scroll categories right"
-              onClick={() => nudge(1)}
-              className={cx(caret, "right-4 sm:right-8")}
-            >
-              <CaretRight className="size-4" />
-            </button>
+            <span className={cx(caret, "right-4 sm:right-8")}>
+              <Button
+                variant="secondary"
+                size="lg"
+                shape="pill"
+                iconOnly
+                aria-label="Scroll categories right"
+                onClick={() => nudge(1)}
+              >
+                <CaretRight className="size-4" />
+              </Button>
+            </span>
           )}
           <div
             ref={row}
@@ -151,11 +157,12 @@ export default function Categories({
                     });
                   }}
                   className={cx(
-                    // The pill is 40px; the pseudo-element brings the hit area to 44px
-                    "relative h-10 shrink-0 touch-manipulation rounded-lg pr-4 pl-3.5 text-sm transition-[color,background-color,transform] duration-150 ease-out before:absolute before:inset-x-0 before:-inset-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-400 active:scale-[0.96]",
+                    // The pill is 40px; the pseudo-element brings the hit area to 44px. The press
+                    // is Tailwind's `scale` property, so that's what transitions, not transform
+                    "relative h-10 shrink-0 touch-manipulation rounded-lg pr-4 pl-3.5 text-body-sm transition-[color,background-color,scale] duration-150 ease-out-quint before:absolute before:inset-x-0 before:-inset-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.96]",
                     selected
                       ? "text-(--tab-ink)"
-                      : "text-base-600 hover:bg-(--tab-tint) hover:text-base-900",
+                      : "text-secondary-foreground hover:bg-(--tab-tint) hover:text-primary-foreground",
                   )}
                 >
                   {/* One pill that slides to the selected tab, taking on its colour as it goes */}

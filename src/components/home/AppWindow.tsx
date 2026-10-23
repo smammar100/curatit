@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import { cx } from "@/lib/cx";
 
-// A Curatit product window, treated like the screenshots elsewhere on the site:
-// white, rounded, with a shadow, sitting on a bg-base-50 mat.
+// A Curatit product window, treated like the screenshots elsewhere on the site: the page's
+// colour (what the app inside is drawn on), rounded, with the default shadow, sitting on a
+// bg-card mat.
 export default function AppWindow({
   title,
   children,
@@ -15,18 +16,18 @@ export default function AppWindow({
   return (
     <div
       className={cx(
-        "@container overflow-hidden rounded bg-white shadow",
+        "@container overflow-hidden rounded bg-page shadow",
         className,
       )}
     >
       <div
-        className="relative flex h-9 items-center gap-1.5 border-b border-base-100 px-4"
+        className="relative flex h-9 items-center gap-1.5 border-b border-border-default px-4"
         aria-hidden="true"
       >
-        <span className="size-2 rounded-full bg-base-200" />
-        <span className="size-2 rounded-full bg-base-200" />
-        <span className="size-2 rounded-full bg-base-200" />
-        <p className="absolute inset-x-16 truncate text-center text-xs text-base-500">
+        <span className="size-2 rounded-full bg-border-strong" />
+        <span className="size-2 rounded-full bg-border-strong" />
+        <span className="size-2 rounded-full bg-border-strong" />
+        <p className="absolute inset-x-16 truncate text-center text-caption text-secondary-foreground">
           {title}
         </p>
       </div>

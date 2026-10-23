@@ -66,7 +66,8 @@ afterEach(() => {
 const render = (ui: React.ReactNode) => act(() => root.render(ui));
 const stage = () => container.querySelector('[data-testid="stage"]')!.textContent;
 const within = (id: string) => container.querySelector(`[data-testid="${id}"]`)!;
-const panel = () => container.querySelector("#breakdown-panel")!;
+// The shown view: the shared Tabs gives each view its own panel with a generated id
+const panel = () => container.querySelector('[role="tabpanel"]:not([hidden])')!;
 const tabNames = () => [...container.querySelectorAll('[role="tab"]')].map((t) => t.textContent);
 const tab = (name: string) => [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find((t) => t.textContent === name);
 const button = (scope: Element, label: RegExp) => [...scope.querySelectorAll<HTMLButtonElement>("button")].find((b) => label.test(b.getAttribute("aria-label") ?? b.textContent ?? ""));
@@ -220,13 +221,13 @@ describe("CreativeBreakdown: Copy brief", () => {
     expect(tabNames()).not.toContain("Apply");
     await act(async () => button(container, /^Copy brief$/)!.click());
     const brief = writeText.mock.calls[0][0] as string;
-    expect(brief.startsWith("# Instagram post — 1:1 replica brief")).toBe(true);
-    expect(brief).toContain("closest possible visual fidelity");
-    expect(brief).toContain("## Reconstruction requirements");
+    expect(brief.startsWith("# Instagram post — visual adaptation brief")).toBe(true);
+    expect(brief).toContain("closely match its colours");
+    expect(brief).toContain("## Visual matching requirements");
     expect(brief).toContain("## Execution and deliverables");
     expect(brief).toContain("https://www.instagram.com/p/EXAMPLE/");
     expect(button(container, /^Copied$/)).toBeTruthy();
-    expect(container.textContent).toContain("Replica brief copied. Paste it into your AI tool.");
+    expect(container.textContent).toContain("Design brief copied. Paste it into your AI tool.");
     writeText.mockRejectedValueOnce(new Error("denied"));
     await act(async () => button(container, /^Cop/)!.click());
     expect(container.textContent).toContain("Couldn't copy the brief here.");

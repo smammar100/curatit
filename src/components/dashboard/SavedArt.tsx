@@ -68,7 +68,7 @@ export default function SavedArt({ className }: { className?: string }) {
           <path d={`M14 ${MOUTH + 12}H146`} className="stroke-base-300" strokeWidth="1.5" strokeDasharray="4 5" strokeLinecap="round" />
         </svg>
         {/* The header's count, arriving once they're in */}
-        <span className="saved-art-badge absolute -top-2.5 -right-2.5 flex h-8 min-w-8 items-center justify-center rounded-full bg-accent-600 px-2 text-subtitle font-medium text-paper tabular-nums ring-4 ring-white">
+        <span className="saved-art-badge absolute -top-2.5 -right-2.5 flex h-8 min-w-8 items-center justify-center rounded-full bg-brand-solid px-2 text-subtitle font-medium text-on-brand-solid-foreground tabular-nums ring-4 ring-page">
           3
         </span>
       </div>

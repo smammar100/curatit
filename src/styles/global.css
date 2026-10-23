@@ -168,7 +168,9 @@
   --color-on-brand-subtle-foreground: var(--color-accent-700);
   --color-brand-border-default: color-mix(in oklab, var(--color-accent-500) 40%, transparent);
   --color-brand-border-subtle: color-mix(in oklab, var(--color-accent-500) 30%, transparent);
-  --color-brand-border-focus: color-mix(in oklab, var(--color-accent-500) 60%, transparent);
+  /* The focus ring: solid accent-500, 3.6:1 on white and 5:1 on the dark page (at 60% it was
+     2.1:1, under the 3:1 a focus indicator needs; 2026-10-18) */
+  --color-brand-border-focus: var(--color-accent-500);
   /* Positive / warning / danger */
   --color-positive-solid: var(--color-success-600);
   --color-positive-subtle: color-mix(in oklab, var(--color-success-600) 10%, transparent);
@@ -203,6 +205,8 @@
   /* Shadows: border (xs), default (sm, and the bare `shadow`), large (md, lg), extra large (xl,
      2xl). Their colours are the --shadow-* primitives in :root, which flip in dark mode: drops
      fade out and a half-pixel inner highlight takes over */
+  /* The bare `shadow` is the default (sm), with its dark treatment; Tailwind's own would not flip */
+  --shadow: 0 0 0 0.5px var(--shadow-inner-1) inset, 0 0 0 0.5px var(--shadow-drop-1), 0 1px 1px -1px var(--shadow-drop-2), 0 1px 2px 0 var(--shadow-drop-3);
   --shadow-2xs: 0 0 0 1px var(--shadow-border-color);
   --shadow-xs: 0 0 0 1px var(--shadow-border-color);
   --shadow-sm: 0 0 0 0.5px var(--shadow-inner-1) inset, 0 0 0 0.5px var(--shadow-drop-1), 0 1px 1px -1px var(--shadow-drop-2), 0 1px 2px 0 var(--shadow-drop-3);
@@ -251,6 +255,23 @@
   --text-caption-xs: 0.5rem;
   --text-caption-xs--line-height: 0.75rem;
   --font-weight-semimedium: 450;
+  /* Easing (2026-10-18, emil-animations): one set for the whole site. ease-out-quint for things
+     entering or responding (menus, toasts, hovers, presses, a sliding thumb), ease-in-out-quart
+     for something already on screen moving to a new place (the divider gliding), ease-in-quart
+     for exits. Tailwind's own ease-out is too weak to read as a curve */
+  --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-in-quart: cubic-bezier(0.5, 0, 0.75, 0);
+  /* The shared entrances and exits as utilities (animate-menu-in …), so every menu, toast and
+     panel runs the same timing: entrances 150-200ms ease-out-quint, exits 120ms ease-in-quart,
+     held at their end state (forwards) until usePresence unmounts them */
+  --animate-menu-in: menu-in 150ms var(--ease-out-quint);
+  --animate-menu-out: menu-out 120ms var(--ease-in-quart) forwards;
+  --animate-toast-in: toast-in 180ms var(--ease-out-quint);
+  --animate-toast-out: toast-out 120ms var(--ease-in-quart) forwards;
+  --animate-fade-in: fade-in 150ms var(--ease-out-quint);
+  --animate-fade-out: fade-out 120ms var(--ease-in-quart) forwards;
+  --animate-rise-in: rise-in 200ms var(--ease-out-quint);
   --font-mono: ui-monospace, "Cascadia Code", "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
   /* Loading skeletons (components/dashboard/Skeleton.tsx): a band of light crossing the block */
   --animate-shimmer: shimmer 1.6s ease-in-out infinite;
@@ -271,7 +292,8 @@
       transform: translateY(-50%);
     }
   }
-  /* Dashboard toast and menus: a short rise and fade in (exits are instant) */
+  /* Dashboard toast and menus: a short rise and fade in, and (2026-10-18) a shorter fade out,
+     held by usePresence in src/lib/motion.ts, so a menu leaves rather than vanishing */
   @keyframes toast-in {
     from {
       opacity: 0;
@@ -289,6 +311,30 @@
       opacity: 0;
     }
   }
+  @keyframes menu-out {
+    to {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+  }
+  @keyframes toast-out {
+    to {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+  /* Content that opens in place (an FAQ answer): a short drop into place */
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
   @keyframes wall-up {
     from {
       transform: translateY(-50%);
@@ -299,8 +345,9 @@
   }
 }
 :root {
-  /* Typography: tabular numbers, and Inter's round quotes and commas (ss03), as Interfere sets it */
-  font-feature-settings: "tnum" 1, "ss03" 1;
+  /* Typography: tabular numbers. (Interfere also sets ss03, Inter's round quotes and commas, but
+     the Inter that next/font serves from Google has no ss03, so it was dropped on 2026-10-18) */
+  font-feature-settings: "tnum" 1;
   color-scheme: light;
 
   /* Interfere's primitive scales (Radix Colors): a neutral grey, alpha greys over white and
@@ -473,6 +520,11 @@
    lines and running text wraps "pretty", which keeps a last line from being one short word.
    Both are base styles, so a utility on the element still wins */
 @layer base {
+  /* Hedvig ships one weight; never let the browser fake a bold serif (2026-10-18). Inter is
+     variable, so it has every weight and loses nothing */
+  html {
+    font-synthesis-weight: none;
+  }
   h1, h2, h3, h4, h5, h6 {
     text-wrap: balance;
   }
@@ -480,11 +532,61 @@
     text-wrap: pretty;
   }
 }
-/* While the theme switches, nothing tweens: every colour would otherwise animate on its own clock */
-[data-theme-switching] *,
+/* While the theme switches, nothing tweens: every colour would otherwise animate on its own clock.
+   The theme switch's own icons (data-theme-icon) are the exception: they cross-fade */
+[data-theme-switching] *:not([data-theme-icon]),
 [data-theme-switching] *::before,
 [data-theme-switching] *::after {
   transition: none !important;
+}
+/* A native <dialog> that scales in from 0.97 and fades, and leaves faster than it came
+   (2026-10-18). The exit keeps the dialog in the top layer while it plays (overlay and display,
+   allow-discrete), so it only runs where `overlay` can be transitioned: a browser that could
+   delay `display` but not `overlay` (Firefox) would drop the dialog out of the top layer for the
+   fade, so there it closes at once */
+.dialog-motion,
+.dialog-motion::backdrop {
+  transition-property: opacity, scale;
+  transition-duration: 140ms;
+  transition-timing-function: var(--ease-in-quart);
+}
+@supports (overlay: auto) {
+  .dialog-motion,
+  .dialog-motion::backdrop {
+    transition-property: opacity, scale, overlay, display;
+    transition-behavior: allow-discrete;
+  }
+}
+.dialog-motion {
+  opacity: 0;
+  scale: 0.97;
+}
+.dialog-motion::backdrop {
+  opacity: 0;
+}
+.dialog-motion[open] {
+  scale: 1;
+}
+.dialog-motion[open],
+.dialog-motion[open]::backdrop {
+  opacity: 1;
+  transition-duration: 200ms;
+  transition-timing-function: var(--ease-out-quint);
+}
+@starting-style {
+  .dialog-motion[open] {
+    opacity: 0;
+    scale: 0.97;
+  }
+  .dialog-motion[open]::backdrop {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dialog-motion,
+  .dialog-motion::backdrop {
+    transition: none;
+  }
 }
 /* Prose colours come from the site's tokens, so markdown pages flip with the theme */
 .prose {
@@ -496,7 +598,7 @@
   --tw-prose-counters: var(--color-base-400);
   --tw-prose-bullets: var(--color-base-300);
   --tw-prose-hr: var(--color-base-200);
-  --tw-prose-quotes: var(--color-accent-600);
+  --tw-prose-quotes: var(--color-base-900);
   --tw-prose-quote-borders: var(--color-base-200);
   --tw-prose-captions: var(--color-base-500);
   --tw-prose-code: var(--color-base-900);
@@ -554,6 +656,172 @@
 
 @media (prefers-reduced-motion: reduce) {
   .board-art-card {
+    animation: none;
+  }
+}
+
+/* The empty-state drawings on the API tokens and review pages (dashboard/EmptyArt): a short intro,
+   once, each piece starting at its own --d. Transform, opacity and stroke offsets only */
+.empty-art-rise,
+.empty-art-fan,
+.empty-art-slide,
+.empty-art-pop,
+.empty-art-stamp,
+.empty-art-grow,
+.empty-art-shadow {
+  transform-box: fill-box;
+  animation-delay: var(--d, 0ms);
+  animation-fill-mode: both;
+}
+
+.empty-art-rise {
+  transform-origin: 50% 100%;
+  animation-name: empty-art-rise;
+  animation-duration: 560ms;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes empty-art-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.94);
+  }
+}
+
+/* From behind the front card: tucked in and straight, then fanned to their angle */
+.empty-art-fan {
+  transform-origin: 50% 100%;
+  animation-name: empty-art-fan;
+  animation-duration: 620ms;
+  animation-timing-function: cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+.empty-art-fan[data-side="left"] {
+  --from: translate(30px, 26px) rotate(9deg);
+}
+
+.empty-art-fan[data-side="right"] {
+  --from: translate(-30px, 26px) rotate(-9deg);
+}
+
+@keyframes empty-art-fan {
+  from {
+    opacity: 0;
+    transform: var(--from);
+  }
+}
+
+.empty-art-slide {
+  animation-name: empty-art-slide;
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes empty-art-slide {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+
+.empty-art-pop {
+  transform-origin: 50% 50%;
+  animation-name: empty-art-pop;
+  animation-duration: 340ms;
+  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes empty-art-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+/* The front row's check lands harder than the rest */
+.empty-art-stamp {
+  transform-origin: 50% 50%;
+  animation-name: empty-art-stamp;
+  animation-duration: 460ms;
+  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes empty-art-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+  60% {
+    opacity: 1;
+  }
+}
+
+.empty-art-grow {
+  transform-origin: 0 50%;
+  animation-name: empty-art-grow;
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes empty-art-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.empty-art-shadow {
+  transform-origin: 50% 50%;
+  animation-name: empty-art-shadow;
+  animation-duration: 560ms;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes empty-art-shadow {
+  from {
+    opacity: 0;
+    transform: scaleX(0.4);
+  }
+}
+
+/* A tick drawn on: the path is about 15 units long */
+.empty-art-draw {
+  stroke-dasharray: 16;
+  animation: empty-art-draw 300ms ease-out var(--d, 0ms) both;
+}
+
+@keyframes empty-art-draw {
+  from {
+    stroke-dashoffset: 16;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* The dashed card's border marches once, then rests */
+.empty-art-march {
+  animation: empty-art-march 1100ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@keyframes empty-art-march {
+  from {
+    stroke-dashoffset: 40;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .empty-art-rise,
+  .empty-art-fan,
+  .empty-art-slide,
+  .empty-art-pop,
+  .empty-art-stamp,
+  .empty-art-grow,
+  .empty-art-shadow,
+  .empty-art-draw,
+  .empty-art-march {
     animation: none;
   }
 }
@@ -766,7 +1034,7 @@
   box-shadow: none;
   outline: 2px solid transparent;
   outline-offset: 2px;
-  transition: outline-color 150ms ease-out;
+  transition: outline-color 150ms var(--ease-out-quint);
 }
 
 .footer-field::placeholder {
@@ -787,7 +1055,7 @@
   background-color: var(--f-bg);
   color: var(--f-ink);
   outline: 2px solid transparent;
-  transition: background-color 150ms ease-out, scale 150ms ease-out;
+  transition: background-color 150ms var(--ease-out-quint), scale 150ms var(--ease-out-quint);
 }
 
 .footer-submit:focus-visible {
@@ -823,9 +1091,39 @@ img[data-fade] {
 img[data-fade="in"] {
   opacity: 1;
 }
+/* The hero corridor's tiles breathe while their covers are on the way (2026-10-18: an empty grey
+   tile read as broken, and a cover's first trip through the image optimiser can take a second or
+   two). Opacity only, on a layer of its own, so it stays on the compositor while the corridor
+   moves; a tile stops as soon as its image is in, and holds still under reduced motion */
+.corridor-tile::after {
+  content: "";
+  position: absolute;
+  /* 1px in, so the tile's inset hairline still shows */
+  inset: 1px;
+  border-radius: inherit;
+  background: var(--color-shimmer);
+  opacity: 0;
+  pointer-events: none;
+  animation: tile-wait 1.2s var(--ease-in-out-quart) infinite alternate;
+}
+.corridor-tile:nth-child(even)::after {
+  animation-delay: -0.6s;
+}
+.corridor-tile:has(> img[data-fade="in"])::after {
+  display: none;
+}
+@keyframes tile-wait {
+  to {
+    opacity: 0.8;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   img[data-fade] {
     transition: none;
+  }
+  .corridor-tile::after {
+    animation: none;
+    opacity: 0.4;
   }
 }
 
@@ -1446,5 +1744,148 @@ img[data-fade="in"] {
   .search-reel-tile,
   .search-reel-caret {
     animation: none;
+  }
+}
+
+/* The mobile menu (navigation/MobileNav). The button's two bars turn into a cross, transform
+   only. The menu unfolds after Makisu, Justin Windle's CSS 3D dropdown (MIT,
+   codepen.io/soulwire/pen/AmywKv): every row hangs from the bottom of the one above it
+   (`.makisu-node` nests the next) and swings down about its top edge, the first from edge-on and
+   the rest from folded flat behind their parent, overshooting a little; a shade lifts off each
+   row as it opens, and the whole sheet swings once with the momentum. Closing folds the rows back
+   up from the bottom. Each row carries a back face so its mirrored side never shows mid-turn.
+   The 3D context exists only while it moves: open at rest, the rows are flat and the text crisp.
+   Timings come from MobileNav as variables; under reduced motion it never enters these states. */
+.menu-icon > span {
+  position: absolute;
+  left: 2.5px;
+  right: 2.5px;
+  top: calc(50% - 0.75px);
+  height: 1.5px;
+  border-radius: 9999px;
+  background: currentColor;
+  transition: transform 320ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.menu-icon > span:first-child {
+  transform: translateY(-2px);
+}
+.menu-icon > span:last-child {
+  transform: translateY(2px);
+}
+.menu-icon[data-open="true"] > span:first-child {
+  transform: translateY(0) rotate(45deg);
+}
+.menu-icon[data-open="true"] > span:last-child {
+  transform: translateY(0) rotate(-45deg);
+}
+
+.makisu {
+  perspective: 900px;
+}
+.makisu-root,
+.makisu-node {
+  transform-origin: 50% 0;
+}
+.makisu-back,
+.makisu-shade {
+  display: none;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.makisu-back {
+  background: var(--color-page);
+}
+.makisu-shade {
+  background: color-mix(in oklab, var(--color-black) 14%, transparent);
+}
+.makisu:is([data-state="opening"], [data-state="closing"]) :is(.makisu-root, .makisu-node, .makisu-face) {
+  transform-style: preserve-3d;
+}
+.makisu:is([data-state="opening"], [data-state="closing"]) .makisu-face {
+  transform: translateZ(-0.1px);
+}
+.makisu:is([data-state="opening"], [data-state="closing"]) :is(.makisu-back, .makisu-shade) {
+  display: block;
+}
+.makisu:is([data-state="opening"], [data-state="closing"]) .makisu-back {
+  transform: translateZ(-0.1px);
+}
+.makisu:is([data-state="opening"], [data-state="closing"]) .makisu-shade {
+  transform: translateZ(0.1px);
+}
+
+.makisu[data-state="opening"] .makisu-root {
+  animation: makisu-swing-out var(--makisu-swing-open) ease-in-out both;
+}
+.makisu[data-state="opening"] .makisu-node {
+  animation: makisu-unfold var(--makisu-speed) ease-in-out var(--makisu-unfold-delay) both;
+}
+.makisu[data-state="opening"] .makisu-first {
+  animation-name: makisu-unfold-first;
+}
+.makisu[data-state="opening"] .makisu-shade {
+  animation: makisu-unshade calc(var(--makisu-speed) * 0.45) ease-in-out var(--makisu-unshade-delay) both;
+}
+.makisu[data-state="closing"] .makisu-root {
+  animation: makisu-swing-in var(--makisu-swing-close) ease-in-out both;
+}
+.makisu[data-state="closing"] .makisu-node {
+  animation: makisu-fold var(--makisu-close-speed) ease-in-out var(--makisu-fold-delay) both;
+}
+.makisu[data-state="closing"] .makisu-first {
+  animation-name: makisu-fold-first;
+}
+.makisu[data-state="closing"] .makisu-shade {
+  animation: makisu-shade calc(var(--makisu-close-speed) * 0.45) ease-in-out var(--makisu-shade-delay) both;
+}
+
+@keyframes makisu-unfold {
+  0% { transform: rotateX(180deg); }
+  50% { transform: rotateX(-30deg); }
+  100% { transform: rotateX(0deg); }
+}
+@keyframes makisu-unfold-first {
+  0% { transform: rotateX(-90deg); }
+  50% { transform: rotateX(60deg); }
+  100% { transform: rotateX(0deg); }
+}
+@keyframes makisu-fold {
+  0% { transform: rotateX(0deg); }
+  100% { transform: rotateX(180deg); }
+}
+/* Makisu folds the first row on to -180deg; here it stops edge-on, so it never swings up over
+   the header bar */
+@keyframes makisu-fold-first {
+  0% { transform: rotateX(0deg); }
+  100% { transform: rotateX(-90deg); }
+}
+/* Makisu swings -30deg and 15deg; a full-width sheet reads better with less */
+@keyframes makisu-swing-out {
+  0% { transform: rotateX(0deg); }
+  30% { transform: rotateX(-18deg); }
+  60% { transform: rotateX(8deg); }
+  100% { transform: rotateX(0deg); }
+}
+@keyframes makisu-swing-in {
+  0% { transform: rotateX(0deg); }
+  50% { transform: rotateX(-6deg); }
+  90% { transform: rotateX(10deg); }
+  100% { transform: rotateX(0deg); }
+}
+@keyframes makisu-unshade {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes makisu-shade {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-icon > span {
+    transition: none;
+  }
+  .makisu :is(.makisu-root, .makisu-node, .makisu-shade) {
+    animation: none !important;
   }
 }

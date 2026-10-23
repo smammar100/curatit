@@ -1,0 +1,8 @@
+/* The design system page (/system): the Light / Dark / Both switch (system/ThemeModeSwitch)
+   sets data-system-theme on <html>; "both" is no attribute. Each sheet renders a light and a
+   dark panel; this hides the other one and its label */
+html[data-system-theme="light"] [data-sheet-panel="dark"],
+html[data-system-theme="dark"] [data-sheet-panel="light"],
+html[data-system-theme] [data-sheet-label] {
+  display: none;
+}

@@ -16,7 +16,7 @@ export default function SitesTagsPage() {
       <Search />
       <section>
         <Wrapper variant="narrow" className="page-start">
-          <Text tag="h1" variant="displayLG" className="text-base-900 text-center">
+          <Text tag="h1" variant="h1" className="text-primary-foreground text-center">
             We got tags!
           </Text>
 

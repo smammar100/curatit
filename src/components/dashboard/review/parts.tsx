@@ -1,11 +1,11 @@
 "use client";
 
 // Small pieces the review pages share: the page frame, status pills, section headings, evidence
-// chips and the formatting of costs and times.
+// chips, the selects' recipe and the formatting of costs and times.
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { cx } from "@/lib/cx";
+import Badge from "@/components/fundations/elements/Badge";
 import { term, type Dimension } from "@/lib/creative/taxonomy";
 import { feedHref } from "../Feed";
 import Header from "../Header";
@@ -35,19 +35,17 @@ export const label = (dimension: Dimension, slug: string | null | undefined) => 
 const STATUS: Record<ReviewStatus, string> = { draft: "Draft", needs_review: "Needs review", approved: "Approved", rejected: "Rejected" };
 const SOURCE: Record<Source, string> = { ai: "Written by AI", human: "Written by an editor", mixed: "AI, edited by an editor" };
 
+// A status label: the shared Badge at 24px with round ends, outlined, inverted or danger
 export function Pill({ children, tone = "plain", title }: { children: ReactNode; tone?: "plain" | "strong" | "danger"; title?: string }) {
   return (
-    <span
+    <Badge
+      size="lg"
+      shape="pill"
+      variant={tone === "strong" ? "inverted" : tone === "danger" ? "danger" : "outline"}
       title={title}
-      className={cx(
-        "inline-flex h-6 shrink-0 items-center gap-1 rounded-full px-2.5 text-caption font-medium whitespace-nowrap",
-        tone === "strong" && "bg-base-900 text-white",
-        tone === "plain" && "bg-base-50 text-base-700 ring-1 ring-base-200",
-        tone === "danger" && "bg-danger-50 text-danger-700",
-      )}
     >
       {children}
-    </span>
+    </Badge>
   );
 }
 
@@ -57,9 +55,9 @@ export const sourceLabel = (source: Source) => SOURCE[source];
 
 export function Section({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
   return (
-    <section className="mt-6 border-t border-base-100 pt-5">
+    <section className="mt-6 border-t border-border-default pt-5">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-caption font-medium text-base-500">{title}</h2>
+        <h2 className="text-caption font-medium text-secondary-foreground">{title}</h2>
         {action}
       </div>
       {children}
@@ -75,7 +73,7 @@ export function EvidenceChip({ value, onShow, active }: { value: string; onShow:
       onClick={() => onShow(value)}
       aria-pressed={active}
       title={value.startsWith("slide:") ? `Show position ${value.slice(6)}` : value === "caption" ? "Show the caption" : "From the post's metadata"}
-      className="inline-flex h-6 items-center rounded-full bg-base-50 px-2 font-mono text-micro text-base-700 ring-1 ring-base-200 transition-[background-color,color] duration-150 hover:bg-base-100 hover:text-base-900 aria-pressed:bg-base-900 aria-pressed:text-white"
+      className="inline-flex h-6 items-center rounded-full bg-card px-2 font-mono text-micro text-secondary-foreground ring-1 ring-border-default transition-[background-color,color] duration-150 ease-out-quint hover:bg-transparent-hover hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-pressed:bg-inverted-solid aria-pressed:text-on-inverted-foreground"
     >
       {value}
     </button>
@@ -98,8 +96,8 @@ export function ago(iso: string | null | undefined) {
 export function Notice({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <div className="mx-auto mt-24 max-w-md text-center">
-      <h1 className="font-display text-display font-light text-balance text-base-900">{title}</h1>
-      {children && <div className="mt-3 text-subtitle text-pretty text-base-500">{children}</div>}
+      <h1 className="font-display text-display font-light text-balance text-primary-foreground">{title}</h1>
+      {children && <div className="mt-3 text-subtitle text-pretty text-secondary-foreground">{children}</div>}
     </div>
   );
 }
@@ -123,8 +121,12 @@ export function useBusy() {
   return { busy, error, setError, run };
 }
 
-// The dashboard's two button looks: solid for the main action, quiet for the rest
-export const solidButton =
-  "inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-base-900 px-4 text-body font-medium text-white transition-[background-color,scale] duration-150 hover:bg-base-800 active:scale-[0.96] disabled:bg-base-100 disabled:text-base-500";
-export const quietButton =
-  "inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-base-50 px-4 text-body font-medium text-base-900 ring-1 ring-base-200 transition-[background-color,scale] duration-150 hover:bg-base-100 active:scale-[0.96] disabled:text-base-400";
+// The buttons are the shared Button (`default` for the main action, `secondary` for the rest, at
+// size sm with round ends), the text fields the shared Field with Input and Textarea (since
+// 2026-10-19). The selects are native until the design system has a Select, so they keep the
+// field recipe's parts here (surface, default shadow, brand focus ring, 16px on touch screens so
+// iOS doesn't zoom) at their own heights, in the dashboard's body role. focus:ring-0 takes off the
+// 1px blue ring @tailwindcss/forms draws on a focused select, which would sit over the brand ring
+const focusRing = "focus:shadow-[0_0_0_2px_var(--color-brand-border-focus)]";
+export const fieldParts = `border-0 bg-component-on-container-subtle text-primary-foreground shadow-sm placeholder:text-tertiary-foreground transition-[box-shadow] duration-150 ease-out-quint focus:ring-0 focus:outline-hidden pointer-coarse:text-[16px] ${focusRing}`;
+export const selectClass = `h-10 rounded-lg py-0 pr-8 pl-3 text-body ${fieldParts}`;

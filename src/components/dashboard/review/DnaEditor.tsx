@@ -4,19 +4,31 @@
 // worker uses (no performance claims, quotes really in the caption, every slide given a role…)
 // and saved as a new version, so the AI's original stays in the history. Slide roles edited here
 // update both the narrative and the slide records.
+//
+// The fields are the shared Field with Input and Textarea (2026-10-19; hand-built from the auth
+// recipe before), with a FieldGroup over each set (the lists, the slide roles). A save the
+// validator refuses still lists every problem above the buttons, and now also marks the field
+// each one is about (by its path) with the problem under it. The selects stay native, on the
+// recipe in parts.tsx, until the design system has a Select.
 import { useMemo, useState } from "react";
+import Button from "@/components/fundations/elements/Button";
+import Input from "@/components/fundations/elements/Input";
+import Textarea from "@/components/fundations/elements/Textarea";
+import Field, { FieldGroup } from "@/components/fundations/molecules/Field";
 import { cx } from "@/lib/cx";
 import { CreativeDna, type SlideObservation } from "@/lib/creative/schema";
 import { DIMENSIONS, TAXONOMY_VERSION, type Dimension } from "@/lib/creative/taxonomy";
 import { validateDna, type Issue } from "@/lib/creative/validate";
 import { track } from "@/lib/analytics";
 import { saveEdit, type Version } from "./data";
-import { quietButton, Section, solidButton, useBusy } from "./parts";
+import { Section, selectClass as select, useBusy } from "./parts";
 
-const field =
-  "w-full rounded-2xl border-0 bg-base-50 px-3.5 py-2.5 text-body pointer-coarse:text-[16px] text-base-900 ring-1 ring-base-200 placeholder:text-base-400 focus:ring-2 focus:ring-base-300";
-const select =
-  "h-9 rounded-full border-0 bg-base-50 py-0 pr-8 pl-3.5 text-body pointer-coarse:text-[16px] text-base-900 ring-1 ring-base-200 focus:ring-2 focus:ring-base-300";
+// The problems the last save attempt found at a path or inside it ("takeaways" holds
+// "takeaways.2"), as one line for that field's error; undefined when there are none
+function problemsAt(problems: Issue[], path: string) {
+  const here = problems.filter((p) => p.path === path || p.path?.startsWith(`${path}.`));
+  return here.length ? here.map((p) => p.message).join("; ") : undefined;
+}
 
 function Options({ dimension }: { dimension: Dimension }) {
   return (
@@ -51,30 +63,49 @@ function ArchetypeOptions() {
   );
 }
 
-function List({ label, items, min, max, onChange, rows = 2 }: { label: string; items: string[]; min: number; max: number; onChange: (items: string[]) => void; rows?: number }) {
+function List({
+  label,
+  items,
+  min,
+  max,
+  onChange,
+  error,
+  rows = 2,
+}: {
+  label: string;
+  items: string[];
+  min: number;
+  max: number;
+  onChange: (items: string[]) => void;
+  error?: string;
+  rows?: number;
+}) {
   return (
-    <fieldset>
-      <legend className="mb-2 text-caption font-medium text-base-500">
-        {label} ({min} to {max})
-      </legend>
+    <FieldGroup legend={`${label} (${min} to ${max})`} error={error}>
       <div className="space-y-2">
         {items.map((item, i) => (
           <div key={i} className="flex items-start gap-2">
-            <textarea aria-label={`${label} ${i + 1}`} rows={rows} value={item} onChange={(e) => onChange(items.map((x, j) => (j === i ? e.target.value : x)))} className={field} />
+            <Textarea
+              aria-label={`${label} ${i + 1}`}
+              rows={rows}
+              value={item}
+              onChange={(e) => onChange(items.map((x, j) => (j === i ? e.target.value : x)))}
+              className="min-w-0 flex-1"
+            />
             {items.length > min && (
-              <button type="button" aria-label={`Remove ${label.toLowerCase()} ${i + 1}`} onClick={() => onChange(items.filter((_, j) => j !== i))} className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-full text-base-500 hover:bg-base-50 hover:text-base-900">
+              <Button variant="transparent" size="base" shape="pill" iconOnly aria-label={`Remove ${label.toLowerCase()} ${i + 1}`} onClick={() => onChange(items.filter((_, j) => j !== i))}>
                 ×
-              </button>
+              </Button>
             )}
           </div>
         ))}
       </div>
       {items.length < max && (
-        <button type="button" onClick={() => onChange([...items, ""])} className="mt-2 text-caption font-medium text-base-600 hover:text-base-900">
+        <Button variant="transparent" size="xxs" onClick={() => onChange([...items, ""])} className="mt-2 -ml-2">
           + Add
-        </button>
+        </Button>
       )}
-    </fieldset>
+    </FieldGroup>
   );
 }
 
@@ -139,6 +170,9 @@ export default function DnaEditor({
   }
 
   const secondary = dna.secondary_archetypes;
+  // Once a save has been refused, each field shows its problems live, so a note clears the moment
+  // the field is fixed (the list above the buttons stays as that attempt found it)
+  const at = (path: string) => (problems.length ? problemsAt(verdict.errors, path) : undefined);
   return (
     <form
       className="mt-2"
@@ -149,49 +183,49 @@ export default function DnaEditor({
     >
       <Section title={`Editing v${version.version_no} (saved as a new version)`}>
         <div className="space-y-4">
-          <label className="block">
-            <span className="mb-1.5 block text-caption font-medium text-base-500">Concept</span>
-            <input value={dna.concept} maxLength={160} onChange={(e) => set({ concept: e.target.value })} className={field} />
-          </label>
+          <Field label="Concept" error={at("concept")}>
+            <Input value={dna.concept} maxLength={160} autoComplete="off" onChange={(e) => set({ concept: e.target.value })} />
+          </Field>
           {/* Creative Intelligence 3.0: the line the post page leads with */}
           {dna.strategy_headline !== undefined && (
             <>
-              <label className="block">
-                <span className="mb-1.5 block text-caption font-medium text-base-500">Strategy headline (8 to 14 words)</span>
-                <input value={dna.strategy_headline} maxLength={110} onChange={(e) => set({ strategy_headline: e.target.value })} className={field} />
-              </label>
-              <label className="block">
-                <span className="mb-1.5 block text-caption font-medium text-base-500">Strategy summary (one or two sentences)</span>
-                <textarea rows={2} value={dna.strategy_summary ?? ""} maxLength={280} onChange={(e) => set({ strategy_summary: e.target.value })} className={field} />
-              </label>
+              <Field label="Strategy headline (8 to 14 words)" error={at("strategy_headline")}>
+                <Input value={dna.strategy_headline} maxLength={110} autoComplete="off" onChange={(e) => set({ strategy_headline: e.target.value })} />
+              </Field>
+              <Field label="Strategy summary (one or two sentences)" error={at("strategy_summary")}>
+                <Textarea rows={2} value={dna.strategy_summary ?? ""} maxLength={280} onChange={(e) => set({ strategy_summary: e.target.value })} />
+              </Field>
             </>
           )}
-          <label className="block">
-            <span className="mb-1.5 block text-caption font-medium text-base-500">Summary</span>
-            <textarea rows={4} value={dna.creative_summary} maxLength={600} onChange={(e) => set({ creative_summary: e.target.value })} className={field} />
-          </label>
-          <label className="block">
-            <span className="mb-1.5 block text-caption font-medium text-base-500">Intent</span>
-            <input value={dna.content_intent} maxLength={280} onChange={(e) => set({ content_intent: e.target.value })} className={field} />
-          </label>
+          <Field label="Summary" error={at("creative_summary")}>
+            <Textarea rows={4} value={dna.creative_summary} maxLength={600} onChange={(e) => set({ creative_summary: e.target.value })} />
+          </Field>
+          <Field label="Intent" error={at("content_intent")}>
+            <Input value={dna.content_intent} maxLength={280} autoComplete="off" onChange={(e) => set({ content_intent: e.target.value })} />
+          </Field>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block">
-              <span className="mb-1.5 block text-caption font-medium text-base-500">Primary archetype</span>
-              <select value={dna.primary_archetype.slug} onChange={(e) => set({ primary_archetype: { ...dna.primary_archetype, slug: e.target.value as CreativeDna["primary_archetype"]["slug"] } })} className={cx(select, "w-full")}>
+            <Field label="Primary archetype" error={at("primary_archetype")}>
+              <select
+                value={dna.primary_archetype.slug}
+                onChange={(e) => set({ primary_archetype: { ...dna.primary_archetype, slug: e.target.value as CreativeDna["primary_archetype"]["slug"] } })}
+                className={cx(select, "w-full")}
+              >
                 <ArchetypeOptions />
               </select>
-            </label>
-            <label className="block">
-              <span className="mb-1.5 block text-caption font-medium text-base-500">Objective</span>
-              <select value={dna.marketing_objective.slug} onChange={(e) => set({ marketing_objective: { ...dna.marketing_objective, slug: e.target.value as CreativeDna["marketing_objective"]["slug"] } })} className={cx(select, "w-full")}>
+            </Field>
+            <Field label="Objective" error={at("marketing_objective")}>
+              <select
+                value={dna.marketing_objective.slug}
+                onChange={(e) => set({ marketing_objective: { ...dna.marketing_objective, slug: e.target.value as CreativeDna["marketing_objective"]["slug"] } })}
+                className={cx(select, "w-full")}
+              >
                 <Options dimension="objective" />
               </select>
-            </label>
+            </Field>
           </div>
 
-          <fieldset>
-            <legend className="mb-1.5 text-caption font-medium text-base-500">Secondary archetypes (up to 3)</legend>
+          <FieldGroup legend="Secondary archetypes (up to 3)" error={at("secondary_archetypes")}>
             <div className="flex flex-wrap gap-2">
               {[0, 1, 2].map((i) => (
                 <select
@@ -212,38 +246,38 @@ export default function DnaEditor({
                 </select>
               ))}
             </div>
-          </fieldset>
+          </FieldGroup>
 
           <div className="grid gap-3 sm:grid-cols-[auto_1fr]">
-            <label className="block">
-              <span className="mb-1.5 block text-caption font-medium text-base-500">Hook technique</span>
+            <Field label="Hook technique" error={at("hook.technique")}>
               <select value={dna.hook.technique} onChange={(e) => set({ hook: { ...dna.hook, technique: e.target.value as CreativeDna["hook"]["technique"] } })} className={select}>
                 <Options dimension="hook_technique" />
               </select>
-            </label>
-            <label className="block">
-              <span className="mb-1.5 block text-caption font-medium text-base-500">Hook as written (exactly)</span>
-              <input value={dna.hook.observed_text ?? ""} maxLength={240} onChange={(e) => set({ hook: { ...dna.hook, observed_text: e.target.value || null } })} className={field} />
-            </label>
+            </Field>
+            <Field label="Hook as written (exactly)" error={at("hook.observed_text")}>
+              <Input
+                value={dna.hook.observed_text ?? ""}
+                maxLength={240}
+                autoComplete="off"
+                onChange={(e) => set({ hook: { ...dna.hook, observed_text: e.target.value || null } })}
+              />
+            </Field>
           </div>
 
           <div>
-            <label className="block">
-              <span className="mb-1.5 block text-caption font-medium text-base-500">Narrative pattern</span>
+            <Field label="Narrative pattern" error={at("narrative.pattern")}>
               <select value={dna.narrative.pattern} onChange={(e) => set({ narrative: { ...dna.narrative, pattern: e.target.value as CreativeDna["narrative"]["pattern"] } })} className={select}>
                 <Options dimension="narrative_pattern" />
               </select>
-            </label>
-            <label className="mt-3 block">
-              <span className="mb-1.5 block text-caption font-medium text-base-500">Arc</span>
-              <textarea rows={2} value={dna.narrative.arc} maxLength={400} onChange={(e) => set({ narrative: { ...dna.narrative, arc: e.target.value } })} className={field} />
-            </label>
-            <fieldset className="mt-3">
-              <legend className="mb-1.5 text-caption font-medium text-base-500">Slide roles (by position)</legend>
+            </Field>
+            <Field label="Arc" error={at("narrative.arc")} className="mt-3">
+              <Textarea rows={2} value={dna.narrative.arc} maxLength={400} onChange={(e) => set({ narrative: { ...dna.narrative, arc: e.target.value } })} />
+            </Field>
+            <FieldGroup legend="Slide roles (by position)" error={at("narrative.slide_roles")} className="mt-3">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {dna.narrative.slide_roles.map((s, i) => (
                   <label key={s.position} className="flex items-center gap-2">
-                    <span className="w-5 text-right font-mono text-micro text-base-500">{s.position}</span>
+                    <span className="w-5 text-right font-mono text-micro text-secondary-foreground">{s.position}</span>
                     <select
                       aria-label={`Role of position ${s.position}`}
                       value={s.role}
@@ -257,60 +291,58 @@ export default function DnaEditor({
                   </label>
                 ))}
               </div>
-            </fieldset>
+            </FieldGroup>
           </div>
 
-          <fieldset>
-            <legend className="mb-2 text-caption font-medium text-base-500">Why it might work (2 to 4 hypotheses; evidence kept)</legend>
+          <FieldGroup legend="Why it might work (2 to 4 hypotheses; evidence kept)" error={at("creative_rationale")}>
             <div className="space-y-2">
               {dna.creative_rationale.map((r, i) => (
-                <textarea
+                <Textarea
                   key={i}
                   aria-label={`Hypothesis ${i + 1}`}
                   rows={2}
                   value={r.hypothesis}
                   maxLength={320}
                   onChange={(e) => set({ creative_rationale: dna.creative_rationale.map((x, j) => (j === i ? { ...x, hypothesis: e.target.value } : x)) })}
-                  className={field}
                 />
               ))}
             </div>
-          </fieldset>
+          </FieldGroup>
 
-          <List label="Takeaways" items={dna.takeaways} min={3} max={5} onChange={(takeaways) => set({ takeaways })} />
-          <List label="Adaptation ideas" items={dna.adaptation_ideas} min={1} max={3} onChange={(adaptation_ideas) => set({ adaptation_ideas })} />
+          <List label="Takeaways" items={dna.takeaways} min={3} max={5} error={at("takeaways")} onChange={(takeaways) => set({ takeaways })} />
+          <List label="Adaptation ideas" items={dna.adaptation_ideas} min={1} max={3} error={at("adaptation_ideas")} onChange={(adaptation_ideas) => set({ adaptation_ideas })} />
         </div>
 
         {(problems.length > 0 || verdict.warnings.length > 0) && (
           <div className="mt-4 space-y-1 text-caption">
             {problems.map((p, i) => (
-              <p key={`e${i}`} className="text-danger-600">
+              <p key={`e${i}`} className="text-danger-foreground">
                 {p.message}
                 {p.path && <span className="font-mono"> ({p.path})</span>}
               </p>
             ))}
             {verdict.warnings.map((w, i) => (
-              <p key={`w${i}`} className="text-base-600">
+              <p key={`w${i}`} className="text-secondary-foreground">
                 Check: {w.message}
               </p>
             ))}
           </div>
         )}
-        {error && <p className="mt-3 text-caption text-danger-600">{error}</p>}
+        {error && <p className="mt-3 text-caption text-danger-foreground">{error}</p>}
 
         <div className="mt-5 flex flex-wrap gap-2">
-          <button type="button" className={solidButton} disabled={!!busy} onClick={() => save(true, true)}>
+          <Button variant="default" size="sm" shape="pill" disabled={!!busy} onClick={() => save(true, true)}>
             {busy === "publish" ? "Publishing…" : "Save, approve and publish"}
-          </button>
-          <button type="button" className={quietButton} disabled={!!busy} onClick={() => save(true, false)}>
+          </Button>
+          <Button variant="secondary" size="sm" shape="pill" disabled={!!busy} onClick={() => save(true, false)}>
             {busy === "approve" ? "Saving…" : "Save and approve"}
-          </button>
-          <button type="submit" className={quietButton} disabled={!!busy}>
+          </Button>
+          <Button type="submit" variant="secondary" size="sm" shape="pill" disabled={!!busy}>
             {busy === "save" ? "Saving…" : "Save for review"}
-          </button>
-          <button type="button" className={quietButton} disabled={!!busy} onClick={onCancel}>
+          </Button>
+          <Button variant="secondary" size="sm" shape="pill" disabled={!!busy} onClick={onCancel}>
             Cancel
-          </button>
+          </Button>
         </div>
       </Section>
     </form>

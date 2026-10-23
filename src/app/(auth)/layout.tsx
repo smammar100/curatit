@@ -32,7 +32,7 @@ export default async function AuthLayout({
 
   return (
     <BaseLayout hideNavigation hideFooter>
-      <div className="relative min-h-dvh overflow-clip bg-white">
+      <div className="relative min-h-dvh overflow-clip bg-page">
         <PostWall covers={covers} />
         <div className="relative flex min-h-dvh items-center justify-center px-4 py-8">
           {/* The card floats over imagery on Interfere's extra large shadow, which has its own dark
@@ -40,7 +40,7 @@ export default async function AuthLayout({
           <div className="w-full max-w-md rounded-2xl bg-container p-6 shadow-xl sm:p-8">
             <Link
               href="/"
-              className="mx-auto mb-6 block w-fit"
+              className="mx-auto mb-6 block w-fit rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus"
               aria-label="Go to homepage"
             >
               <Lockup />

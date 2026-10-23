@@ -9,7 +9,8 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { isAuthWeakPasswordError, type AuthError } from "@supabase/supabase-js";
 import { captureServerEvent } from "@/lib/analytics-server";
-import { authMessage, emailProblem, passwordProblem, safeNext } from "@/lib/auth";
+import { authMessage, emailProblem, GUARD_MESSAGES, passwordProblem, safeNext } from "@/lib/auth";
+import { isDisposableEmail, overLimit } from "@/lib/auth-guard";
 import { sendWelcomeEmail } from "@/lib/email";
 import { SITE_URL } from "@/lib/site";
 import { createClient } from "@/utils/supabase/server";
@@ -55,6 +56,7 @@ export async function signIn(_: AuthState, form: FormData): Promise<AuthState> {
   // The form checks these first; this covers a submit without JavaScript
   const fields = invalid({ email: emailProblem(email), password: password ? null : "Enter your password." });
   if (fields) return { fields, email };
+  if (await overLimit("sign_in")) return { error: GUARD_MESSAGES.limited, email };
   const { error } = await (await supabase()).auth.signInWithPassword({ email, password });
   if (error) return { error: authMessage(error.code), email };
   redirect(safeNext(form.get("next")));
@@ -65,8 +67,9 @@ export async function signUp(_: AuthState, form: FormData): Promise<AuthState> {
   const password = String(form.get("password") ?? "");
   const next = safeNext(form.get("next"));
   // The form checks these first; this covers a submit without JavaScript
-  const fields = invalid({ email: emailProblem(email), password: passwordProblem(password) });
+  const fields = invalid({ email: emailProblem(email) ?? (isDisposableEmail(email) ? GUARD_MESSAGES.disposable : null), password: passwordProblem(password) });
   if (fields) return { fields, email };
+  if (await overLimit("sign_up")) return { error: GUARD_MESSAGES.limited, email };
   const { data, error } = await (await supabase()).auth.signUp({
     email,
     password,
@@ -100,6 +103,10 @@ export async function signUp(_: AuthState, form: FormData): Promise<AuthState> {
 
 export async function resendConfirmation(_: AuthState, form: FormData): Promise<AuthState> {
   const email = field(form, "email");
+  // The address comes from the "Check your email" screen, but the action can be called with any
+  const problem = emailProblem(email);
+  if (problem) return { error: problem, sent: email };
+  if (await overLimit("resend")) return { error: GUARD_MESSAGES.limited, sent: email };
   const { error } = await (await supabase()).auth.resend({
     type: "signup",
     email,
@@ -112,6 +119,7 @@ export async function requestPasswordReset(_: AuthState, form: FormData): Promis
   const email = field(form, "email");
   const problem = emailProblem(email);
   if (problem) return { fields: { email: problem }, email };
+  if (await overLimit("reset")) return { error: GUARD_MESSAGES.limited, email };
   const { error } = await (await supabase()).auth.resetPasswordForEmail(email, { redirectTo: await callback("/reset-password") });
   // Rate limits are worth saying; whether the address has an account isn't, so this answers the
   // same for any address (sign-up does say, as it has to refuse the address anyway)

@@ -41,7 +41,7 @@ Contracts                  contracts.ts (zod, one source for MCP schemas, REST v
 
 ## Retrieval
 
-Full-text (`websearch_to_tsquery`) plus taxonomy filters, through `curatit_mcp_search_v2`, ranked by the function. No semantic retrieval: no embeddings exist and the spec says to add them only when an evaluation shows benefit. Two things the API adds: `query_mode: "any_word"` (explicit, reported back) for natural-language queries the all-words default can't match, and `suggestions` on an empty page instead of silent relaxation. Cursors are HMAC-signed and bound to the search and the account.
+Full-text (`websearch_to_tsquery`) plus taxonomy filters, through `curatit_mcp_search_v2`, ranked by the function. `query_mode: "natural"` is the default: the shared interpreter maps supported English descriptions to catalog filters and leftover keywords. `applied` reports the original query and effective interpretation; explicit filters take precedence with a warning. `all_words` retains literal matching and `any_word` explicitly widens literal matching. Empty results have suggestions, never silent relaxation. No embeddings or model calls are used. Cursors are HMAC-signed and bound to the original query, interpreted search and account. See [natural-language search](../natural-language-search.md) for scope and tests.
 
 ## Brief generation
 

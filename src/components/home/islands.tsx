@@ -45,4 +45,5 @@ export const DetailDemo = island(() => import("./DetailDemo"));
 export const BoardDemo = island(() => import("./BoardDemo"));
 export const Categories = island(() => import("./Categories"));
 export const McpDemo = island(() => import("./McpDemo"));
+export const DnaDemo = island(() => import("./DnaDemo"));
 export const LogoReel = island(() => import("./LogoReel"));

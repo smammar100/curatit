@@ -40,10 +40,10 @@ export default function HowItWorks() {
     <section id="how-it-works">
       <Wrapper variant="standard" className="section-y">
         <div className="text-balance max-w-2xl mx-auto text-center">
-          <Text tag="h2" variant="displayLG" className="text-base-900">
+          <Text tag="h2" variant="h1" className="text-primary-foreground">
             How it works
           </Text>
-          <Text tag="p" variant="textBase" className="text-base-600 mt-4">
+          <Text tag="p" variant="body" className="text-secondary-foreground mt-4">
             Find an example, see how it's built, save it for later. Try the
             cards below.
           </Text>
@@ -52,25 +52,27 @@ export default function HowItWorks() {
           {steps.map((step) => (
             <li
               key={step.title}
-              className="relative flex min-h-110 min-w-0 flex-col overflow-clip rounded-2xl bg-base-50 md:aspect-[421/560]"
+              className="relative flex min-h-110 min-w-0 flex-col overflow-clip rounded-2xl bg-card md:aspect-[421/560]"
             >
               <div className="relative z-10 px-6 py-7 lg:px-8">
                 <Text
                   tag="h3"
-                  variant="displayXS"
-                  className="text-base-900 text-balance"
+                  variant="h5"
+                  className="text-primary-foreground text-balance"
                 >
                   {step.title}
                 </Text>
                 <Text
                   tag="p"
-                  variant="textSM"
-                  className="mt-2 text-base-600 text-pretty"
+                  variant="bodySM"
+                  className="mt-2 text-secondary-foreground text-pretty"
                 >
                   {step.muted}
                 </Text>
               </div>
-              {/* Every illustration fills the same box and runs off the card's bottom edge, which fades it out */}
+              {/* Every illustration fills the same box and runs off the card's bottom edge, which
+                  fades it out. The fade ends in the card's colour, opaque: bg-card is a tint, so
+                  it's the page's colour with the card's tint over it (::before) */}
               <div
                 role="group"
                 aria-label={step.demoLabel}
@@ -79,7 +81,7 @@ export default function HowItWorks() {
                 <div className="absolute inset-x-6 top-0 -bottom-6 lg:inset-x-8">
                   {step.demo}
                 </div>
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/5 bg-linear-to-b from-transparent to-base-50" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/5 bg-linear-to-b from-transparent to-page before:absolute before:inset-0 before:bg-linear-to-b before:from-transparent before:to-card" />
               </div>
             </li>
           ))}

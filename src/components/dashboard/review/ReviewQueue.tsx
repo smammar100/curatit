@@ -4,9 +4,15 @@
 // and failed, for editors. AI drafts wait here until an editor approves them; nothing an AI wrote
 // is public before that. Analyses themselves run on a person's machine (npm run creative -- work),
 // so the queue shows what's waiting for that, not a progress bar.
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import Button from "@/components/fundations/elements/Button";
+import Tabs, {
+  Tab,
+  TabList,
+  TabPanel,
+} from "@/components/fundations/molecules/Tabs";
 import { cx } from "@/lib/cx";
 import { refreshPostPage } from "@/app/dashboard/review/actions";
 import { track } from "@/lib/analytics";
@@ -25,18 +31,17 @@ import {
   money,
   Notice,
   Pill,
-  quietButton,
   reviewHref,
   seconds,
-  solidButton,
   sourceLabel,
   StatusPill,
   useBusy,
 } from "./parts";
 import { saveWalk, walkOf } from "./walk";
+import { ReviewArt } from "../EmptyArt";
 
 const TABS = ["Needs review", "Failed", "Published", "Recent runs"] as const;
-type Tab = (typeof TABS)[number];
+type List = (typeof TABS)[number];
 
 export default function ReviewQueue() {
   const editor = useIsEditor();
@@ -74,7 +79,7 @@ export function QueueView({
   failed: string | null;
   onRefresh: () => void;
 }) {
-  const [tab, setTab] = useState<Tab>("Needs review");
+  const [tab, setTab] = useState<List>("Needs review");
   const counts = queue?.counts;
   const tiles: [string, number | undefined][] = [
     ["Queued", counts?.pending],
@@ -104,20 +109,55 @@ export function QueueView({
       ),
     );
   }, [queue, tab]);
-  const lists: Record<Tab, number | undefined> = {
+  const lists: Record<List, number | undefined> = {
     "Needs review": queue?.review.length,
     Failed: queue?.failed.length,
     Published: queue?.published.length,
     "Recent runs": queue?.runs.length,
   };
 
+  // The open list, rendered only while its tab is selected
+  const shown: ReactNode = (
+    <>
+      {failed && (
+        <p className="rounded-2xl bg-danger-subtle px-4 py-3 text-body text-danger-foreground">
+          Couldn&apos;t load the queue: {failed}
+        </p>
+      )}
+      {!queue && !failed && <ListSkeleton />}
+      {queue && tab === "Recent runs" && <Runs queue={queue} />}
+      {queue && tab === "Needs review" && queue.review.length > 1 && (
+        <ApproveAll rows={queue.review} onDone={onRefresh} />
+      )}
+      {queue && tab !== "Recent runs" && (
+        <Rows
+          rows={
+            tab === "Needs review"
+              ? queue.review
+              : tab === "Failed"
+                ? queue.failed
+                : queue.published
+          }
+          empty={
+            tab === "Needs review"
+              ? "Nothing to review."
+              : tab === "Failed"
+                ? "No failed analyses."
+                : "No published analyses yet."
+          }
+          onChange={onRefresh}
+        />
+      )}
+    </>
+  );
+
   return (
     <>
-      <div className="max-w-5xl">
-        <h1 className="font-display text-display font-light text-base-900">
+      <div>
+        <h1 className="font-display text-display font-light text-primary-foreground">
           Analysis review
         </h1>
-        <p className="mt-1 max-w-2xl text-subtitle text-pretty text-base-500">
+        <p className="mt-1 max-w-2xl text-subtitle text-pretty text-secondary-foreground">
           AI drafts wait here until an editor approves them. Nothing is public
           before that, and a new analysis never replaces one you&apos;ve
           reviewed.
@@ -127,15 +167,17 @@ export function QueueView({
           {tiles.map(([name, value]) => (
             <div
               key={name}
-              className="flex min-w-0 flex-col-reverse rounded-2xl bg-base-50 px-3.5 py-3"
+              className="flex min-w-0 flex-col-reverse rounded-2xl bg-card px-3.5 py-3"
             >
-              <dt className="truncate text-caption text-base-500">{name}</dt>
+              <dt className="truncate text-caption text-secondary-foreground">
+                {name}
+              </dt>
               <dd
                 className={cx(
                   "text-title font-medium tabular-nums",
                   name === "Failed" && value
-                    ? "text-danger-600"
-                    : "text-base-900",
+                    ? "text-danger-foreground"
+                    : "text-primary-foreground",
                 )}
               >
                 {value ?? "–"}
@@ -144,7 +186,7 @@ export function QueueView({
           ))}
         </dl>
         {queue?.oldestPending && (
-          <p className="mt-2 text-caption text-base-500">
+          <p className="mt-2 text-caption text-secondary-foreground">
             Oldest queued {ago(queue.oldestPending)}. Run{" "}
             <code className="font-mono text-micro">
               npm run creative -- work
@@ -153,59 +195,23 @@ export function QueueView({
           </p>
         )}
 
-        <div
-          role="tablist"
-          aria-label="Lists"
-          className="mt-8 flex flex-wrap gap-1.5"
-        >
+        {/* The shared Tabs: one tab stop, ← / → / Home / End marked handled so the dashboard's
+            own arrow handlers leave them be; the row wraps on a narrow screen. mt-7 and the panels' mt-3
+            land the row where the hand-built one sat (32px up, 16px down), past the list's py-1 */}
+        <Tabs value={tab} onValueChange={setTab} className="mt-7">
+          <TabList aria-label="Lists" variant="pill" wrap>
+            {TABS.map((name) => (
+              <Tab key={name} value={name} count={lists[name]}>
+                {name}
+              </Tab>
+            ))}
+          </TabList>
           {TABS.map((name) => (
-            <button
-              key={name}
-              type="button"
-              role="tab"
-              aria-selected={tab === name}
-              onClick={() => setTab(name)}
-              className="inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-body font-medium text-base-600 transition-[background-color,color] duration-150 hover:bg-base-50 hover:text-base-900 aria-selected:bg-base-900 aria-selected:text-white"
-            >
-              {name}
-              {lists[name] !== undefined && (
-                <span className="tabular-nums opacity-70">{lists[name]}</span>
-              )}
-            </button>
+            <TabPanel key={name} value={name} className="mt-3">
+              {tab === name && shown}
+            </TabPanel>
           ))}
-        </div>
-
-        <div role="tabpanel" aria-label={tab} className="mt-4">
-          {failed && (
-            <p className="rounded-2xl bg-danger-50 px-4 py-3 text-body text-danger-700">
-              Couldn&apos;t load the queue: {failed}
-            </p>
-          )}
-          {!queue && !failed && <ListSkeleton />}
-          {queue && tab === "Recent runs" && <Runs queue={queue} />}
-          {queue && tab === "Needs review" && queue.review.length > 1 && (
-            <ApproveAll rows={queue.review} onDone={onRefresh} />
-          )}
-          {queue && tab !== "Recent runs" && (
-            <Rows
-              rows={
-                tab === "Needs review"
-                  ? queue.review
-                  : tab === "Failed"
-                    ? queue.failed
-                    : queue.published
-              }
-              empty={
-                tab === "Needs review"
-                  ? "Nothing to review."
-                  : tab === "Failed"
-                    ? "No failed analyses."
-                    : "No published analyses yet."
-              }
-              onChange={onRefresh}
-            />
-          )}
-        </div>
+        </Tabs>
       </div>
     </>
   );
@@ -274,45 +280,47 @@ function ApproveAll({
   const n = targets.length;
   return (
     <div
-      className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-base-50 px-4 py-3"
+      className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-card px-4 py-3"
       aria-live="polite"
     >
       {phase === "idle" && (
         <>
-          <p className="text-body text-base-600">
+          <p className="text-body text-secondary-foreground">
             {n} {n === 1 ? "analysis is" : "analyses are"} waiting.
           </p>
-          <button
-            type="button"
-            className={solidButton}
+          <Button
+            variant="default"
+            size="sm"
+            shape="pill"
             onClick={() => setPhase("confirm")}
           >
             Approve and publish all {n}
-          </button>
+          </Button>
         </>
       )}
       {phase === "confirm" && (
         <>
-          <p className="text-body text-base-900">
+          <p className="text-body text-primary-foreground">
             Publish all {n}? Each goes live as it is. Any of them can be
             unpublished afterwards.
           </p>
           <div className="flex gap-2">
-            <button type="button" className={solidButton} onClick={run}>
+            <Button variant="default" size="sm" shape="pill" onClick={run}>
               Publish all {n}
-            </button>
-            <button
-              type="button"
-              className={quietButton}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              shape="pill"
               onClick={() => setPhase("idle")}
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </>
       )}
       {phase === "running" && (
-        <p className="text-body text-base-900 tabular-nums">
+        <p className="text-body text-primary-foreground tabular-nums">
           Publishing{" "}
           {progress.done + progress.failed + 1 > n
             ? n
@@ -324,7 +332,9 @@ function ApproveAll({
         <p
           className={cx(
             "text-body",
-            progress.failed ? "text-danger-700" : "text-base-900",
+            progress.failed
+              ? "text-danger-foreground"
+              : "text-primary-foreground",
           )}
         >
           Published {progress.done} of {n}.
@@ -337,11 +347,24 @@ function ApproveAll({
   );
 }
 
+// An empty list: the cleared-queue drawing over one line saying which list is empty
+function Empty({ children }: { children: ReactNode }) {
+  return (
+    <div className="rounded-2xl bg-card px-4 pt-10 pb-8 text-center">
+      <ReviewArt className="mx-auto mb-5 w-56" />
+      <p className="text-body text-secondary-foreground">{children}</p>
+    </div>
+  );
+}
+
 function ListSkeleton() {
   return (
     <ul aria-hidden="true" className="space-y-2">
       {[0, 1, 2].map((i) => (
-        <li key={i} className="h-20 animate-pulse rounded-2xl bg-base-50" />
+        <li
+          key={i}
+          className="h-20 animate-pulse rounded-2xl bg-card motion-reduce:animate-none"
+        />
       ))}
     </ul>
   );
@@ -356,12 +379,7 @@ function Rows({
   empty: string;
   onChange: () => void;
 }) {
-  if (!rows.length)
-    return (
-      <p className="rounded-2xl bg-base-50 px-4 py-6 text-center text-body text-base-500">
-        {empty}
-      </p>
-    );
+  if (!rows.length) return <Empty>{empty}</Empty>;
   return (
     <ul className="space-y-2">
       {rows.map((row) => (
@@ -376,8 +394,8 @@ function Row({ row, onChange }: { row: QueueRow; onChange: () => void }) {
   const dna = analysis?.creative_dna;
   const { busy, error, run } = useBusy();
   return (
-    <li className="relative flex items-center gap-3 rounded-2xl p-2 pr-3 ring-1 ring-base-200 transition-[background-color] duration-150 hover:bg-base-50">
-      <div className="relative aspect-4/5 w-12 shrink-0 overflow-hidden rounded-lg bg-base-100 outline-1 -outline-offset-1 outline-edge">
+    <li className="relative flex items-center gap-3 rounded-2xl p-2 pr-3 ring-1 ring-border-default transition-[background-color] duration-150 ease-out-quint hover:bg-transparent-hover">
+      <div className="relative aspect-4/5 w-12 shrink-0 overflow-hidden rounded-sm bg-component outline-1 -outline-offset-1 outline-edge">
         {post.images[0] && (
           <Image
             src={post.images[0]}
@@ -389,30 +407,34 @@ function Row({ row, onChange }: { row: QueueRow; onChange: () => void }) {
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-2 truncate text-caption text-base-500">
-          <span className="font-medium text-base-700">{post.brand}</span>
+        <p className="flex items-center gap-2 truncate text-caption text-secondary-foreground">
+          <span className="font-medium text-primary-foreground">
+            {post.brand}
+          </span>
           <span>{post.category}</span>
           <span className="font-mono text-micro">{post.short_code}</span>
         </p>
         <Link
           href={reviewHref(post.id)}
-          className="mt-0.5 block truncate text-subtitle font-medium text-base-900 after:absolute after:inset-0 after:rounded-2xl"
+          className="mt-0.5 block truncate text-subtitle font-medium text-primary-foreground after:absolute after:inset-0 after:rounded-2xl"
         >
           {dna?.concept ?? (job ? "Analysis failed" : "No analysis yet")}
         </Link>
         {job?.state === "failed" ? (
-          <p className="truncate text-caption text-danger-600">
+          <p className="truncate text-caption text-danger-foreground">
             {job.last_failure_kind}: {job.last_error}
           </p>
         ) : (
           dna && (
-            <p className="truncate text-caption text-base-500">
+            <p className="truncate text-caption text-secondary-foreground">
               {label("archetype", dna.primary_archetype.slug)} ·{" "}
               {label("objective", dna.marketing_objective.slug)}
             </p>
           )
         )}
-        {error && <p className="text-caption text-danger-600">{error}</p>}
+        {error && (
+          <p className="text-caption text-danger-foreground">{error}</p>
+        )}
       </div>
       <div className="relative z-10 flex shrink-0 items-center gap-1.5">
         {proposals > 0 && (
@@ -430,9 +452,10 @@ function Row({ row, onChange }: { row: QueueRow; onChange: () => void }) {
         {analysis && <StatusPill status={analysis.review_status} />}
         {analysis?.published_at && <Pill tone="strong">Public</Pill>}
         {job?.state === "failed" && (
-          <button
-            type="button"
-            className={cx(quietButton, "h-8 px-3")}
+          <Button
+            variant="secondary"
+            size="sm"
+            shape="pill"
             disabled={busy !== null}
             onClick={() =>
               run("retry", () => reprocess(post.id)).then(
@@ -441,7 +464,7 @@ function Row({ row, onChange }: { row: QueueRow; onChange: () => void }) {
             }
           >
             {busy ? "Queuing…" : `Retry (${job.attempts}/${job.max_attempts})`}
-          </button>
+          </Button>
         )}
       </div>
     </li>
@@ -449,17 +472,12 @@ function Row({ row, onChange }: { row: QueueRow; onChange: () => void }) {
 }
 
 function Runs({ queue }: { queue: Queue }) {
-  if (!queue.runs.length)
-    return (
-      <p className="rounded-2xl bg-base-50 px-4 py-6 text-center text-body text-base-500">
-        No runs yet.
-      </p>
-    );
+  if (!queue.runs.length) return <Empty>No runs yet.</Empty>;
   return (
-    <div className="overflow-x-auto rounded-2xl ring-1 ring-base-200">
+    <div className="overflow-x-auto rounded-2xl ring-1 ring-border-default">
       <table className="w-full min-w-[40rem] text-left text-body">
-        <thead className="text-caption text-base-500">
-          <tr className="border-b border-base-100">
+        <thead className="text-caption text-secondary-foreground">
+          <tr className="border-b border-border-default">
             {[
               "When",
               "Post",
@@ -475,17 +493,17 @@ function Runs({ queue }: { queue: Queue }) {
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-base-100 tabular-nums">
+        <tbody className="divide-y divide-border-default tabular-nums">
           {queue.runs.map((run) => (
             <tr key={run.id}>
-              <td className="px-3 py-2 whitespace-nowrap text-base-500">
+              <td className="px-3 py-2 whitespace-nowrap text-secondary-foreground">
                 {ago(run.started_at)}
               </td>
               <td className="max-w-48 truncate px-3 py-2">
                 {run.post ? (
                   <Link
                     href={reviewHref(run.post_id)}
-                    className="text-base-900 hover:text-accent-600"
+                    className="text-primary-foreground transition-colors duration-150 ease-out-quint hover:text-brand-foreground"
                   >
                     {run.post.brand} · {run.post.short_code}
                   </Link>
@@ -497,7 +515,7 @@ function Runs({ queue }: { queue: Queue }) {
                 className={cx(
                   "px-3 py-2",
                   (run.status === "failed" || run.status === "invalid") &&
-                    "text-danger-600",
+                    "text-danger-foreground",
                 )}
                 title={run.error ?? undefined}
               >
@@ -518,7 +536,7 @@ function Runs({ queue }: { queue: Queue }) {
           ))}
         </tbody>
       </table>
-      <p className="border-t border-base-100 px-3 py-2 text-caption text-base-500">
+      <p className="border-t border-border-default px-3 py-2 text-caption text-secondary-foreground">
         Costs are the model provider&apos;s list-price estimates; on a Claude
         subscription they count against its usage limits rather than being
         billed.
