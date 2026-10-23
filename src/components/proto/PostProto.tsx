@@ -11,6 +11,7 @@ import Lockup from "@/components/assets/Lockup";
 import Avatar from "@/components/fundations/elements/Avatar";
 import Badge from "@/components/fundations/elements/Badge";
 import Button from "@/components/fundations/elements/Button";
+import Segmented from "@/components/fundations/elements/Segmented";
 import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
 import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
 import CaretDown from "@/components/fundations/icons/CaretDown";
@@ -45,14 +46,40 @@ function Label({ children }: { children: string }) {
 
 type Related = { shortCode: string; hook: string; cover: string; brand: string; width: number | null; height: number | null };
 import { type Direction } from "@/components/proto/postDirections";
-type Props = { post: PostDetail; analysis: PublicAnalysis | null; related: Related[]; direction: Direction; theme: "light" | "dark" };
+type Props = { post: PostDetail; analysis: PublicAnalysis | null; related: Related[]; direction: Direction; theme: "light" | "dark"; picker?: boolean };
 
-export default function PostProto({ direction, theme, ...rest }: Props) {
+const DIRECTION_TABS: { value: Direction; label: string }[] = [
+  { value: "card", label: "Card" },
+  { value: "studio", label: "Studio" },
+  { value: "pin", label: "Pin" },
+  { value: "shot", label: "Shot" },
+  { value: "inspector", label: "Inspector" },
+];
+
+// The page takes the first direction and theme from the address; the floating bar at the foot
+// switches both without a reload (`picker={false}` hides it, for captures)
+export default function PostProto({ direction: initialDirection, theme: initialTheme, picker = true, ...rest }: Props) {
+  const [direction, setDirection] = useState<Direction>(initialDirection);
+  const [theme, setTheme] = useState(initialTheme);
   const Variant = { card: Card, studio: Studio, pin: Pin, shot: Shot, inspector: Inspector }[direction];
   return (
     <MotionConfig reducedMotion="user">
       <div data-theme-scope={theme} data-theme={theme} className="min-h-dvh bg-page text-body text-foreground">
-        <Variant {...rest} />
+        <Variant key={direction} {...rest} />
+        {picker && (
+          <div data-theme-scope="light" data-theme="light" className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-surface-6 p-1.5 text-body text-foreground shadow-surface-6">
+            <Segmented aria-label="Direction" value={direction} onValueChange={(v) => setDirection(v as Direction)} options={DIRECTION_TABS} />
+            <Segmented
+              aria-label="Theme"
+              value={theme}
+              onValueChange={(v) => setTheme(v as "light" | "dark")}
+              options={[
+                { value: "light", label: "Light" },
+                { value: "dark", label: "Dark" },
+              ]}
+            />
+          </div>
+        )}
       </div>
     </MotionConfig>
   );
@@ -103,7 +130,7 @@ function Thumbs({ post, index, onIndex }: { post: PostDetail; index: number; onI
 
 // ---- 1. Card: after lafys.com's detail page ----
 
-function Card({ post, analysis }: Omit<Props, "direction" | "theme">) {
+function Card({ post, analysis }: Omit<Props, "direction" | "theme" | "picker">) {
   const { index, setIndex, view, setView, saved, setSaved, count, stage, role, ratio } = usePost(post, analysis);
   return (
     <>
@@ -268,7 +295,7 @@ function Fold({ icon: Glyph, label, accessory, open, onToggle, children }: { ico
   );
 }
 
-function Studio({ post, analysis, related }: Omit<Props, "direction" | "theme">) {
+function Studio({ post, analysis, related }: Omit<Props, "direction" | "theme" | "picker">) {
   const { index, setIndex, view, setView, saved, setSaved, count, stage, role, ratio } = usePost(post, analysis);
   const [fold, setFold] = useState<"breakdown" | "colours" | "boards" | null>("breakdown");
   const toggle = (key: typeof fold) => setFold((f) => (f === key ? null : key));
@@ -471,7 +498,7 @@ function Studio({ post, analysis, related }: Omit<Props, "direction" | "theme">)
 // One rounded card over the page, the post on its left half and the actions, title, brand,
 // caption and breakdown on its right; "More like this" as a masonry of real posts under it ----
 
-function Pin({ post, analysis, related }: Omit<Props, "direction" | "theme">) {
+function Pin({ post, analysis, related }: Omit<Props, "direction" | "theme" | "picker">) {
   const { index, setIndex, view, setView, saved, setSaved, count, stage, role, ratio } = usePost(post, analysis);
   return (
     <>
@@ -582,7 +609,7 @@ function Pin({ post, analysis, related }: Omit<Props, "direction" | "theme">) {
 // Title and brand above, the post as wide as the column, a floating rail of round actions on
 // the right, then the breakdown and the Visual DNA side by side under it ----
 
-function Shot({ post, analysis }: Omit<Props, "direction" | "theme">) {
+function Shot({ post, analysis }: Omit<Props, "direction" | "theme" | "picker">) {
   const { index, setIndex, view, setView, saved, setSaved, count, stage, role, ratio } = usePost(post, analysis);
   const rail = [
     { label: saved ? "Saved" : "Save", icon: BookmarkSimple, on: saved, onClick: () => setSaved((v) => !v) },
@@ -698,7 +725,7 @@ function Shot({ post, analysis }: Omit<Props, "direction" | "theme">) {
 // post fills, an Info panel on the right (the colours as dots, Add to a board, then the breakdown),
 // a filmstrip of other posts along the foot ----
 
-function Inspector({ post, analysis, related }: Omit<Props, "direction" | "theme">) {
+function Inspector({ post, analysis, related }: Omit<Props, "direction" | "theme" | "picker">) {
   const { index, setIndex, view, setView, saved, setSaved, count, stage, role, ratio } = usePost(post, analysis);
   const [open, setOpen] = useState(true);
   return (

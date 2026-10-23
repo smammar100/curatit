@@ -2,7 +2,7 @@
 // owner shared (lafys.com's detail page: the work large on the left, one ruled card on the right
 // with the title, the author, a full-width primary action and chip sections). Real post, real
 // published analysis; `?post=<shortCode>` picks another, `?theme=dark` renders it dark for
-// captures, `?direction=studio` is the three-column layout after a reference app's detail page
+// captures (`?picker=0` hides the floating direction bar), `?direction=studio` is the three-column layout after a reference app's detail page
 // (a left column of the author, folds and details, the work in the middle, discussion on the
 // right). Outside the site shell so it reads as a page of its own. Deleted once a direction
 // is chosen.
@@ -14,7 +14,7 @@ import { getPostDetail, getPublishedPosts } from "@/lib/posts";
 
 export const dynamic = "force-dynamic";
 
-export default async function PostProtoPage({ searchParams }: { searchParams: Promise<{ post?: string; theme?: string; direction?: string }> }) {
+export default async function PostProtoPage({ searchParams }: { searchParams: Promise<{ post?: string; theme?: string; direction?: string; picker?: string }> }) {
   const params = await searchParams;
   const posts = await getPublishedPosts();
   let shortCode = params.post;
@@ -33,5 +33,5 @@ export default async function PostProtoPage({ searchParams }: { searchParams: Pr
     .slice(0, 12)
     .map((p) => ({ shortCode: p.shortCode, hook: p.hook, cover: p.images[0], brand: p.brand.name, width: p.width, height: p.height }));
   const direction = DIRECTIONS.includes(params.direction as Direction) ? (params.direction as Direction) : "card";
-  return <PostProto post={post} analysis={analysis} related={related} direction={direction} theme={params.theme === "dark" ? "dark" : "light"} />;
+  return <PostProto post={post} analysis={analysis} related={related} direction={direction} theme={params.theme === "dark" ? "dark" : "light"} picker={params.picker !== "0"} />;
 }
