@@ -211,6 +211,18 @@ and must never be used as fallback public prose. Preserve immutable history and 
 edits. The October 17 cleanup is an editorial repair of existing approved content; the 20 new
 image-reviewed analyses remain drafts until editor approval.
 
+On 2026-10-24, at the owner's request, the 54 posts imported that day (Betterment, Airtasker, 19 more
+Wealthsimple) were analysed the same way in a Claude Code session rather than by the worker: every
+image opened, notes serialized by `scripts/maintenance/build-session-analyses.ts` (which now takes
+`SESSION_MODEL_ID`, here `claude-session-image-review`, and lists every invalid post before writing
+anything), saved through `creative_save_analysis` against each queued job as `needs_review`, none
+published (`docs/creative-eval/session-2026-10-24/`). Stored prose names slides counting from zero;
+notes written counting from one must be shifted before saving, or the site's `numberingOf()` reads
+them as zero-based and every slide number shows one too high. The worker can't use the Claude CLI
+sign-in at `~/.claude` while the desktop app runs, because the app's own session writes its token
+there; a separate profile (`CLAUDE_CONFIG_DIR=C:\Users\1234\.claude-curatit-worker`, signed in on
+2026-10-24) works, with the app's `CLAUDE*`/`ANTHROPIC*` variables unset.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know

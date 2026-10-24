@@ -1,5 +1,5 @@
 // Serializes an image-reviewed session's authored notes; never generates analyses from captions.
-// Usage: npx tsx scripts/maintenance/build-session-analyses.ts <session-directory>
+// Usage: [SESSION_MODEL_ID=<reviewer>] npx tsx scripts/maintenance/build-session-analyses.ts <session-directory>
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import sharp from 'sharp';
@@ -11,11 +11,14 @@ import { PROMPT_VERSION, PIPELINE_VERSION } from '../../src/lib/creative/pipelin
 import { TAXONOMY_VERSION } from '../../src/lib/creative/taxonomy';
 import type { Manifest } from '../../src/lib/creative/prompt';
 const root=process.argv[2];
+// Who reviewed the images: the 17 October batch was a ChatGPT session; set SESSION_MODEL_ID for another reviewer
+const MODEL=process.env.SESSION_MODEL_ID??'chatgpt-image-review';
 if(!root) throw new Error('Supply the directory containing reviewed specs, manifests and images');
 const manifests: Manifest[]=JSON.parse(await readFile(join(root,'new-manifests.json'),'utf8'));
 const specs=JSON.parse(await readFile(join(root,'new-analysis-specs.json'),'utf8'));
 const extras=JSON.parse(await readFile(join(root,'new-analysis-extras.json'),'utf8'));
 const out=[];
+const failed: {code:string,errors:unknown}[]=[];
 for(const m of manifests){
  const s=specs[m.short_code],e=extras[m.short_code];
  if(!s||!e||s.slides.length!==m.media.expected)throw new Error(`Unreviewed/incomplete: ${m.short_code}`);
@@ -35,9 +38,11 @@ for(const m of manifests){
  const post={caption:m.caption,expectedSlides:m.media.expected};
  const a=validateDna(dna,post,perception),b=validatePerception(perception,post);
  const errors=[...a.errors,...b.errors],warnings=[...a.warnings,...b.warnings];
- if(errors.length)throw new Error(`${m.short_code}: ${JSON.stringify(errors)}`);
- const inputFingerprint=fingerprint({postId:m.id,caption:m.caption,brand:m.brand.slug??'',category:m.storage_folder??m.category.slug??'',images:m.images.map(i=>({position:i.position,path:i.path,tag:i.etag??`${i.size??0}`})),model:'chatgpt-image-review',promptVersion:PROMPT_VERSION,taxonomyVersion:TAXONOMY_VERSION});
- out.push({post_id:m.id,short_code:m.short_code,content_fingerprint:m.content_fingerprint,pipeline_version:PIPELINE_VERSION,version:{summary:dna.creative_summary,hook:dna.strategy_headline,why_it_works:dna.creative_rationale.map(x=>x.hypothesis).join(' '),takeaways:dna.takeaways,creative_dna:dna,perception,input_fingerprint:inputFingerprint,model_id:'chatgpt-image-review',prompt_version:PROMPT_VERSION,taxonomy_version:TAXONOMY_VERSION,validation:{errors,warnings,method:'session visual review of every stored image'},image_analysis_complete:true,expected_slides:slides.length,processed_slides:slides.length},slides});
+ if(errors.length){failed.push({code:m.short_code,errors});continue;}
+ const inputFingerprint=fingerprint({postId:m.id,caption:m.caption,brand:m.brand.slug??'',category:m.storage_folder??m.category.slug??'',images:m.images.map(i=>({position:i.position,path:i.path,tag:i.etag??`${i.size??0}`})),model:MODEL,promptVersion:PROMPT_VERSION,taxonomyVersion:TAXONOMY_VERSION});
+ out.push({post_id:m.id,short_code:m.short_code,content_fingerprint:m.content_fingerprint,pipeline_version:PIPELINE_VERSION,version:{summary:dna.creative_summary,hook:dna.strategy_headline,why_it_works:dna.creative_rationale.map(x=>x.hypothesis).join(' '),takeaways:dna.takeaways,creative_dna:dna,perception,input_fingerprint:inputFingerprint,model_id:MODEL,prompt_version:PROMPT_VERSION,taxonomy_version:TAXONOMY_VERSION,validation:{errors,warnings,method:'session visual review of every stored image'},image_analysis_complete:true,expected_slides:slides.length,processed_slides:slides.length},slides});
 }
+// Every post's problems at once, and nothing written until all of them pass
+if(failed.length){console.error(JSON.stringify(failed,null,1));process.exit(1);}
 await writeFile(join(root,'new-analyses.json'),JSON.stringify(out,null,2));
 console.log(JSON.stringify({posts:out.length,slides:out.reduce((n,x)=>n+x.slides.length,0),warnings:out.filter(x=>x.version.validation.warnings.length).map(x=>({code:x.short_code,warnings:x.version.validation.warnings}))}));
