@@ -305,6 +305,33 @@ export const sources = [
     // fundraisers like @hawaiimutualaid post with @gofundme as co-author but aren't filed here
     brandAccounts: ["gofundme", "gofundmepro", "gofundmenl"],
   },
+  // Added 2026-10-24 from the 21 October Apify runs, which were lists of posts requested one by one:
+  // every still requested by its own URL is kept (reels and a profile scrape's extras are not)
+  {
+    // A second Wealthsimple export: only posts the first one didn't have
+    file: "data/instagram/wealthsimple-2026-10-21.json",
+    folder: "fintech",
+    categories: ["finance"],
+    brand: { name: "Wealthsimple", slug: "wealthsimple", websiteUrl: "https://www.wealthsimple.com" },
+    brandAccounts: ["wealthsimple"],
+  },
+  {
+    file: "data/instagram/betterment.json",
+    folder: "finance",
+    categories: ["finance"],
+    brand: { name: "Betterment", slug: "betterment", websiteUrl: "https://www.betterment.com" },
+    brandAccounts: ["betterment"],
+  },
+  {
+    file: "data/instagram/airtasker.json",
+    folder: "lifestyle",
+    categories: ["lifestyle"],
+    brand: { name: "Airtasker", slug: "airtasker", websiteUrl: "https://www.airtasker.com" },
+    // @airtaskeruk and @airtaskerusa are Airtasker's own. @nova100, @themortgagedoctor_ and
+    // @glittergelpen_bookclub post partnerships with @airtasker as co-author; their posts were asked
+    // for one by one, so they're filed under Airtasker, but the accounts aren't Airtasker's
+    brandAccounts: ["airtasker", "airtaskeruk", "airtaskerusa"],
+  },
 ];
 
 // Mirrors the generated instagram_posts.format column
