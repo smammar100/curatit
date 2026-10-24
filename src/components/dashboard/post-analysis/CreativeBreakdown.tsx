@@ -266,7 +266,9 @@ function Decision({ n, value, decision, open, stage }: { n: number; value: numbe
   const here = stage.carousel && decision.evidence.some((target) => target.kind === "slide" && target.index === stage.index);
   return (
     <Collapsible value={value} render={<li />}>
-      <CollapsibleTrigger>
+      {/* The caret sits on the title's first line (12px on a 20px line), not centred on the title and
+          its slides line together, where it fell under the number */}
+      <CollapsibleTrigger className="items-start [&>[data-slot=collapsible-caret]]:mt-1">
         <span className="flex gap-2">
           <span className="data w-4 shrink-0 text-text-2">{n}</span>
           <span className="min-w-0">

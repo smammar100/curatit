@@ -23,6 +23,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperti
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import Lockup from "@/components/assets/Lockup";
 import { ArrowUpRight, ChatCircle, ChevronLeft, ChevronRight, Close, Heart, Icon, Play, SealCheck } from "@/components/glaze/icon";
 import { Avatar } from "@/components/glaze/ui/avatar";
@@ -130,32 +131,61 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
       <main className="mx-auto flex max-w-384 flex-col gap-6 px-4 pt-2 pb-16 sm:px-8 lg:flex-row lg:items-start lg:gap-10 lg:pt-4">
         {/* The post, sticky while the column beside it scrolls */}
         <div className="min-w-0 flex-1 lg:sticky lg:top-4">
-          <div className="relative flex items-center justify-center overflow-hidden rounded-shell bg-shell p-4 sm:p-8 lg:h-(--stage-h)">
-            <div className="relative aspect-(--ratio) h-full max-h-full w-full max-w-(--stage-w)">
-              <Image
-                key={post.images[index]}
-                src={post.images[index]}
-                alt={count > 1 ? `${post.hook} (slide ${index + 1} of ${count})` : post.hook}
-                fill
-                sizes="(min-width: 1024px) 60vw, 100vw"
-                priority
-                className="rounded-panel object-contain"
-              />
+          {/* The stage: the post on a grey mat, the slide arrows at its sides, and under the image (never
+              over it) where you are in the carousel: the slide's number and role on the left, one bar
+              per slide on the right, the current one long and in ink, each a button */}
+          <div className="relative flex flex-col items-center overflow-hidden rounded-shell bg-shell p-4 sm:p-8 lg:h-(--stage-h)">
+            <div className="flex min-h-0 w-full flex-1 items-center justify-center">
+              <div className="relative aspect-(--ratio) h-full max-h-full w-full max-w-(--stage-w)">
+                <Image
+                  key={post.images[index]}
+                  src={post.images[index]}
+                  alt={count > 1 ? `${post.hook} (slide ${index + 1} of ${count})` : post.hook}
+                  fill
+                  sizes="(min-width: 1024px) 60vw, 100vw"
+                  priority
+                  className="rounded-panel object-contain"
+                />
+              </div>
             </div>
-            <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center gap-1.5 type-caption">
-              {count > 1 && (
-                <p className="data rounded-pill bg-ink px-2.5 py-1 text-text-inverse" aria-live="polite">
-                  {index + 1} / {count}
-                  {role && <span className="opacity-70"> · {role}</span>}
+            {(count > 1 || video) && (
+              <div className="mt-4 flex w-full max-w-(--stage-w) items-center justify-between gap-4">
+                <p className="min-w-0 truncate type-caption text-text-2" aria-live="polite">
+                  {count > 1 && (
+                    <>
+                      <span className="data font-medium text-text-1">{index + 1}</span> of <span className="data">{count}</span>
+                      {role && <span className="text-text-1"> · {role}</span>}
+                    </>
+                  )}
+                  {video && (
+                    <span title="A video on Instagram; the library keeps its cover frame">
+                      {count > 1 && " · "}
+                      <Icon icon={Play} size={12} className="inline align-text-bottom" /> Video cover
+                    </span>
+                  )}
                 </p>
-              )}
-              {video && (
-                <p className="flex items-center gap-1 rounded-pill bg-ink px-2.5 py-1 text-text-inverse" title="A video on Instagram; the library keeps its cover frame">
-                  <Icon icon={Play} size={12} />
-                  Video cover
-                </p>
-              )}
-            </div>
+                {count > 1 && (
+                  <div role="group" aria-label="Slides" className="flex shrink-0 items-center gap-1">
+                    {post.images.map((src, i) => (
+                      <ButtonPrimitive
+                        key={src}
+                        aria-label={`Slide ${i + 1}`}
+                        aria-pressed={i === index}
+                        onClick={() => go(i)}
+                        className="group flex h-6 items-center rounded-pill px-0.5"
+                      >
+                        <span
+                          className={cn(
+                            "block h-1 rounded-pill transition-[background-color] duration-(--dur-state) ease-out",
+                            i === index ? "w-6 bg-ink" : "w-3 bg-line-strong group-hover:bg-text-2",
+                          )}
+                        />
+                      </ButtonPrimitive>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             {count > 1 && (
               <>
                 <SlideButton side="left" disabled={index === 0} onClick={() => go(index - 1)} />
@@ -163,30 +193,27 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
               </>
             )}
           </div>
-          {/* Under the stage: the slide count as a quiet tag and every slide as a thumbnail */}
-          <div className="mt-3 flex items-center gap-3 overflow-x-auto p-1">
-            <Badge variant="outline" className="shrink-0">
-              {count} {count === 1 ? "slide" : "slides"}
-            </Badge>
-            {count > 1 && (
-              <ol className="flex gap-1.5">
-                {post.images.map((src, i) => (
-                  <li key={src}>
-                    <Button variant="ghost" size="icon-lg" aria-label={`Slide ${i + 1}`} aria-pressed={i === index} onClick={() => go(i)}>
-                      <span
-                        className={cn(
-                          "relative block size-full overflow-hidden rounded-tag transition-opacity duration-(--dur-state) ease-out",
-                          i === index ? "border-2 border-ink" : "opacity-60 group-hover/button:opacity-100",
-                        )}
-                      >
-                        <Image src={src} alt="" fill sizes="36px" className="object-cover" />
-                      </span>
-                    </Button>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </div>
+          {/* Under the stage, every slide as a thumbnail at the post's shape: the one on stage in full
+              with an ink ring, the rest dimmed until pointed at */}
+          {count > 1 && (
+            <ol className="mt-3 flex gap-2 overflow-x-auto p-1">
+              {post.images.map((src, i) => (
+                <li key={src} className="shrink-0">
+                  <ButtonPrimitive
+                    aria-label={`Show slide ${i + 1}`}
+                    aria-pressed={i === index}
+                    onClick={() => go(i)}
+                    className={cn(
+                      "group relative block aspect-(--ratio) w-10 overflow-hidden rounded-tag bg-field transition-opacity duration-(--dur-state) ease-out",
+                      i === index ? "outline-2 outline-offset-2 outline-ink" : "opacity-50 hover:opacity-100",
+                    )}
+                  >
+                    <Image src={src} alt="" fill sizes="40px" className="object-cover" />
+                  </ButtonPrimitive>
+                </li>
+              ))}
+            </ol>
+          )}
         </div>
 
         <div className="flex min-w-0 flex-col gap-4 lg:w-104 lg:shrink-0">

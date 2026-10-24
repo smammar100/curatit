@@ -6,8 +6,10 @@
 // of the slide on the stage opens with its one observation and its approximate colours. A row
 // shows its slide on the stage, and ← / → move the open row, so the two never disagree.
 // Since 2026-10-24 each row is Glaze's Item, pressed as a whole (it renders as Base UI's button,
-// the one Glaze's Button is built on, since a row of two lines is no one-line Button): the one on
-// stage takes Item's selected wash, the thumbnail is its image media, the count a Badge.
+// the one Glaze's Button is built on, since a row of two lines is no one-line Button): the row on
+// stage, its details included, sits on one pressed wash (the list item carries it, so the row and
+// the details under it never read as two greys), the thumbnail is its image media at the post's
+// 4:5, the count a Badge.
 import Image from "next/image";
 import type { CSSProperties } from "react";
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
@@ -44,9 +46,9 @@ export default function SlideBreakdown({ analysis, index, onSlide, images, video
         const role = analysis.sequence.roles[i] ?? slide?.role ?? `Slide ${i + 1}`;
         const cited = citations(analysis, i);
         return (
-          <li key={i} className="overflow-clip rounded-panel transition-[background-color] duration-(--dur-state) ease-out hover:bg-hover-row">
-            <Item render={<ButtonPrimitive />} selected={active} aria-pressed={active} aria-label={`Slide ${i + 1}: ${role}`} onClick={() => onSlide(i)} className="focus-visible:focus-ring-inset">
-              <ItemMedia variant="image">
+          <li key={i} className={`overflow-clip rounded-panel transition-[background-color] duration-(--dur-state) ease-out ${active ? "bg-pressed" : "hover:bg-hover-row"}`}>
+            <Item render={<ButtonPrimitive />} aria-pressed={active} aria-label={`Slide ${i + 1}: ${role}`} onClick={() => onSlide(i)} className="focus-visible:focus-ring-inset">
+              <ItemMedia variant="image" className="h-10 w-8">
                 {images[i] && <Image src={images[i]} alt="" width={32} height={40} sizes="32px" />}
               </ItemMedia>
               <ItemContent>
