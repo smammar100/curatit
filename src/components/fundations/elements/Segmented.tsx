@@ -24,8 +24,9 @@ export type SegmentedOption<T extends string> = {
   icon?: ReactNode;
 };
 
-// The site's three size names, all on the library's compact step: 28px tall, 24px options
-const sizes = { sm: "compact", md: "compact", lg: "compact" } as const;
+// The site's three size names, all on the library's default step since 2026-10-24: 36px tall,
+// 28px options (the compact step, 28px and 24px, before)
+const sizes = { sm: "default", md: "default", lg: "default" } as const;
 const squares = { compact: "w-6", default: "w-7" } as const;
 
 type Props<T extends string> = {

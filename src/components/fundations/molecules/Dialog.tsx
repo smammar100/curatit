@@ -27,8 +27,8 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-// Widths: a confirmation, a short form, a longer read, on the library's three, which it narrows a
-// notch in a compact region, the site's setting: 360, 480 and 800px
+// Widths: a confirmation, a short form, a longer read, on the library's three (it narrows them a
+// notch in a compact region; the site has been on the default step since 2026-10-24)
 const sizes = {
   sm: "sm",
   md: "lg",

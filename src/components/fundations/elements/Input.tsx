@@ -8,14 +8,14 @@ import { cn } from "@/lib/utils";
 // The single-line text field, since 2026-10-23 on Fluid Functionalism's field recipe (its select
 // trigger and InputField): the one stroke (a 1px --border ring) on no fill, a faint hover tint,
 // the card surface while focused, the control height and corners from the size and shape
-// providers (28px and a pill on the site's compact step), and the page's 1px focus outline. A
+// providers (36px and a pill on the site's default step), and the page's 1px focus outline. A
 // field whose value has a problem wears a red ring. 16px text on touch screens, so iOS doesn't
 // zoom into it. For a name, an email, a URL, a token's name: anything typed on one line. Several
 // lines is Textarea; a search box (its icon, a clear button, Escape) is SearchField; one of a few
 // fixed values is Segmented; on or off is Switch or Checkbox. Give it its label, hint and error
 // with Field, which wires the ids.
 //
-//   size     md and lg are both the compact step, 28px (the site's setting; lg is kept for call sites)
+//   size     md and lg are both the default step, 36px (the site's setting since 2026-10-24; lg is kept for call sites)
 //   invalid  sets aria-invalid; the red ring keys off the attribute, so Field's error does the same
 //   leadingIcon  a decorative icon inside on the left (a Phosphor icon; drawn at 14px, never read)
 //   trailing     one small thing inside on the right: a Kbd, or an xxs icon Button. Clicks on
@@ -39,8 +39,9 @@ export const fieldClass =
 const searchClass = "[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none";
 
 // The site's two sizes on the library's two steps
-// Both names on the compact step: the site's setting, the dashboard's settings forms included
-const sizes = { md: "compact", lg: "compact" } as const;
+// Both names on the default step: the site's setting since 2026-10-24, the dashboard's settings
+// forms included
+const sizes = { md: "default", lg: "default" } as const;
 
 export type InputSize = keyof typeof sizes;
 

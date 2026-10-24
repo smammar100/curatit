@@ -8,8 +8,7 @@ import { cn } from "@/lib/utils";
 // surface sits 1px inside the button and a same-colour shadow fills it out, so a press shrinks it
 // exactly 1px a side at any width; a label never wraps; loading keeps the label mounted at opacity
 // 0 under the spinner, so the width never changes; and the corners and size come from the site's
-// shape and size providers (pill, compact: 28px tall, 12px text; the two larger sizes take the
-// library's default step, 36px and 13px, for the hero's calls and the dashboard header).
+// shape and size providers (pill, and the library's default step: 36px tall, 13px text).
 //
 // A link that looks like an action is `isLink` with an href (the library's asChild over Next's
 // Link). Icon-only buttons must be named (`aria-label`); the types insist.
@@ -44,19 +43,19 @@ const variants = {
   none: { variant: "ghost", className: "" },
 } as const;
 
-// The site's seven size names, every one on the library's compact step (28px, 12px text: the
-// site's setting, the dashboard's header and the hero's calls included; the names are kept for
-// the call sites)
+// The site's seven size names, every one on the library's default step since 2026-10-24 (36px,
+// 13px text, the site's setting; it was the compact step, 28px and 12px, before). The names are
+// kept for the call sites
 const sizes = {
-  xxs: "compact",
-  xs: "compact",
-  sm: "compact",
-  base: "compact",
-  md: "compact",
-  lg: "compact",
-  xl: "compact",
+  xxs: "default",
+  xs: "default",
+  sm: "default",
+  base: "default",
+  md: "default",
+  lg: "default",
+  xl: "default",
 } as const;
-// On touch screens a compact button reaches 44px tall through an invisible ::after, so nothing
+// On touch screens a button reaches 44px tall or more through an invisible ::after, so nothing
 // moves (the library's root is relative, so the box is placed against it)
 const touch = "pointer-coarse:after:absolute pointer-coarse:after:inset-x-0 pointer-coarse:after:-inset-y-2";
 // An icon sits 4px closer to its edge than the label does, as the library sets its own icon slots
@@ -123,10 +122,11 @@ export default function Button({
   ...rest
 }: ButtonProps) {
   const look = variants[variant];
-  const step = sizes[size];
+  // Typed as either step, so the compact recipes below stay valid if a size moves back to it
+  const step = sizes[size] as "compact" | "default";
   const classes = cn(
     look.className,
-    step === "compact" && touch,
+    touch,
     !iconOnly && leftIcon && iconInset[step].left,
     !iconOnly && rightIcon && iconInset[step].right,
     className,

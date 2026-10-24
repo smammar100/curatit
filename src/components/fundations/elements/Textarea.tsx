@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 // anything that may run past one line. One line (a name, an email) is Input. Its label, hint and
 // error come from Field, as for Input.
 //
-//   size        md (the default, the compact step) and lg (the default step), the Input's two
+//   size        md and lg, both the default step since 2026-10-24, the Input's two
 //   rows        the height it opens at (3 by default)
 //   resize      "vertical" (the default: a person can drag it taller) or "none" (a fixed box,
 //               like a note on a board)
@@ -37,7 +37,7 @@ const resizes = {
   none: "resize-none",
 } as const;
 
-const sizes = { md: "compact", lg: "compact" } as const;
+const sizes = { md: "default", lg: "default" } as const;
 
 export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   size?: keyof typeof sizes;
