@@ -112,19 +112,20 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
   const role = analysis?.sequence?.roles?.[index] ?? analysis?.slides?.[index]?.role ?? null;
   const caption = useMemo(() => splitCaption(post), [post]);
   const source = { brand: post.brand.name, shortCode: post.shortCode, url: post.url, format: post.format, slides: post.images.length, images: post.images, videos: post.videos, width: post.width, height: post.height };
-  // The stage's sizes: from lg the mat fills the window under the bar (3.5rem) with the page's 1rem
-  // above and below it, and the image keeps the post's shape inside it, its width capped by the
-  // height left after the mat's padding (4rem) and the slide row under it
+  // The frame is the feed's (Feed and Header): a 92px bar (5.75rem), 8px down to the content, 24px
+  // gutters from sm. From lg the stage takes the rest of the window less 16px at the foot (7.25rem),
+  // and the image keeps the post's shape inside it, its width capped by the height left after the
+  // stage's 32px padding each way (11.25rem) and the slide row under it
   const below = count > 1 ? "5.25rem" : video ? "2rem" : "0rem";
-  const stage = { "--stage-h": "calc(100dvh - 5.5rem)", "--ratio": String(r), "--stage-w": `min(100%, calc((100dvh - 9.5rem - ${below}) * ${r}))` } as CSSProperties;
+  const stage = { "--stage-h": "calc(100dvh - 7.25rem)", "--ratio": String(r), "--stage-w": `min(100%, calc((100dvh - 11.25rem - ${below}) * ${r}))` } as CSSProperties;
 
   return (
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="post-title" tabIndex={-1} style={stage} className="fixed inset-0 z-(--z-overlay) overflow-y-auto bg-page type-body-sm text-text-1">
       {/* The app bar: back to the feed, the lockup, the feed's neighbours and Close. It stays at the
           top while the details scroll, so the stage under it can keep the window's full height */}
-      <header className="sticky top-0 z-10 flex h-14 items-center bg-page px-4 sm:px-8">
+      <header className="sticky top-0 z-10 flex h-23 items-center bg-page px-4 sm:px-6">
         <div className="flex-1">
-          <Button variant="secondary" onClick={close}>
+          <Button variant="secondary" size="lg" onClick={close}>
             <Icon icon={ChevronLeft} />
             Library
           </Button>
@@ -133,15 +134,15 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
         <div className="flex flex-1 items-center justify-end gap-1.5">
           <StepLink side="left" shortCode={previous?.shortCode} />
           <StepLink side="right" shortCode={next?.shortCode} />
-          <Button variant="secondary" size="icon" aria-label="Close" onClick={close}>
+          <Button variant="secondary" size="icon-lg" aria-label="Close" onClick={close}>
             <Icon icon={Close} />
           </Button>
         </div>
       </header>
 
-      <main className="mx-auto flex max-w-384 flex-col gap-6 px-4 pt-2 pb-16 sm:px-8 lg:flex-row lg:items-start lg:gap-10 lg:pt-4">
+      <main className="flex flex-col gap-6 px-4 pt-2 pb-16 sm:px-6 lg:flex-row lg:items-start lg:gap-10">
         {/* The post, sticky while the column beside it scrolls */}
-        <div className="min-w-0 flex-1 lg:sticky lg:top-18">
+        <div className="min-w-0 flex-1 lg:sticky lg:top-25">
           {/* The stage: the post on a grey mat, the slide arrows at its sides, and under the image (never
               over it) where you are in the carousel: the slides themselves as the indicator, small at
               the post's shape, the one on stage in full with an ink ring and the rest dimmed until
@@ -334,13 +335,13 @@ function StepLink({ side, shortCode }: { side: "left" | "right"; shortCode?: str
   const label = side === "left" ? "Previous post" : "Next post";
   if (!shortCode) {
     return (
-      <Button variant="secondary" size="icon" aria-label={label} disabled>
+      <Button variant="secondary" size="icon-lg" aria-label={label} disabled>
         <Icon icon={caret} />
       </Button>
     );
   }
   return (
-    <Button variant="secondary" size="icon" aria-label={label} render={<Link href={postHref(shortCode)} replace scroll={false} />} nativeButton={false}>
+    <Button variant="secondary" size="icon-lg" aria-label={label} render={<Link href={postHref(shortCode)} replace scroll={false} />} nativeButton={false}>
       <Icon icon={caret} />
     </Button>
   );
