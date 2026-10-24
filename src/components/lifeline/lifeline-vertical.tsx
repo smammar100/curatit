@@ -9,9 +9,8 @@ import {
   useState,
   type CSSProperties,
 } from "react"
-// Curatit: Phosphor (the site's icon set) in place of lucide-react
-import Film from "@/components/fundations/icons/FilmStrip"
-import ImageIcon from "@/components/fundations/icons/Picture"
+// Curatit: Phosphor through the site's icon entry (Glaze's, since 2026-10-24) in place of lucide-react
+import { FilmStrip as Film, Picture as ImageIcon } from "@/components/glaze/icon"
 import { cn } from "@/lib/utils"
 import { CompanyIcon } from "./company-icon"
 import {

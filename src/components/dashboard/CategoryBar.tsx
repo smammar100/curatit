@@ -13,74 +13,11 @@
 // exception, through light-dark() in custom properties the chip's classes read.
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Chip } from "@/components/glaze/ui/chip";
-import {
-  AddressBook,
-  AirplaneTilt,
-  Barbell,
-  Basketball,
-  BookOpen,
-  Briefcase,
-  Camera,
-  ChatsCircle,
-  Code,
-  CreditCard,
-  CurrencyBtc,
-  FirstAid,
-  ForkKnife,
-  GraduationCap,
-  Handshake,
-  House,
-  Icon,
-  Light,
-  ListChecks,
-  MapTrifold,
-  MusicNotes,
-  Newspaper,
-  PaintBrush,
-  Popcorn,
-  ShareNetwork,
-  ShoppingBag,
-  Sparkle,
-  SquaresFour,
-  Tool,
-  UsersThree,
-  type GlazeIcon,
-} from "@/components/glaze/icon";
+import { Icon, SquaresFour } from "@/components/glaze/icon";
+import { CATEGORY_ICONS } from "./categoryIcons";
 import { categoriesWithPosts } from "@/lib/categories";
 import type { DashPost } from "./types";
 
-// Each category's glyph, by slug: the same Phosphor glyphs as categoryIcons.ts (the homepage's
-// tabs and the welcome flow's folders), from Glaze's icon set, for the row and the search panel
-export const CATEGORY_GLYPHS: Record<string, GlazeIcon> = {
-  ai: Sparkle,
-  business: Briefcase,
-  collaboration: UsersThree,
-  communication: ChatsCircle,
-  crm: AddressBook,
-  "crypto-web3": CurrencyBtc,
-  "developer-tools": Code,
-  education: GraduationCap,
-  entertainment: Popcorn,
-  finance: CreditCard,
-  "food-drink": ForkKnife,
-  "graphics-design": PaintBrush,
-  "health-fitness": Barbell,
-  "jobs-recruitment": Handshake,
-  lifestyle: Light,
-  "maps-navigation": MapTrifold,
-  medical: FirstAid,
-  "music-audio": MusicNotes,
-  news: Newspaper,
-  "photo-video": Camera,
-  productivity: ListChecks,
-  "real-estate": House,
-  reference: BookOpen,
-  shopping: ShoppingBag,
-  "social-networking": ShareNetwork,
-  sports: Basketball,
-  "travel-transportation": AirplaneTilt,
-  utilities: Tool,
-};
 
 // The selected category's chip: a pale tint of its hue with the icon and name in a deep shade of
 // it (6.3:1 or more in both themes)
@@ -131,7 +68,7 @@ export default function CategoryBar({ posts, value, onChange }: { posts: DashPos
       </Chip>
       {options.map((option) => {
         const on = option.slug === value;
-        const glyph = CATEGORY_GLYPHS[option.slug];
+        const glyph = CATEGORY_ICONS[option.slug];
         return (
           <Chip key={option.slug} pressed={on} onPressedChange={() => onChange(on ? null : option.slug)} className={TINT} style={tint(option.hue)}>
             {glyph && <Icon icon={glyph} />}

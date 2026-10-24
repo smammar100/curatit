@@ -32,7 +32,7 @@ export default function ObservedEngagement({ likes, comments, category }: { like
     <DataList>
       {row("Likes", <Icon icon={Heart} />, countLabel(likes), likes == null)}
       {row("Comments", <Icon icon={ChatCircle} />, countLabel(comments), comments == null)}
-      {category && row("Category", CategoryGlyph ? <CategoryGlyph className="size-3.5 shrink-0" aria-hidden="true" /> : <Icon icon={SquaresFour} />, category.name, false)}
+      {category && row("Category", CategoryGlyph ? <Icon icon={CategoryGlyph} /> : <Icon icon={SquaresFour} />, category.name, false)}
     </DataList>
   );
 }

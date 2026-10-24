@@ -26,7 +26,7 @@ import { categoriesWithPosts } from "@/lib/categories";
 import { cx } from "@/lib/cx";
 import { usePresence, useReducedMotion } from "@/lib/motion";
 import { useBoards } from "./boards";
-import { CATEGORY_GLYPHS } from "./CategoryBar";
+import { CATEGORY_ICONS } from "./categoryIcons";
 import { compact } from "./search";
 
 const RECENT_KEY = "curatit-recent-searches";
@@ -340,7 +340,7 @@ function Row({ children }: { children: ReactNode }) {
 // The category's hue as a small tile with its glyph: the swatch the homepage and Discover use,
 // through custom properties the tile's classes read
 function CategorySwatch({ slug, hue }: { slug: string; hue: number }) {
-  const glyph = CATEGORY_GLYPHS[slug];
+  const glyph = CATEGORY_ICONS[slug];
   return (
     <span
       aria-hidden="true"

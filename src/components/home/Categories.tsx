@@ -127,7 +127,7 @@ export default function Categories({
                     value={category.slug}
                     style={{ "--tab-ink": tabInk(category.hue) } as CSSProperties}
                   >
-                    {Glyph && <Glyph className="size-3.5 shrink-0 text-(--tab-ink)" aria-hidden="true" />}
+                    {Glyph && <Icon icon={Glyph} className="shrink-0 text-(--tab-ink)" />}
                     {category.name}
                   </TabsTrigger>
                 );

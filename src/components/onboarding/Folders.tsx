@@ -18,6 +18,7 @@ import type { CSSProperties } from "react";
 import Image from "next/image";
 import { Toggle } from "@base-ui/react/toggle";
 import { CATEGORY_ICONS } from "@/components/dashboard/categoryIcons";
+import { Icon } from "@/components/glaze/icon";
 import { cx } from "@/lib/cx";
 import { edge, Tick, toggle, type Category } from "./parts";
 
@@ -76,7 +77,7 @@ export function FolderTile({ category, on, onClick }: { category: Category; on: 
 
         {/* The front, with the icon and the name; it tilts open on hover */}
         <span className="folder-front absolute inset-x-0 bottom-0 z-(--z-raised) flex h-18 flex-col items-center justify-end gap-1 rounded-panel bg-(--folder-front) pb-2.5 ring-1 ring-line-faint">
-          {Glyph && <Glyph className="size-5 text-(--folder-ink)" />}
+          {Glyph && <Icon icon={Glyph} size={20} className="text-(--folder-ink)" />}
           {/* The name and its count as a small raised pill on the tinted front */}
           <span className="flex max-w-[calc(100%-var(--space-4))] items-center gap-1.5 rounded-pill bg-surface-3 px-2.5 py-1 type-label-sm text-text-1 shadow-surface-3">
             <span className="truncate">{category.name}</span>
