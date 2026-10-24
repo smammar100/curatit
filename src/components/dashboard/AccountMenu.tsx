@@ -48,15 +48,16 @@ export default function AccountMenu({ onShowSaved }: { onShowSaved: () => void }
 
   return (
     <DropdownMenu>
-      {/* The avatar in a ghost icon button: the button's hover wash rings it, and it is named */}
-      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Account menu" />}>
-        <Avatar size="default" decorative />
+      {/* The avatar is the button, as tall as every control beside it (after Mobbin's header), and named */}
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon-lg" aria-label="Account menu" />}>
+        <Avatar size="lg" decorative className="size-full" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
         {/* Who's signed in. A non-breaking space holds each line's height until the session is read */}
         <DropdownMenuGroup>
-          <DropdownMenuLabel>
-            <span className="flex items-center justify-between gap-3">
+          {/* The row runs the menu's full width, so the avatar's edge lines up with the icons under it */}
+          <DropdownMenuLabel className="py-1.5">
+            <span className="flex w-full min-w-0 items-center justify-between gap-3">
               <span className="min-w-0">
                 <span className="block truncate type-label text-text-1">{user?.name ?? " "}</span>
                 <span className="block truncate type-caption text-text-2">{user?.email ?? " "}</span>

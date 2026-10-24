@@ -1,12 +1,13 @@
 "use client";
 
 // The dashboard header, after Cosmos: the mark and the For you / Discover switch, a search pill in the
-// middle, then Create, Saved (a bookmark with the count of saved posts) and the account menu. The
+// middle, then Saved (a bookmark), Create and the account menu. The
 // feed drives it directly; other dashboard pages pass `onView` / `onSearch` that take you back to
 // the feed. Since 2026-10-24 every control is Glaze's: the two views a SegmentedControl (a few views
-// of one thing), a DropdownMenu of them below lg, Create and Saved secondary Buttons (Saved the
-// primary while you're on it, with its count as its label), and the account menu's avatar in a
-// ghost icon Button. The search pill (SearchBox) is its own, as before.
+// of one thing), a DropdownMenu of them below lg. The right side follows Mobbin's header since
+// 2026-10-24 (the owner shared it for its balance): everything one height (44px), Saved a ghost
+// bookmark with no count on it (the primary while you're on it), Create the one outlined pill, and
+// the avatar as tall as the buttons. The search pill (SearchBox) is its own, as before.
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import Symbol from "@/components/assets/Symbol";
@@ -55,6 +56,7 @@ export default function Header({
           aria-label="Feed"
           value={view && view !== "Saved" ? view : ""}
           onValueChange={(next) => onView(next as View)}
+          size="lg"
           className="hidden lg:flex"
         >
           {TABS.map((option) => (
@@ -70,32 +72,23 @@ export default function Header({
 
       <SearchBox query={query} onQuery={onQuery} onSearch={onSearch} className="w-full max-w-xl justify-self-center" />
 
-      <div className="flex items-center justify-end gap-2">
+      {/* After Mobbin's header (2026-10-24, at the owner's request): every control one height, the
+          icon a plain ghost button, one outlined pill, then the avatar as tall as the rest; the header's
+          controls take the large step (44px, 20px icons) beside the 52px search */}
+      <div className="flex items-center justify-end gap-1 sm:gap-2 lg:gap-3">
+        {/* Saved: a ghost bookmark, the ink glass while you're on it or on one of your boards. The
+            bookmark alone, as on Mobbin (its count badge was taken out at the owner's request); the
+            count is still in its name for screen readers */}
+        <Button
+          variant={onSaved ? "primary" : "ghost"}
+          size="icon-lg"
+          onClick={() => onView("Saved")}
+          aria-label={savedCount > 0 ? `Saved, ${savedCount} ${savedCount === 1 ? "post" : "posts"}` : "Saved"}
+          aria-current={onSaved ? "page" : undefined}
+        >
+          <Icon icon={Bookmark} />
+        </Button>
         <CreateBoard />
-        {/* Saved: the primary (the ink glass) while you're on it or on one of your boards, the flat
-            secondary otherwise. The count is its label beside the bookmark; with nothing saved it's
-            the bookmark alone */}
-        {savedCount > 0 ? (
-          <Button
-            variant={onSaved ? "primary" : "secondary"}
-            onClick={() => onView("Saved")}
-            aria-label={`Saved, ${savedCount} ${savedCount === 1 ? "post" : "posts"}`}
-            aria-current={onSaved ? "page" : undefined}
-          >
-            <Icon icon={Bookmark} />
-            <span className="data">{savedCount}</span>
-          </Button>
-        ) : (
-          <Button
-            variant={onSaved ? "primary" : "secondary"}
-            size="icon"
-            onClick={() => onView("Saved")}
-            aria-label="Saved"
-            aria-current={onSaved ? "page" : undefined}
-          >
-            <Icon icon={Bookmark} />
-          </Button>
-        )}
         <AccountMenu onShowSaved={() => onView("Saved")} />
       </div>
     </header>
@@ -107,7 +100,7 @@ export default function Header({
 function ViewMenu({ view, onChange }: { view: View | null; onChange: (view: View) => void }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" aria-label={`Feed: ${view ?? "none chosen"}`} />}>
+      <DropdownMenuTrigger render={<Button variant="ghost" size="lg" aria-label={`Feed: ${view ?? "none chosen"}`} />}>
         {view ?? "Feed"}
         <Icon icon={ChevronDown} />
       </DropdownMenuTrigger>
@@ -125,17 +118,17 @@ function ViewMenu({ view, onChange }: { view: View | null; onChange: (view: View
 }
 
 // Create: opens the new board dialog. Below md it's the plus alone, an icon button the size of
-// Saved and the avatar beside it; from md the word joins it
+// Saved and the avatar beside it; from md it's the word alone on the header's one outlined pill,
+// as Mobbin's "Invite & earn"
 function CreateBoard() {
   const [open, setOpen] = useState(false);
   const show = () => setOpen(true);
   return (
     <>
-      <Button variant="secondary" size="icon" onClick={show} aria-label="Create a board" aria-haspopup="dialog" className="md:hidden">
+      <Button variant="secondary" size="icon-lg" onClick={show} aria-label="Create a board" aria-haspopup="dialog" className="md:hidden">
         <Icon icon={Add} />
       </Button>
-      <Button variant="secondary" onClick={show} aria-haspopup="dialog" className="hidden md:inline-flex">
-        <Icon icon={Add} />
+      <Button variant="secondary" size="lg" onClick={show} aria-haspopup="dialog" aria-label="Create a board" className="hidden md:inline-flex">
         Create
       </Button>
       <NewBoardDialog open={open} onClose={() => setOpen(false)} />

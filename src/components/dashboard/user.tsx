@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import type { User as AuthUser } from "@supabase/supabase-js";
 import { Avatar as GlazeAvatar } from "@/components/glaze/ui/avatar";
 import { Skeleton } from "@/components/glaze/ui/skeleton";
+import { cn } from "@/lib/glaze/utils";
 import { identify, resetAnalytics } from "@/lib/analytics";
 import { createClient } from "@/utils/supabase/client";
 
@@ -67,6 +68,6 @@ export const useUser = () => use(UserContext);
 const SKELETON = { xs: "size-4", sm: "size-5", default: "size-6", lg: "size-8" } as const;
 export function Avatar({ size = "default", decorative, className }: { size?: keyof typeof SKELETON; decorative?: boolean; className?: string }) {
   const user = useUser();
-  if (!user) return <Skeleton className={`${SKELETON[size]} rounded-pill${className ? ` ${className}` : ""}`} />;
+  if (!user) return <Skeleton className={cn(SKELETON[size], "rounded-pill", className)} />;
   return <GlazeAvatar src={user.avatar ?? undefined} name={user.name} size={size} decorative={decorative} className={className} />;
 }
