@@ -1,11 +1,14 @@
+import Link from "next/link";
 // Assets
 import Image from "next/image";
 // Fundation
 import Text from "@/components/fundations/elements/Text";
-import Button from "@/components/fundations/elements/Button";
+// Glaze
+import { Button } from "@/components/glaze/ui/button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 // Icons
-import Checkout from "@/components/fundations/icons/Checkout";
+import { Checkout, Icon } from "@/components/glaze/icon";
+import { DataList, DataListItem, DataListLabel, DataListValue } from "@/components/glaze/ui/data-list";
 // Components
 import StoreCard from "@/components/store/StoreCard";
 // Content
@@ -24,26 +27,18 @@ export default function StoreLayout({
           <div>
             <div className="flex flex-wrap justify-between gap-4">
               <div className="max-w-xl text-balance">
-                <Text tag="h1" variant="h1" className="text-primary-foreground">
+                <Text tag="h1" variant="h1" className="text-text-1">
                   {frontmatter.title}
                 </Text>
-                <Text tag="p" variant="body" className="text-secondary-foreground mt-4">
+                <Text tag="p" variant="body" className="mt-4 text-text-2">
                   {frontmatter.description}
                 </Text>
               </div>
-              <Button
-                isLink
-                iconOnly
-                size="xs"
-                variant="default"
-                href={frontmatter.checkout}
-                aria-label={`Buy ${frontmatter.title}`}
-                title={`Buy ${frontmatter.title}`}
-              >
-                <Checkout className="size-4" />
+              <Button size="icon" aria-label={`Buy ${frontmatter.title}`} title={`Buy ${frontmatter.title}`} render={<a href={frontmatter.checkout} />} nativeButton={false}>
+                <Icon icon={Checkout} />
               </Button>
             </div>
-            <div className="p-8 bg-card rounded-2xl mt-12">
+            <div className="mt-12 rounded-(--radius-float) bg-shell p-8">
               <Image
                 width={1400}
                 height={1400}
@@ -51,59 +46,41 @@ export default function StoreLayout({
                 src={frontmatter.image.url}
                 alt={frontmatter.image.alt}
                 sizes="100vw"
-                className="size-full aspect-8/5 object-top rounded shadow"
+                className="aspect-8/5 size-full rounded-panel object-cover object-top outline-1 -outline-offset-1 outline-line-faint"
               />
             </div>
-            <dl className="mt-4 divide-y divide-border-default">
+            <DataList className="mt-4">
               {frontmatter.features.map((feature) => (
-                <div key={feature.title} className="flex itmes-center gap-2 justify-between py-2">
-                  <dt>
-                    <Text tag="h3" variant="bodySM" className="text-primary-foreground font-medium">
-                      {feature.title}
-                    </Text>
-                  </dt>
-                  <dd className="mt-1">
-                    <Text tag="p" variant="bodySM" className="text-secondary-foreground">
-                      {feature.description}
-                    </Text>
-                  </dd>
-                </div>
+                <DataListItem key={feature.title}>
+                  <DataListLabel>{feature.title}</DataListLabel>
+                  <DataListValue>{feature.description}</DataListValue>
+                </DataListItem>
               ))}
-              <div className="divide-y divide-border-default">
-                <div className="flex itmes-center gap-2 justify-between py-2">
-                  <dt>
-                    <Text tag="h3" variant="bodySM" className="text-primary-foreground font-medium">
-                      <span>Details</span>
-                    </Text>
-                  </dt>
-                  <dd>
-                    <ul role="list">
-                      {frontmatter.highlights.map((highlight) => (
-                        <li key={highlight}>
-                          <Text tag="p" variant="bodySM" className="text-secondary-foreground">
-                            {highlight}
-                          </Text>
-                        </li>
-                      ))}
-                    </ul>
-                  </dd>
-                </div>
-              </div>
-              <Text tag="p" variant="bodySM" className="text-secondary-foreground mt-4">
-                {frontmatter.license}
-              </Text>
-            </dl>
+              <DataListItem>
+                <DataListLabel>Details</DataListLabel>
+                <DataListValue>
+                  <ul role="list">
+                    {frontmatter.highlights.map((highlight) => (
+                      <li key={highlight}>{highlight}</li>
+                    ))}
+                  </ul>
+                </DataListValue>
+              </DataListItem>
+            </DataList>
+            <Text tag="p" variant="bodySM" className="mt-4 text-text-2">
+              {frontmatter.license}
+            </Text>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {frontmatter.gallery?.map((img) => (
-              <div key={img.url} className="p-8 bg-card rounded-2xl mt-12">
+              <div key={img.url} className="mt-12 rounded-(--radius-float) bg-shell p-8">
                 <Image
                   width={1400}
                   height={1400}
                   src={img.url}
                   alt={img.alt}
                   sizes="(min-width: 1024px) 33vw, 100vw"
-                  className="size-full aspect-8/5 object-top rounded shadow"
+                  className="aspect-8/5 size-full rounded-panel object-cover object-top outline-1 -outline-offset-1 outline-line-faint"
                 />
               </div>
             ))}
@@ -113,10 +90,10 @@ export default function StoreLayout({
       <section>
         <Wrapper variant="standard" className="section-y">
           <div className="flex flex-wrap gap-4 justify-between items-center">
-            <Text tag="h2" variant="h3" className="text-primary-foreground">
+            <Text tag="h2" variant="h3" className="text-text-1">
               More products
             </Text>
-            <Button isLink size="sm" variant="muted" href="/store">
+            <Button size="sm" variant="secondary" render={<Link href="/store" />} nativeButton={false}>
               See all products
             </Button>
           </div>

@@ -2,13 +2,16 @@
 
 // The empty Saved view's illustration, the "Pocket" direction (chosen from a three-way prototype
 // on 2026-10-11): the header's bookmark drawn large as a pocket, three posts from the feed
-// dropping into it one after another, then the header's orange count badge popping onto its
-// corner. Where your saves go, and that they're counted. Shapes in the palette's tokens (the
-// face a step lighter than the inside in both themes), covers real. The motion runs once
+// dropping into it one after another, then a count popping onto its corner. Where your saves go,
+// and that they're counted. A drawing, kept as one since 2026-10-24 on Glaze's tokens: the
+// pocket's inside is the grey field and its face paper (so the face is lighter than the inside in
+// both themes), its outline and seam Glaze's line, the posts on the panel corner lifted with Fluid
+// Functionalism's surface pair, and the count Glaze's Badge. Covers real. The motion runs once
 // (.saved-art-* in global.css); reduced motion shows the finished scene. Decorative: the words
 // under it say what to do.
-import { useMemo } from "react";
+import { useMemo, type CSSProperties } from "react";
 import Image from "next/image";
+import { Badge } from "@/components/glaze/ui/badge";
 import { cx } from "@/lib/cx";
 import { useBoards } from "./boards";
 import type { DashPost } from "./types";
@@ -38,17 +41,21 @@ export default function SavedArt({ className }: { className?: string }) {
 
   return (
     <div aria-hidden="true" className={cx("pointer-events-none relative h-60 w-72 select-none", className)}>
-      <div className="absolute bottom-2 left-1/2 h-[200px] w-40 -translate-x-1/2">
+      <div className="absolute bottom-2 left-1/2 h-50 w-40 -translate-x-1/2">
         {/* The pocket's inside */}
         <svg viewBox="0 0 160 200" className="absolute inset-0 overflow-visible">
-          <path d={BACK} className="fill-base-100 stroke-base-200 dark:fill-base-50" strokeWidth="1.5" />
+          <path d={BACK} fill="var(--field)" stroke="var(--line)" strokeWidth="1.5" />
         </svg>
         {/* The posts, dropping in */}
         {cards.map(({ post, x, angle, delay }) => (
-          <div key={post.shortCode} className="absolute top-1 left-1/2 w-24" style={{ translate: `calc(-50% + ${x}px) 0`, rotate: `${angle}deg` }}>
+          <div
+            key={post.shortCode}
+            className="absolute top-1 left-1/2 w-24 rotate-(--angle) [translate:calc(-50%+var(--x))_0]"
+            style={{ "--x": `${x}px`, "--angle": `${angle}deg` } as CSSProperties}
+          >
             <div
-              className="saved-art-card relative aspect-4/5 overflow-hidden rounded-lg bg-base-100 shadow-[0_8px_18px_-10px_rgb(0_0_0/0.4)] outline-1 -outline-offset-1 outline-edge"
-              style={{ animationDelay: `${delay}ms` }}
+              className="saved-art-card relative aspect-4/5 overflow-hidden rounded-panel bg-surface-4 shadow-surface-4 [animation-delay:var(--delay)]"
+              style={{ "--delay": `${delay}ms` } as CSSProperties}
             >
               <Image src={post.cover} alt="" fill sizes="96px" className="object-cover" />
             </div>
@@ -57,20 +64,18 @@ export default function SavedArt({ className }: { className?: string }) {
         <svg viewBox="0 0 160 200" className="absolute inset-0 overflow-visible">
           <defs>
             <linearGradient id="saved-art-shade" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="black" stopOpacity="0" />
-              <stop offset="1" stopColor="black" stopOpacity="0.22" />
+              <stop offset="0" stopColor="var(--ink)" stopOpacity="0" />
+              <stop offset="1" stopColor="var(--ink)" stopOpacity="0.22" />
             </linearGradient>
           </defs>
           {/* Where the posts slip in behind the face */}
           <rect x="1" y={MOUTH - 14} width="158" height="14" fill="url(#saved-art-shade)" />
-          {/* The face, a step lighter than the inside, with a stitched seam */}
-          <path d={FRONT} className="fill-base-50 stroke-base-200 dark:fill-base-100" strokeWidth="1.5" strokeLinejoin="round" />
-          <path d={`M14 ${MOUTH + 12}H146`} className="stroke-base-300" strokeWidth="1.5" strokeDasharray="4 5" strokeLinecap="round" />
+          {/* The face, lighter than the inside, with a stitched seam */}
+          <path d={FRONT} fill="var(--paper)" stroke="var(--line)" strokeWidth="1.5" strokeLinejoin="round" />
+          <path d={`M14 ${MOUTH + 12}H146`} stroke="var(--line)" strokeWidth="1.5" strokeDasharray="4 5" strokeLinecap="round" />
         </svg>
-        {/* The header's count, arriving once they're in */}
-        <span className="saved-art-badge absolute -top-2.5 -right-2.5 flex h-8 min-w-8 items-center justify-center rounded-full bg-brand-solid px-2 text-subtitle font-medium text-on-brand-solid-foreground tabular-nums ring-4 ring-page">
-          3
-        </span>
+        {/* The count, arriving once they're in */}
+        <Badge count={3} className="saved-art-badge absolute -top-2.5 -right-2.5" />
       </div>
     </div>
   );

@@ -1,30 +1,40 @@
 "use client";
 
-// The post's creative breakdown, beside the image in PostView (Creative Intelligence 3.0). Three
-// views of its published analysis, visual first and short, each opening up only on request:
-// - Breakdown: the strategy in a line and a sentence or two, its traits as chips, the key creative
-//   decisions (the first open on its explanation; each opens to what was observed, its possible
-//   effect, the principle and what to watch out for, and shows its slide on the stage), the data
-//   checks summed up in one line, and the caveats.
-// - Visual DNA: composition, typography, colour (the post's colours with their jobs, copyable),
-//   imagery, visual devices, and branding & consistency, each one insight, a few attributes and
-//   the slides that show them; on a carousel, what stays the same and the sequence as a bar.
+// The post's creative breakdown, in the post's page (Creative Intelligence 3.0, set in the
+// "Document" direction since 2026-10-23: chosen from a six-way prototype at the owner's request,
+// after the Spec sheet read as text-heavy; the reading order is headline → traits → decisions →
+// checks). Two views of its published analysis, visual first and short, each opening up only on
+// request:
+// - Breakdown: the strategy as a serif headline and a sentence or two, its traits as a list of
+//   label and value, the key creative decisions as numbered rows (the first open on its
+//   explanation; each opens to what was observed, its possible effect, the principle and what to
+//   watch out for, and shows its slide on the stage), the data checks summed up in one row, and the
+//   caveats.
+// - Visual DNA: composition, typography, colour (a palette of the post's colours, each hex under its
+//   block, copyable), imagery, visual devices, and branding & consistency, each a section with its
+//   glyph, one insight and a few attributes; on a carousel, what stays the same and the sequence as
+//   a bar. Since 2026-10-24, at the owner's request, no slide tags: where a statement rests is in
+//   plain words where it matters, and a section's header is its title alone.
 // Beside the tabs, Copy brief puts the reference-led visual adaptation prompt on the clipboard
-// (2026-10-14; the Download .md button beside it was taken out on 2026-10-15). The tabs are the
-// shared Tabs (pill, since 2026-10-19; a hand-built row before), whose ← / → / Home / End are
-// marked handled so PostView's slide arrows leave them be; the button is the same as the
-// Instagram link above it. The bar stays in view while the panel scrolls, and switching tabs
-// brings the new tab's start into view only when the panel had scrolled past it. One slide index in PostView drives the stage, ← / →, the bar and every slide
-// link, so they never disagree; a single image has no slide links at all (it's always on screen).
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import Tabs, { Tab, TabList, TabPanel } from "@/components/fundations/molecules/Tabs";
-import CaretDown from "@/components/fundations/icons/CaretDown";
-import Check from "@/components/fundations/icons/Check";
-import Copy from "@/components/fundations/icons/Copy";
-import Eye from "@/components/fundations/icons/Eye";
-import Question from "@/components/fundations/icons/Question";
-import SealCheck from "@/components/fundations/icons/SealCheck";
-import WarningCircle from "@/components/fundations/icons/WarningCircle";
+// (2026-10-14; the Download .md button beside it was taken out on 2026-10-15). The tabs are
+// Glaze's Tabs (Base UI), whose ← / → / Home / End are marked handled so PostView's slide arrows
+// leave them be. The bar stays in view while the page scrolls, and switching tabs brings the new
+// tab's start into view only when the page had scrolled past it. One slide index in PostView
+// drives the stage, ← / →, the bar and every slide link, so they never disagree; a single image has
+// no slide links at all (it's always on screen).
+// Since 2026-10-24 it is built from Glaze: Tabs, the decisions, the data checks and the folds
+// Collapsibles, the traits and the reasoning DataLists, the slide links Chips (pressed while their
+// slide is on the stage), the swatches, the sequence bar and Copy brief Buttons. Glaze has no icon
+// tiles or cards inside a card, so each section's glyph sits inline with its title and the
+// decisions' numbers are plain figures.
+import { useEffect, useLayoutEffect, useRef, useState, type ComponentProps, type CSSProperties, type ReactNode } from "react";
+import { Check, ChevronDown, Copy, Failed, FilmStrip, Icon, Palette, Picture, Question, SealCheck, Show, Sparkle, SquaresFour, TextAa } from "@/components/glaze/icon";
+import { Badge } from "@/components/glaze/ui/badge";
+import { Button } from "@/components/glaze/ui/button";
+import { Button as ButtonPrimitive } from "@base-ui/react/button";
+import { Collapsible, CollapsibleContent, CollapsibleGroup, CollapsibleTrigger } from "@/components/glaze/ui/collapsible";
+import { DataList, DataListItem, DataListLabel, DataListValue } from "@/components/glaze/ui/data-list";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/glaze/ui/tabs";
 import {
   briefMarkdown,
   evidenceGroups,
@@ -37,8 +47,9 @@ import {
   type IntegrityStatus,
   type IntegrityView,
   type PublicAnalysis,
+  type VisualSection,
 } from "@/lib/creative/publicView";
-import { cx } from "@/lib/cx";
+import { cn } from "@/lib/glaze/utils";
 
 type Props = {
   analysis: PublicAnalysis;
@@ -54,6 +65,8 @@ type View = "breakdown" | "visual";
 // What every part below needs to point at slides
 type Stage = { index: number; onSlide: (index: number) => void; carousel: boolean };
 
+type Glyph = ComponentProps<typeof Icon>["icon"];
+
 // The strategy in a few words each, only the parts the analysis has
 export function traits(analysis: PublicAnalysis) {
   const label = (name: string) => analysis.labels.find((l) => l.label === name)?.value ?? null;
@@ -65,7 +78,7 @@ export function traits(analysis: PublicAnalysis) {
   ].filter((trait): trait is { label: string; value: string } => !!trait.value);
 }
 
-// The panel that scrolls the breakdown: the first ancestor that scrolls vertically
+// The pane that scrolls the breakdown: the first ancestor that scrolls vertically
 function scrollParent(element: HTMLElement) {
   for (let node = element.parentElement; node; node = node.parentElement) {
     const { overflowY } = getComputedStyle(node);
@@ -90,7 +103,7 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
     setView(next);
   };
 
-  // After a switch the new tab starts in view: when the panel had scrolled past the top of the
+  // After a switch the new tab starts in view: when the pane had scrolled past the top of the
   // tabs, it jumps back to it; when the tabs were in view, nothing moves
   useLayoutEffect(() => {
     if (!switched.current) return;
@@ -105,31 +118,25 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
   return (
     <div>
       <div ref={top} aria-hidden="true" />
-      <Tabs value={view} onValueChange={choose}>
-        {/* Sticky over the panel's own padding (px-6 in PostView), so content slides under it */}
-        <div className="sticky top-0 z-10 -mx-6 flex flex-wrap items-center justify-between gap-2 bg-modal px-6 py-1.5">
-          <TabList aria-label="Creative breakdown" variant="pill">
+      <Tabs value={view} onValueChange={(next) => choose(next as View)}>
+        {/* Sticky over the card's own padding (px-4 in PostView), so content slides under it */}
+        <div className="sticky top-0 z-(--z-sticky) -mx-4 flex flex-wrap items-center justify-between gap-2 bg-paper px-4 py-2">
+          <TabsList aria-label="Creative breakdown" activateOnFocus>
             {views.map((v) => (
-              <Tab key={v.id} value={v.id}>
+              <TabsTrigger key={v.id} value={v.id}>
                 {v.label}
-              </Tab>
+              </TabsTrigger>
             ))}
-          </TabList>
+          </TabsList>
           <CopyBrief analysis={analysis} source={source} />
         </div>
 
         {/* Each view renders only while it's shown, so a switch starts it afresh, as before */}
-        <TabPanel value="breakdown" className="mt-3">
-          {view === "breakdown" && <Breakdown analysis={analysis} stage={stage} />}
-        </TabPanel>
-        {views.some((v) => v.id === "visual") && (
-          <TabPanel value="visual" className="mt-3">
-            {view === "visual" && <VisualDna analysis={analysis} stage={stage} videos={videos} />}
-          </TabPanel>
-        )}
+        <TabsContent value="breakdown">{view === "breakdown" && <Breakdown analysis={analysis} stage={stage} />}</TabsContent>
+        {views.some((v) => v.id === "visual") && <TabsContent value="visual">{view === "visual" && <VisualDna analysis={analysis} stage={stage} videos={videos} />}</TabsContent>}
       </Tabs>
 
-      <p className="mt-5 text-micro text-pretty text-secondary-foreground">
+      <p className="mt-5 type-caption text-pretty text-text-2">
         AI-written from every slide, checked by Curatit&apos;s editors.{!analysis.complete && " Some slides have no record, so this may be incomplete."}
       </p>
     </div>
@@ -142,257 +149,294 @@ function Breakdown({ analysis, stage }: { analysis: PublicAnalysis; stage: Stage
   const decisions = analysis.creativeDecisions;
   // The first decision starts open on its explanation; opening one yourself shows its slide
   const [open, setOpen] = useState<number | null>(decisions.length ? 0 : null);
-  const toggle = (i: number) => {
-    const next = open === i ? null : i;
+  const choose = (next: number | null) => {
     setOpen(next);
     const first = next == null ? null : decisions[next].evidence.find((target) => target.kind === "slide");
     if (stage.carousel && first?.kind === "slide") stage.onSlide(first.index);
   };
-  const folds = (!decisions.length && analysis.hypotheses.length > 0) || analysis.caveats.length > 0;
 
   return (
-    <div>
-      <p className="text-subtitle font-medium text-balance text-primary-foreground">{analysis.headline}</p>
-      {analysis.summary && <p className="mt-1.5 text-body text-pretty text-secondary-foreground">{analysis.summary}</p>}
-      <Chips analysis={analysis} />
+    <article className="text-pretty">
+      <h2 className="type-title text-balance text-text-1">{analysis.headline}</h2>
+      {analysis.summary && <p className="mt-2.5 type-body-sm text-pretty text-text-2">{analysis.summary}</p>}
+      <Traits analysis={analysis} />
 
       {decisions.length > 0 ? (
         <section aria-labelledby="decisions-heading" className="mt-6">
-          <Subhead id="decisions-heading">Key creative decisions</Subhead>
-          <ol className="mt-2 space-y-1">
+          <div className="flex items-baseline justify-between gap-3">
+            <Subhead id="decisions-heading">Key creative decisions</Subhead>
+            <span className="data type-caption text-text-2">{decisions.length}</span>
+          </div>
+          <CollapsibleGroup
+            variant="plain"
+            render={<ol />}
+            value={open == null ? [] : [open]}
+            onValueChange={(values) => choose(values.length ? (values[0] as number) : null)}
+            className="mt-1"
+          >
             {decisions.map((decision, i) => (
-              <DecisionCard key={i} n={i + 1} decision={decision} open={open === i} onToggle={() => toggle(i)} stage={stage} />
+              <Decision key={i} n={i + 1} value={i} decision={decision} open={open === i} stage={stage} />
             ))}
-          </ol>
+          </CollapsibleGroup>
         </section>
       ) : (
         analysis.mechanisms.length > 0 && (
-          <>
+          <section className="mt-6">
             <Subhead>What it does</Subhead>
-            <ul className="mt-2 space-y-3">
+            <ul className="mt-1">
               {analysis.mechanisms.map((insight, i) => (
-                <li key={i}>
-                  <p className="text-body text-pretty text-primary-foreground">{insight.text}</p>
-                  <p className="mt-1 flex flex-wrap items-baseline gap-x-2.5 text-caption">
-                    <span className="text-secondary-foreground">{insight.kind === "interpretation" ? "Interpretation" : "Observed"}</span>
+                <li key={i} className="rule-row py-2.5">
+                  <p className="type-body-sm text-pretty text-text-1">{insight.text}</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 type-caption">
+                    <span className="text-text-2">{insight.kind === "interpretation" ? "Interpretation" : "Observed"}</span>
                     <Evidence evidence={insight.evidence} stage={stage} />
-                  </p>
+                  </div>
                 </li>
               ))}
             </ul>
-          </>
+          </section>
         )
       )}
 
       {analysis.integrity.length > 0 && <DataChecks checks={analysis.integrity} stage={stage} />}
 
-      {folds && (
-        <div className="mt-5 divide-y divide-border-default border-y border-border-default">
-          {!decisions.length && (
-            <Fold title="Why it might work" count={analysis.hypotheses.length}>
-              <ul className="space-y-3 pb-4">
-                {analysis.hypotheses.map((hypothesis, i) => (
-                  <li key={i}>
-                    <p className="text-body text-pretty text-secondary-foreground">{hypothesis.text}</p>
-                    <p className="mt-1 text-caption">
-                      <Evidence evidence={hypothesis.evidence} stage={stage} />
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </Fold>
+      {((!decisions.length && analysis.hypotheses.length > 0) || analysis.caveats.length > 0) && (
+        <CollapsibleGroup variant="plain" multiple className="mt-4 border-t border-line-faint">
+          {!decisions.length && analysis.hypotheses.length > 0 && (
+            <Collapsible value="hypotheses">
+              <CollapsibleTrigger summary={analysis.hypotheses.length}>Why it might work</CollapsibleTrigger>
+              <CollapsibleContent>
+                <ul className="space-y-3">
+                  {analysis.hypotheses.map((hypothesis, i) => (
+                    <li key={i}>
+                      <p className="type-body-sm text-pretty text-text-2">{hypothesis.text}</p>
+                      <div className="mt-1 type-caption">
+                        <Evidence evidence={hypothesis.evidence} stage={stage} />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </CollapsibleContent>
+            </Collapsible>
           )}
-          <Fold title="Caveats" count={analysis.caveats.length}>
-            <List items={analysis.caveats} className="mt-0 pb-4" />
-          </Fold>
-        </div>
+          {analysis.caveats.length > 0 && (
+            <Collapsible value="caveats">
+              <CollapsibleTrigger summary={analysis.caveats.length}>Caveats</CollapsibleTrigger>
+              <CollapsibleContent>
+                <ol className="space-y-2 type-body-sm text-pretty text-text-1">
+                  {analysis.caveats.map((item, i) => (
+                    <li key={i} className="flex gap-2.5">
+                      <span className="w-3 shrink-0 text-text-2">–</span>
+                      {item}
+                    </li>
+                  ))}
+                </ol>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+        </CollapsibleGroup>
       )}
-    </div>
+    </article>
   );
 }
 
-function Chips({ analysis }: { analysis: PublicAnalysis }) {
+// The strategy's traits as label and value pairs
+function Traits({ analysis }: { analysis: PublicAnalysis }) {
   const items = traits(analysis);
   if (!items.length) return null;
   return (
-    <dl className="mt-3 flex flex-wrap gap-1.5">
+    <DataList className="mt-3">
       {items.map((trait) => (
-        <div key={trait.label} className="flex h-7 max-w-full min-w-0 items-center gap-1.5 rounded-full bg-card px-2.5 text-caption">
-          <dt className="shrink-0 text-secondary-foreground">{trait.label}</dt>
-          <dd className="truncate font-medium text-primary-foreground" title={trait.value}>
-            {trait.value}
-          </dd>
-        </div>
+        <DataListItem key={trait.label}>
+          <DataListLabel>{trait.label}</DataListLabel>
+          <DataListValue>{trait.value}</DataListValue>
+        </DataListItem>
       ))}
-    </dl>
+    </DataList>
   );
 }
 
-// A decision: its number, title and where it shows (marked while the stage is on one of those
-// slides); open, its explanation, and on request the reasoning: observed, possible effect,
-// principle, watch out
-function DecisionCard({ n, decision, open, onToggle, stage }: { n: number; decision: DecisionView; open: boolean; onToggle: () => void; stage: Stage }) {
+// A decision as a row: its number, its title and where it shows (marked while the stage is on one
+// of those slides); open, its explanation, and on request the reasoning: observed, possible effect,
+// principle, watch out. Its content renders only while it's open, so a closed decision's reasoning
+// isn't in the page
+function Decision({ n, value, decision, open, stage }: { n: number; value: number; decision: DecisionView; open: boolean; stage: Stage }) {
   const [reasoning, setReasoning] = useState(false);
   const id = `decision-${n}`;
   const where = [stage.carousel ? slideList(decision.evidence) : null, decision.evidence.some((target) => target.kind === "caption") ? "Caption" : null].filter(Boolean).join(" · ");
   const here = stage.carousel && decision.evidence.some((target) => target.kind === "slide" && target.index === stage.index);
   return (
-    <li className={cx("rounded-xl transition-[background-color] duration-150 ease-out-quint", open ? "bg-card" : "hover:bg-card")}>
-      <button type="button" aria-expanded={open} aria-controls={id} onClick={onToggle} className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus">
-        <span className="mt-px w-5 shrink-0 text-caption text-secondary-foreground tabular-nums">{String(n).padStart(2, "0")}</span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-body font-medium text-pretty text-primary-foreground">{decision.title}</span>
-          {where && (
-            <span className={cx("mt-0.5 flex items-center gap-1.5 text-caption tabular-nums", here ? "text-primary-foreground" : "text-secondary-foreground")}>
-              {here && <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-primary-foreground" />}
-              {where}
-              {here && <span className="sr-only">, on screen</span>}
-            </span>
-          )}
+    <Collapsible value={value} render={<li />}>
+      {/* The caret sits on the title's first line (12px on a 20px line), not centred on the title and
+          its slides line together, where it fell under the number */}
+      <CollapsibleTrigger className="items-start [&>[data-slot=collapsible-caret]]:mt-1">
+        <span className="flex gap-2">
+          <span className="data w-4 shrink-0 text-text-2">{n}</span>
+          <span className="min-w-0">
+            <span className="block text-balance">{decision.title}</span>
+            {where && (
+              <span className={cn("mt-0.5 flex items-center gap-1 type-caption", here ? "text-text-1" : "text-text-2")}>
+                {here && <Icon icon={Show} size={12} />}
+                <span className="data">{where}</span>
+                {here && <span className="sr-only">, on screen</span>}
+              </span>
+            )}
+          </span>
         </span>
-        <Chevron open={open} />
-      </button>
-      {open && (
-        <div id={id} className="px-3 pb-3 pl-11">
-          <p className="text-body text-pretty text-secondary-foreground">{decision.explanation}</p>
-          <button
-            type="button"
-            aria-expanded={reasoning}
-            aria-controls={`${id}-reasoning`}
-            onClick={() => setReasoning((value) => !value)}
-            className="relative mt-1.5 flex h-8 items-center gap-1 text-caption font-medium text-secondary-foreground transition-[color] duration-150 ease-out-quint before:absolute before:-inset-x-2 before:-inset-y-1.5 hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
-          >
-            {reasoning ? "Hide the reasoning" : "Show the reasoning"}
-            <Chevron open={reasoning} />
-          </button>
-          {reasoning && (
-            <dl id={`${id}-reasoning`} className="mt-1 space-y-2.5">
-              {decision.observation && <Field label="Observed">{decision.observation}</Field>}
-              <Field label="Possible effect">{decision.effect}</Field>
-              <Field label="Reusable principle" strong>
-                {decision.principle}
-              </Field>
-              {decision.watchOut && <Field label="Watch out">{decision.watchOut}</Field>}
-              {stage.carousel && (
-                <div className="text-caption">
-                  <dt className="sr-only">Evidence</dt>
-                  <dd>
-                    <Evidence evidence={decision.evidence} stage={stage} />
-                    {decision.confidence === "low" && <span className="ml-2.5 text-secondary-foreground">Low confidence</span>}
-                  </dd>
-                </div>
-              )}
-            </dl>
-          )}
-        </div>
-      )}
-    </li>
+      </CollapsibleTrigger>
+      <CollapsibleContent hiddenUntilFound={false}>
+        {open && (
+          <div className="ps-6">
+            <p className="text-pretty">{decision.explanation}</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-expanded={reasoning}
+              aria-controls={`${id}-reasoning`}
+              onClick={() => setReasoning((value) => !value)}
+              className="mt-1 -ms-2.5"
+            >
+              <span>{reasoning ? "Hide the reasoning" : "Show the reasoning"}</span>
+              <Icon icon={ChevronDown} className={cn("text-text-2 transition-[rotate] duration-(--dur-state) ease-out", reasoning && "rotate-180")} />
+            </Button>
+            {reasoning && (
+              <DataList id={`${id}-reasoning`} orientation="vertical" className="mt-1 border-t border-line-faint">
+                {decision.observation && <Reason label="Observed">{decision.observation}</Reason>}
+                <Reason label="Possible effect">{decision.effect}</Reason>
+                <Reason label="Reusable principle" strong>
+                  {decision.principle}
+                </Reason>
+                {decision.watchOut && <Reason label="Watch out">{decision.watchOut}</Reason>}
+                {/* Where it shows is the line under the title; the slide tags that repeated it here
+                    were taken out on 2026-10-24 at the owner's request */}
+                {decision.confidence === "low" && (
+                  <DataListItem>
+                    <DataListLabel className="sr-only">Confidence</DataListLabel>
+                    <DataListValue className="type-caption text-text-2">Low confidence</DataListValue>
+                  </DataListItem>
+                )}
+              </DataList>
+            )}
+          </div>
+        )}
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
-function Field({ label, strong, children }: { label: string; strong?: boolean; children: ReactNode }) {
+function Reason({ label, strong, children }: { label: string; strong?: boolean; children: ReactNode }) {
   return (
-    <div>
-      <dt className="text-micro text-secondary-foreground">{label}</dt>
-      <dd className={cx("mt-0.5 text-body text-pretty", strong ? "font-medium text-primary-foreground" : "text-secondary-foreground")}>{children}</dd>
-    </div>
+    <DataListItem>
+      <DataListLabel className="type-caption">{label}</DataListLabel>
+      <DataListValue className={cn("text-pretty", strong ? "type-label text-text-1" : "type-body-sm text-text-2")}>{children}</DataListValue>
+    </DataListItem>
   );
 }
 
-// The data checks summed up in a line; open, each with what kind of statement it is, in words and
-// an icon, never by colour alone
-const STATUS_ICON: Record<IntegrityStatus, typeof Eye> = { concern: WarningCircle, observed: Eye, cannot_verify: Question, verified: SealCheck };
+// The data checks summed up in one row; open, each with what kind of statement it is, in words
+// and a glyph, never by colour alone
+const STATUS_ICON: Record<IntegrityStatus, Glyph> = { concern: Failed, observed: Show, cannot_verify: Question, verified: SealCheck };
 
 function DataChecks({ checks, stage }: { checks: IntegrityView[]; stage: Stage }) {
-  const [open, setOpen] = useState(false);
   return (
-    <section aria-labelledby="checks-heading" className="mt-6">
-      <Subhead id="checks-heading">Data checks</Subhead>
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls="checks-list"
-        onClick={() => setOpen((value) => !value)}
-        className="mt-2 flex w-full items-center justify-between gap-3 rounded-xl bg-card px-3 py-2.5 text-left transition-[background-color] duration-150 ease-out-quint hover:bg-transparent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
-      >
-        <span className="text-body text-pretty text-primary-foreground">{integritySummary(checks)}</span>
-        <span className="flex shrink-0 items-center gap-1.5 text-caption text-secondary-foreground">
-          {open ? "Hide" : "Show"}
-          <Chevron open={open} />
-        </span>
-      </button>
-      {open && (
-        <div id="checks-list">
-          <ul className="mt-3 space-y-3">
+    <CollapsibleGroup variant="plain" className="mt-4 border-t border-line-faint">
+      <Collapsible value="checks">
+        <CollapsibleTrigger>
+          <span className="block">Data checks</span>
+          <span className="block type-body-sm text-pretty text-text-2">{integritySummary(checks)}</span>
+        </CollapsibleTrigger>
+        <CollapsibleContent hiddenUntilFound={false}>
+          <ul className="space-y-2.5">
             {checks.map((check, i) => {
-              const Icon = STATUS_ICON[check.status];
+              const concern = check.status === "concern";
               return (
-                <li key={i} className="flex gap-2.5">
-                  <Icon size="sm" aria-hidden="true" className={cx("mt-0.5 shrink-0", check.status === "concern" ? "text-primary-foreground" : "text-tertiary-foreground")} />
+                <li key={i} className="flex gap-2">
+                  <Icon icon={STATUS_ICON[check.status]} className={cn("mt-0.5", concern ? "text-warn-text" : "text-text-2")} />
                   <div className="min-w-0">
-                    <p className="flex flex-wrap items-baseline gap-x-2 text-body">
-                      <span className="font-medium text-primary-foreground">{check.aspect}</span>
-                      <span className={cx("text-caption", check.status === "concern" ? "font-medium text-primary-foreground" : "text-secondary-foreground")}>{STATUS_LABEL[check.status]}</span>
+                    <p className="flex flex-wrap items-baseline gap-x-2">
+                      <span className="type-label text-text-1">{check.aspect}</span>
+                      <span className={cn("type-caption", concern ? "font-medium text-warn-text" : "text-text-2")}>{STATUS_LABEL[check.status]}</span>
                     </p>
-                    <p className="mt-0.5 text-body text-pretty text-secondary-foreground">{check.note}</p>
+                    <p className="text-pretty text-text-2">{check.note}</p>
                     {stage.carousel && check.evidence.some((target) => target.kind === "slide") && (
-                      <p className="mt-1 text-caption">
+                      <div className="mt-1 type-caption">
                         <Evidence evidence={check.evidence} stage={stage} />
-                      </p>
+                      </div>
                     )}
                   </div>
                 </li>
               );
             })}
           </ul>
-          <p className="mt-3 text-micro text-pretty text-secondary-foreground">Read from the post itself. No figure here was checked against its sources.</p>
-        </div>
-      )}
-    </section>
+          <p className="mt-3 type-caption text-pretty text-text-2">Read from the post itself. No figure here was checked against its sources.</p>
+        </CollapsibleContent>
+      </Collapsible>
+    </CollapsibleGroup>
   );
 }
 
 // ---- Visual DNA ----
 
+// A glyph per dimension, beside its title
+const DNA_ICONS: Record<VisualSection["key"], Glyph> = {
+  composition: SquaresFour,
+  typography: TextAa,
+  colour: Palette,
+  imagery: Picture,
+  devices: Sparkle,
+  branding: SealCheck,
+};
+
 function VisualDna({ analysis, stage, videos }: { analysis: PublicAnalysis; stage: Stage; videos: boolean[] }) {
   return (
     <div>
       {analysis.visual.map((section) => (
-        <section key={section.key} className="mt-6 first:mt-0">
-          <Subhead>{section.title}</Subhead>
-          {section.insight && <p className="mt-1.5 text-body text-pretty text-primary-foreground">{section.insight}</p>}
-          {section.key === "colour" && analysis.colours.length > 0 && <Swatches colours={analysis.colours} />}
-          {section.chips.length > 0 && (
-            <ul className="mt-2 flex flex-wrap gap-1.5">
+        <DnaSection key={section.key} icon={DNA_ICONS[section.key]} title={section.title}>
+          {/* Colour is the palette alone (2026-10-24, at the owner's request): no note, no chips */}
+          {section.key === "colour" && analysis.colours.length > 0 ? (
+            <ColourPalette colours={analysis.colours} />
+          ) : (
+            section.insight && <p className="mt-0.5 text-pretty text-text-2">{section.insight}</p>
+          )}
+          {section.key !== "colour" && section.chips.length > 0 && (
+            <ul className="mt-2 flex flex-wrap gap-1">
               {section.chips.map((chip) => (
-                <li key={chip} className="rounded-full bg-card px-2.5 py-1 text-caption text-primary-foreground">
-                  {chip}
+                <li key={chip}>
+                  <Badge>{chip}</Badge>
                 </li>
               ))}
             </ul>
           )}
           {section.key === "branding" && analysis.consistency && <Consistency consistency={analysis.consistency} stage={stage} />}
-          {stage.carousel && section.key !== "branding" && section.evidence.length > 0 && (
-            <p className="mt-1.5 text-caption">
-              <span className="mr-2 text-secondary-foreground">Seen on</span>
-              <Evidence evidence={section.evidence} stage={stage} />
-            </p>
-          )}
-        </section>
+        </DnaSection>
       ))}
       {stage.carousel && (
-        <section className="mt-6">
-          <Subhead>Sequence</Subhead>
+        <DnaSection icon={FilmStrip} title="Sequence">
           <Sequence analysis={analysis} stage={stage} videos={videos} />
-          {analysis.sequence.arc && <p className="mt-2 text-body text-pretty text-secondary-foreground">{analysis.sequence.arc}</p>}
-        </section>
+          {analysis.sequence.arc && <p className="mt-2 text-pretty text-text-2">{analysis.sequence.arc}</p>}
+        </DnaSection>
       )}
     </div>
   );
 }
 
-// The post's colours as tiles: the swatch, the job it does and its hex. Tapping one copies the hex
-function Swatches({ colours }: { colours: ColourView[] }) {
+// One dimension: its glyph and title, then the rest, ruled from the next. The slides a dimension
+// shows on were a tag beside the title until 2026-10-24, taken out at the owner's request
+function DnaSection({ icon, title, children }: { icon: Glyph; title: string; children: ReactNode }) {
+  return (
+    <section className="rule-row py-3 first:pt-0">
+      <h3 className="flex items-center gap-1.5 type-label text-text-1">
+        <Icon icon={icon} className="text-text-2" />
+        {title}
+      </h3>
+      {children}
+    </section>
+  );
+}
+
+// The post's colours as a palette: one strip of equal blocks, each hex under its block. Pressing a
+// block copies its hex, and the hex under it says Copied for a moment
+function ColourPalette({ colours }: { colours: ColourView[] }) {
   const [copied, setCopied] = useState<string | null>(null);
   useEffect(() => {
     if (!copied) return;
@@ -402,28 +446,23 @@ function Swatches({ colours }: { colours: ColourView[] }) {
   const copy = (hex: string) => navigator.clipboard?.writeText(hex).then(() => setCopied(hex), () => setCopied(null));
   return (
     <>
-      <ul className="mt-2.5 grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-1.5" aria-label="Colours (measured from the image)">
+      <ul className="mt-2.5 flex h-12 overflow-hidden rounded-(--corner-xs) border border-line-faint" aria-label="Colours (measured from the image)">
         {colours.map((colour) => (
-          <li key={colour.hex} className="min-w-0">
-            <button
-              type="button"
+          <li key={colour.hex} className="min-w-0 flex-1">
+            <ButtonPrimitive
               onClick={() => copy(colour.hex)}
               aria-label={`Copy ${colour.hex}${colour.role ? `, ${colour.role}` : ""}`}
-              className="group flex w-full items-center gap-2.5 rounded-xl bg-card p-1.5 pr-2.5 text-left transition-[background-color] duration-150 ease-out-quint hover:bg-transparent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
-            >
-              <span aria-hidden="true" className="size-8 shrink-0 rounded-lg outline-1 -outline-offset-1 outline-edge" style={{ background: colour.hex }} />
-              <span className="min-w-0 flex-1">
-                {colour.role && (
-                  <span className="block truncate text-caption text-primary-foreground" title={colour.role}>
-                    {colour.role}
-                  </span>
-                )}
-                <span className="block font-mono text-micro text-secondary-foreground uppercase">{colour.hex}</span>
-              </span>
-              <span aria-hidden="true" className="shrink-0 text-tertiary-foreground transition-[color] duration-150 ease-out-quint group-hover:text-secondary-foreground">
-                {copied === colour.hex ? <Check size="xs" /> : <Copy size="xs" />}
-              </span>
-            </button>
+              title={colour.role ?? undefined}
+              className="block size-full cursor-pointer bg-(--swatch) focus-visible:focus-ring-inset"
+              style={{ "--swatch": colour.hex } as CSSProperties}
+            />
+          </li>
+        ))}
+      </ul>
+      <ul aria-hidden="true" className="mt-1.5 flex">
+        {colours.map((colour) => (
+          <li key={colour.hex} className="min-w-0 flex-1 truncate type-caption text-text-2">
+            <span className="mono">{copied === colour.hex ? "Copied" : colour.hex}</span>
           </li>
         ))}
       </ul>
@@ -437,24 +476,24 @@ function Swatches({ colours }: { colours: ColourView[] }) {
 // What every slide shares, and what changes where
 function Consistency({ consistency, stage }: { consistency: NonNullable<PublicAnalysis["consistency"]>; stage: Stage }) {
   return (
-    <div className="mt-2.5 space-y-1.5 text-caption">
+    <div className="mt-2.5 space-y-1.5 type-caption">
       {consistency.same.length > 0 && (
         <p>
-          <span className="mr-2 text-secondary-foreground">Same on every slide</span>
-          <span className="text-primary-foreground">{consistency.same.join(", ")}</span>
+          <span className="mr-2 text-text-2">Same on every slide</span>
+          <span className="text-text-1">{consistency.same.join(", ")}</span>
         </p>
       )}
       {consistency.varies.map((change) => (
-        <p key={change.label}>
-          <span className="mr-2 text-secondary-foreground">{change.label} changes on</span>
+        <div key={change.label} className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="text-text-2">{change.label} changes on</span>
           <Evidence evidence={change.evidence} stage={stage} />
-        </p>
+        </div>
       ))}
     </div>
   );
 }
 
-// The slides as a bar you tap, the ones that break the pattern a shade darker, with what the
+// The slides as a bar you press, the ones that break the pattern a shade darker, with what the
 // current slide changes from the one before
 function Sequence({ analysis, stage, videos }: { analysis: PublicAnalysis; stage: Stage; videos: boolean[] }) {
   const { index, onSlide } = stage;
@@ -462,31 +501,37 @@ function Sequence({ analysis, stage, videos }: { analysis: PublicAnalysis; stage
   const usual = mostCommon(roles);
   const changes = analysis.slides[index]?.changes ?? [];
   return (
-    <div className="mt-2">
-      <p className="text-right text-micro text-secondary-foreground tabular-nums">
-        {index + 1} / {roles.length} · <span className="text-primary-foreground">{roles[index] ?? "Slide"}</span>
+    <div className="mt-1.5">
+      <p className="data text-right type-caption text-text-2">
+        {index + 1} / {roles.length} · <span className="text-text-1">{roles[index] ?? "Slide"}</span>
         {videos[index] && " · video cover"}
       </p>
-      <div role="group" aria-label="Slides" className="mt-1.5 flex gap-1">
+      <div role="group" aria-label="Slides" className="mt-1 flex">
         {roles.map((role, i) => (
-          <button
+          <Button
             key={i}
-            type="button"
+            variant="ghost"
+            size="sm"
             aria-pressed={i === index}
             aria-label={`Slide ${i + 1}${role ? `: ${role}` : ""}`}
             title={role ?? undefined}
             onClick={() => onSlide(i)}
-            className="group relative h-6 min-w-0 flex-1 before:absolute before:inset-x-0 before:-inset-y-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
+            className="min-w-0 flex-1"
           >
-            <span className={cx("block h-1.5 w-full rounded-full transition-[background-color] duration-150 ease-out-quint", i === index ? "bg-primary-foreground" : role !== usual ? "bg-tertiary-foreground group-hover:bg-secondary-foreground" : "bg-component-active group-hover:bg-border-strong")} />
-          </button>
+            <span
+              className={cn(
+                "-mx-2 block h-1.5 w-full rounded-pill transition-colors duration-(--dur-state) ease-out",
+                i === index ? "bg-ink" : role !== usual ? "bg-(--ink-45) group-hover/button:bg-(--ink-60)" : "bg-(--ink-15) group-hover/button:bg-(--ink-45)",
+              )}
+            />
+          </Button>
         ))}
       </div>
-      {analysis.sequence.formula && <p className="mt-1 text-caption text-pretty text-secondary-foreground">{analysis.sequence.formula}</p>}
+      {analysis.sequence.formula && <p className="mt-1 type-caption text-pretty text-text-2">{analysis.sequence.formula}</p>}
       {changes.length > 0 && (
-        <div className="mt-2 text-caption">
-          <p className="text-secondary-foreground">Changes from slide {index}</p>
-          <ul className="mt-0.5 text-primary-foreground">
+        <div className="mt-2 type-caption">
+          <p className="text-text-2">Changes from slide {index}</p>
+          <ul className="mt-0.5 text-text-1">
             {changes.map((change) => (
               <li key={change}>{change}</li>
             ))}
@@ -526,15 +571,10 @@ function CopyBrief({ analysis, source }: { analysis: PublicAnalysis; source: Bri
   }, [state]);
   return (
     <>
-      <button
-        type="button"
-        onClick={copy}
-        title="Copy a design brief matching this post’s visual treatment with replacement text, logos and imagery"
-        className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-card pr-3 pl-3.5 text-body font-medium whitespace-nowrap text-primary-foreground transition-[background-color,scale] duration-150 ease-out-quint hover:bg-transparent-hover motion-safe:active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
-      >
-        {state === "copied" ? "Copied" : state === "failed" ? "Couldn't copy" : "Copy brief"}
-        {state === "copied" ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-      </button>
+      <Button variant="secondary" size="sm" onClick={copy} title="Copy a design brief matching this post’s visual treatment with replacement text, logos and imagery">
+        <span>{state === "copied" ? "Copied" : state === "failed" ? "Couldn't copy" : "Copy brief"}</span>
+        <Icon icon={state === "copied" ? Check : Copy} />
+      </Button>
       <span role="status" className="sr-only">
         {state === "copied" ? "Design brief copied. Paste it into your AI tool." : state === "failed" ? "Couldn't copy the brief here." : ""}
       </span>
@@ -546,47 +586,9 @@ function CopyBrief({ analysis, source }: { analysis: PublicAnalysis; source: Bri
 
 function Subhead({ id, children }: { id?: string; children: ReactNode }) {
   return (
-    <h3 id={id} className="mt-6 text-caption font-medium text-secondary-foreground first:mt-0">
+    <h3 id={id} className="type-heading-sm text-text-1">
       {children}
     </h3>
-  );
-}
-
-function List({ items, numbered, className }: { items: string[]; numbered?: boolean; className?: string }) {
-  return (
-    <ol className={cx("mt-2 space-y-2 text-body text-pretty text-primary-foreground", className)}>
-      {items.map((item, i) => (
-        <li key={i} className="flex gap-2.5">
-          <span className="w-3 shrink-0 text-tertiary-foreground tabular-nums">{numbered ? i + 1 : "–"}</span>
-          {item}
-        </li>
-      ))}
-    </ol>
-  );
-}
-
-function Fold({ title, count, children }: { title: string; count: number; children: ReactNode }) {
-  if (!count) return null;
-  return (
-    <details className="group">
-      <summary className="flex h-11 cursor-pointer list-none items-center justify-between text-body font-medium text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus [&::-webkit-details-marker]:hidden">
-        {title}
-        <span className="flex items-center gap-2 text-caption font-normal text-secondary-foreground tabular-nums">
-          {count}
-          <Chevron open={false} group />
-        </span>
-      </summary>
-      {children}
-    </details>
-  );
-}
-
-// Phosphor's caret, as in the dashboard header's menu trigger
-function Chevron({ open, group }: { open: boolean; group?: boolean }) {
-  return (
-    <CaretDown
-      className={cx("mt-0.5 size-3.5 shrink-0 text-tertiary-foreground transition-transform duration-200 ease-out-quint motion-reduce:transition-none", open && "rotate-180", group && "group-open:rotate-180")}
-    />
   );
 }
 
@@ -599,31 +601,11 @@ function slideList(evidence: EvidenceTarget[]) {
   return parts.length === 1 && !parts[0].includes("–") ? `Slide ${parts[0]}` : `Slides ${parts.join(", ")}`;
 }
 
-// The slides a statement rests on, as links that show them on the stage ("Slide 1", "Slides 4–5");
-// the caption and the post's details as plain words. A single image is always on screen, so it
-// gets no slide links
+// The slides a statement rests on, the caption and the post's details, in plain words: "Slides 4–5 ·
+// Caption". They were chips that showed the slide on the stage until 2026-10-24, when the owner
+// asked for the tags to go. A single image is always on screen, so it names no slides
 function Evidence({ evidence, stage }: { evidence: EvidenceTarget[]; stage: Stage }) {
   const groups = evidenceGroups(evidence).filter((group) => stage.carousel || group.target.kind !== "slide");
   if (!groups.length) return null;
-  return (
-    <span className="inline-flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-      {groups.map((group) =>
-        group.target.kind === "slide" ? (
-          <button
-            key={group.label}
-            type="button"
-            aria-pressed={group.target.index === stage.index}
-            onClick={() => group.target.kind === "slide" && stage.onSlide(group.target.index)}
-            className="relative font-medium text-secondary-foreground underline decoration-border-strong underline-offset-2 transition-[color,text-decoration-color] duration-150 ease-out-quint before:absolute before:-inset-x-1 before:-inset-y-2 hover:text-primary-foreground hover:decoration-tertiary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-pressed:text-primary-foreground aria-pressed:decoration-primary-foreground"
-          >
-            {group.label}
-          </button>
-        ) : (
-          <span key={group.label} className="text-secondary-foreground">
-            {group.label}
-          </span>
-        ),
-      )}
-    </span>
-  );
+  return <span className="text-text-2">{groups.map((group) => group.label).join(" · ")}</span>;
 }

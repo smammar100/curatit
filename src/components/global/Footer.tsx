@@ -1,43 +1,43 @@
-import type { ReactNode } from "react";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 // Assets
 import Logo from "@/components/assets/Logo";
 import Symbol from "@/components/assets/Symbol";
+import TextLink from "@/components/fundations/elements/TextLink";
 import DeferredImages from "@/components/global/DeferredImages";
 import {
   getPublishedPosts,
   optimizedImage,
   type LibraryPost,
 } from "@/lib/posts";
-import { SUPPORT_MAILTO } from "@/lib/site";
 import FooterNewsletter from "./FooterNewsletter";
 
 // The site footer, "Ruled" (chosen from two prototype rounds on 2026-10-15, replacing "Night"'s
 // fanned covers): the page's paper carries on, and the footer is an inset dark panel, one of two
 // deliberately dark surfaces (with Vision's panel) on the marketing site. Hairlines divide it
 // into cells: the full logo (the mark turning beside the wordmark) over a short statement in the
-// first, the link groups in their own; then the newest covers as a filmstrip running edge to
+// first, the links in their own; then the newest covers as a filmstrip running edge to
 // edge and drifting sideways (a CSS marquee, still under reduced motion); then © and legal.
 // A server component, so it costs the page no script beyond the hidden email field; if the
 // library can't be reached, it renders without the strip.
+//
+// Since 2026-10-24 on Glaze. The panel is its own Glaze scope in the dark theme (`glaze` with
+// data-theme="dark"), so it stays dark on both the light and the dark site and every colour
+// inside is a Glaze role that flips there: the panel is the grey field (the one solid surface of
+// that theme the bridge leaves alone; paper, page and shell keep the site's own ladder), the words
+// text-1 and text-2, the cell rules the line that must read, the links quiet TextLinks (text-2,
+// text-1 on hover, Glaze's ink focus ring, which is light in this scope), the strip's empty tiles
+// the hover wash with tag corners. The --f-* palette in global.css is no longer read here.
 
+// One column of links since 2026-10-23, at the owner's request: Pricing, Submit a brand, Blog,
+// Advertise and Contact came out, with the Company heading; the pages themselves stay
 const LINKS = [
   {
     title: "Product",
     links: [
-      { label: "Pricing", href: "/pricing" },
       { label: "MCP (beta)", href: "/agents" },
-      { label: "Submit a brand to the library", href: "/submit" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
       { label: "Vision", href: "/vision" },
       { label: "Roadmap", href: "/roadmap" },
-      { label: "Blog", href: "/blog" },
-      { label: "Advertise", href: "/advertise" },
-      { label: "Contact", href: SUPPORT_MAILTO },
     ],
   },
 ];
@@ -77,30 +77,11 @@ function pickCovers(posts: LibraryPost[]) {
   return picked;
 }
 
-const linkClass =
-  "inline-flex min-h-10 items-center rounded-sm text-pretty text-[color:var(--f-body)] transition-colors duration-150 ease-out-quint hover:text-[color:var(--f-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--f-focus)] pointer-coarse:min-h-11";
-const cell = "border-[color:var(--f-line)] p-6 sm:p-8";
-
-function FooterLink({
-  href,
-  className,
-  children,
-}: {
-  href: string;
-  className?: string;
-  children: ReactNode;
-}) {
-  const classes = `${linkClass} ${className ?? ""}`;
-  return href.startsWith("/") ? (
-    <Link href={href} className={classes}>
-      {children}
-    </Link>
-  ) : (
-    <a href={href} className={classes}>
-      {children}
-    </a>
-  );
-}
+// A quiet link, at least 40px tall (44px on touch screens)
+const linkClass = "inline-flex min-h-10 items-center text-pretty pointer-coarse:min-h-11";
+const cell = "border-line p-6 sm:p-8";
+// The footer's bottom edge clears the home indicator on phones
+const safeBottom = { "--footer-pb": "max(1rem, env(safe-area-inset-bottom))" } as CSSProperties;
 
 export default async function Footer() {
   const posts = await getPublishedPosts().catch(() => []);
@@ -108,31 +89,18 @@ export default async function Footer() {
   const strip = Array.from({ length: REPEAT }, () => covers).flat();
 
   return (
-    <footer className="mt-12 bg-page px-4 lg:mt-16 pb-[max(1rem,env(safe-area-inset-bottom))]">
-      <div className="footer-panel relative isolate overflow-clip rounded-4xl sm:rounded-5xl">
+    <footer className="mt-12 bg-page px-4 pb-(--footer-pb) lg:mt-16" style={safeBottom}>
+      <div data-theme="dark" className="glaze relative isolate overflow-clip rounded-(--radius-float) bg-field text-text-2">
         <div className="grid grid-cols-2 lg:grid-cols-12">
           {/* The logo and the statement */}
-          <div
-            className={`${cell} col-span-2 border-b lg:col-span-6 lg:border-r lg:border-b-0`}
-          >
-            <Link
-              href="/"
-              aria-label="Curatit home"
-              className="inline-flex items-center gap-2.5 rounded-sm text-[color:var(--f-ink)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--f-focus)]"
-            >
-              <Symbol
-                className="footer-mark size-6 shrink-0"
-                aria-hidden="true"
-              />
+          <div className={`${cell} col-span-2 border-b lg:col-span-6 lg:border-r lg:border-b-0`}>
+            <Link href="/" aria-label="Curatit home" className="inline-flex items-center gap-2.5 rounded-tag text-text-1">
+              <Symbol className="footer-mark size-6 shrink-0" aria-hidden="true" />
               <Logo className="h-4 w-auto" aria-hidden="true" />
             </Link>
             <p className="mt-10 max-w-sm font-display text-h4 font-normal text-balance lg:mt-16 lg:text-h3">
-              <span className="text-[color:var(--f-quiet)]">
-                Real brand posts.{" "}
-              </span>
-              <span className="text-[color:var(--f-ink)]">
-                Useful ideas for your next project.
-              </span>
+              <span className="text-text-2">Real brand posts. </span>
+              <span className="text-text-1">Useful ideas for your next project.</span>
             </p>
             {SHOW_NEWSLETTER && (
               <div className="mt-8">
@@ -140,21 +108,16 @@ export default async function Footer() {
               </div>
             )}
           </div>
-          {LINKS.map((group, i) => (
-            <nav
-              key={group.title}
-              aria-label={group.title}
-              className={`${cell} border-b lg:col-span-3 lg:border-b-0 ${i === 0 ? "border-r" : ""}`}
-            >
-              <p className="text-caption-lg/5 font-medium text-[color:var(--f-quiet)]">
-                {group.title}
-              </p>
+          {/* The one links column takes the width the two used to share */}
+          {LINKS.map((group) => (
+            <nav key={group.title} aria-label={group.title} className={`${cell} col-span-2 border-b lg:col-span-6 lg:border-b-0`}>
+              <p className="type-label-sm text-text-2">{group.title}</p>
               <ul className="mt-1">
                 {group.links.map((link) => (
                   <li key={link.href}>
-                    <FooterLink href={link.href} className="text-body-sm">
+                    <TextLink variant="quiet" href={link.href} className={`${linkClass} type-body-sm`}>
                       {link.label}
-                    </FooterLink>
+                    </TextLink>
                   </li>
                 ))}
               </ul>
@@ -164,15 +127,12 @@ export default async function Footer() {
 
         {/* The newest covers, a filmstrip drifting across the whole width */}
         {covers.length > 0 && (
-          <div
-            className="footer-strip overflow-clip border-b border-[color:var(--f-line)] py-2"
-            aria-hidden="true"
-          >
+          <div className="footer-strip overflow-clip border-b border-line py-2" aria-hidden="true">
             <div className="footer-strip-track flex w-max gap-2">
               {strip.map((post, i) => (
                 <div
                   key={`${post.id}-${i}`}
-                  className="relative aspect-4/5 w-24 shrink-0 overflow-hidden rounded-sm bg-[color:var(--f-raise)] sm:w-28 lg:w-32"
+                  className="relative aspect-4/5 w-24 shrink-0 overflow-hidden rounded-panel bg-hover sm:w-28 lg:w-32"
                 >
                   {/* Started after the page has loaded (DeferredImages below): on a short page
                       the strip is close enough to the fold for the browser to fetch its covers
@@ -196,15 +156,13 @@ export default async function Footer() {
         <DeferredImages selector=".footer-strip img" />
 
         <div className="flex flex-wrap items-center justify-between gap-x-6 px-6 py-5 sm:px-8">
-          <p className="text-caption-lg/5 text-[color:var(--f-quiet)]">
-            © 2026 Curatit
-          </p>
+          <p className="type-caption text-text-2">© 2026 Curatit</p>
           <ul className="flex gap-x-5" aria-label="Legal">
             {LEGAL.map((link) => (
               <li key={link.href}>
-                <FooterLink href={link.href} className="text-caption-lg">
+                <TextLink variant="quiet" href={link.href} className={`${linkClass} type-caption`}>
                   {link.label}
-                </FooterLink>
+                </TextLink>
               </li>
             ))}
           </ul>

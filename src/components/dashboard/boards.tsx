@@ -2,23 +2,30 @@
 
 // The dashboard's boards: the signed-in person's boards from public.boards / board_posts, saving
 // a post to one or taking it off, making, renaming, describing, sharing and deleting boards,
-// notes on a board's posts, the toast that confirms each (the shared Toast, through the
-// ToastProvider round the dashboard in app/dashboard/layout.tsx), and the "Save" menu on each tile
-// (the shared Menu). The pages are static, so the boards load in the browser once the page is up
+// notes on a board's posts, the toast that confirms each (Glaze's toast(), through the one Toaster
+// in app/dashboard/layout.tsx; a failure is toast.fail, which stays until it's closed), and the
+// "Save" menu on each tile (Glaze's DropdownMenu, since 2026-10-24). The pages are static, so the
+// boards load in the browser once the page is up
 // (Row Level Security limits them to the owner's). Every change shows at once and is
 // written in the background; if the write fails it's undone and the toast says so. A new board
 // gets its id here (crypto.randomUUID), so a post can be saved to it while it's still being
 // written: writes to a board wait for its creation.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
-// Fundations
-import Button from "@/components/fundations/elements/Button";
-import Input from "@/components/fundations/elements/Input";
-import Menu, { MenuItem, MenuItemCheckbox, MenuMessage, useMenu } from "@/components/fundations/molecules/Menu";
-import { useToast } from "@/components/fundations/molecules/Toast";
-// Icons
-import Check from "@/components/fundations/icons/Check";
-import Plus from "@/components/fundations/icons/Plus";
+import { Button } from "@/components/glaze/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/glaze/ui/dropdown-menu";
+import { Input } from "@/components/glaze/ui/input";
+import { toast } from "@/components/glaze/ui/toast";
+import { Add, Check, Icon } from "@/components/glaze/icon";
 import { cx } from "@/lib/cx";
 import { createClient } from "@/utils/supabase/client";
 import { track } from "@/lib/analytics";
@@ -43,7 +50,7 @@ type BoardsValue = {
   setNote: (post: string, board: string, note: string) => void;
   // Turns the read-only link on (a new token every time, so an old link stays dead) or off
   setSharing: (id: string, on: boolean) => void;
-  // Shows a short confirmation, or a problem, at the bottom of the screen (the shared toast)
+  // Shows a short confirmation, or a problem, at the bottom of the screen (Glaze's toast)
   notify: (text: string, tone?: "done" | "error") => void;
 };
 
@@ -73,19 +80,16 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
   const [supabase] = useState(() => createClient());
   const [boards, setBoards] = useState<Board[]>([]);
   const [status, setStatus] = useState<BoardsValue["status"]>("loading");
-  const { toast } = useToast();
   const [byCode] = useState(() => new Map(posts.map((post) => [post.shortCode, post])));
   // Boards still being written, so a save to one waits for it
   const creating = useRef(new Map<string, Promise<boolean>>());
 
-  // The shared toast: its reading time (2.5s at least, 4s for a failure), held while pointed at,
-  // focused or in a background tab; a failure is read out assertively
-  const notify = useCallback(
-    (text: string, tone: "done" | "error" = "done") => {
-      toast({ message: text, tone: tone === "error" ? "danger" : "neutral" });
-    },
-    [toast],
-  );
+  // Glaze's toast: its reading time worked out from the words, held while pointed at, focused or
+  // in a background tab. A failure is toast.fail: read out assertively, and it stays until closed
+  const notify = useCallback((text: string, tone: "done" | "error" = "done") => {
+    if (tone === "error") toast.fail(text);
+    else toast(text);
+  }, []);
   const change = (id: string, edit: (board: Board) => Board) => setBoards((list) => list.map((b) => (b.id === id ? edit(b) : b)));
 
   useEffect(() => {
@@ -292,35 +296,24 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
   );
 }
 
-// The Save menu's last row: "New board", which opens in place into a name field and Create (the
-// one field the shared Menu allows, in its footer). Enter or Create makes the board with the post
-// on it and closes the menu; from the keyboard (Enter, or Create pressed with a key) focus goes
-// back to Save, from a pointer it stays put (see SaveMenu). Escape closes the menu, as anywhere in it.
-function NewBoardItem({ label, onCreate }: { label: string; onCreate: (name: string) => void }) {
-  const menu = useMenu();
+// The Save menu's last row: "New board", which opens in place into a name field and Create. Enter or
+// Create makes the board with the post on it and closes the menu; from the keyboard (Enter, or
+// Create pressed with a key) focus goes back to Save, from a pointer it stays put (see SaveMenu).
+// Escape closes the menu, as anywhere in it. Other keys typed in the field stay the field's, or the
+// menu's arrow keys and type-ahead would take them.
+function NewBoardItem({ label, onCreate }: { label: string; onCreate: (name: string, fromKeyboard: boolean) => void }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   // Set by Create's click (a key press clicks with no detail); Enter in the field counts as keyboard
   const fromKeyboard = useRef(true);
   if (!open) {
     return (
-      <MenuItem
-        media={
-          <span className="flex size-full items-center justify-center rounded bg-component">
-            <Plus className="size-3.5" />
-          </span>
-        }
-        onSelect={(event) => {
-          event.preventDefault();
-          setOpen(true);
-        }}
-      >
+      <DropdownMenuItem closeOnClick={false} onClick={() => setOpen(true)}>
+        <Icon icon={Add} />
         {label}
-      </MenuItem>
+      </DropdownMenuItem>
     );
   }
-  // The field and Create are 40px, and the form's 2px padding brings it to the 44px of the row it
-  // replaces
   return (
     <form
       className="flex gap-1.5 p-0.5"
@@ -330,15 +323,17 @@ function NewBoardItem({ label, onCreate }: { label: string; onCreate: (name: str
         fromKeyboard.current = true;
         const trimmed = name.trim();
         if (!trimmed) return;
-        onCreate(trimmed);
-        menu.close({ fromKeyboard: keyboard });
+        onCreate(trimmed, keyboard);
       }}
     >
       <Input
         autoFocus
         aria-label="Board name"
         value={name}
-        onChange={(event) => setName(event.target.value)}
+        onValueChange={setName}
+        onKeyDown={(event) => {
+          if (event.key !== "Escape" && event.key !== "Tab") event.stopPropagation();
+        }}
         maxLength={NAME_MAX}
         placeholder="Board name"
         className="min-w-0 flex-1"
@@ -356,54 +351,66 @@ function NewBoardItem({ label, onCreate }: { label: string; onCreate: (name: str
   );
 }
 
-// "Save" with a menu of boards (the shared Menu): a board with the post on it shows a check, and
-// choosing it takes the post off again. `tone="overlay"` sits on an image. Choosing a board (or
-// making one) from the keyboard puts focus back on Save; a pointer's choice doesn't move focus
-// there (returnFocus="keyboard"), because the tiles reveal Save on focus-within and it would stay
-// on screen after the pointer left. The boards scroll under the "Save to board" heading; New board
-// stays at the foot.
-export function SaveMenu({ post, tone = "plain", className }: { post: string; tone?: "plain" | "overlay"; className?: string }) {
+// "Save" with a menu of boards (Glaze's DropdownMenu): a board with the post on it shows a check,
+// and choosing it takes the post off again. Choosing a board (or making one) from the keyboard puts
+// focus back on Save; a pointer's choice doesn't move focus there, because the tiles reveal Save on
+// focus-within and it would stay on screen after the pointer left. The boards scroll under the
+// "Save to board" heading; New board stays at the foot. On a cover and on a page Save is the same
+// flat secondary pill (`tone` is kept for the callers): paper with its hairline reads over any image.
+export function SaveMenu({ post, className }: { post: string; tone?: "plain" | "overlay"; className?: string }) {
   const { boards, status, save, remove, createBoard } = useBoards();
   const savedIn = boards.some((board) => board.items.some((item) => item.post === post));
+  const [open, setOpen] = useState(false);
+  // Whether focus goes back to Save as the menu closes. The New board form closes it itself and
+  // says; otherwise only a close from the keyboard (Escape, or a board chosen with a key) returns it
+  const returnFocus = useRef<boolean | null>(null);
 
   return (
-    <Menu
-      heading="Save to board"
-      align="end"
-      width="fixed"
-      scrollable
-      returnFocus="keyboard"
-      className={className}
-      trigger={
-        // On a cover it's a label like the tile's brand: the page's colour (white, near-black in
-        // dark), nearly opaque, with the default shadow, so it reads over any image
-        <Button
-          size="sm"
-          variant={tone === "overlay" ? "none" : "muted"}
-          leftIcon={savedIn ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
-          className={tone === "overlay" ? "bg-page/95 text-primary-foreground shadow-sm hover:bg-page" : undefined}
-        >
-          {savedIn ? "Saved" : "Save"}
-        </Button>
-      }
-      footer={
-        status !== "loading" && (
-          <NewBoardItem label={boards.length ? "New board" : "Make your first board"} onCreate={(name) => createBoard(name, { firstPost: post })} />
-        )
-      }
-    >
-      {status === "loading" && <MenuMessage>Loading your boards…</MenuMessage>}
-      {boards.map((board) => (
-        <MenuItemCheckbox
-          key={board.id}
-          checked={board.items.some((item) => item.post === post)}
-          onCheckedChange={(on) => (on ? save(post, board.id) : remove(post, board.id))}
-          media={<BoardThumb board={board} className="size-full" />}
-        >
-          {board.name}
-        </MenuItemCheckbox>
-      ))}
-    </Menu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger render={<Button size="sm" variant="secondary" className={className} />}>
+        <Icon icon={savedIn ? Check : Add} />
+        {savedIn ? "Saved" : "Save"}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        aria-label="Save to board"
+        className="w-64"
+        finalFocus={(type) => {
+          const forced = returnFocus.current;
+          returnFocus.current = null;
+          return forced ?? type === "keyboard";
+        }}
+      >
+        <DropdownMenuGroup className="flex min-h-0 flex-col overflow-y-auto">
+          <DropdownMenuLabel>Save to board</DropdownMenuLabel>
+          {status === "loading" && <p className="px-2 py-1.5 type-body-sm text-text-2">Loading your boards…</p>}
+          {boards.map((board) => (
+            <DropdownMenuCheckboxItem
+              key={board.id}
+              closeOnClick
+              checked={board.items.some((item) => item.post === post)}
+              onCheckedChange={(on) => (on ? save(post, board.id) : remove(post, board.id))}
+            >
+              <BoardThumb board={board} className="size-6" />
+              <span className="min-w-0 truncate">{board.name}</span>
+            </DropdownMenuCheckboxItem>
+          ))}
+        </DropdownMenuGroup>
+        {status !== "loading" && (
+          <>
+            {boards.length > 0 && <DropdownMenuSeparator />}
+            <NewBoardItem
+              label={boards.length ? "New board" : "Make your first board"}
+              onCreate={(name, fromKeyboard) => {
+                createBoard(name, { firstPost: post });
+                returnFocus.current = fromKeyboard;
+                setOpen(false);
+              }}
+            />
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -412,7 +419,7 @@ export function BoardThumb({ board, className }: { board: Board; className?: str
   const { posts } = useBoards();
   const first = board.items[0] && posts.get(board.items[0].post);
   return (
-    <span className={cx("relative block shrink-0 overflow-hidden rounded bg-component", className)}>
+    <span className={cx("relative block shrink-0 overflow-hidden rounded-tag bg-field", className)}>
       {first && <Image src={first.cover} alt="" fill sizes="64px" className="object-cover" />}
     </span>
   );

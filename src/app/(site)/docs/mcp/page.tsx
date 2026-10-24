@@ -3,13 +3,12 @@ import Link from "next/link";
 // Fundation
 import Wrapper from "@/components/fundations/containers/Wrapper";
 import Text from "@/components/fundations/elements/Text";
-import Button from "@/components/fundations/elements/Button";
-import Badge from "@/components/fundations/elements/Badge";
-// Icons
-import Key from "@/components/fundations/icons/Key";
-import Plugs from "@/components/fundations/icons/Plugs";
-import TerminalWindow from "@/components/fundations/icons/TerminalWindow";
-import SealCheck from "@/components/fundations/icons/SealCheck";
+import TextLink from "@/components/fundations/elements/TextLink";
+// Glaze
+import { Icon, Key, Plugs, SealCheck, Terminal } from "@/components/glaze/icon";
+import { Badge } from "@/components/glaze/ui/badge";
+import { Button } from "@/components/glaze/ui/button";
+import { Card, CardContent } from "@/components/glaze/ui/card";
 // Components
 import CopyBlock from "@/components/mcp/CopyBlock";
 import { MCP_URL, TOOLS } from "@/components/mcp/tools";
@@ -23,7 +22,11 @@ export const metadata: Metadata = {
 // (resource_documentation). After Hume AI's deploy page and Hashnode's token page (Mobbin
 // references): three steps down the page, then one card per client with its configuration
 // ready to copy, then what the tools do. Every snippet puts the token in the environment, never
-// in the file. Server rendered; CopyBlock is the only script.
+// in the file. Server rendered; CopyBlock is the only script. Since 2026-10-24 on Glaze: each
+// client is a Card (the one thing on the page a person acts on, its configuration to copy); the
+// steps, the tools and the closing note are grouped by space and a hairline instead of grey
+// cards, the icons stand bare (no tinted plates), the "Step N" labels over the titles became the
+// list's own numbers in outline Badges, and the tool ids are mono at 0.8 of their line.
 
 const TOKEN = "paste-your-token-here";
 
@@ -90,16 +93,27 @@ const CLIENTS: { name: string; status: "remote" | "bridge" | "soon"; how: string
 
 const STATUS: Record<(typeof CLIENTS)[number]["status"], string> = { remote: "Connects directly", bridge: "Through the bridge", soon: "Coming" };
 
+const STEPS = [
+  {
+    icon: Key,
+    title: "Create a token",
+    body: "Sign in, open the account menu and choose API tokens. A token is shown once; keep it like a password.",
+    action: { label: "Open API tokens", href: "/dashboard/settings/tokens" },
+  },
+  { icon: Plugs, title: "Add Curatit to your client", body: "Copy the configuration for your tool below. The token lives in your environment, never in a file you share." },
+  { icon: Terminal, title: "Ask for references", body: "Try: Find three finance carousel posts and show their sources. The tools come back with real Instagram URLs." },
+];
+
 export default function ConnectPage() {
   return (
     <>
       <section>
         <Wrapper variant="standard" className="page-start">
           <div className="max-w-2xl">
-            <Text tag="h1" variant="h1" className="text-balance text-primary-foreground">
+            <Text tag="h1" variant="h1" className="text-balance text-text-1">
               Use Curatit from your AI tools
             </Text>
-            <Text className="mt-6 text-pretty text-secondary-foreground">
+            <Text className="mt-6 text-pretty text-text-2">
               Curatit is an MCP server. Connect it once and your assistant can search the library, read a post slide by slide, and build a brief from real work, with every claim tied to something it can show you.
             </Text>
           </div>
@@ -112,20 +126,25 @@ export default function ConnectPage() {
           <h2 id="steps" className="sr-only">
             Three steps
           </h2>
-          <ol className="grid gap-4 md:grid-cols-3">
-            {[
-              { icon: <Key className="size-5" />, title: "Create a token", body: "Sign in, open the account menu and choose API tokens. A token is shown once; keep it like a password.", action: <Button isLink size="xs" variant="muted" href="/dashboard/settings/tokens">Open API tokens</Button> },
-              { icon: <Plugs className="size-5" />, title: "Add Curatit to your client", body: "Copy the configuration for your tool below. The token lives in your environment, never in a file you share." },
-              { icon: <TerminalWindow className="size-5" />, title: "Ask for references", body: "Try: Find three finance carousel posts and show their sources. The tools come back with real Instagram URLs." },
-            ].map((step, i) => (
-              <li key={step.title} className="rounded-2xl bg-card p-5 lg:p-6">
+          <ol className="grid gap-8 md:grid-cols-3">
+            {STEPS.map((step, i) => (
+              <li key={step.title} className="border-t border-line-faint pt-6">
                 <div className="flex items-center gap-3">
-                  <span className="flex size-9 items-center justify-center rounded-full bg-container text-primary-foreground shadow-xs">{step.icon}</span>
-                  <p className="text-caption-lg font-medium tracking-wider text-secondary-foreground uppercase">Step {i + 1}</p>
+                  <Badge variant="outline" aria-hidden="true" className="data">
+                    {i + 1}
+                  </Badge>
+                  <Icon icon={step.icon} size={20} className="text-text-1" />
                 </div>
-                <h3 className="mt-4 text-body-base font-medium text-primary-foreground">{step.title}</h3>
-                <p className="mt-1 text-body-sm text-pretty text-secondary-foreground">{step.body}</p>
-                {step.action && <div className="mt-4">{step.action}</div>}
+                <h3 className="mt-4 type-heading text-text-1">
+                  <span className="sr-only">Step {i + 1}: </span>
+                  {step.title}
+                </h3>
+                <p className="mt-1 type-body-sm text-pretty text-text-2">{step.body}</p>
+                {step.action && (
+                  <Button size="sm" variant="secondary" render={<Link href={step.action.href} />} nativeButton={false} className="mt-4">
+                    {step.action.label}
+                  </Button>
+                )}
               </li>
             ))}
           </ol>
@@ -135,36 +154,42 @@ export default function ConnectPage() {
       {/* One card per client: the words on the left, the configuration on the right */}
       <section aria-labelledby="clients">
         <Wrapper variant="standard" className="section-y">
-          <Text tag="h2" id="clients" variant="h3" className="text-primary-foreground">
+          <Text tag="h2" id="clients" variant="h3" className="text-text-1">
             Your client
           </Text>
           <ul className="mt-8 space-y-4">
             {CLIENTS.map((client) => (
-              <li key={client.name} className="grid gap-5 rounded-2xl bg-container p-5 shadow-xs lg:grid-cols-12 lg:gap-8 lg:p-6">
-                <div className="lg:col-span-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-body-base font-medium text-primary-foreground">{client.name}</h3>
-                    <Badge>{STATUS[client.status]}</Badge>
-                  </div>
-                  <p className="mt-2 text-body-sm text-pretty text-secondary-foreground">{client.how}</p>
-                  {client.note && <p className="mt-2 text-caption-lg text-pretty text-secondary-foreground">{client.note}</p>}
-                </div>
-                <div className="min-w-0 lg:col-span-8">
-                  {client.status === "soon" ? (
-                    <p className="rounded-lg bg-card px-4 py-3.5 font-mono text-body-sm text-secondary-foreground ring-1 ring-border-default">{client.code}</p>
-                  ) : (
-                    <CopyBlock code={client.code} label={`the ${client.name} configuration`} />
-                  )}
-                </div>
+              <li key={client.name}>
+                <Card>
+                  <CardContent className="grid gap-5 lg:grid-cols-12 lg:gap-8">
+                    <div className="lg:col-span-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="type-heading text-text-1">{client.name}</h3>
+                        <Badge>{STATUS[client.status]}</Badge>
+                      </div>
+                      <p className="mt-2 type-body-sm text-pretty text-text-2">{client.how}</p>
+                      {client.note && <p className="mt-2 type-caption text-pretty text-text-2">{client.note}</p>}
+                    </div>
+                    <div className="min-w-0 lg:col-span-8">
+                      {client.status === "soon" ? (
+                        <p className="rounded-overlay bg-field px-3 py-3 type-body-sm break-all text-text-2">
+                          <code className="mono">{client.code}</code>
+                        </p>
+                      ) : (
+                        <CopyBlock code={client.code} label={`the ${client.name} configuration`} />
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               </li>
             ))}
           </ul>
-          <p className="mt-6 text-body-sm text-pretty text-secondary-foreground">
-            No MCP in your tool? The same six operations are available over plain HTTP at <code className="font-mono text-caption-lg text-primary-foreground">/api/v1</code>, described by{" "}
-            <a href="/api/v1/openapi.json" className="underline decoration-border-strong underline-offset-2 hover:text-primary-foreground">
+          <p className="mt-6 type-body-sm text-pretty text-text-2">
+            No MCP in your tool? The same six operations are available over plain HTTP at <code className="mono text-text-1">/api/v1</code>, described by{" "}
+            <TextLink href="/api/v1/openapi.json" external>
               openapi.json
-            </a>
-            . Guides for each client are in the repository under <code className="font-mono text-caption-lg text-primary-foreground">docs/mcp/installation</code>.
+            </TextLink>
+            . Guides for each client are in the repository under <code className="mono text-text-1">docs/mcp/installation</code>.
           </p>
         </Wrapper>
       </section>
@@ -172,27 +197,25 @@ export default function ConnectPage() {
       {/* What the tools do */}
       <section aria-labelledby="tools">
         <Wrapper variant="standard" className="section-y">
-          <Text tag="h2" id="tools" variant="h3" className="text-primary-foreground">
+          <Text tag="h2" id="tools" variant="h3" className="text-text-1">
             Six tools, all read-only
           </Text>
-          <ul className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-8 grid gap-x-8 gap-y-6 md:grid-cols-2 lg:grid-cols-3">
             {TOOLS.map((tool) => (
-              <li key={tool.name} className="rounded-2xl bg-card p-5">
-                <p className="font-mono text-body-sm text-primary-foreground">{tool.name}</p>
-                <p className="mt-2 text-body-sm text-pretty text-secondary-foreground">{tool.does}</p>
+              <li key={tool.name} className="border-t border-line-faint pt-4">
+                <p className="type-body-sm break-all text-text-1">
+                  <code className="mono">{tool.name}</code>
+                </p>
+                <p className="mt-2 type-body-sm text-pretty text-text-2">{tool.does}</p>
               </li>
             ))}
           </ul>
-          <div className="mt-10 flex items-start gap-3 rounded-2xl bg-card p-5 lg:p-6">
-            <SealCheck className="mt-0.5 size-5 shrink-0 text-primary-foreground" />
+          <div className="mt-10 flex items-start gap-3 border-t border-line-faint pt-6">
+            <Icon icon={SealCheck} size={20} className="mt-0.5 shrink-0 text-text-1" />
             <div>
-              <p className="text-body-base font-medium text-primary-foreground">What your tool can and can&apos;t do</p>
-              <p className="mt-1 max-w-prose text-body-sm text-pretty text-secondary-foreground">
-                A token reads what you can read: published posts and editor-approved analyses. It can&apos;t post, change your account or see your boards. Counts are shown as collected and say nothing about performance. Revoke a token any time from{" "}
-                <Link href="/dashboard/settings/tokens" className="underline decoration-border-strong underline-offset-2 hover:text-primary-foreground">
-                  API tokens
-                </Link>
-                .
+              <h3 className="type-heading text-text-1">What your tool can and can&apos;t do</h3>
+              <p className="mt-1 max-w-measure type-body-sm text-pretty text-text-2">
+                A token reads what you can read: published posts and editor-approved analyses. It can&apos;t post, change your account or see your boards. Counts are shown as collected and say nothing about performance. Revoke a token any time from <TextLink href="/dashboard/settings/tokens">API tokens</TextLink>.
               </p>
             </div>
           </div>

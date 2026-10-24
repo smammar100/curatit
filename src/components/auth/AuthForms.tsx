@@ -2,7 +2,12 @@
 
 // The auth forms, each driven by a server action in src/app/auth/actions.ts. The pages are
 // static, so ?next= (where to go after signing in) and ?error= (a link that failed in
-// /auth/callback) are read from the address once the page has loaded.
+// /auth/callback) are read from the address once the page has loaded. Since 2026-10-24 every
+// piece is Glaze's: the fields are AuthField (a Field with an Input and a FieldError), the
+// server's message a fail Alert, the submit a primary Button that pends with its -ing verb, the
+// links TextLinks (inline in the footers and inside notes, quiet for "Forgot password?" at the
+// label's right), the words text-1 and text-2 and the medium weight where they were semibold.
+// The validation, the copy and the analytics are as they were.
 import {
   useActionState,
   useEffect,
@@ -11,10 +16,11 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import Link from "next/link";
 // Fundations
-import Button from "@/components/fundations/elements/Button";
 import Text from "@/components/fundations/elements/Text";
+import TextLink from "@/components/fundations/elements/TextLink";
+// Glaze
+import { Button } from "@/components/glaze/ui/button";
 // Components
 import {
   requestPasswordReset,
@@ -36,13 +42,6 @@ import { SUPPORT_MAILTO } from "@/lib/site";
 import { AuthField, AuthNotice } from "./AuthParts";
 import PasswordField from "./PasswordField";
 
-// The colour holds on hover (5:1 or more on the card in both themes; any accent step that darkens
-// it in light mode dims it in dark mode), and the underline marks the hover. The focus ring is
-// the site's, as on the navigation's links
-const focusRing =
-  "rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus";
-export const linkClass = `font-medium text-brand-foreground underline-offset-2 hover:underline ${focusRing}`;
-
 function useParam(name: string) {
   const [value, setValue] = useState<string | null>(null);
   useEffect(
@@ -60,10 +59,10 @@ function Next() {
 export function Heading({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="text-center text-balance">
-      <Text tag="h1" variant="h5" className="text-primary-foreground">
+      <Text tag="h1" variant="h5" className="text-text-1">
         {title}
       </Text>
-      <Text tag="p" variant="bodySM" className="mt-2 text-secondary-foreground">
+      <Text tag="p" variant="bodySM" className="mt-2 text-text-2">
         {children}
       </Text>
     </div>
@@ -75,7 +74,7 @@ export function Footer({ children }: { children: ReactNode }) {
     <Text
       tag="p"
       variant="captionLG"
-      className="mt-5 text-center font-medium text-secondary-foreground"
+      className="mt-5 text-center font-medium text-text-2"
     >
       {children}
     </Text>
@@ -147,10 +146,10 @@ function useValidation(
   };
 }
 
-// The form's button. While its action runs it shows a spinner and ignores presses (loading:
-// focus stays on it, and the busy words are its name for screen readers); `waiting` is for
-// before it can be used at all, and disables it outright, which also holds back a press made
-// before the page's script has loaded
+// The form's button, the card's one primary. While its action runs it shows the arc and the busy
+// words and ignores presses (pending: focus stays on it, aria-busy is set and its name stays the
+// idle words); `waiting` is for before it can be used at all, and disables it outright, which
+// also holds back a press made before the page's script has loaded
 export function Submit({
   pending,
   waiting = false,
@@ -164,14 +163,15 @@ export function Submit({
 }) {
   return (
     <Button
-      size="base"
-      variant="default"
+      // Glaze's default step, 32px, the same as the fields above it
+      variant="primary"
       type="submit"
-      loading={pending}
+      pending={pending}
+      pendingLabel={busy}
       disabled={waiting}
       className="w-full"
     >
-      {pending ? busy : idle}
+      {idle}
     </Button>
   );
 }
@@ -214,23 +214,17 @@ export function SignInForm() {
           autoComplete="current-password"
           required
           aside={
-            <Link
-              href="/forgot-password"
-              // 16px of text, given 24px to tap without moving the row
-              className={`-my-1 py-1 text-caption-lg font-medium text-secondary-foreground transition-colors duration-150 ease-out-quint hover:text-brand-foreground ${focusRing}`}
-            >
+            // The label's own size
+            <TextLink variant="quiet" href="/forgot-password" className="type-body-sm">
               Forgot password?
-            </Link>
+            </TextLink>
           }
         />
         {error && <AuthNotice>{error}</AuthNotice>}
         <Submit pending={pending} idle="Sign in" busy="Signing in…" />
       </form>
       <Footer>
-        Don&apos;t have an account?{" "}
-        <Link href="/signup" className={linkClass}>
-          Sign up
-        </Link>
+        Don&apos;t have an account? <TextLink href="/signup">Sign up</TextLink>
       </Footer>
     </>
   );
@@ -297,10 +291,7 @@ export function SignUpForm() {
         />
       </form>
       <Footer>
-        Already have an account?{" "}
-        <Link href="/signin" className={linkClass}>
-          Sign in
-        </Link>
+        Already have an account? <TextLink href="/signin">Sign in</TextLink>
       </Footer>
     </>
   );
@@ -308,18 +299,10 @@ export function SignUpForm() {
 
 // Under the email on sign-up when the address already has an account: sign in, or write to us
 function EmailTaken() {
-  const link = `font-medium underline underline-offset-2 ${focusRing}`;
   return (
     <span>
-      {authMessage("email_exists")}{" "}
-      <Link href="/signin" className={link}>
-        Sign in
-      </Link>{" "}
-      instead, or{" "}
-      <a href={SUPPORT_MAILTO} className={link}>
-        contact support
-      </a>
-      .
+      {authMessage("email_exists")} <TextLink href="/signin">Sign in</TextLink> instead, or{" "}
+      <TextLink href={SUPPORT_MAILTO}>contact support</TextLink>.
     </span>
   );
 }
@@ -335,8 +318,8 @@ function CheckEmail({ email }: { email: string }) {
     <>
       <Heading title="Check your email">
         We sent a link to{" "}
-        <span className="font-medium text-primary-foreground">{email}</span>. Open it in
-        this browser to finish signing up.
+        <span className="font-medium text-text-1">{email}</span>
+        . Open it in this browser to finish signing up.
       </Heading>
       <form
         action={(form) => {
@@ -353,26 +336,34 @@ function CheckEmail({ email }: { email: string }) {
             tag="p"
             variant="bodySM"
             role="status"
-            className="text-center text-secondary-foreground"
+            className="text-center text-text-2"
           >
             Sent again. It can take a minute to arrive.
           </Text>
         )}
         <Button
-          size="base"
-          variant="muted"
+          variant="secondary"
           type="submit"
-          loading={pending}
+          pending={pending}
+          pendingLabel="Sending…"
           className="w-full"
         >
-          {pending ? "Sending…" : "Send the link again"}
+          Send the link again
         </Button>
       </form>
       <Footer>
-        Wrong address? {/* A full load, so the form starts empty */}
-        <a href="/signup" className={linkClass}>
+        Wrong address?{" "}
+        {/* A full load (not a client-side navigation to the page that's already here), so the
+            form starts empty */}
+        <TextLink
+          href="/signup"
+          onClick={(event) => {
+            event.preventDefault();
+            location.assign("/signup");
+          }}
+        >
           Start again
-        </a>
+        </TextLink>
       </Footer>
     </>
   );
@@ -389,13 +380,11 @@ export function ForgotPasswordForm() {
       <>
         <Heading title="Check your email">
           If there&apos;s an account for{" "}
-          <span className="font-medium text-primary-foreground">{state.sent}</span>, a
-          link to choose a new password is on its way. Open it in this browser.
+          <span className="font-medium text-text-1">{state.sent}</span>
+          , a link to choose a new password is on its way. Open it in this browser.
         </Heading>
         <Footer>
-          <Link href="/signin" className={linkClass}>
-            Back to sign in
-          </Link>
+          <TextLink href="/signin">Back to sign in</TextLink>
         </Footer>
       </>
     );
@@ -421,10 +410,7 @@ export function ForgotPasswordForm() {
         <Submit pending={pending} idle="Send reset link" busy="Sending…" />
       </form>
       <Footer>
-        Remembered it?{" "}
-        <Link href="/signin" className={linkClass}>
-          Sign in
-        </Link>
+        Remembered it? <TextLink href="/signin">Sign in</TextLink>
       </Footer>
     </>
   );
@@ -470,9 +456,7 @@ export function ConfirmLinkForm() {
           Open the button in the email again, or copy the whole link into your browser.
         </Heading>
         <Footer>
-          <Link href="/signin" className={linkClass}>
-            Back to sign in
-          </Link>
+          <TextLink href="/signin">Back to sign in</TextLink>
         </Footer>
       </>
     );
@@ -488,9 +472,7 @@ export function ConfirmLinkForm() {
         <Submit pending={pending} waiting={!link} idle={copy.button} busy={copy.busy} />
       </form>
       <Footer>
-        <Link href="/signin" className={linkClass}>
-          Back to sign in
-        </Link>
+        <TextLink href="/signin">Back to sign in</TextLink>
       </Footer>
     </>
   );
@@ -521,12 +503,7 @@ export function ResetPasswordForm() {
             {error === authMessage("session_missing") && (
               <>
                 {" "}
-                <Link
-                  href="/forgot-password"
-                  className={`font-medium underline underline-offset-2 ${focusRing}`}
-                >
-                  Get a new link
-                </Link>
+                <TextLink href="/forgot-password">Get a new link</TextLink>
               </>
             )}
           </AuthNotice>
@@ -534,9 +511,7 @@ export function ResetPasswordForm() {
         <Submit pending={pending} idle="Save password" busy="Saving…" />
       </form>
       <Footer>
-        <Link href="/signin" className={linkClass}>
-          Back to sign in
-        </Link>
+        <TextLink href="/signin">Back to sign in</TextLink>
       </Footer>
     </>
   );

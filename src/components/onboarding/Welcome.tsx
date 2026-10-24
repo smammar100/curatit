@@ -2,17 +2,23 @@
 
 // The welcome flow, /dashboard/welcome: the "Studio" direction, chosen from a three-way
 // prototype on 2026-10-11 (after Cosmos's account setup). A full page split in two: one question
-// at a time on the left (name and what you do, industries as folders, brands), and
-// on the right your For you taking shape, the library's wall re-sorting with every pick and
-// saying why. The end drops the wall and stands alone in the middle of the page. The answers save to the profile at the end; "Skip for now" saves what's been answered so far and
+// at a time on the left (name and what you do, industries as folders, brands), and on the right
+// your For you taking shape, the library's wall re-sorting with every pick and saying why. The
+// end drops the wall and stands alone in the middle of the page. The answers save to the profile
+// at the end; "Skip for now" saves what's been answered so far and
 // that you've been here, so it doesn't ask again. The feed ranks on them from then on. Open
 // again from the account menu to change them.
+//
+// Since 2026-10-24 on Glaze: Back, Skip, Cancel and "No one in particular" are ghost Buttons,
+// the step's one action the primary (with its arc while the answers save), a profile that can't
+// load or answers that can't save are fail Alerts, the wall's ground is the grey shell, and the
+// pickers are in parts.tsx and Folders.tsx.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Symbol from "@/components/assets/Symbol";
-import Button from "@/components/fundations/elements/Button";
-import CaretLeft from "@/components/fundations/icons/CaretLeft";
-import Notice from "@/components/fundations/molecules/Notice";
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/glaze/ui/alert";
+import { Button } from "@/components/glaze/ui/button";
+import { ChevronLeft, Icon } from "@/components/glaze/icon";
 import { useBoards } from "@/components/dashboard/boards";
 import { rank } from "@/components/dashboard/forYou";
 import { useProfile } from "@/components/dashboard/profile";
@@ -30,11 +36,6 @@ const STEPS = [
   { title: "Which industries do you work in?", sub: "Pick at least one. Their posts come first." },
   { title: "Brands you keep an eye on?", sub: "Optional. Their new posts go up top." },
 ];
-
-// A quiet text button with a 44px hit area that doesn't change the layout (Button has no
-// text-only variant at that height: transparent fills on hover, and its 44px size sets 14px)
-const textButton =
-  "-mx-2 inline-flex h-11 items-center rounded-full px-2 text-body font-medium text-secondary-foreground transition-colors duration-150 ease-out-quint hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus disabled:pointer-events-none disabled:text-disabled-foreground";
 
 export default function Welcome() {
   const router = useRouter();
@@ -82,13 +83,15 @@ export default function Welcome() {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-page px-6" role="status" aria-live="polite">
         {status === "error" ? (
-          <div className="max-w-sm text-center">
-            <p className="text-subtitle font-medium text-primary-foreground">We couldn’t load your profile.</p>
-            <p className="mt-2 text-body text-secondary-foreground">Check your connection and reload the page.</p>
-            <Button type="button" size="base" variant="muted" onClick={() => location.reload()} className="mx-auto mt-6 w-fit">
-              Reload
-            </Button>
-          </div>
+          <Alert status="fail" announce={false} className="max-w-sm">
+            <AlertTitle>We couldn’t load your profile.</AlertTitle>
+            <AlertDescription>Check your connection and reload the page.</AlertDescription>
+            <AlertAction>
+              <Button size="sm" variant="secondary" onClick={() => location.reload()}>
+                Reload
+              </Button>
+            </AlertAction>
+          </Alert>
         ) : (
           <span className="sr-only">Loading your profile</span>
         )}
@@ -158,17 +161,24 @@ export default function Welcome() {
         <div className="grid grid-cols-[1fr_auto_1fr] items-center">
           <div>
             {step > 0 && !done && (
-              <Button variant="transparent" size="lg" shape="pill" iconOnly aria-label="Back" onClick={() => setStep((s) => s - 1)}>
-                <CaretLeft size="sm" />
+              <Button variant="ghost" size="icon" aria-label="Back" onClick={() => setStep((s) => s - 1)}>
+                <Icon icon={ChevronLeft} />
               </Button>
             )}
           </div>
-          <Symbol className="size-7 text-primary-foreground" aria-hidden="true" />
-          <div className="text-right">
+          <Symbol className="size-7 text-text-1" aria-hidden="true" />
+          <div className="text-end">
             {!done && (
-              <button type="button" onClick={skip} disabled={saving !== null} className={textButton}>
-                {start.redo ? "Cancel" : saving === "skip" ? "One moment…" : "Skip for now"}
-              </button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={skip}
+                pending={saving === "skip"}
+                pendingLabel="One moment"
+                disabled={saving === "finish"}
+              >
+                {start.redo ? "Cancel" : "Skip for now"}
+              </Button>
             )}
           </div>
         </div>
@@ -196,18 +206,25 @@ export default function Welcome() {
                 {step === 2 && <BrandGrid brands={brands} value={draft.brands} onChange={(brands) => patch({ brands })} className="grid-cols-4" />}
               </div>
               {failed && (
-                <Notice tone="danger" live className="mt-4">
-                  We couldn’t save that. Check your connection and try again.
-                </Notice>
+                <Alert status="fail" className="mt-4">
+                  <AlertDescription>We couldn’t save that. Check your connection and try again.</AlertDescription>
+                </Alert>
               )}
               <div className="mt-8 flex items-center gap-4">
-                <Button type="submit" size="base" variant="default" disabled={!ready || saving !== null} className="w-fit">
-                  {step === STEPS.length - 1 ? (saving === "finish" ? "Saving…" : "Build my feed") : "Next"}
+                <Button
+                  type="submit"
+                  size="lg"
+                  pending={saving === "finish"}
+                  pendingLabel="Saving"
+                  disabled={!ready || saving === "skip"}
+                  className="w-fit"
+                >
+                  {step === STEPS.length - 1 ? "Build my feed" : "Next"}
                 </Button>
                 {step === 2 && (
-                  <button type="button" onClick={() => finish({ brands: [] })} disabled={saving !== null} className={textButton}>
+                  <Button variant="ghost" size="sm" onClick={() => finish({ brands: [] })} disabled={saving !== null}>
                     No one in particular
-                  </button>
+                  </Button>
                 )}
               </div>
             </form>
@@ -216,10 +233,10 @@ export default function Welcome() {
       </section>
 
       {/* Your For you, taking shape. The caption isn't a live region: each pick already says
-          whether it's on, and this would say it twice */}
+          whether it's on, and this would say it twice. The ground is the grey shell */}
       {!done && (
-        <aside className="relative hidden bg-base-50 lg:block" aria-label="Your feed, taking shape">
-          <p className="absolute top-6 right-10 left-10 z-10 text-caption text-secondary-foreground">{caption}</p>
+        <aside className="relative hidden bg-shell lg:block" aria-label="Your feed, taking shape">
+          <p className="absolute inset-x-10 top-6 z-(--z-raised) type-caption text-text-2">{caption}</p>
           <div className="absolute inset-0 overflow-hidden px-10 pt-14 pb-10">
             {/* Re-rises only when the wall's posts actually change */}
             <Collage key={ranked.slice(0, 12).map((p) => p.shortCode).join()} posts={ranked.slice(0, 12)} />

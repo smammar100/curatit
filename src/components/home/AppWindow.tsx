@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import { cx } from "@/lib/cx";
 
-// A Curatit product window, treated like the screenshots elsewhere on the site: the page's
-// colour (what the app inside is drawn on), rounded, with the default shadow, sitting on a
-// bg-card mat.
+// A Curatit product window, treated like the screenshots elsewhere on the site: a card lifted off
+// its grey mat on Fluid Functionalism's surface ladder (bg-surface-3 with its shadow; surfaces stay
+// FF's under Glaze), with the card's shell corner. The title bar is one faint hairline with the
+// title centred in the caption role (since 2026-10-24 on Glaze, which has no traffic-light dots).
 export default function AppWindow({
   title,
   children,
@@ -14,22 +15,9 @@ export default function AppWindow({
   className?: string;
 }) {
   return (
-    <div
-      className={cx(
-        "@container overflow-hidden rounded bg-page shadow",
-        className,
-      )}
-    >
-      <div
-        className="relative flex h-9 items-center gap-1.5 border-b border-border-default px-4"
-        aria-hidden="true"
-      >
-        <span className="size-2 rounded-full bg-border-strong" />
-        <span className="size-2 rounded-full bg-border-strong" />
-        <span className="size-2 rounded-full bg-border-strong" />
-        <p className="absolute inset-x-16 truncate text-center text-caption text-secondary-foreground">
-          {title}
-        </p>
+    <div className={cx("@container overflow-hidden rounded-(--radius-nested) bg-surface-3 sm:rounded-(--radius-float) shadow-surface-2", className)}>
+      <div className="flex h-9 items-center justify-center border-b border-line-faint px-4" aria-hidden="true">
+        <p className="truncate type-caption text-text-2">{title}</p>
       </div>
       {children}
     </div>

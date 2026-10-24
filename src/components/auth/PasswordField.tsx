@@ -2,21 +2,24 @@
 
 // The password field for sign-up and reset password: the input, a strength meter that fills as
 // you type, and the project's rules as a checklist that ticks off live (PASSWORD_RULES in
-// lib/auth, the same rules Supabase enforces). The meter runs red, amber, light green, green
-// (the danger, warning and success tokens in global.css); the word beside it says the same in
-// a darker shade, so the level never rests on colour alone.
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import Check from "@/components/fundations/icons/Check";
+// lib/auth, the same rules Supabase enforces). The meter runs red, amber, light green, green;
+// the word beside it says the same in its word colour, so the level never rests on colour alone.
+// Since 2026-10-24 on Glaze: the field is AuthField (Glaze's Field and Input), the bars Glaze's
+// status marks (fail, warn, then ok at two strengths) on the grey field's track, the words the
+// status words, and each rule a Check glyph once met and a quiet dot glyph until then, in text-1
+// or text-2.
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { Check, DotOutline, Icon } from "@/components/glaze/icon";
 import { PASSWORD_RULES } from "@/lib/auth";
 import { cx } from "@/lib/cx";
 import { AuthField } from "./AuthParts";
 
 const LEVELS = [
   { label: "", fill: "", text: "" },
-  { label: "Weak", fill: "bg-danger-500", text: "text-danger-foreground" },
-  { label: "Fair", fill: "bg-warning-500", text: "text-warning-700" },
-  { label: "Good", fill: "bg-success-400", text: "text-success-700" },
-  { label: "Strong", fill: "bg-success-600", text: "text-success-700" },
+  { label: "Weak", fill: "bg-fail", text: "text-fail-text" },
+  { label: "Fair", fill: "bg-warn", text: "text-warn-text" },
+  { label: "Good", fill: "bg-ok/60", text: "text-ok-text" },
+  { label: "Strong", fill: "bg-ok", text: "text-ok-text" },
 ];
 
 // Guessable no matter which rules they meet: common passwords, a run of one character, and
@@ -95,19 +98,14 @@ export default function PasswordField({
       <div className="mt-2.5 flex items-center gap-3">
         <div className="grid flex-1 grid-cols-4 gap-1" aria-hidden="true">
           {[1, 2, 3, 4].map((step) => (
-            <span
-              key={step}
-              className="h-1 overflow-hidden rounded-full bg-component"
-            >
+            <span key={step} className="h-1 overflow-hidden rounded-pill bg-field">
               <span
                 className={cx(
-                  "block h-full origin-left rounded-full transition-[scale,background-color] duration-200 ease-out-quint motion-reduce:transition-none",
-                  step <= level
-                    ? cx(fill, "scale-x-100")
-                    : "scale-x-0 bg-border-strong",
+                  "block h-full origin-left rounded-pill transition-[scale,background-color] delay-(--step-delay) duration-(--dur-slide) ease-out motion-reduce:transition-none",
+                  step <= level ? cx(fill, "scale-x-100") : "scale-x-0",
                 )}
                 // The fill sweeps left to right as the level climbs
-                style={{ transitionDelay: `${(step - 1) * 40}ms` }}
+                style={{ "--step-delay": `${(step - 1) * 40}ms` } as CSSProperties}
               />
             </span>
           ))}
@@ -115,7 +113,7 @@ export default function PasswordField({
         <p
           aria-live="polite"
           className={cx(
-            "w-12 text-right text-caption-lg font-medium transition-colors duration-200 ease-out-quint motion-reduce:transition-none",
+            "w-12 text-right type-label-sm transition-colors duration-(--dur-state) ease-out motion-reduce:transition-none",
             text,
           )}
         >
@@ -125,30 +123,18 @@ export default function PasswordField({
       </div>
 
       {/* The rules, ticked off as they're met */}
-      <ul
-        id={`${id}-rules`}
-        className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5"
-      >
+      <ul id={`${id}-rules`} className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5">
         {PASSWORD_RULES.map((rule) => {
           const ok = rule.test(value);
           return (
             <li
               key={rule.id}
               className={cx(
-                "flex items-center gap-1.5 text-caption-lg transition-colors duration-150 ease-out-quint motion-reduce:transition-none",
-                ok ? "text-primary-foreground" : "text-secondary-foreground",
+                "flex items-center gap-1.5 type-caption transition-colors duration-(--dur-state) ease-out motion-reduce:transition-none",
+                ok ? "text-text-1" : "text-text-2",
               )}
             >
-              <span
-                className="flex size-3 shrink-0 items-center justify-center"
-                aria-hidden="true"
-              >
-                {ok ? (
-                  <Check className="size-3" />
-                ) : (
-                  <span className="size-1 rounded-full bg-tertiary-foreground" />
-                )}
-              </span>
+              {ok ? <Icon icon={Check} size={12} /> : <Icon icon={DotOutline} size={12} className="text-text-3" />}
               <span className="sr-only">{ok ? "Done: " : "Needs: "}</span>
               {rule.label}
             </li>

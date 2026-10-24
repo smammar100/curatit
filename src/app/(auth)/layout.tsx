@@ -12,7 +12,9 @@ export const revalidate = 3600;
 
 // Sign in / sign up: no navigation or footer. One card, centred over a drifting wall of the
 // library's posts (after Pinterest's login; chosen from a three-way prototype on 2026-10-10).
-// The card is compact on purpose: with its form it has to fit a 720px-tall viewport.
+// The card is compact on purpose: with its form it has to fit a 720px-tall viewport. Since
+// 2026-10-24 the card has Glaze's shell corners on the surface ladder's sixth step, and the
+// lockup takes Glaze's ink focus ring.
 export default async function AuthLayout({
   children,
 }: {
@@ -35,14 +37,11 @@ export default async function AuthLayout({
       <div className="relative min-h-dvh overflow-clip bg-page">
         <PostWall covers={covers} />
         <div className="relative flex min-h-dvh items-center justify-center px-4 py-8">
-          {/* The card floats over imagery on Interfere's extra large shadow, which has its own dark
-              treatment (a half-pixel inner highlight), so it needs no ring there */}
-          <div className="w-full max-w-md rounded-2xl bg-container p-6 shadow-xl sm:p-8">
-            <Link
-              href="/"
-              className="mx-auto mb-6 block w-fit rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus"
-              aria-label="Go to homepage"
-            >
+          {/* The card floats over imagery, which no Glaze recipe covers, so it lifts on Fluid
+              Functionalism's own pair (surface 3 with the sixth step's shadow, which has its own
+              dark treatment) at Glaze's card corners */}
+          <div className="w-full max-w-md rounded-(--radius-float) bg-surface-3 p-6 shadow-surface-6 sm:p-8">
+            <Link href="/" className="mx-auto mb-6 block w-fit rounded-tag" aria-label="Go to homepage">
               <Lockup />
             </Link>
             {children}

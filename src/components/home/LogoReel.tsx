@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { m, useInView, useReducedMotion } from "framer-motion";
 import { cx } from "@/lib/cx";
 
@@ -8,10 +8,12 @@ import { cx } from "@/lib/cx";
  * A reel of app-icon tiles that advance through five slots laid out on a
  * shallow arc: small and soft at the ends, full size in the middle. One tile
  * moves on every beat while the reel is on screen; the rest wait their turn
- * hidden beyond the ends. Reduced motion holds the reel still.
+ * hidden beyond the ends. Reduced motion holds the reel still. A tile is an app icon on Glaze's
+ * shell corner with the faint hairline (2026-10-24); the ends are dimmed rather than blurred,
+ * since Glaze has no blur.
  */
 
-const SIZE = 96; // tile size at the middle slot, px
+const SIZE = 96; // tile size at the middle slot, px (size-24)
 const SLOTS = 5;
 const BEAT = 1800; // ms between steps
 const MIN_POOL = 7; // visible slots plus the hidden entry and exit positions
@@ -27,7 +29,8 @@ const CENTRES = [
   [70, 284],
 ];
 const SCALES = [0.73, 0.84, 1, 0.84, 0.73];
-const BLURS = [2.75, 0, 0, 0, 2.75];
+// The tiles at the ends sit back: dimmed, where they used to be blurred
+const OPACITIES = [0.55, 1, 1, 1, 0.55];
 
 type Orientation = "vertical" | "horizontal";
 // `near` is the side of the box that faces the text
@@ -43,7 +46,6 @@ function slotStyle(virtual: number, orientation: Orientation, near: Near) {
       CENTRES[SLOTS - 1][1] + (CENTRES[SLOTS - 1][1] - CENTRES[SLOTS - 2][1]);
   const hidden = virtual < 0 || virtual >= SLOTS;
   const scale = hidden ? 0.6 : SCALES[index];
-  const blur = hidden ? BLURS[0] : BLURS[index];
   // CENTRES assume the text is on the right ("end"); mirror across the short axis otherwise
   if (near === "start") cx = BOX.short - cx;
   const [x, y] = orientation === "vertical" ? [cx, cy] : [cy, cx];
@@ -51,8 +53,7 @@ function slotStyle(virtual: number, orientation: Orientation, near: Near) {
     x: x - SIZE / 2,
     y: y - SIZE / 2,
     scale,
-    opacity: hidden ? 0 : 1,
-    filter: `blur(${blur}px)`,
+    opacity: hidden ? 0 : OPACITIES[index],
   };
 }
 
@@ -102,8 +103,8 @@ export default function LogoReel({
     <div
       ref={ref}
       aria-hidden="true"
-      className={cx("relative shrink-0 select-none", className)}
-      style={{ width, height }}
+      className={cx("relative h-(--reel-h) w-(--reel-w) shrink-0 select-none", className)}
+      style={{ "--reel-w": `${width}px`, "--reel-h": `${height}px` } as CSSProperties}
     >
       {pool.map((item, i) => {
         // Tiles advance from the last slot to the first; -1 and 5 are the hidden entry and exit positions
@@ -113,8 +114,7 @@ export default function LogoReel({
         return (
           <m.div
             key={i}
-            className="absolute top-0 left-0 overflow-hidden rounded-4xl shadow-sm"
-            style={{ width: SIZE, height: SIZE }}
+            className="absolute top-0 left-0 size-24 overflow-hidden rounded-panel ring-1 ring-line-faint"
             initial={false}
             animate={slotStyle(virtual, orientation, near)}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}

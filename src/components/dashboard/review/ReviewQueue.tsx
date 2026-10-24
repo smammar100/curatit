@@ -4,15 +4,26 @@
 // and failed, for editors. AI drafts wait here until an editor approves them; nothing an AI wrote
 // is public before that. Analyses themselves run on a person's machine (npm run creative -- work),
 // so the queue shows what's waiting for that, not a progress bar.
+//
+// Since 2026-10-24 on Glaze: the counts as a DataList on its own panel (Glaze has no row of
+// number tiles), the lists in Glaze's Tabs with a TabsCount each, a failed load as a fail Alert,
+// the wait as Item-shaped skeletons through SkeletonSwap, an empty list as Empty, the posts as
+// Items in an ItemGroup (the concept the row's link, brand, category and short code under it),
+// Approve all as a Card with its actions in the footer, and the runs as a table on a Panel.
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import Button from "@/components/fundations/elements/Button";
-import Tabs, {
-  Tab,
-  TabList,
-  TabPanel,
-} from "@/components/fundations/molecules/Tabs";
+import TextLink from "@/components/fundations/elements/TextLink";
+import { Alert, AlertDescription } from "@/components/glaze/ui/alert";
+import { Badge } from "@/components/glaze/ui/badge";
+import { Button } from "@/components/glaze/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/glaze/ui/card";
+import { DataList, DataListItem, DataListLabel, DataListValue } from "@/components/glaze/ui/data-list";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/glaze/ui/empty-state";
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemLink, ItemMedia, ItemTitle } from "@/components/glaze/ui/item";
+import { Panel } from "@/components/glaze/ui/panel";
+import { Skeleton, SkeletonSwap, SkeletonText } from "@/components/glaze/ui/skeleton";
+import { Tabs, TabsContent, TabsCount, TabsList, TabsTrigger } from "@/components/glaze/ui/tabs";
+import { Failed, Icon } from "@/components/glaze/icon";
 import { cx } from "@/lib/cx";
 import { refreshPostPage } from "@/app/dashboard/review/actions";
 import { track } from "@/lib/analytics";
@@ -29,16 +40,16 @@ import {
   Frame,
   label,
   money,
-  Notice,
+  PageMessage,
   Pill,
   reviewHref,
   seconds,
   sourceLabel,
   StatusPill,
   useBusy,
+  useSoftNav,
 } from "./parts";
 import { saveWalk, walkOf } from "./walk";
-import { ReviewArt } from "../EmptyArt";
 
 const TABS = ["Needs review", "Failed", "Published", "Recent runs"] as const;
 type List = (typeof TABS)[number];
@@ -60,9 +71,9 @@ export default function ReviewQueue() {
   return (
     <Frame>
       {editor === false ? (
-        <Notice title="Editors only">
+        <PageMessage title="Editors only">
           The analysis review is for Curatit&apos;s editors.
-        </Notice>
+        </PageMessage>
       ) : (
         <QueueView queue={queue} failed={failed} onRefresh={refresh} />
       )}
@@ -120,96 +131,80 @@ export function QueueView({
   const shown: ReactNode = (
     <>
       {failed && (
-        <p className="rounded-2xl bg-danger-subtle px-4 py-3 text-body text-danger-foreground">
-          Couldn&apos;t load the queue: {failed}
-        </p>
+        <Alert status="fail" className="mb-3">
+          <AlertDescription>Couldn&apos;t load the queue: {failed}</AlertDescription>
+        </Alert>
       )}
-      {!queue && !failed && <ListSkeleton />}
-      {queue && tab === "Recent runs" && <Runs queue={queue} />}
-      {queue && tab === "Needs review" && queue.review.length > 1 && (
-        <ApproveAll rows={queue.review} onDone={onRefresh} />
-      )}
-      {queue && tab !== "Recent runs" && (
-        <Rows
-          rows={
-            tab === "Needs review"
-              ? queue.review
-              : tab === "Failed"
-                ? queue.failed
-                : queue.published
-          }
-          empty={
-            tab === "Needs review"
-              ? "Nothing to review."
-              : tab === "Failed"
-                ? "No failed analyses."
-                : "No published analyses yet."
-          }
-          onChange={onRefresh}
-        />
-      )}
+      <SkeletonSwap loading={!queue && !failed} fallback={<ListSkeleton />} label="Loading the queue">
+        {queue && tab === "Recent runs" && <Runs queue={queue} />}
+        {queue && tab === "Needs review" && queue.review.length > 1 && (
+          <ApproveAll rows={queue.review} onDone={onRefresh} />
+        )}
+        {queue && tab !== "Recent runs" && (
+          <Rows
+            rows={
+              tab === "Needs review"
+                ? queue.review
+                : tab === "Failed"
+                  ? queue.failed
+                  : queue.published
+            }
+            empty={
+              tab === "Needs review"
+                ? "Nothing to review."
+                : tab === "Failed"
+                  ? "No failed analyses."
+                  : "No published analyses yet."
+            }
+            onChange={onRefresh}
+          />
+        )}
+      </SkeletonSwap>
     </>
   );
 
   return (
     <>
       <div>
-        <h1 className="font-display text-display font-light text-primary-foreground">
-          Analysis review
-        </h1>
-        <p className="mt-1 max-w-2xl text-subtitle text-pretty text-secondary-foreground">
+        <h1 className="type-title text-text-1">Analysis review</h1>
+        <p className="mt-1 max-w-measure type-body text-pretty text-text-2">
           AI drafts wait here until an editor approves them. Nothing is public
           before that, and a new analysis never replaces one you&apos;ve
           reviewed.
         </p>
 
-        <dl className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        {/* The counts, a label and a number a row; a number still loading holds its place */}
+        <DataList variant="panel" className="mt-6 max-w-md">
           {tiles.map(([name, value]) => (
-            <div
-              key={name}
-              className="flex min-w-0 flex-col-reverse rounded-2xl bg-card px-3.5 py-3"
-            >
-              <dt className="truncate text-caption text-secondary-foreground">
-                {name}
-              </dt>
-              <dd
-                className={cx(
-                  "text-title font-medium tabular-nums",
-                  name === "Failed" && value
-                    ? "text-danger-foreground"
-                    : "text-primary-foreground",
-                )}
-              >
-                {value ?? "–"}
-              </dd>
-            </div>
+            <DataListItem key={name}>
+              <DataListLabel>{name}</DataListLabel>
+              <DataListValue className={cx("tabular-nums", name === "Failed" && value ? "text-fail-text" : undefined)}>
+                {value ?? <Skeleton className="h-4 w-6" />}
+              </DataListValue>
+            </DataListItem>
           ))}
-        </dl>
+        </DataList>
         {queue?.oldestPending && (
-          <p className="mt-2 text-caption text-secondary-foreground">
+          <p className="mt-2 type-caption text-text-2">
             Oldest queued {ago(queue.oldestPending)}. Run{" "}
-            <code className="font-mono text-micro">
-              npm run creative -- work
-            </code>{" "}
+            <code className="mono">npm run creative -- work</code>{" "}
             to analyse the queue.
           </p>
         )}
 
-        {/* The shared Tabs: one tab stop, ← / → / Home / End marked handled so the dashboard's
-            own arrow handlers leave them be; the row wraps on a narrow screen. mt-7 and the panels' mt-3
-            land the row where the hand-built one sat (32px up, 16px down), past the list's py-1 */}
-        <Tabs value={tab} onValueChange={setTab} className="mt-7">
-          <TabList aria-label="Lists" variant="pill" wrap>
+        <Tabs value={tab} onValueChange={(next) => setTab(next as List)} className="mt-7">
+          <TabsList aria-label="Lists">
             {TABS.map((name) => (
-              <Tab key={name} value={name} count={lists[name]}>
+              <TabsTrigger key={name} value={name}>
                 {name}
-              </Tab>
+                {lists[name] !== undefined && <TabsCount>{lists[name]}</TabsCount>}
+              </TabsTrigger>
             ))}
-          </TabList>
+          </TabsList>
           {TABS.map((name) => (
-            <TabPanel key={name} value={name} className="mt-3">
+            <TabsContent key={name} value={name} className="mt-3">
               {tab === name && shown}
-            </TabPanel>
+            </TabsContent>
           ))}
         </Tabs>
       </div>
@@ -219,8 +214,8 @@ export function QueueView({
 
 // Approve and publish everything waiting for review in one go (2026-10-15, after an import of
 // 55 posts: the owner reviews a whole import at once, and one by one took the afternoon). It asks
-// first, then records each decision through the same creative_review call the Approve button
-// makes, so every post gets its review event and its page is rebuilt, and says how it went.
+// first, in place, then records each decision through the same creative_review call the Approve
+// button makes, so every post gets its review event and its page is rebuilt, and says how it went.
 function ApproveAll({
   rows,
   onDone,
@@ -279,94 +274,90 @@ function ApproveAll({
 
   const n = targets.length;
   return (
-    <div
-      className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-card px-4 py-3"
-      aria-live="polite"
-    >
-      {phase === "idle" && (
-        <>
-          <p className="text-body text-secondary-foreground">
+    <Card className="mb-3" aria-live="polite">
+      <CardContent>
+        {phase === "idle" && (
+          <p className="type-body-sm text-text-2">
             {n} {n === 1 ? "analysis is" : "analyses are"} waiting.
           </p>
-          <Button
-            variant="default"
-            size="sm"
-            shape="pill"
-            onClick={() => setPhase("confirm")}
-          >
-            Approve and publish all {n}
-          </Button>
-        </>
-      )}
-      {phase === "confirm" && (
-        <>
-          <p className="text-body text-primary-foreground">
+        )}
+        {phase === "confirm" && (
+          <p className="type-body-sm text-text-1">
             Publish all {n}? Each goes live as it is. Any of them can be
             unpublished afterwards.
           </p>
-          <div className="flex gap-2">
-            <Button variant="default" size="sm" shape="pill" onClick={run}>
-              Publish all {n}
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              shape="pill"
-              onClick={() => setPhase("idle")}
-            >
-              Cancel
-            </Button>
-          </div>
-        </>
+        )}
+        {phase === "running" && (
+          <p className="type-body-sm text-text-1 tabular-nums">
+            Publishing{" "}
+            {progress.done + progress.failed + 1 > n
+              ? n
+              : progress.done + progress.failed + 1}{" "}
+            of {n}…
+          </p>
+        )}
+        {phase === "done" && (
+          <p
+            className={cx(
+              "type-body-sm",
+              progress.failed ? "text-fail-text" : "text-text-1",
+            )}
+          >
+            Published {progress.done} of {n}.
+            {progress.failed
+              ? ` ${progress.failed} failed: ${progress.error}`
+              : ""}
+          </p>
+        )}
+      </CardContent>
+      {phase === "idle" && (
+        <CardFooter>
+          <Button size="sm" onClick={() => setPhase("confirm")}>
+            Approve and publish all {n}
+          </Button>
+        </CardFooter>
       )}
-      {phase === "running" && (
-        <p className="text-body text-primary-foreground tabular-nums">
-          Publishing{" "}
-          {progress.done + progress.failed + 1 > n
-            ? n
-            : progress.done + progress.failed + 1}{" "}
-          of {n}…
-        </p>
+      {phase === "confirm" && (
+        <CardFooter>
+          <Button variant="secondary" size="sm" onClick={() => setPhase("idle")}>
+            Cancel
+          </Button>
+          <Button size="sm" onClick={run}>
+            Publish all {n}
+          </Button>
+        </CardFooter>
       )}
-      {phase === "done" && (
-        <p
-          className={cx(
-            "text-body",
-            progress.failed
-              ? "text-danger-foreground"
-              : "text-primary-foreground",
-          )}
-        >
-          Published {progress.done} of {n}.
-          {progress.failed
-            ? ` ${progress.failed} failed: ${progress.error}`
-            : ""}
-        </p>
-      )}
-    </div>
+    </Card>
   );
 }
 
-// An empty list: the cleared-queue drawing over one line saying which list is empty
-function Empty({ children }: { children: ReactNode }) {
+// An empty list: one line saying which list is empty
+function EmptyList({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-2xl bg-card px-4 pt-10 pb-8 text-center">
-      <ReviewArt className="mx-auto mb-5 w-56" />
-      <p className="text-body text-secondary-foreground">{children}</p>
-    </div>
+    <Empty>
+      <EmptyHeader>
+        <EmptyTitle>{children}</EmptyTitle>
+      </EmptyHeader>
+    </Empty>
   );
 }
 
+// Three rows shaped like the posts': the thumbnail, the title and two lines under it
 function ListSkeleton() {
   return (
-    <ul aria-hidden="true" className="space-y-2">
+    <ItemGroup aria-label="Loading the queue">
       {[0, 1, 2].map((i) => (
-        <li
-          key={i}
-          className="h-20 animate-pulse rounded-2xl bg-card motion-reduce:animate-none"
-        />
+        <Item key={i}>
+          <ItemMedia>
+            <Skeleton className="aspect-4/5 w-12" />
+          </ItemMedia>
+          <ItemContent>
+            <SkeletonText type="label" className="w-1/2" />
+            <SkeletonText type="body-sm" lines={2} />
+          </ItemContent>
+        </Item>
       ))}
-    </ul>
+    </ItemGroup>
   );
 }
 
@@ -379,13 +370,13 @@ function Rows({
   empty: string;
   onChange: () => void;
 }) {
-  if (!rows.length) return <Empty>{empty}</Empty>;
+  if (!rows.length) return <EmptyList>{empty}</EmptyList>;
   return (
-    <ul className="space-y-2">
+    <ItemGroup aria-label="Posts">
       {rows.map((row) => (
         <Row key={row.post.id} row={row} onChange={onChange} />
       ))}
-    </ul>
+    </ItemGroup>
   );
 }
 
@@ -393,54 +384,59 @@ function Row({ row, onChange }: { row: QueueRow; onChange: () => void }) {
   const { post, analysis, job, proposals } = row;
   const dna = analysis?.creative_dna;
   const { busy, error, run } = useBusy();
+  const navigate = useSoftNav();
   return (
-    <li className="relative flex items-center gap-3 rounded-2xl p-2 pr-3 ring-1 ring-border-default transition-[background-color] duration-150 ease-out-quint hover:bg-transparent-hover">
-      <div className="relative aspect-4/5 w-12 shrink-0 overflow-hidden rounded-sm bg-component outline-1 -outline-offset-1 outline-edge">
-        {post.images[0] && (
-          <Image
-            src={post.images[0]}
-            alt=""
-            fill
-            sizes="48px"
-            className="object-cover"
-          />
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-2 truncate text-caption text-secondary-foreground">
-          <span className="font-medium text-primary-foreground">
-            {post.brand}
-          </span>
-          <span>{post.category}</span>
-          <span className="font-mono text-micro">{post.short_code}</span>
-        </p>
-        <Link
-          href={reviewHref(post.id)}
-          className="mt-0.5 block truncate text-subtitle font-medium text-primary-foreground after:absolute after:inset-0 after:rounded-2xl"
-        >
-          {dna?.concept ?? (job ? "Analysis failed" : "No analysis yet")}
-        </Link>
+    <Item>
+      {/* The cover, 4:5, with the image's hairline drawn over it */}
+      <ItemMedia>
+        <div className="relative aspect-4/5 w-12 overflow-hidden rounded-(--corner-xs) bg-field after:pointer-events-none after:absolute after:inset-0 after:rounded-(--corner-xs) after:border after:border-line-faint">
+          {post.images[0] && (
+            <Image
+              src={post.images[0]}
+              alt=""
+              fill
+              sizes="48px"
+              className="object-cover"
+            />
+          )}
+        </div>
+      </ItemMedia>
+      <ItemContent>
+        {/* The row's one link, covering it */}
+        <ItemTitle>
+          <ItemLink href={reviewHref(post.id)} onClick={navigate}>
+            {dna?.concept ?? (job ? "Analysis failed" : "No analysis yet")}
+          </ItemLink>
+        </ItemTitle>
+        <ItemDescription className="flex min-w-0 items-baseline gap-2">
+          <span className="truncate text-text-1">{post.brand}</span>
+          <span className="truncate">{post.category}</span>
+          <span className="type-code-xs">{post.short_code}</span>
+        </ItemDescription>
         {job?.state === "failed" ? (
-          <p className="truncate text-caption text-danger-foreground">
+          <ItemDescription className="truncate text-fail-text">
             {job.last_failure_kind}: {job.last_error}
-          </p>
+          </ItemDescription>
         ) : (
           dna && (
-            <p className="truncate text-caption text-secondary-foreground">
+            <ItemDescription className="truncate">
               {label("archetype", dna.primary_archetype.slug)} ·{" "}
               {label("objective", dna.marketing_objective.slug)}
-            </p>
+            </ItemDescription>
           )
         )}
         {error && (
-          <p className="text-caption text-danger-foreground">{error}</p>
+          <ItemDescription className="flex items-center gap-1.5 text-fail-text">
+            <Icon icon={Failed} />
+            {error}
+          </ItemDescription>
         )}
-      </div>
-      <div className="relative z-10 flex shrink-0 items-center gap-1.5">
+      </ItemContent>
+      <div className="relative z-(--z-raised) flex shrink-0 items-center gap-1.5">
         {proposals > 0 && (
-          <Pill title="Newer analyses waiting beside the current one">
+          <Badge variant="outline" title="Newer analyses waiting beside the current one">
             {proposals} new
-          </Pill>
+          </Badge>
         )}
         {analysis && (
           <span className="hidden sm:contents">
@@ -451,96 +447,97 @@ function Row({ row, onChange }: { row: QueueRow; onChange: () => void }) {
         )}
         {analysis && <StatusPill status={analysis.review_status} />}
         {analysis?.published_at && <Pill tone="strong">Public</Pill>}
-        {job?.state === "failed" && (
+      </div>
+      {job?.state === "failed" && (
+        <ItemActions>
           <Button
             variant="secondary"
             size="sm"
-            shape="pill"
-            disabled={busy !== null}
+            pending={busy !== null}
+            pendingLabel="Queuing"
             onClick={() =>
               run("retry", () => reprocess(post.id)).then(
                 (ok) => ok && onChange(),
               )
             }
           >
-            {busy ? "Queuing…" : `Retry (${job.attempts}/${job.max_attempts})`}
+            Retry ({job.attempts}/{job.max_attempts})
           </Button>
-        )}
-      </div>
-    </li>
+        </ItemActions>
+      )}
+    </Item>
   );
 }
 
 function Runs({ queue }: { queue: Queue }) {
-  if (!queue.runs.length) return <Empty>No runs yet.</Empty>;
+  if (!queue.runs.length) return <EmptyList>No runs yet.</EmptyList>;
   return (
-    <div className="overflow-x-auto rounded-2xl ring-1 ring-border-default">
-      <table className="w-full min-w-[40rem] text-left text-body">
-        <thead className="text-caption text-secondary-foreground">
-          <tr className="border-b border-border-default">
-            {[
-              "When",
-              "Post",
-              "Result",
-              "Slides",
-              "Calls",
-              "Est. cost",
-              "Time",
-            ].map((h) => (
-              <th key={h} scope="col" className="px-3 py-2 font-medium">
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border-default tabular-nums">
-          {queue.runs.map((run) => (
-            <tr key={run.id}>
-              <td className="px-3 py-2 whitespace-nowrap text-secondary-foreground">
-                {ago(run.started_at)}
-              </td>
-              <td className="max-w-48 truncate px-3 py-2">
-                {run.post ? (
-                  <Link
-                    href={reviewHref(run.post_id)}
-                    className="text-primary-foreground transition-colors duration-150 ease-out-quint hover:text-brand-foreground"
-                  >
-                    {run.post.brand} · {run.post.short_code}
-                  </Link>
-                ) : (
-                  run.post_id
-                )}
-              </td>
-              <td
-                className={cx(
-                  "px-3 py-2",
-                  (run.status === "failed" || run.status === "invalid") &&
-                    "text-danger-foreground",
-                )}
-                title={run.error ?? undefined}
-              >
-                {run.status}
-                {run.failure_kind && run.status !== "succeeded"
-                  ? ` · ${run.failure_kind}`
-                  : ""}
-              </td>
-              <td className="px-3 py-2">
-                {run.expected_slides
-                  ? `${run.processed_slides ?? 0}/${run.expected_slides}`
-                  : "—"}
-              </td>
-              <td className="px-3 py-2">{run.model_calls ?? "—"}</td>
-              <td className="px-3 py-2">{money(run.estimated_cost_usd)}</td>
-              <td className="px-3 py-2">{seconds(run.duration_ms)}</td>
+    <Panel padding="none">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-160 text-start type-body-sm">
+          <thead className="type-label-sm text-text-2">
+            <tr className="border-b border-line-faint">
+              {[
+                "When",
+                "Post",
+                "Result",
+                "Slides",
+                "Calls",
+                "Est. cost",
+                "Time",
+              ].map((h) => (
+                <th key={h} scope="col" className="px-3 py-2 text-start">
+                  {h}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="border-t border-border-default px-3 py-2 text-caption text-secondary-foreground">
+          </thead>
+          <tbody className="divide-y divide-line-faint tabular-nums">
+            {queue.runs.map((run) => (
+              <tr key={run.id}>
+                <td className="px-3 py-2 whitespace-nowrap text-text-2">
+                  {ago(run.started_at)}
+                </td>
+                <td className="max-w-48 truncate px-3 py-2 text-text-1">
+                  {run.post ? (
+                    <TextLink href={reviewHref(run.post_id)}>
+                      {run.post.brand} · {run.post.short_code}
+                    </TextLink>
+                  ) : (
+                    run.post_id
+                  )}
+                </td>
+                <td
+                  className={cx(
+                    "px-3 py-2",
+                    (run.status === "failed" || run.status === "invalid") &&
+                      "text-fail-text",
+                  )}
+                  title={run.error ?? undefined}
+                >
+                  {run.status}
+                  {run.failure_kind && run.status !== "succeeded"
+                    ? ` · ${run.failure_kind}`
+                    : ""}
+                </td>
+                <td className="px-3 py-2">
+                  {run.expected_slides
+                    ? `${run.processed_slides ?? 0}/${run.expected_slides}`
+                    : "—"}
+                </td>
+                <td className="px-3 py-2">{run.model_calls ?? "—"}</td>
+                <td className="px-3 py-2">{money(run.estimated_cost_usd)}</td>
+                <td className="px-3 py-2">{seconds(run.duration_ms)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="border-t border-line-faint px-3 py-2 type-caption text-text-2">
         Costs are the model provider&apos;s list-price estimates; on a Claude
         subscription they count against its usage limits rather than being
         billed.
       </p>
-    </div>
+    </Panel>
   );
 }

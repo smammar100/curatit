@@ -3,11 +3,15 @@
 // Who's signed in, for the account menu and avatar. The dashboard's pages are static (the
 // proxy keeps signed-out visitors away), so the user is read here in the browser, from the
 // session cookie Supabase keeps. Signing out anywhere, this tab or another, goes to sign-in.
+// The Avatar here is Glaze's Avatar bound to the session (2026-10-24): the picture, or the
+// initials, and a Skeleton circle of the same size until the session is read.
 import { createContext, use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { User as AuthUser } from "@supabase/supabase-js";
+import { Avatar as GlazeAvatar } from "@/components/glaze/ui/avatar";
+import { Skeleton } from "@/components/glaze/ui/skeleton";
+import { cn } from "@/lib/glaze/utils";
 import { identify, resetAnalytics } from "@/lib/analytics";
-import { cx } from "@/lib/cx";
 import { createClient } from "@/utils/supabase/client";
 
 export type User = { name: string; email: string; avatar: string | null };
@@ -58,30 +62,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
 export const useUser = () => use(UserContext);
 
-const initials = (name: string) =>
-  name
-    .split(/[\s._-]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]!.toUpperCase())
-    .join("");
-
-// The signed-in person's picture, or their initials on the brand's tint; an empty circle until the
-// session is read
-export function Avatar({ className }: { className?: string }) {
+// The signed-in person's picture, or their initials (Glaze's Avatar); a Skeleton circle of the
+// same size until the session is read. `decorative` when the name is written beside it, or the
+// control holding it is already named
+const SKELETON = { xs: "size-4", sm: "size-5", default: "size-6", lg: "size-8" } as const;
+export function Avatar({ size = "default", decorative, className }: { size?: keyof typeof SKELETON; decorative?: boolean; className?: string }) {
   const user = useUser();
-  const [broken, setBroken] = useState(false);
-  const base = cx("flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full text-caption font-medium", className);
-  if (!user) return <span aria-hidden="true" className={cx(base, "bg-component")} />;
-  if (user.avatar && !broken) {
-    return (
-      // Google's avatar host isn't in next.config's image list, and it's 96px: a plain img
-      <img src={user.avatar} alt={user.name} referrerPolicy="no-referrer" onError={() => setBroken(true)} className={cx(base, "bg-component object-cover")} />
-    );
-  }
-  return (
-    <span role="img" aria-label={user.name} className={cx(base, "bg-brand-subtle text-on-brand-subtle-foreground")}>
-      {initials(user.name)}
-    </span>
-  );
+  if (!user) return <Skeleton className={cn(SKELETON[size], "rounded-pill", className)} />;
+  return <GlazeAvatar src={user.avatar ?? undefined} name={user.name} size={size} decorative={decorative} className={className} />;
 }

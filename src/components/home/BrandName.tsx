@@ -5,11 +5,12 @@ import type { LibraryPost } from "@/lib/posts";
 import { cx } from "@/lib/cx";
 import { useMounted } from "@/lib/useMounted";
 
-const logoClass =
-  "size-4 shrink-0 rounded-sm outline-1 -outline-offset-1 outline-edge";
+// The mark: Glaze's tag corner and the faint hairline drawn inside it (2026-10-24)
+const logoClass = "size-4 shrink-0 rounded-tag outline-1 -outline-offset-1 outline-line-faint";
 
 // A brand's name with its logo in front, for post captions. The logo is decorative
-// (the name is right beside it), so it has no alt text.
+// (the name is right beside it), so it has no alt text. The name is Glaze's small label role
+// (12/16 at 550) in text-1 since 2026-10-24.
 //
 // The logo is requested only after mount (useMounted), like PostCover's covers: in the server
 // HTML it's an empty square of the same size. On the homepage the demos' logos sit in sections
@@ -25,21 +26,10 @@ export default function BrandName({
 }) {
   const mounted = useMounted();
   return (
-    <p
-      className={cx(
-        "flex min-w-0 items-center gap-1.5 text-caption-lg font-medium text-primary-foreground",
-        className,
-      )}
-    >
+    <p className={cx("flex min-w-0 items-center gap-1.5 type-label-sm text-text-1", className)}>
       {brand.logo &&
         (mounted ? (
-          <Image
-            src={brand.logo}
-            alt=""
-            width={16}
-            height={16}
-            className={logoClass}
-          />
+          <Image src={brand.logo} alt="" width={16} height={16} className={logoClass} />
         ) : (
           <span aria-hidden="true" className={logoClass} />
         ))}

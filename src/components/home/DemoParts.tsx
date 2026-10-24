@@ -9,8 +9,9 @@ import {
   type FocusEvent,
 } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
-import Segmented from "@/components/fundations/elements/Segmented";
-import Search from "@/components/fundations/icons/Search";
+import { Icon, Search } from "@/components/glaze/icon";
+import { Badge } from "@/components/glaze/ui/badge";
+import { SegmentedControl, SegmentedControlItem } from "@/components/glaze/ui/segmented-control";
 import { cx } from "@/lib/cx";
 import { briefs } from "./demo";
 import { BelowFold } from "./HydrateOnView";
@@ -170,16 +171,8 @@ export function useTyped(text: string, enabled: boolean) {
   return { typed: text.slice(0, count), done: count >= text.length };
 }
 
-// The example briefs as the shared segmented control, stretched across the card with the options
-// sharing its width (`[&>button]` reaches the options and leaves the thumb alone, and its selector
-// outranks Segmented's own px-3 rather than relying on stylesheet order). They keep 8px padding,
-// as they had before, so the row still fits a 240px card (a 320px phone, a 1024px window). Until
-// Segmented has a stretch option of its own
-const briefOptions = briefs.map((option, i) => ({
-  value: String(i),
-  label: option.label,
-}));
-
+// The example briefs as Glaze's SegmentedControl (2026-10-24): the small size, filling the card's
+// width with the three briefs sharing it. Arrow keys move and pick, as on the real control
 export function BriefTabs({
   active,
   onChange,
@@ -190,18 +183,26 @@ export function BriefTabs({
   className?: string;
 }) {
   return (
-    <Segmented
+    <SegmentedControl
       aria-label="Try a brief"
-      tone="inverted"
-      options={briefOptions}
+      size="sm"
+      fill
       value={String(active)}
       onValueChange={(value) => onChange(Number(value))}
-      className={cx("w-full [&>button]:flex-1 [&>button]:px-2", className)}
-    />
+      className={className}
+    >
+      {briefs.map((option, i) => (
+        <SegmentedControlItem key={option.label} value={String(i)}>
+          {option.label}
+        </SegmentedControlItem>
+      ))}
+    </SegmentedControl>
   );
 }
 
-// The search field with a brief in it. While `typing`, a caret follows the text.
+// The search field with a brief in it, drawn on Glaze's field recipe (the hairline pill on paper,
+// the small control's height, the icon leading in text-3). While `typing`, a caret follows the
+// text. A drawing, not a field: nothing can be typed into it.
 export function QueryField({
   query,
   typing = false,
@@ -212,40 +213,20 @@ export function QueryField({
   className?: string;
 }) {
   return (
-    <div
-      className={cx(
-        "flex h-9 items-center gap-2 rounded-md bg-component-on-container-subtle px-3 text-caption-lg ring-1 ring-border-default shadow-sm",
-        className,
-      )}
-    >
-      <Search className="size-3.5 shrink-0 text-tertiary-foreground" />
+    <div className={cx("field [--field-h:var(--control-sm)]", className)}>
+      <Icon icon={Search} size={12} className="text-text-3" />
       <span className="sr-only">Brief:</span>
-      <span className="truncate text-primary-foreground">{query}</span>
-      {typing && (
-        <span
-          aria-hidden="true"
-          className="-ml-1.5 h-3.5 w-px shrink-0 bg-primary-foreground"
-        />
-      )}
+      <span className="truncate">{query}</span>
+      {typing && <span aria-hidden="true" className="-ml-1.5 h-3.5 w-px shrink-0 bg-ink" />}
     </div>
   );
 }
 
-export function Tag({
-  children,
-  className,
-}: {
-  children: string;
-  className?: string;
-}) {
+// A matched term: Glaze's outline Badge, a label of what the post is
+export function Tag({ children, className }: { children: string; className?: string }) {
   return (
-    <span
-      className={cx(
-        "rounded-md bg-component-on-container-subtle px-2 py-1 text-caption-lg text-primary-foreground ring-1 ring-border-default",
-        className,
-      )}
-    >
+    <Badge variant="outline" className={className}>
       {children}
-    </span>
+    </Badge>
   );
 }

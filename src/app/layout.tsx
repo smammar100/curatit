@@ -2,8 +2,12 @@ import type { Metadata, Viewport } from "next";
 import { Hedvig_Letters_Serif, Inter } from "next/font/google";
 import ThemeScript from "@/components/global/ThemeScript";
 import type { ReactNode } from "react";
-// Import global styles
+import { GlazePortalProvider } from "@/lib/glaze/portal";
+// Import global styles, then Glaze (scoped to .glaze, as its own stylesheet) and the bridge that gives Glaze
+// Fluid Functionalism's type, motion and surfaces
 import "@/styles/global.css";
+import "@/components/glaze/styles.css";
+import "@/styles/glaze-bridge.css";
 import { SITE_URL } from "@/lib/site";
 
 // Inter: https://rsms.me/inter/
@@ -60,17 +64,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       data-scroll-behavior="smooth"
       // ThemeScript sets data-theme before React runs; the server never knows it
       suppressHydrationWarning
-      // Selection is a pale accent (accent-100, which flips with the theme) under the
-      // primary ink, which flips with it too: 13:1 on the light site, 11:1 on the dark. The ink is
-      // set rather than left as the text's own, because the footer panel and the CopyBlock slab
-      // carry light text on the light site; and it's primary-foreground, not base-900, because
-      // .vision-night re-scopes the base scale but not the accent (base-900 would read 1:1 there).
-      // Smooth anchor scrolling only with motion allowed
-      className={`${inter.variable} ${hedvig.variable} motion-safe:scroll-smooth selection:bg-accent-100 selection:text-primary-foreground`}
+      // Smooth anchor scrolling only with motion allowed. Text selection is Glaze's (ink at 15%, base.css)
+      className={`${inter.variable} ${hedvig.variable} motion-safe:scroll-smooth`}
     >
-      <body className="bg-page flex flex-col lg:min-h-svh">
+      {/* glaze: the design system's scope (2026-10-24); its overlays portal inside it through GlazePortalProvider */}
+      <body className="glaze bg-page flex flex-col lg:min-h-svh">
         <ThemeScript />
-        {children}
+        <GlazePortalProvider>
+          {children}
+        </GlazePortalProvider>
       </body>
     </html>
   );

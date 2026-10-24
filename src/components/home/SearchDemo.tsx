@@ -22,6 +22,9 @@ import { usePosts } from "./HomePosts";
 // While on screen it cycles through the briefs: the query types out, then the
 // results arrive one by one. Clicking a brief takes over from the loop.
 // Fills its box (HowItWorks gives every illustration the same one).
+// Since 2026-10-24 on Glaze: the brief tabs are its SegmentedControl, the field a drawing on its
+// field recipe, the matched terms its outline Badges, the rows split by the faint hairline and
+// the result covers on the tag corner.
 export default function SearchDemo() {
   const [active, setActive] = useState(0);
   const { ref, playing, stop } = useLoop<HTMLDivElement>(4500, () =>
@@ -48,7 +51,7 @@ export default function SearchDemo() {
       </m.div>
       <m.ul
         variants={introItem}
-        className="mt-4 min-h-0 flex-1 divide-y divide-border-default overflow-hidden"
+        className="mt-4 min-h-0 flex-1 divide-y divide-line-faint overflow-hidden"
         aria-live={playing ? "off" : "polite"}
       >
         {posts.map((post, i) => {
@@ -70,7 +73,7 @@ export default function SearchDemo() {
               <PostCover
                 post={post}
                 sizes="48px"
-                className="w-12 shrink-0 rounded shadow-sm"
+                className="w-12 shrink-0 rounded-(--corner-xs)"
               />
               <div className="min-w-0">
                 <BrandName brand={post.brand} />

@@ -7,11 +7,13 @@
 // it (typeNamed in search.ts), and the grid shows the result. Laid out after Cosmos's Explore (its
 // curated collections) at the owner's request, after a first build where every type was a full
 // row of posts. A row of hook chips under the cards was built and taken out at the owner's request.
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+// Since 2026-10-24 on Glaze: the strip a panel-cornered tile on the shell's grey with a faint line
+// inside its edge, the words in Glaze's type roles, the arrows small secondary icon Buttons, and
+// each card's press a ghost Button (its name) whose hit area covers the whole card.
+import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Image from "next/image";
-import Button from "@/components/fundations/elements/Button";
-import CaretLeft from "@/components/fundations/icons/CaretLeft";
-import CaretRight from "@/components/fundations/icons/CaretRight";
+import { Button } from "@/components/glaze/ui/button";
+import { ChevronLeft, ChevronRight, Icon } from "@/components/glaze/icon";
 import { spread } from "./forYou";
 import type { DashPost } from "./types";
 
@@ -39,10 +41,10 @@ export default function Playbooks({ posts, onPick }: { posts: DashPost[]; onPick
         <Scroller
           heading={
             <>
-              <h2 id="playbooks-types" className="font-display text-display font-light text-primary-foreground">
+              <h2 id="playbooks-types" className="type-title text-text-1">
                 Playbooks
               </h2>
-              <p className="mt-1 text-body text-secondary-foreground">The kinds of post the breakdowns keep finding, across brands</p>
+              <p className="mt-1 type-body-sm text-text-2">The kinds of post the breakdowns keep finding, across brands</p>
             </>
           }
           label="playbooks"
@@ -59,34 +61,35 @@ export default function Playbooks({ posts, onPick }: { posts: DashPost[]; onPick
 }
 
 // A type of post as a collection: three of its covers from different brands in one strip, its
-// name, and how many posts from how many brands. One button, which searches for the type
+// name, and how many posts from how many brands. One press, which searches for the type: the name
+// is a ghost Button whose ::after stretches over the card (it is static, so the card is what the
+// after is placed in), and the count describes it
 function TypeCard({ group, priority, onPick }: { group: Group; priority: boolean; onPick: () => void }) {
   const covers = spread(group.posts, 3).slice(0, 3);
+  const countId = useId();
   return (
-    <button
-      type="button"
-      onClick={onPick}
-      className="group block w-full cursor-pointer rounded-xl text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus"
-    >
-      <span className="grid grid-cols-3 gap-0.5 overflow-hidden rounded-xl bg-card">
+    <div className="group relative">
+      <span className="relative grid grid-cols-3 gap-0.5 overflow-hidden rounded-panel bg-shell after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:border after:border-line-faint">
         {covers.map((post) => (
-          <span key={post.shortCode} className="relative aspect-4/5 overflow-hidden bg-component">
+          <span key={post.shortCode} className="relative aspect-4/5 overflow-hidden bg-field">
             <Image
               src={post.cover}
               alt=""
               fill
               sizes="6rem"
               priority={priority}
-              className="object-cover transition-transform duration-300 ease-out-quint motion-safe:group-hover:scale-[1.03]"
+              className="object-cover transition-transform duration-(--dur-overlay) ease-out motion-safe:group-hover:scale-103"
             />
           </span>
         ))}
       </span>
-      <span className="mt-2.5 block truncate text-subtitle font-medium text-primary-foreground">{group.name}</span>
-      <span className="mt-0.5 block truncate text-caption text-secondary-foreground tabular-nums">
+      <Button variant="ghost" onClick={onPick} aria-describedby={countId} className="static mt-1.5 -ms-3 after:absolute after:inset-0">
+        {group.name}
+      </Button>
+      <span id={countId} className="block truncate type-caption text-text-2 tabular-nums">
         {group.posts.length} posts from {group.brands} brands
       </span>
-    </button>
+    </div>
   );
 }
 
@@ -115,27 +118,28 @@ function Scroller({ heading, label, children }: { heading: ReactNode; label: str
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
     row.scrollBy({ left: direction * row.clientWidth * 0.8, behavior: still ? "auto" : "smooth" });
   };
-  const mask = `linear-gradient(to right, ${more.left ? "transparent" : "black"}, black 48px, black calc(100% - 48px), ${more.right ? "transparent" : "black"})`;
+  // The fades: an edge with more beyond it runs from transparent to opaque over 48px
+  const fades = { "--fade-l": more.left ? "transparent" : "black", "--fade-r": more.right ? "transparent" : "black" } as CSSProperties;
 
   return (
     <>
       <div className="mb-4 flex items-end gap-4">
         <div className="min-w-0 flex-1">{heading}</div>
         {(more.left || more.right) && (
-        <div className="hidden shrink-0 gap-1 sm:flex">
-          <Button size="sm" variant="secondary" shape="pill" iconOnly aria-label={`Back through the ${label}`} disabled={!more.left} onClick={() => page(-1)}>
-            <CaretLeft className="size-3.5" />
-          </Button>
-          <Button size="sm" variant="secondary" shape="pill" iconOnly aria-label={`More ${label}`} disabled={!more.right} onClick={() => page(1)}>
-            <CaretRight className="size-3.5" />
-          </Button>
-        </div>
+          <div className="hidden shrink-0 gap-1 sm:flex">
+            <Button size="icon-sm" variant="secondary" aria-label={`Back through the ${label}`} disabled={!more.left} onClick={() => page(-1)}>
+              <Icon icon={ChevronLeft} />
+            </Button>
+            <Button size="icon-sm" variant="secondary" aria-label={`More ${label}`} disabled={!more.right} onClick={() => page(1)}>
+              <Icon icon={ChevronRight} />
+            </Button>
+          </div>
         )}
       </div>
       <ul
         ref={ref}
-        className="scrollbar-hide -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:scroll-px-6 sm:px-6 lg:gap-5"
-        style={{ maskImage: mask, WebkitMaskImage: mask }}
+        className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 py-1 scrollbar-none [mask-image:linear-gradient(to_right,var(--fade-l),black_48px,black_calc(100%-48px),var(--fade-r))] sm:-mx-6 sm:scroll-px-6 sm:px-6 lg:gap-5"
+        style={fades}
       >
         {children}
       </ul>

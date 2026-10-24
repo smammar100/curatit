@@ -7,11 +7,20 @@
 // stay up when the folder is picked, with a check on its front. The gallery's open-and-drag is
 // gone: here a tap means "this one". The folder keeps its own proportions (176×128) whatever
 // the cell's width. Motion is in global.css (.folder-*), still under reduced motion.
+//
+// Since 2026-10-24 on Glaze's tokens: the tint stays its own (the category's hue is data, so it
+// reaches the folder only through the --folder-* custom properties below), while the posts, the
+// name pill and the check draw on the ink, the lines and the surface ladder. The folder itself is
+// a toggle (Base UI's Toggle, which Glaze's Chip is built on), not a Button: it's a drawing, not a
+// control with a label, and Glaze's base draws its focus ring. Its posts and its name pill are
+// the drawing's cards, so they lift on Fluid Functionalism's surface pair.
 import type { CSSProperties } from "react";
 import Image from "next/image";
+import { Toggle } from "@base-ui/react/toggle";
 import { CATEGORY_ICONS } from "@/components/dashboard/categoryIcons";
+import { Icon } from "@/components/glaze/icon";
 import { cx } from "@/lib/cx";
-import { Tick, toggle, type Category } from "./parts";
+import { edge, Tick, toggle, type Category } from "./parts";
 
 // Same lightness and chroma for every folder; only the hue changes, so the seven read as one
 // set. Each tone has a light and a dark value, through light-dark().
@@ -27,12 +36,11 @@ function tone(hue: number) {
 export function FolderTile({ category, on, onClick }: { category: Category; on: boolean; onClick: () => void }) {
   const Glyph = CATEGORY_ICONS[category.slug];
   return (
-    <button
-      type="button"
-      aria-pressed={on}
-      onClick={onClick}
+    <Toggle
+      pressed={on}
+      onPressedChange={onClick}
       style={tone(category.hue)}
-      className="folder group relative h-36 w-full touch-manipulation rounded-xl transition-[scale] duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.97]"
+      className="folder group relative h-36 w-full touch-manipulation rounded-panel transition-[scale] duration-(--dur-slide) ease-out motion-safe:active:scale-(--scale-press)"
     >
       <span className="sr-only">
         {category.name}, {category.posts.length} posts
@@ -40,9 +48,9 @@ export function FolderTile({ category, on, onClick }: { category: Category; on: 
       {/* The folder, 176 by 128, centred in the cell */}
       <span aria-hidden="true" className="absolute bottom-2 left-1/2 block h-32 w-full max-w-44 -translate-x-1/2">
         {/* The back: the tab, the body, the pocket the posts sit in */}
-        <span className="absolute top-0 left-0 h-6 w-16 rounded-t-lg bg-(--folder-back)" />
-        <span className="absolute inset-x-0 top-4 bottom-0 rounded-tr-xl rounded-b-xl bg-(--folder-back)" />
-        <span className="absolute inset-x-1.5 top-6 bottom-1.5 rounded-lg bg-(--folder-pocket)" />
+        <span className="absolute start-0 top-0 h-6 w-16 rounded-t-tag bg-(--folder-back)" />
+        <span className="absolute inset-x-0 top-4 bottom-0 rounded-tr-panel rounded-b-panel bg-(--folder-back)" />
+        <span className="absolute inset-x-1.5 top-6 bottom-1.5 rounded-tag bg-(--folder-pocket)" />
 
         {/* Three of its posts, tucked in behind the front with their tops showing; they slide up
             on hover and stay up once picked */}
@@ -52,10 +60,10 @@ export function FolderTile({ category, on, onClick }: { category: Category; on: 
             return (
               <span
                 key={post.shortCode}
-                className="folder-card absolute bottom-0 aspect-4/5 w-14 origin-bottom overflow-hidden rounded-md bg-container shadow-md outline-1 -outline-offset-1 outline-edge"
+                className={cx("folder-card absolute bottom-0 z-(--stack) aspect-4/5 w-14 origin-bottom overflow-hidden rounded-tag bg-surface-3 shadow-surface-3", edge)}
                 style={
                   {
-                    zIndex: i + 1,
+                    "--stack": i + 1,
                     "--rest": `translate(${offset * 4}px, ${offset * -2}px) rotate(${offset * 4}deg)`,
                     "--fan": `translate(${offset * 26}px, ${-30 + Math.abs(offset) * -3}px) rotate(${offset * 10}deg)`,
                   } as CSSProperties
@@ -68,16 +76,17 @@ export function FolderTile({ category, on, onClick }: { category: Category; on: 
         </span>
 
         {/* The front, with the icon and the name; it tilts open on hover */}
-        <span className="folder-front absolute inset-x-0 bottom-0 z-10 flex h-[4.5rem] flex-col items-center justify-end gap-1 rounded-xl bg-(--folder-front) pb-2.5 shadow-sm ring-1 ring-border-default">
-          {Glyph && <Glyph className="size-5 text-(--folder-ink)" />}
-          <span className="flex max-w-[calc(100%-1rem)] items-center gap-1.5 rounded-md bg-container px-2.5 py-1 text-caption font-medium text-primary-foreground shadow-sm ring-1 ring-border-default">
+        <span className="folder-front absolute inset-x-0 bottom-0 z-(--z-raised) flex h-18 flex-col items-center justify-end gap-1 rounded-panel bg-(--folder-front) pb-2.5 ring-1 ring-line-faint">
+          {Glyph && <Icon icon={Glyph} size={20} className="text-(--folder-ink)" />}
+          {/* The name and its count as a small raised pill on the tinted front */}
+          <span className="flex max-w-[calc(100%-var(--space-4))] items-center gap-1.5 rounded-pill bg-surface-3 px-2.5 py-1 type-label-sm text-text-1 shadow-surface-3">
             <span className="truncate">{category.name}</span>
-            <span className="shrink-0 text-secondary-foreground tabular-nums">{category.posts.length}</span>
+            <span className="shrink-0 text-text-2 tabular-nums">{category.posts.length}</span>
           </span>
-          {on && <Tick className="absolute top-2 right-2 size-6 ring-2 ring-container" />}
+          {on && <Tick className="absolute end-2 top-2 size-6 ring-2 ring-paper" />}
         </span>
       </span>
-    </button>
+    </Toggle>
   );
 }
 

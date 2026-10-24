@@ -1,21 +1,23 @@
 // The building blocks of the design system page's sheets (/system/<topic>). Hook-free, so a
-// sheet stays a server component: the only scripts on these pages are the theme switch, the
-// tab row and the live demos that need one.
+// foundation sheet stays a server component; a component sheet that needs state is a client file.
 //
-// A sheet shows its specimens in both themes. <Sheet> renders them twice, once per theme, in a
-// panel that carries that theme's tokens whatever the site's theme is (theme-scopes.css,
-// generated from global.css); the Light / Dark / Both switch hides one of the two with CSS
-// (system.css), so switching costs no render.
+// A sheet shows its specimens in both themes. <Sheet> renders them twice, once per theme, each in a
+// panel that is its own .glaze scope carrying that theme's tokens whatever the site's theme is
+// (theme-scopes.css, generated from global.css, Glaze's tokens.css and the bridge); the Light / Dark /
+// Both switch hides one of the two with CSS (system.css), so switching costs no render. Each panel
+// holds a stage portal, so a menu, popover or dialog opened inside it stays in the panel's theme.
 import type { ReactNode } from "react";
+import { GlazePortalProvider } from "@/lib/glaze/portal";
+import { Check, Close, Icon } from "@/components/glaze/icon";
+import { CodeBlock } from "@/components/glaze/ui/code-block";
 import Text from "@/components/fundations/elements/Text";
-import CopyBlock from "@/components/mcp/CopyBlock";
-import { cx } from "@/lib/cx";
+import { cn } from "@/lib/glaze/utils";
 
 export type Theme = "light" | "dark";
 const THEMES: Theme[] = ["light", "dark"];
 
 /** A specimen in both themes. `children` is called once per theme, so ids stay unique.
- *  `split` puts the two side by side (for narrow specimens); otherwise they stack. */
+ *  `split` puts the two side by side from xl (for narrow specimens); otherwise they stack. */
 export function Sheet({
   children,
   split = false,
@@ -26,20 +28,11 @@ export function Sheet({
   className?: string;
 }) {
   return (
-    <div
-      className={cx(
-        "grid gap-4",
-        split && "xl:grid-cols-[repeat(auto-fit,minmax(min(100%,28rem),1fr))]",
-        className,
-      )}
-    >
+    <div className={cn("grid gap-4", split && "xl:grid-cols-2", className)}>
       {THEMES.map((theme) => (
-        <ThemePanel key={theme} theme={theme} className="min-w-0 p-5 sm:p-8">
-          <p
-            data-sheet-label
-            className="mb-5 text-caption-lg tracking-wider text-secondary-foreground uppercase"
-          >
-            {theme}
+        <ThemePanel key={theme} theme={theme} className="min-w-0 p-5 sm:p-6">
+          <p data-sheet-label className="mb-4 type-caption text-text-2">
+            {theme === "light" ? "Light" : "Dark"}
           </p>
           {children(theme)}
         </ThemePanel>
@@ -63,77 +56,87 @@ export function ThemePanel({
       data-theme-scope={theme}
       data-theme={theme}
       data-sheet-panel={theme}
-      className={cx("rounded-2xl shadow-xs", className)}
+      className={cn("glaze rounded-shell border border-line-faint bg-page text-text-1", className)}
     >
-      {children}
+      <GlazePortalProvider>{children}</GlazePortalProvider>
     </div>
   );
 }
 
-/** A spec matrix: one row per variant, one column per size or state. Scrolls sideways inside
- *  its panel when it's wider than the screen. */
+/** A spec matrix: one row per variant, one column per size or state. Scrolls sideways inside its
+ *  panel when it's wider than the screen. */
 export function Matrix({
   columns,
   rows,
-  first = "9rem",
-  template,
   align = "center",
 }: {
-  columns: ReactNode[];
+  columns: readonly ReactNode[];
   rows: { label: ReactNode; sub?: ReactNode; cells: ReactNode[] }[];
-  /** Width of the label column */
-  first?: string;
-  /** The other columns' grid template, when equal shares don't fit (e.g. "auto auto minmax(16rem,1fr)") */
-  template?: string;
   align?: "center" | "start";
 }) {
   return (
-    <div className="-mx-5 overflow-x-auto px-5 sm:-mx-8 sm:px-8">
-      <div
-        role="table"
-        className="grid w-full min-w-min"
-        style={{ gridTemplateColumns: `${first} ${template ?? `repeat(${columns.length}, minmax(max-content, 1fr))`}` }}
-      >
-        <div role="row" className="contents">
-          <span role="columnheader" className="border-b border-border-default pb-3" />
-          {columns.map((c, i) => (
-            <span
-              key={i}
-              role="columnheader"
-              className="border-b border-border-default px-3 pb-3 font-mono text-caption-lg text-secondary-foreground"
-            >
-              {c}
-            </span>
-          ))}
-        </div>
-        {rows.map((r, i) => (
-          <div key={i} role="row" className="contents">
-            <div
-              role="rowheader"
-              className={cx(
-                "flex flex-col self-stretch border-b border-border-subtle py-3 pr-3",
-                align === "center" && "justify-center",
-              )}
-            >
-              <span className="block font-mono text-caption-lg text-primary-foreground">{r.label}</span>
-              {r.sub && <span className="mt-0.5 block text-caption-lg text-secondary-foreground">{r.sub}</span>}
-            </div>
-            {r.cells.map((cell, j) => (
-              <div
-                key={j}
-                role="cell"
-                className={cx(
-                  "flex self-stretch border-b border-border-subtle px-3 py-3",
-                  align === "center" ? "items-center" : "items-start",
+    <div className="-mx-5 overflow-x-auto px-5 sm:-mx-6 sm:px-6">
+      <table className="w-full min-w-max border-collapse text-start">
+        <thead>
+          <tr>
+            <td className="border-b border-line-faint pb-2" />
+            {columns.map((c, i) => (
+              <th key={i} scope="col" className="border-b border-line-faint px-3 pb-2 text-start type-caption text-text-2">
+                {c}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i}>
+              <th
+                scope="row"
+                className={cn(
+                  "w-36 border-b border-line-faint py-3 pe-3 text-start font-normal",
+                  align === "center" ? "align-middle" : "align-top",
                 )}
               >
-                {cell}
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
+                <span className="block type-label text-text-1">{r.label}</span>
+                {r.sub && <span className="mt-0.5 block type-caption text-text-2">{r.sub}</span>}
+              </th>
+              {r.cells.map((cell, j) => (
+                <td
+                  key={j}
+                  className={cn(
+                    "border-b border-line-faint px-3 py-3",
+                    align === "center" ? "align-middle" : "align-top",
+                  )}
+                >
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
+  );
+}
+
+/** A labelled specimen inside a panel: the thing, then a caption under it. `stretch` lets the thing
+ *  take the full width (a code block, a list) instead of sitting in a row */
+export function Specimen({
+  label,
+  children,
+  className,
+  stretch = false,
+}: {
+  label: ReactNode;
+  children: ReactNode;
+  className?: string;
+  stretch?: boolean;
+}) {
+  return (
+    <figure className={cn("flex min-w-0 flex-col gap-2", className)}>
+      <div className={stretch ? "grid min-w-0" : "flex min-h-8 flex-wrap items-center gap-2"}>{children}</div>
+      <figcaption className="type-caption text-text-2">{label}</figcaption>
+    </figure>
   );
 }
 
@@ -150,101 +153,73 @@ export function SheetSection({
   id?: string;
 }) {
   return (
-    <section id={id} className="scroll-mt-40">
-      <Text tag="h3" variant="h5" className="text-primary-foreground">
-        {title}
-      </Text>
-      {description && (
-        <Text variant="bodySM" className="mt-1.5 max-w-[65ch] text-secondary-foreground">
-          {description}
-        </Text>
-      )}
-      <div className="mt-5">{children}</div>
+    <section id={id} className="scroll-mt-32">
+      <h3 className="type-heading text-text-1">{title}</h3>
+      {description && <p className="mt-1 max-w-measure type-body-sm text-text-2">{description}</p>}
+      <div className="mt-4">{children}</div>
     </section>
   );
 }
 
-/** The rules for a component, in the order an agent or a new designer needs them: when to use
- *  it, what to use instead, the closed set of variants with its default, and what never to do */
-export function Rules({ items }: { items: { term: string; text: ReactNode }[] }) {
+/** Do and don't, from the component's rules in .design-system/glaze-docs/<name>.md. Each line is a
+ *  glyph and a word, never a colour alone */
+export function Rules({ items }: { items: { kind: "do" | "dont"; text: ReactNode }[] }) {
   return (
-    <dl className="grid max-w-4xl gap-x-8 gap-y-3 text-body-sm sm:grid-cols-[8rem_minmax(0,1fr)]">
-      {items.map((item) => (
-        <div key={item.term} className="contents">
-          <dt className="font-medium text-primary-foreground">{item.term}</dt>
-          <dd className="text-secondary-foreground">{item.text}</dd>
-        </div>
+    <ul className="grid max-w-measure gap-3">
+      {items.map((item, i) => (
+        <li key={i} className="flex items-start gap-3 type-body-sm text-text-2">
+          <span
+            className={cn(
+              "mt-0.5 inline-flex w-16 shrink-0 items-center gap-1 type-label-sm",
+              item.kind === "do" ? "text-ok-text" : "text-fail-text",
+            )}
+          >
+            <Icon icon={item.kind === "do" ? Check : Close} size={12} />
+            {item.kind === "do" ? "Do" : "Don't"}
+          </span>
+          <span className="min-w-0">{item.text}</span>
+        </li>
       ))}
-    </dl>
+    </ul>
   );
 }
 
-/** A correct example beside an incorrect one, both copyable */
-export function Code({ correct, incorrect }: { correct: string; incorrect?: { code: string; why: string } }) {
-  return (
-    <div className={cx("grid gap-4", incorrect && "lg:grid-cols-2")}>
-      <div className="min-w-0">
-        <p className="mb-2 text-caption-lg font-medium tracking-wider text-positive-foreground uppercase">Correct</p>
-        <CopyBlock tone="light" label="the correct example" code={correct} />
-      </div>
-      {incorrect && (
-        <div className="min-w-0">
-          <p className="mb-2 text-caption-lg font-medium tracking-wider text-danger-foreground uppercase">
-            Incorrect: {incorrect.why}
-          </p>
-          <CopyBlock tone="light" label="the incorrect example" code={incorrect.code} />
-        </div>
-      )}
-    </div>
-  );
+/** A block of code to copy: an import, an example */
+export function Example({ code, filename }: { code: string; filename?: string }) {
+  return <CodeBlock code={code} language="tsx" filename={filename} />;
 }
 
-/** A decision tree, walked top to bottom (for choices with three or more answers) */
-export function Flow({ tree }: { tree: string }) {
-  return (
-    <pre className="overflow-x-auto rounded-2xl bg-card px-5 py-4 font-mono text-caption-lg leading-relaxed text-primary-foreground">
-      {tree}
-    </pre>
-  );
+/** A token, class or prop name inside a sentence */
+export function Mono({ children }: { children: ReactNode }) {
+  return <code className="text-text-1">{children}</code>;
 }
 
-/** Monospace token or class name. `tone` sets its colour (never a text-* class in className:
- *  cx doesn't merge, so two colours would both land) */
-export function Mono({
+/** The sheet's own title block, with the import line when it documents a component */
+export function SheetHeader({
+  title,
   children,
-  className,
-  tone = "secondary",
+  importLine,
 }: {
+  title: string;
   children: ReactNode;
-  className?: string;
-  tone?: "primary" | "secondary";
+  importLine?: string;
 }) {
   return (
-    <code
-      className={cx(
-        "font-mono text-caption-lg",
-        tone === "primary" ? "text-primary-foreground" : "text-secondary-foreground",
-        className,
-      )}
-    >
-      {children}
-    </code>
-  );
-}
-
-/** A colour sample with a hairline, so white on white still shows */
-export function Swatch({ className }: { className: string }) {
-  return <span aria-hidden className={cx("block rounded-lg shadow-xs", className)} />;
-}
-
-/** The sheet's own title block */
-export function SheetHeader({ title, children }: { title: string; children: ReactNode }) {
-  return (
     <header className="max-w-3xl">
-      <Text tag="h2" variant="h3" className="text-primary-foreground">
+      <Text tag="h2" variant="h4" className="text-text-1">
         {title}
       </Text>
-      <Text className="mt-3 text-secondary-foreground">{children}</Text>
+      <p className="mt-2 type-body text-text-2">{children}</p>
+      {importLine && (
+        <div className="mt-4">
+          <CodeBlock code={importLine} language="tsx" header={false} defaultWrap />
+        </div>
+      )}
     </header>
   );
+}
+
+/** A sheet's column of sections */
+export function SheetBody({ children }: { children: ReactNode }) {
+  return <div className="flex flex-col gap-12">{children}</div>;
 }

@@ -1,12 +1,17 @@
 // Assets
 import Image from "next/image";
-// Fundation
-import Text from "@/components/fundations/elements/Text";
+// Glaze
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardLink, CardMeta, CardTitle } from "@/components/glaze/ui/card";
 // Content
 import type { LibraryPost } from "@/lib/library";
 
 const formats = { static: "Static", carousel: "Carousel" };
 
+// One post on the /library page, as Glaze's Card (2026-10-24): the cover run to the panel's edge,
+// then the brand with its handle and the caption, and the date, format and counts in the footer on
+// the shell (the date and format were a label above the brand; Glaze puts none above a title). The
+// whole card opens the post on Instagram through CardLink in the title: one tab stop, the ring
+// round the shell.
 export default function LibraryCard({ post }: { post: LibraryPost }) {
   const date = post.postedAt.toLocaleDateString("en-US", {
     month: "short",
@@ -17,8 +22,8 @@ export default function LibraryCard({ post }: { post: LibraryPost }) {
   const firstLine = post.caption.split("\n")[0];
 
   return (
-    <article className="relative">
-      <div className="p-8 bg-card rounded-lg">
+    <Card>
+      <CardContent flush>
         {post.hasImage ? (
           <Image
             src={post.image}
@@ -26,46 +31,33 @@ export default function LibraryCard({ post }: { post: LibraryPost }) {
             height={post.height}
             alt={`${post.brand} ${formats[post.format].toLowerCase()} post: ${firstLine}`}
             sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-            className="aspect-4/5 w-full object-cover object-top rounded shadow"
+            className="aspect-4/5 w-full bg-field object-cover object-top"
           />
         ) : (
-          <div className="flex aspect-4/5 w-full flex-col items-center justify-center rounded bg-component p-6 text-center">
-            <Text variant="bodySM" className="font-medium text-primary-foreground">
-              {post.brand}
-            </Text>
-            <Text variant="captionLG" className="mt-1 text-secondary-foreground">
-              Image not available
-            </Text>
+          <div className="flex aspect-4/5 w-full flex-col items-center justify-center bg-field p-6 text-center">
+            <p className="type-label text-text-1">{post.brand}</p>
+            <p className="mt-1 type-caption text-text-2">Image not available</p>
           </div>
         )}
-      </div>
-      <div className="mt-4">
-        <Text tag="p" variant="captionLG" className="text-secondary-foreground uppercase tracking-wider font-medium flex items-center gap-2">
-          <time dateTime={post.postedAt.toISOString()}>{date}</time>
-          <span aria-hidden="true">·</span>
-          <span>{formats[post.format]}</span>
-        </Text>
-        <Text tag="h3" variant="bodySM" className="text-primary-foreground font-medium mt-2">
-          {post.brand} <span className="font-normal text-secondary-foreground">@{post.handle}</span>
-        </Text>
-        <Text tag="p" variant="bodySM" className="text-secondary-foreground mt-1 line-clamp-2">
-          {post.caption}
-        </Text>
-        <Text tag="p" variant="captionLG" className="text-secondary-foreground mt-2">
-          {post.likes.toLocaleString("en-US")} likes · {post.comments.toLocaleString("en-US")} comments
-        </Text>
-      </div>
-      {/* Stretched link to the original post */}
-      <a
-        href={post.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="absolute inset-0 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus"
-      >
-        <span className="sr-only">
-          Open this {post.brand} post on Instagram (opens in a new tab)
-        </span>
-      </a>
-    </article>
+      </CardContent>
+      <CardHeader>
+        <CardTitle>
+          <h3>
+            <CardLink href={post.url} target="_blank" rel="noopener noreferrer">
+              {post.brand}
+              <span className="sr-only">: open this post on Instagram (opens in a new tab)</span>
+            </CardLink>{" "}
+            <span className="font-normal text-text-2">@{post.handle}</span>
+          </h3>
+        </CardTitle>
+        <CardDescription className="line-clamp-2">{post.caption}</CardDescription>
+      </CardHeader>
+      <CardFooter>
+        <CardMeta>
+          <time dateTime={post.postedAt.toISOString()}>{date}</time> · {formats[post.format]} · {post.likes.toLocaleString("en-US")} likes ·{" "}
+          {post.comments.toLocaleString("en-US")} comments
+        </CardMeta>
+      </CardFooter>
+    </Card>
   );
 }

@@ -1,33 +1,38 @@
 // Assets
 import Image from "next/image";
-// Fundation
-import Card, { CardMedia, CardTitle } from "@/components/fundations/molecules/Card";
+// Glaze
+import { Card, CardContent, CardDescription, CardHeader, CardLink, CardTitle } from "@/components/glaze/ui/card";
 // Content
 import type { CollectionEntry } from "@/lib/content";
 
-// The words sit under the mat, so the article holds the title's stretched link
+// Glaze's Card (2026-10-24): the image run to the panel's edge, the title under it opening the
+// product through CardLink (one tab stop, the ring round the shell), the price under the title
+// (it was joined to the title with an em dash, which Glaze keeps out of copy)
 export default function StoreCard({ post }: { post: CollectionEntry<"store"> }) {
   const url = "/store/" + post.id;
   const { title, price, image } = post.data;
   return (
-    <article className="relative isolate group-hover:opacity-60 hover:opacity-100 peer hover:peer-hover:opacity-60 transition-opacity duration-150 ease-out-quint">
+    <article className="peer transition-opacity duration-(--dur-state) ease-out group-hover:opacity-60 hover:opacity-100 hover:peer-hover:opacity-60">
       <Card>
-        <CardMedia>
+        <CardContent flush>
           <Image
             width={500}
             height={500}
             src={image.url}
             alt={image.alt}
             sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-            className="object-top"
+            className="aspect-8/5 w-full bg-field object-cover object-top"
           />
-        </CardMedia>
+        </CardContent>
+        <CardHeader>
+          <CardTitle>
+            <h3>
+              <CardLink href={url}>{title}</CardLink>
+            </h3>
+          </CardTitle>
+          <CardDescription className="data">${price}</CardDescription>
+        </CardHeader>
       </Card>
-      <CardTitle href={url} className="mt-2">
-        <span>${price}</span>
-        —
-        <span>{title}</span>
-      </CardTitle>
     </article>
   );
 }

@@ -3,68 +3,74 @@ import type { ComponentType } from "react";
 import type { TopicSlug } from "../topics";
 import Colour from "./Colour";
 import Type from "./Type";
-import Shape from "./Shape";
+import Surfaces from "./Surfaces";
 import Motion from "./Motion";
+import Radius from "./Radius";
+import Space from "./Space";
 import Icons from "./Icons";
-import Layout from "./Layout";
 import Brand from "./Brand";
 import ButtonSheet from "./ButtonSheet";
-import TextLinkSheet from "./atoms/TextLink";
+import CopyButtonSheet from "./CopyButtonSheet";
+import TextLinkSheet from "./TextLinkSheet";
+import FieldSheet from "./FieldSheet";
+import TextareaSheet from "./TextareaSheet";
+import SelectSheet from "./SelectSheet";
+import CheckboxSheet from "./CheckboxSheet";
+import SwitchSheet from "./SwitchSheet";
+import SegmentedSheet from "./SegmentedSheet";
+import ChipSheet from "./ChipSheet";
+import TabsSheet from "./TabsSheet";
+import CardSheet from "./CardSheet";
+import ItemSheet from "./ItemSheet";
+import DataListSheet from "./DataListSheet";
+import CollapsibleSheet from "./CollapsibleSheet";
 import BadgeSheet from "./BadgeSheet";
-import InputSheet from "./atoms/Input";
-import TextareaSheet from "./atoms/Textarea";
-import CheckboxSheet from "./atoms/Checkbox";
-import Controls from "./Controls";
-import AvatarSheet from "./atoms/Avatar";
-import SpinnerSheet from "./atoms/Spinner";
-import SkeletonSheet from "./atoms/Skeleton";
-import KbdSheet from "./atoms/Kbd";
-import SeparatorSheet from "./atoms/Separator";
-import FieldSheet from "./molecules/Field";
-import SearchFieldSheet from "./molecules/SearchField";
-import AuthFields from "./Input";
-import NoticeSheet from "./molecules/Notice";
-import ToastSheet from "./molecules/Toast";
-import EmptyStateSheet from "./molecules/EmptyState";
-import CardSheet from "./molecules/Card";
-import MenuSheet from "./molecules/Menu";
-import DialogSheet from "./molecules/Dialog";
-import TooltipSheet from "./molecules/Tooltip";
-import TabsSheet from "./molecules/Tabs";
-import Code from "./Code";
-import Patterns from "./Patterns";
+import AvatarSheet from "./AvatarSheet";
+import KbdSheet from "./KbdSheet";
+import CodeBlockSheet from "./CodeBlockSheet";
+import AlertSheet from "./AlertSheet";
+import ToastSheet from "./ToastSheet";
+import EmptyStateSheet from "./EmptyStateSheet";
+import SkeletonSheet from "./SkeletonSheet";
+import DialogSheet from "./DialogSheet";
+import DropdownMenuSheet from "./DropdownMenuSheet";
+import PopoverSheet from "./PopoverSheet";
+import TooltipSheet from "./TooltipSheet";
 
 export const SHEETS: Record<TopicSlug, ComponentType> = {
   colour: Colour,
   type: Type,
-  shape: Shape,
+  surfaces: Surfaces,
   motion: Motion,
+  radius: Radius,
+  space: Space,
   icons: Icons,
-  layout: Layout,
   brand: Brand,
   button: ButtonSheet,
+  "copy-button": CopyButtonSheet,
   "text-link": TextLinkSheet,
-  badge: BadgeSheet,
-  input: InputSheet,
-  textarea: TextareaSheet,
-  checkbox: CheckboxSheet,
-  controls: Controls,
-  avatar: AvatarSheet,
-  spinner: SpinnerSheet,
-  skeleton: SkeletonSheet,
-  kbd: KbdSheet,
-  separator: SeparatorSheet,
   field: FieldSheet,
-  "search-field": SearchFieldSheet,
-  "auth-fields": AuthFields,
-  notice: NoticeSheet,
+  textarea: TextareaSheet,
+  select: SelectSheet,
+  checkbox: CheckboxSheet,
+  switch: SwitchSheet,
+  "segmented-control": SegmentedSheet,
+  chip: ChipSheet,
+  tabs: TabsSheet,
+  card: CardSheet,
+  item: ItemSheet,
+  "data-list": DataListSheet,
+  collapsible: CollapsibleSheet,
+  badge: BadgeSheet,
+  avatar: AvatarSheet,
+  kbd: KbdSheet,
+  "code-block": CodeBlockSheet,
+  alert: AlertSheet,
   toast: ToastSheet,
   "empty-state": EmptyStateSheet,
-  card: CardSheet,
-  menu: MenuSheet,
+  skeleton: SkeletonSheet,
   dialog: DialogSheet,
+  "dropdown-menu": DropdownMenuSheet,
+  popover: PopoverSheet,
   tooltip: TooltipSheet,
-  tabs: TabsSheet,
-  code: Code,
-  patterns: Patterns,
 };

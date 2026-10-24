@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 // Fundation
 import Text from "@/components/fundations/elements/Text";
-import Button from "@/components/fundations/elements/Button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
+// Glaze
+import { ChevronLeft, ChevronRight, Icon } from "@/components/glaze/icon";
+import { Button } from "@/components/glaze/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/glaze/ui/tabs";
 // Components
 import { CATEGORY_ICONS } from "@/components/dashboard/categoryIcons";
-import CaretLeft from "@/components/fundations/icons/CaretLeft";
-import CaretRight from "@/components/fundations/icons/CaretRight";
 import type { CategoryDef } from "@/lib/categories";
 import type { PostCard } from "@/lib/posts";
 import { cx } from "@/lib/cx";
@@ -17,22 +18,20 @@ import BrandName from "./BrandName";
 import PostCover from "./PostCover";
 import { easeOut } from "./DemoParts";
 
-// Every tab shares lightness and chroma; only the hue changes, so the tabs read as one set.
-// The selected pill is tabFill; tint is the hover wash, ink the icon and selected text.
-// Each tone has a light and a dark value; light-dark() follows the theme's color-scheme
-const tabFill = (hue: number) =>
-  `light-dark(oklch(0.9 0.06 ${hue}), oklch(0.36 0.07 ${hue}))`;
-function tabTone(hue: number) {
-  return {
-    "--tab-tint": `light-dark(oklch(0.96 0.025 ${hue}), oklch(0.27 0.035 ${hue}))`,
-    "--tab-ink": `light-dark(oklch(0.42 0.1 ${hue}), oklch(0.82 0.09 ${hue}))`,
-  } as CSSProperties;
-}
+// Every category's ink shares lightness and chroma; only the hue changes, so the icons read as one
+// set. It has a light and a dark value; light-dark() follows the theme's color-scheme. The hue is
+// the category's data (src/lib/categories.ts), handed to the icon as a custom property
+const tabInk = (hue: number) => `light-dark(oklch(0.42 0.1 ${hue}), oklch(0.82 0.09 ${hue}))`;
 
 // One gallery, filtered by a row of category tabs. `categories` are the brands' main categories
 // with enough posts to fill the gallery and `galleries` each tab's ten posts, by slug (both picked
 // on the server, see page.tsx); a tab's gallery takes its extra tags too. The ten slots stay put;
 // each one cross-fades to its new post, slot by slot, so the grid never reflows.
+//
+// Since 2026-10-24 the row is Glaze's Tabs: its paper pill slides to the selected tab, the arrow
+// keys move between tabs, and the selected one scrolls itself into view. Each tab keeps its
+// category's hue on its icon (the --tab-ink property), a recorded exception to Glaze's black and
+// white, since the pill itself is Glaze's and takes no colour.
 export default function Categories({
   categories,
   galleries,
@@ -42,7 +41,6 @@ export default function Categories({
 }) {
   const [active, setActive] = useState(categories[0]?.slug ?? "");
   const reduceMotion = useReducedMotion();
-  const id = useId();
   const shown = galleries[active] ?? [];
 
   // The tab row scrolls sideways once it doesn't fit; which edges have more beyond them
@@ -67,15 +65,15 @@ export default function Categories({
       observer.disconnect();
     };
   }, [categories]);
-  // An edge with more beyond it is fully clear under its caret (which ends 4.75rem in from
-  // the edge), then fades in, so no tab text shows through the caret
+  // An edge with more beyond it is fully clear under its caret (which ends 2.25rem in from the
+  // list's edge), then fades in, so no tab text shows through the caret. A mask paints nothing
   const edge = (side: "left" | "right") =>
     side === "left"
       ? more.left
-        ? "transparent 0, transparent 4.75rem, black 8rem"
+        ? "transparent 0, transparent 3rem, black 6rem"
         : "black 0"
       : more.right
-        ? "black calc(100% - 8rem), transparent calc(100% - 4.75rem), transparent 100%"
+        ? "black calc(100% - 6rem), transparent calc(100% - 3rem), transparent 100%"
         : "black 100%";
   const mask = `linear-gradient(to right, ${edge("left")}, ${edge("right")})`;
   const nudge = (dir: 1 | -1) =>
@@ -83,150 +81,82 @@ export default function Categories({
       left: dir * row.current.clientWidth * 0.6,
       behavior: reduceMotion ? "auto" : "smooth",
     });
-  // A caret is the secondary Button, round and 44px; this places it over the row's edge (the
-  // Button sets its own `relative`, so the placing is on a wrapper)
-  const caret = "absolute top-1/2 z-10 flex -translate-y-1/2";
+  // A caret is the secondary icon Button; this places it over the row's edge
+  const caret = "absolute top-1/2 z-(--z-raised) flex -translate-y-1/2";
 
   return (
     <section>
       <Wrapper variant="standard" className="section-y">
-        <div className="text-balance max-w-3xl mx-auto text-center">
-          <Text tag="h2" variant="h1" className="text-primary-foreground">
+        <div className="mx-auto max-w-3xl text-center text-balance">
+          <Text tag="h2" variant="h1" className="text-text-1">
             Explore posts by industry.
           </Text>
-          <Text tag="p" variant="body" className="text-secondary-foreground mt-4">
+          <Text tag="p" variant="body" className="mt-4 text-text-2">
             Browse examples from finance, food, travel and more.
           </Text>
         </div>
-        {/* One scrolling row, bleeding to the page gutter.
-            py-0.5 keeps the tabs' extended hit areas from being clipped by the scroller. One line at every
-            width (2026-10-15, at the person's request): centred while it fits, scrolling sideways once it doesn't. */}
-        <div className="relative -mx-4 mt-12 sm:-mx-8">
-          {more.left && (
-            <span className={cx(caret, "left-4 sm:left-8")}>
-              <Button
-                variant="secondary"
-                size="lg"
-                shape="pill"
-                iconOnly
-                aria-label="Scroll categories left"
-                onClick={() => nudge(-1)}
-              >
-                <CaretLeft className="size-4" />
-              </Button>
-            </span>
-          )}
-          {more.right && (
-            <span className={cx(caret, "right-4 sm:right-8")}>
-              <Button
-                variant="secondary"
-                size="lg"
-                shape="pill"
-                iconOnly
-                aria-label="Scroll categories right"
-                onClick={() => nudge(1)}
-              >
-                <CaretRight className="size-4" />
-              </Button>
-            </span>
-          )}
-          <div
-            ref={row}
-            role="tablist"
-            aria-label="Category"
-            style={{ maskImage: mask, WebkitMaskImage: mask }}
-            className="scrollbar-hide flex justify-center-safe gap-1 overflow-x-auto px-4 py-0.5 sm:px-8"
-          >
-            {categories.map((category) => {
-              const selected = category.slug === active;
-              const Icon = CATEGORY_ICONS[category.slug];
-              return (
-                <button
-                  key={category.slug}
-                  type="button"
-                  role="tab"
-                  id={`${id}-${category.slug}`}
-                  aria-selected={selected}
-                  aria-controls={`${id}-panel`}
-                  style={tabTone(category.hue)}
-                  onClick={(event) => {
-                    setActive(category.slug);
-                    event.currentTarget.scrollIntoView({
-                      block: "nearest",
-                      inline: "nearest",
-                    });
-                  }}
-                  className={cx(
-                    // The pill is 40px; the pseudo-element brings the hit area to 44px. The press
-                    // is Tailwind's `scale` property, so that's what transitions, not transform
-                    "relative h-10 shrink-0 touch-manipulation rounded-lg pr-4 pl-3.5 text-body-sm transition-[color,background-color,scale] duration-150 ease-out-quint before:absolute before:inset-x-0 before:-inset-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.96]",
-                    selected
-                      ? "text-(--tab-ink)"
-                      : "text-secondary-foreground hover:bg-(--tab-tint) hover:text-primary-foreground",
-                  )}
-                >
-                  {/* One pill that slides to the selected tab, taking on its colour as it goes */}
-                  {selected && (
-                    <m.span
-                      layoutId={`${id}-pill`}
-                      aria-hidden="true"
-                      className="absolute inset-0 rounded-lg"
-                      initial={false}
-                      animate={{ backgroundColor: tabFill(category.hue) }}
-                      transition={
-                        reduceMotion
-                          ? { duration: 0 }
-                          : { type: "spring", duration: 0.5, bounce: 0 }
-                      }
-                    />
-                  )}
-                  <span className="relative flex items-center gap-2">
-                    {Icon && (
-                      <Icon className="size-4 shrink-0 text-(--tab-ink)" />
-                    )}
+        <Tabs value={active} onValueChange={(value) => setActive(String(value))} className="mt-12 gap-8">
+          {/* One scrolling row, bleeding to the page gutter. One line at every width (2026-10-15,
+              at the person's request): centred while it fits, scrolling sideways once it doesn't */}
+          <div className="relative -mx-4 flex justify-center px-4 sm:-mx-8 sm:px-8">
+            {more.left && (
+              <span className={cx(caret, "left-4 sm:left-8")}>
+                <Button variant="secondary" size="icon-lg" aria-label="Scroll categories left" onClick={() => nudge(-1)}>
+                  <Icon icon={ChevronLeft} />
+                </Button>
+              </span>
+            )}
+            {more.right && (
+              <span className={cx(caret, "right-4 sm:right-8")}>
+                <Button variant="secondary" size="icon-lg" aria-label="Scroll categories right" onClick={() => nudge(1)}>
+                  <Icon icon={ChevronRight} />
+                </Button>
+              </span>
+            )}
+            <TabsList
+              ref={row}
+              aria-label="Category"
+              style={{ "--row-mask": mask } as CSSProperties}
+              className="[mask-image:var(--row-mask)]"
+            >
+              {categories.map((category) => {
+                const Glyph = CATEGORY_ICONS[category.slug];
+                return (
+                  <TabsTrigger
+                    key={category.slug}
+                    value={category.slug}
+                    style={{ "--tab-ink": tabInk(category.hue) } as CSSProperties}
+                  >
+                    {Glyph && <Icon icon={Glyph} className="shrink-0 text-(--tab-ink) in-data-active:text-current" />}
                     {category.name}
-                  </span>
-                </button>
-              );
-            })}
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
           </div>
-        </div>
-        <ul
-          id={`${id}-panel`}
-          role="tabpanel"
-          aria-labelledby={`${id}-${active}`}
-          className="mt-8 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-5"
-        >
-          {shown.map((post, slot) => (
-            // Each slot is a one-cell grid: the leaving and arriving posts overlap while they fade
-            <li key={slot} className="grid grid-cols-1">
-              <AnimatePresence initial={false}>
-                <m.div
-                  key={post.shortCode}
-                  className="min-w-0 [grid-area:1/1]"
-                  initial={reduceMotion ? false : { opacity: 0, scale: 0.97 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{
-                    opacity: 0,
-                    transition: { duration: reduceMotion ? 0 : 0.12 },
-                  }}
-                  transition={
-                    reduceMotion
-                      ? { duration: 0 }
-                      : { duration: 0.3, ease: easeOut, delay: slot * 0.03 }
-                  }
-                >
-                  <PostCover
-                    post={post}
-                    sizes="(min-width: 1024px) 220px, 45vw"
-                    className="rounded shadow"
-                  />
-                  <BrandName brand={post.brand} className="mt-2" />
-                </m.div>
-              </AnimatePresence>
-            </li>
-          ))}
-        </ul>
+          <TabsContent value={active}>
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-5">
+              {shown.map((post, slot) => (
+                // Each slot is a one-cell grid: the leaving and arriving posts overlap while they fade
+                <li key={slot} className="grid grid-cols-1">
+                  <AnimatePresence initial={false}>
+                    <m.div
+                      key={post.shortCode}
+                      className="col-start-1 row-start-1 min-w-0"
+                      initial={reduceMotion ? false : { opacity: 0, scale: 0.97 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, transition: { duration: reduceMotion ? 0 : 0.12 } }}
+                      transition={reduceMotion ? { duration: 0 } : { duration: 0.3, ease: easeOut, delay: slot * 0.03 }}
+                    >
+                      <PostCover post={post} sizes="(min-width: 1024px) 220px, 45vw" className="rounded-panel" />
+                      <BrandName brand={post.brand} className="mt-2" />
+                    </m.div>
+                  </AnimatePresence>
+                </li>
+              ))}
+            </ul>
+          </TabsContent>
+        </Tabs>
       </Wrapper>
     </section>
   );

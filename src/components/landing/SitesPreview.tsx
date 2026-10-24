@@ -1,5 +1,6 @@
+import Link from "next/link";
 // Fundation
-import Button from "@/components/fundations/elements/Button";
+import { Button } from "@/components/glaze/ui/button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 // Components
 import SiteCard from "@/components/sites/SiteCard";
@@ -17,16 +18,7 @@ export default function SitesPreview() {
       <Wrapper variant="standard" className="section-y">
         <div className=" relative flex snap-x snap-proximity gap-1 py-2 overflow-x-scroll scrollbar-hide">
           {sortedTags.map((tag) => (
-            <Button
-              key={tag}
-              isLink
-              size="xs"
-              variant="muted"
-              title={tag}
-              aria-label={tag}
-              href={`/sites/tags/${tag}`}
-              className="capitalize"
-            >
+            <Button key={tag} size="sm" variant="secondary" title={tag} aria-label={tag} render={<Link href={`/sites/tags/${tag}`} />} nativeButton={false}>
               {tag}
             </Button>
           ))}

@@ -1,7 +1,9 @@
 // Fundation
 import Text from "@/components/fundations/elements/Text";
-import Button from "@/components/fundations/elements/Button";
+import { Button } from "@/components/glaze/ui/button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
+import { Card, CardContent, CardFooter } from "@/components/glaze/ui/card";
+import { DataList, DataListItem, DataListLabel, DataListValue } from "@/components/glaze/ui/data-list";
 // Data
 const packages = [
   {
@@ -28,53 +30,50 @@ const packages = [
   },
 ];
 
+// The advertising packages (the template's page, copy as it was). Since 2026-10-24 each package is
+// Glaze's Card: the name, description, price and what's in it (a DataList) on the panel, Get
+// started the footer's one small primary Button on the shell.
 export default function AdvertisePage() {
   return (
     <section>
       <Wrapper variant="standard" className="page-start">
         <div className="text-center max-w-3xl mx-auto text-balance">
-          <Text tag="h1" variant="h1" className="text-primary-foreground text-center">
+          <Text tag="h1" variant="h1" className="text-text-1 text-center">
             Put your launch in front of the Curatit crowd
           </Text>
-          <Text tag="p" variant="body" className="text-secondary-foreground mt-4">
+          <Text tag="p" variant="body" className="mt-4 text-text-2">
             Reach designers and developers actively looking for production-grade inspiration. Choose
             a package or build a custom campaign.
           </Text>
         </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-12">
           {packages.map((pkg) => (
-            <div key={pkg.name} className="flex flex-col h-full justify-between bg-card rounded-lg p-8">
-              <div className="flex flex-col gap-8">
+            <Card key={pkg.name} className="h-full">
+              <CardContent className="flex-1 gap-8 p-6">
                 <div className="space-y-3">
-                  <Text tag="p" variant="h3" className="text-primary-foreground text-balance">
+                  <Text tag="p" variant="h3" className="text-balance text-text-1">
                     {pkg.name}
                   </Text>
-                  <Text tag="p" variant="bodySM" className="text-secondary-foreground">
+                  <Text tag="p" variant="bodySM" className="text-text-2">
                     {pkg.description}
                   </Text>
                 </div>
-                <div>
-                  <Text tag="p" variant="h1" className="text-primary-foreground">
-                    {pkg.price}
-                  </Text>
-                </div>
-                <ul className="divide-y divide-border-strong mt-4">
+                <Text tag="p" variant="h1" className="text-text-1">
+                  {pkg.price}
+                </Text>
+                <DataList>
                   {pkg.features.map((item) => (
-                    <li key={item.label} className="flex items-center justify-between py-3 text-primary-foreground">
-                      <Text tag="span" variant="body" className="text-primary-foreground">
-                        {item.label}
-                      </Text>
-                      <Text tag="span" variant="bodySM" className="text-secondary-foreground">
-                        {item.value}
-                      </Text>
-                    </li>
+                    <DataListItem key={item.label}>
+                      <DataListLabel>{item.label}</DataListLabel>
+                      <DataListValue>{item.value}</DataListValue>
+                    </DataListItem>
                   ))}
-                </ul>
-              </div>
-              <Button size="base" variant="default" className="w-fit mt-8">
-                Get started
-              </Button>
-            </div>
+                </DataList>
+              </CardContent>
+              <CardFooter>
+                <Button size="sm">Get started</Button>
+              </CardFooter>
+            </Card>
           ))}
         </div>
       </Wrapper>

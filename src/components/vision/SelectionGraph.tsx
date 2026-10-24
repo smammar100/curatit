@@ -8,13 +8,19 @@
 // walk. The drift and the flow run on requestAnimationFrame straight into the DOM (no React
 // renders per frame), only while the graph is on screen and the tab is visible; a Pause button
 // under it stops all of it (WCAG 2.2.2), and under reduced motion everything holds still on the
-// first post. It works with three to five posts: the walk only visits the ones there are. It's
-// drawn inside the page's .vision-night panel, so its colours are the base-* and white classes
-// the panel redefines (the semantic tokens don't flip there). Original work, made for Curatit.
+// first post. It works with three to five posts: the walk only visits the ones there are.
+//
+// Since 2026-10-24 on Glaze. It's drawn on the Vision page's panel, which inverts the page (dark
+// on the light site, paper on the dark one) while Glaze's roles follow the page, so the drawing
+// takes one colour, the panel's own text colour (currentColor), at Glaze's ink alphas: lines at
+// 15% and 45%, dots at 45%, frames at 45% and the full ink when selected, the readout at the full
+// ink and 60%. The frames are hollow and the lines run only between their edges, so nothing
+// needs the panel's fill. The Pause button is Glaze's secondary icon Button
+// and the transitions run on Glaze's overlay duration. Original work, made for Curatit.
 import Image from "next/image";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
-import Pause from "@/components/fundations/icons/Pause";
-import Play from "@/components/fundations/icons/Play";
+import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from "react";
+import { Button } from "@/components/glaze/ui/button";
+import { FilmStrip, Icon, Pause, Picture, Play } from "@/components/glaze/icon";
 import type { LibraryPost } from "@/lib/posts";
 import { cx } from "@/lib/cx";
 
@@ -41,8 +47,7 @@ const EDGES: [number, number][] = [
 ];
 const STEP_MS = 2600;
 const HANDOFF_MS = 900;
-// A post's frame is 20% of the graph's width, 6:5
-const NODE_W = 20;
+// A post's frame is a fifth of the graph's width (w-1/5), 6:5
 // How far a post drifts from its place, in field units, and how fast (radians a second)
 const DRIFT = 1.8;
 
@@ -75,8 +80,44 @@ function hexagon(w: number, h: number) {
 }
 const FRAME = hexagon(120, 100);
 const HEX_CLIP = hexagon(1, 1);
+// A post's frame in field units (a fifth of the field's width, 6:5) and its outline's corners
+// around its centre. The frames are hollow, so a line runs only between their edges: it starts and
+// ends where it leaves each hexagon (centrally symmetric, so one reach serves both ends)
+const NODE_FIELD = { w: FIELD.w / 5, h: FIELD.w / 6 };
+const CORNERS = [
+  [3, 50],
+  [30, 3],
+  [90, 3],
+  [117, 50],
+  [90, 97],
+  [30, 97],
+].map(([x, y]) => [(x / 120 - 0.5) * NODE_FIELD.w, (y / 100 - 0.5) * NODE_FIELD.h]);
+// How far a ray from the centre in direction (dx, dy), a unit vector, runs before it meets the outline
+function reach(dx: number, dy: number) {
+  let best = Infinity;
+  CORNERS.forEach(([ax, ay], i) => {
+    const [bx, by] = CORNERS[(i + 1) % CORNERS.length];
+    const ex = bx - ax;
+    const ey = by - ay;
+    const den = dx * ey - dy * ex;
+    if (Math.abs(den) < 1e-9) return;
+    const t = (ax * ey - ay * ex) / den;
+    const s = (ax * dy - ay * dx) / den;
+    if (t > 0 && s >= 0 && s <= 1) best = Math.min(best, t);
+  });
+  return best === Infinity ? 0 : best;
+}
+type Point = { x: number; y: number };
+// The visible stretch of the line between two posts' centres
+function segment(a: Point, b: Point) {
+  const length = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+  const dx = (b.x - a.x) / length;
+  const dy = (b.y - a.y) / length;
+  const r = Math.min(reach(dx, dy), length / 2);
+  return { x1: a.x + dx * r, y1: a.y + dy * r, x2: b.x - dx * r, y2: b.y - dy * r };
+}
+const along = (s: ReturnType<typeof segment>, u: number) => ({ x: s.x1 + (s.x2 - s.x1) * u, y: s.y1 + (s.y2 - s.y1) * u });
 
-const short = (category: string) => category.replace(/[^A-Za-z]/g, "").slice(0, 4).toUpperCase();
 const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 
 export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
@@ -149,19 +190,20 @@ export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
         if (el) el.style.transform = `translate(${((p.x - NODES[i].x) * unit).toFixed(2)}px, ${((p.y - NODES[i].y) * unit).toFixed(2)}px)`;
       });
       edges.forEach(([a, b], k) => {
+        const s = segment(at[a], at[b]);
         const line = lineEls.current[k];
         if (line) {
-          line.setAttribute("x1", at[a].x.toFixed(2));
-          line.setAttribute("y1", at[a].y.toFixed(2));
-          line.setAttribute("x2", at[b].x.toFixed(2));
-          line.setAttribute("y2", at[b].y.toFixed(2));
+          line.setAttribute("x1", s.x1.toFixed(2));
+          line.setAttribute("y1", s.y1.toFixed(2));
+          line.setAttribute("x2", s.x2.toFixed(2));
+          line.setAttribute("y2", s.y2.toFixed(2));
         }
         // A faint dot flows along each line, each at its own pace
         const dot = flowEls.current[k];
         if (dot) {
-          const u = (t * (0.09 + k * 0.013) + k * 0.37) % 1;
-          dot.setAttribute("cx", (at[a].x + (at[b].x - at[a].x) * u).toFixed(2));
-          dot.setAttribute("cy", (at[a].y + (at[b].y - at[a].y) * u).toFixed(2));
+          const q = along(s, (t * (0.09 + k * 0.013) + k * 0.37) % 1);
+          dot.setAttribute("cx", q.x.toFixed(2));
+          dot.setAttribute("cy", q.y.toFixed(2));
         }
       });
       // The handoff: a dark dot carries the selection along its line
@@ -170,9 +212,9 @@ export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
       if (dot) {
         const p = move ? (now - move.at) / HANDOFF_MS : 1;
         if (move && p < 1 && at[move.from] && at[move.to]) {
-          const e = ease(Math.max(0, p));
-          dot.setAttribute("cx", (at[move.from].x + (at[move.to].x - at[move.from].x) * e).toFixed(2));
-          dot.setAttribute("cy", (at[move.from].y + (at[move.to].y - at[move.from].y) * e).toFixed(2));
+          const q = along(segment(at[move.from], at[move.to]), ease(Math.max(0, p)));
+          dot.setAttribute("cx", q.x.toFixed(2));
+          dot.setAttribute("cy", q.y.toFixed(2));
           dot.style.opacity = "1";
         } else dot.style.opacity = "0";
       }
@@ -191,126 +233,132 @@ export default function SelectionGraph({ posts }: { posts: LibraryPost[] }) {
 
   return (
     <div className="relative">
-    <div
-      ref={root}
-      role="img"
-      aria-label={`An illustration: ${nodes.length} recent posts from the library, one from each of ${nodes.length} categories, joined by lines`}
-      data-paused={paused || still || undefined}
-      className="@container relative mx-auto aspect-3/2 w-full select-none"
-    >
-      <svg viewBox={`0 0 ${FIELD.w} ${FIELD.h}`} className="absolute inset-0 size-full overflow-visible" aria-hidden="true">
-        <defs>
-          <clipPath id={clip} clipPathUnits="objectBoundingBox">
-            <path d={HEX_CLIP} />
-          </clipPath>
-        </defs>
-        {edges.map(([a, b], k) => (
-          <line
-            key={`${a}-${b}`}
-            ref={(el) => {
-              lineEls.current[k] = el;
-            }}
-            x1={NODES[a].x}
-            y1={NODES[a].y}
-            x2={NODES[b].x}
-            y2={NODES[b].y}
-            vectorEffect="non-scaling-stroke"
-            strokeWidth={1}
-            className={cx("transition-[stroke] duration-500 ease-in-out-quart", a === active || b === active ? "stroke-base-500" : "stroke-base-200")}
-          />
-        ))}
-        {!still &&
-          edges.map(([a, b], k) => (
-            <circle
-              key={`flow-${a}-${b}`}
+      <div
+        ref={root}
+        role="img"
+        aria-label={`An illustration: ${nodes.length} recent posts from the library, one from each of ${nodes.length} categories, joined by lines`}
+        data-paused={paused || still || undefined}
+        className="@container relative mx-auto aspect-3/2 w-full select-none"
+      >
+        <svg viewBox={`0 0 ${FIELD.w} ${FIELD.h}`} className="absolute inset-0 size-full overflow-visible" aria-hidden="true">
+          <defs>
+            <clipPath id={clip} clipPathUnits="objectBoundingBox">
+              <path d={HEX_CLIP} />
+            </clipPath>
+          </defs>
+          {edges.map(([a, b], k) => (
+            <line
+              key={`${a}-${b}`}
               ref={(el) => {
-                flowEls.current[k] = el;
+                lineEls.current[k] = el;
               }}
-              cx={NODES[a].x}
-              cy={NODES[a].y}
-              r={0.45}
-              className={cx("fill-base-400", !moving && "opacity-0")}
+              {...segment(NODES[a], NODES[b])}
+              vectorEffect="non-scaling-stroke"
+              strokeWidth={1}
+              className={cx(
+                // The alpha is the element's opacity, so the change tweens (a currentColor mix doesn't)
+                "stroke-current transition-opacity duration-(--dur-overlay) ease-out",
+                a === active || b === active ? "opacity-45" : "opacity-15",
+              )}
             />
           ))}
-        {!still && <circle ref={handoffEl} r={0.9} className="fill-base-900" style={{ opacity: 0 }} />}
-      </svg>
-
-      {nodes.map((post, i) => {
-        const selected = i === active;
-        const slides = post.images.length;
-        return (
-          <div
-            key={post.id}
-            ref={(el) => {
-              nodeEls.current[i] = el;
-            }}
-            onPointerEnter={() => setHeld(i)}
-            onPointerLeave={() => setHeld(null)}
-            className="absolute aspect-6/5 -translate-x-1/2 -translate-y-1/2"
-            style={{ left: `${(NODES[i].x / FIELD.w) * 100}%`, top: `${(NODES[i].y / FIELD.h) * 100}%`, width: `${NODE_W}%` }}
-          >
-            {/* The reticle: a dashed ring turning around the selected post */}
-            <svg
-              viewBox="0 0 100 100"
-              aria-hidden="true"
-              className={cx(
-                "vision-reticle absolute top-1/2 left-1/2 aspect-square w-[118%] -translate-x-1/2 -translate-y-1/2 overflow-visible transition-opacity duration-500 ease-in-out-quart",
-                selected ? "opacity-100" : "opacity-0",
-              )}
-            >
-              <circle cx="50" cy="50" r="49" fill="none" strokeWidth={1} strokeDasharray="1.5 4" vectorEffect="non-scaling-stroke" className="stroke-base-400" />
-            </svg>
-            <svg viewBox="0 0 120 100" className="absolute inset-0 size-full overflow-visible" aria-hidden="true">
-              <path
-                d={FRAME}
-                vectorEffect="non-scaling-stroke"
-                strokeWidth={1}
-                className={cx("fill-white transition-[stroke] duration-500 ease-in-out-quart", selected ? "stroke-base-900" : "stroke-base-300")}
+          {!still &&
+            edges.map(([a, b], k) => (
+              <circle
+                key={`flow-${a}-${b}`}
+                ref={(el) => {
+                  flowEls.current[k] = el;
+                }}
+                cx={NODES[a].x}
+                cy={NODES[a].y}
+                r={0.45}
+                className={cx("fill-current/45", !moving && "opacity-0")}
               />
-            </svg>
+            ))}
+          {/* Hidden until a handoff runs; the frame loop sets its opacity directly */}
+          {!still && <circle ref={handoffEl} r={0.9} className="fill-current opacity-0" />}
+        </svg>
+
+        {nodes.map((post, i) => {
+          const selected = i === active;
+          const slides = post.images.length;
+          return (
             <div
-              className={cx(
-                // The cover cut to the frame's own hexagon, inset so the two read as one shape
-                "absolute top-1/2 left-1/2 aspect-6/5 w-[80%] -translate-x-1/2 -translate-y-1/2 overflow-hidden bg-base-100",
-                "transition-[scale,opacity] duration-500 ease-in-out-quart motion-reduce:transition-none",
-                selected ? "scale-105 opacity-100" : "opacity-80",
-              )}
-              style={{ clipPath: `url(#${clip})` }}
+              key={post.id}
+              ref={(el) => {
+                nodeEls.current[i] = el;
+              }}
+              onPointerEnter={() => setHeld(i)}
+              onPointerLeave={() => setHeld(null)}
+              className="absolute top-(--y) left-(--x) aspect-6/5 w-1/5 -translate-x-1/2 -translate-y-1/2"
+              style={{ "--x": `${(NODES[i].x / FIELD.w) * 100}%`, "--y": `${(NODES[i].y / FIELD.h) * 100}%` } as CSSProperties}
             >
-              <Image src={post.images[0]} alt="" fill sizes="(min-width: 1024px) 200px, 26vw" className="object-cover" draggable={false} />
-              {selected && moving && <span key={run} aria-hidden="true" className="vision-scan absolute inset-x-0 h-1/4" />}
+              {/* The reticle: a dashed ring turning around the selected post, a little wider
+                  than the frame */}
+              <svg
+                viewBox="0 0 100 100"
+                aria-hidden="true"
+                className={cx(
+                  "vision-reticle absolute top-1/2 left-1/2 aspect-square w-full -translate-x-1/2 -translate-y-1/2 scale-118 overflow-visible transition-opacity duration-(--dur-overlay) ease-out",
+                  selected ? "opacity-100" : "opacity-0",
+                )}
+              >
+                <circle cx="50" cy="50" r="49" fill="none" strokeWidth={1} strokeDasharray="1.5 4" vectorEffect="non-scaling-stroke" className="stroke-current/45" />
+              </svg>
+              <svg viewBox="0 0 120 100" className="absolute inset-0 size-full overflow-visible" aria-hidden="true">
+                <path
+                  d={FRAME}
+                  vectorEffect="non-scaling-stroke"
+                  strokeWidth={1}
+                  fill="none"
+                  className={cx("stroke-current transition-opacity duration-(--dur-overlay) ease-out", selected ? "opacity-100" : "opacity-45")}
+                />
+              </svg>
+              <div
+                className={cx(
+                  // The cover cut to the frame's own hexagon, inset so the two read as one shape
+                  "absolute top-1/2 left-1/2 aspect-6/5 w-4/5 -translate-x-1/2 -translate-y-1/2 overflow-hidden bg-current/10 [clip-path:var(--hex)]",
+                  "transition-[scale,opacity] duration-(--dur-overlay) ease-out motion-reduce:transition-none",
+                  selected ? "scale-105 opacity-100" : "opacity-80",
+                )}
+                style={{ "--hex": `url(#${clip})` } as CSSProperties}
+              >
+                <Image src={post.images[0]} alt="" fill sizes="(min-width: 1024px) 200px, 26vw" className="object-cover" draggable={false} />
+                {selected && moving && <span key={run} aria-hidden="true" className="vision-scan absolute inset-x-0 h-1/4" />}
+              </div>
+              <Readout
+                index={i}
+                category={post.category.name}
+                carousel={slides > 1}
+                slides={slides}
+                selected={selected}
+                run={run}
+                still={!moving}
+                left={NODES[i].left}
+              />
             </div>
-            <Readout
-              index={i}
-              category={short(post.category.name)}
-              carousel={slides > 1}
-              slides={slides}
-              selected={selected}
-              run={run}
-              still={!moving}
-              left={NODES[i].left}
-            />
-          </div>
-        );
-      })}
-    </div>
-    {!still && (
-      <button
-        type="button"
-        onClick={() => setPaused((value) => !value)}
-        aria-pressed={paused}
-        aria-label={paused ? "Play the animation" : "Pause the animation"}
-        className="absolute right-0 bottom-0 flex size-11 items-center justify-center rounded-full text-base-500 ring-1 ring-base-200 transition-[color,background-color] duration-150 ease-out-quint hover:bg-base-100 hover:text-base-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-500"
-      >
-        {paused ? <Play className="size-4" /> : <Pause className="size-4" />}
-      </button>
-    )}
+          );
+        })}
+      </div>
+      {!still && (
+        <Button
+          variant="secondary"
+          size="icon"
+          onClick={() => setPaused((value) => !value)}
+          aria-pressed={paused}
+          aria-label={paused ? "Play the animation" : "Pause the animation"}
+          className="absolute right-0 bottom-0"
+        >
+          <Icon icon={paused ? Play : Pause} />
+        </Button>
+      )}
     </div>
   );
 }
 
-// The selection readout beside a post: "<.03 FINT.>" over format dots and its slide count, which
-// counts up from zero when the post is selected
+// The selection readout beside a post: its number and category over its format glyph (one
+// picture, or a film strip for a carousel) and its slide count, which counts up from zero when
+// the post is selected
 function Readout({
   index,
   category,
@@ -350,22 +398,21 @@ function Readout({
     <div
       aria-hidden="true"
       className={cx(
-        // Sized from the graph's own width, never under 9px; below 40rem only the selected one shows
-        "absolute top-[-8%] font-mono text-[clamp(9px,1.05cqw,11px)] leading-tight whitespace-nowrap tabular-nums transition-[color,opacity] duration-500 ease-in-out-quart @max-[40rem]:not-data-[on]:opacity-0",
-        left ? "right-[86%] text-right" : "left-[86%]",
-        selected ? "text-base-900" : "text-base-400",
+        // Below 40rem of graph only the selected one shows
+        "absolute -top-4 type-caption whitespace-nowrap tabular-nums transition-[color,opacity] duration-(--dur-overlay) ease-out @max-[40rem]:not-data-[on]:opacity-0",
+        left ? "right-5/6 text-right" : "left-5/6",
+        selected ? "text-current" : "text-current/60",
       )}
       data-on={selected || undefined}
     >
-      <p>
-        &lt;.0{index + 1} {category}.&gt;
+      <p className="whitespace-nowrap">
+        {String(index + 1).padStart(2, "0")} {category}
       </p>
-      <p className="mt-0.5 flex items-center justify-between gap-3">
-        <span className="flex gap-0.5">
-          <span className="size-[0.7em] rounded-full bg-current" />
-          {carousel && <span className="size-[0.7em] rounded-full bg-current" />}
+      <p className={cx("mt-0.5 flex items-center gap-1.5 whitespace-nowrap", left && "justify-end")}>
+        <Icon icon={carousel ? FilmStrip : Picture} size={12} />
+        <span>
+          {shown} {slides === 1 ? "slide" : "slides"}
         </span>
-        <span>{String(shown).padStart(2, "0")} sl.</span>
       </p>
     </div>
   );

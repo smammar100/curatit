@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { optimizedImage } from "@/lib/posts";
 import { cx } from "@/lib/cx";
 import DeferredImages from "@/components/global/DeferredImages";
@@ -37,14 +38,16 @@ export default function PostWall({ covers }: { covers: string[] }) {
   return (
     <div
       aria-hidden="true"
-      className="post-wall absolute inset-0 grid grid-cols-3 gap-3 px-3 opacity-80 lg:grid-cols-6"
-      style={{ maskImage: EDGE_FADE, WebkitMaskImage: EDGE_FADE }}
+      className="post-wall absolute inset-0 grid grid-cols-3 gap-3 px-3 opacity-80 mask-(--wall-fade) lg:grid-cols-6"
+      style={{ "--wall-fade": EDGE_FADE } as CSSProperties}
     >
       {columns.map((column, c) => (
         <div
           key={c}
           className={cx(
-            "flex flex-col gap-3 motion-reduce:animate-none",
+            // The duration is important: the animate-wall-* shorthand would otherwise reset it
+            "flex flex-col gap-3 [animation-duration:var(--drift)]! motion-reduce:animate-none",
+            c % 2 ? "-mt-30" : "-mt-10",
             // Under reduced motion an up-drifting column rests where its drift would start
             // (half its height up), so its eager covers are on screen in both modes
             c % 2
@@ -54,10 +57,7 @@ export default function PostWall({ covers }: { covers: string[] }) {
           )}
           // Neighbouring columns run at different speeds and start at different offsets, so
           // the wall never reads as one sheet sliding
-          style={{
-            animationDuration: `${70 + (c % 3) * 12}s`,
-            marginTop: c % 2 ? -120 : -40,
-          }}
+          style={{ "--drift": `${70 + (c % 3) * 12}s` } as CSSProperties}
         >
           {[...column, ...column].map((cover, i) => {
             const first = c % 2 ? column.length : 0;
@@ -72,7 +72,7 @@ export default function PostWall({ covers }: { covers: string[] }) {
             return (
               <div
                 key={i}
-                className="relative aspect-4/5 overflow-hidden rounded bg-component"
+                className="relative aspect-4/5 overflow-hidden rounded-panel bg-field"
               >
                 {eager ? (
                   // Inside a <picture>, which React leaves alone: an eager <img> anywhere else in

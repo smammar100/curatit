@@ -1,0 +1,160 @@
+/* Glaze, with Fluid Functionalism's type, motion and surfaces (2026-10-24, the owner's choice).
+
+   The site's components, colours, lines, radii, sizes, glass and icons are Glaze's (src/components/glaze, installed
+   from design.how). Three systems stay Fluid Functionalism's, and this file is where they meet Glaze: it retunes
+   Glaze's own tokens and recipes, so a Glaze component keeps its classes and reads Curatit's values.
+
+   - Type: Inter for every word (Glaze Sans is not bundled), Hedvig Letters Serif for the page title, and Glaze's
+     type roles set on FF's six-role scale (display 28/34, title 16/22, subtitle 14/20, body 13/20, caption 12/16,
+     micro 11/14) and FF's weights (400 text, 550 labels and headings, 700 strong).
+   - Motion: FF's three tiers (80ms for a press, a hover or a colour, 160ms for a selection travelling, 240ms for an
+     overlay arriving, each leaving a tier quicker) and its curves (ease-out-quint in, ease-in-quart out).
+   - Size: the roomier controls, rows and paddings the site had before Glaze (see the Size block below).
+   - Surfaces: FF's eight-step ladder. Paper is surface 3, the shell surface 2 with a wash of ink, a card lifts on
+     step 2, an overlay (menu, popover, select, toast) on step 6 with the ladder's own 1px ring in place of Glaze's
+     border, a dialog or a sheet on step 8.
+     In the dark theme the ladder steps each surface lighter and the shadows turn to rings and highlights, as before.
+
+   Loaded after Glaze's styles.css in the root layout. The tokens are declared on Glaze's own selectors (tokens.css:
+   [data-system="glaze"] and .glaze, and its dark and reduced-motion blocks), never under :where(), so at equal
+   specificity the later file wins; the recipes below sit where Glaze's utilities do. Glaze's own files are left as
+   installed, so a reinstall doesn't lose this. */
+
+[data-system="glaze"], .glaze {
+  /* == Type == */
+  --font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: var(--font-hedvig), "Hedvig Letters Serif", ui-serif, Georgia, serif;
+  --weight-normal: 400;
+  --weight-medium: 550;
+  --weight-semibold: 700;
+  --type-title: 400 var(--fs-display) / var(--lh-display) var(--font-serif);
+  --type-heading: 550 var(--fs-title) / var(--lh-title) var(--font-sans);
+  --type-heading-sm: 550 var(--fs-subtitle) / var(--lh-subtitle) var(--font-sans);
+  --type-body: 400 var(--fs-subtitle) / var(--lh-subtitle) var(--font-sans);
+  --type-body-sm: 400 var(--fs-body) / var(--lh-body) var(--font-sans);
+  --type-label: 550 var(--fs-body) / var(--lh-body) var(--font-sans);
+  --type-label-sm: 550 var(--fs-caption) / var(--lh-caption) var(--font-sans);
+  --type-label-lg: 550 var(--fs-subtitle) / var(--lh-subtitle) var(--font-sans);
+  --type-caption: 400 var(--fs-caption) / var(--lh-caption) var(--font-sans);
+  --tracking-heading: -0.01em;
+  --tracking-body: 0em;
+  --tracking-label: 0em;
+
+  /* == Motion == */
+  --dur-press: 80ms;
+  --dur-glass-press: 80ms;
+  --dur-glass-release: 180ms;
+  --dur-state: 80ms;
+  --dur-overlay: 240ms;
+  --dur-slide: 160ms;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+
+  /* == Size (2026-10-24, at the owner's request) ==
+     The roomier sizes the site had before Glaze: 40px controls (32 small, 44 large), 44px rows, 40px menu rows,
+     16px icons in a control and rounder overlays, so nothing reads cramped. The components' own paddings follow
+     (Curatit: edits in button, card, select, dropdown-menu and lib/glaze/overlay). */
+  --control-sm: 32px;
+  --control: 40px;
+  --control-lg: 44px;
+  --row: 44px;
+  --menu-row: 40px;
+  --menu-row-sm: 32px;
+  --menu-min: 224px;
+  --popup-max: 480px;
+  --icon-sm: 14px;
+  --icon: 16px;
+  --icon-lg: 20px;
+
+  /* == Corners (2026-10-24, at the owner's request) ==
+     Two rules. The radius grows with the size of the thing, so everything keeps the same softness: one-line
+     controls (buttons, fields, chips, tabs) stay pills, and every box takes the step for its size. And a corner
+     inside another is the outer corner less the gap between them, so nested corners run parallel. Where the gap is
+     as wide as the outer corner or wider, the inner box no longer reads as nested and takes its own step.
+       2XS  6px  the smallest parts, 24px or less: a checkbox, a key, a brand's mark, a swatch, a badge, a tooltip
+       XS  12px  row-sized boxes, about 32 to 56px: menu rows (24 less the menu's 12px padding), list rows,
+                 thumbnails, a brand's tile
+       S   16px  boxes of content: a card's panel, a post's tile, a text field, an alert, a code block
+       M   24px  what floats or holds a page's worth: menus, popovers, toasts, dialogs, the post's stage, big panels
+     Nested, worked out: a card's shell is its panel plus the 3px between them (19px); a dialog's panel is 24 less
+     3 (21px); a label 8px inside a tile is 16 less 8, and a picture 16px inside an M box is 24 less 16 (both 8px);
+     a ring 4px outside an XS thumbnail is 12 plus 4 (S). Glaze's own names point at these steps. */
+  --corner-2xs: 6px;
+  --corner-xs: 12px;
+  --corner-s: 16px;
+  --corner-m: 24px;
+  --radius-tag: var(--corner-2xs);
+  --radius-panel: var(--corner-s);
+  --radius-overlay: var(--corner-s);
+  --radius-shell: calc(var(--corner-s) + var(--shell-inset));
+  --radius-float: var(--corner-m);
+  --radius-nested: calc(var(--corner-s) - var(--space-2));
+
+  /* == Surfaces == */
+  --page: var(--color-page);
+  --paper: var(--surface-3);
+  --shell: color-mix(in oklab, var(--surface-2), var(--ink) 3%);
+  --code-surface: var(--surface-3);
+}
+
+/* Glaze's dark block sets its own surfaces; the ladder takes them back (each FF step is lighter in dark). */
+[data-system="glaze"][data-theme="dark"], .glaze[data-theme="dark"], [data-theme="dark"] [data-system="glaze"], [data-theme="dark"] .glaze {
+  --page: var(--color-page);
+  --paper: var(--surface-3);
+  --shell: color-mix(in oklab, var(--surface-2), var(--ink) 3%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-system="glaze"], .glaze {
+    --dur-press: 0ms;
+    --dur-glass-press: 0ms;
+    --dur-glass-release: 0ms;
+    --dur-state: 0ms;
+    --dur-overlay: 0ms;
+    --dur-slide: 0ms;
+  }
+}
+
+/* A card lifts on step 2; its panel sits on paper inside it. */
+:where(.glaze, [data-system="glaze"]) .shell {
+  border-color: transparent;
+  box-shadow: var(--shadow-2);
+}
+
+/* Every overlay (menu, popover, select, toast) is FF's floating surface: step 6, the ladder's ring and drop in place
+   of Glaze's flat border, at the M corner. */
+:where(.glaze, [data-system="glaze"]) .overlay {
+  background-color: var(--surface-6);
+  border-color: transparent;
+  box-shadow: var(--shadow-6);
+  border-radius: var(--radius-float);
+}
+
+/* A dialog or a sheet is a card raised to the top of the ladder, at the M corner, its panel 3px in at 21px. */
+:where(.glaze, [data-system="glaze"]) :is([role="dialog"], [role="alertdialog"]).shell {
+  --radius-shell: var(--radius-float);
+  --radius-panel: calc(var(--radius-float) - var(--shell-inset));
+  box-shadow: var(--shadow-8);
+}
+
+/* Filled fields (2026-10-24, at the owner's request): every input, select and text area is a soft fill with no
+   edge at rest, in place of Glaze's paper with a hairline. The fill is the text colour at 8% (12% under the pointer),
+   so it reads on paper, on a card and on a dark dialog alike. The edge appears with the cursor in the field
+   (--line-focus) and turns coral when it's invalid, as before. Set on the field itself, so only it changes. */
+:where(.glaze, [data-system="glaze"]) {
+  --field-fill: color-mix(in oklab, var(--text-1) 8%, transparent);
+  --field-fill-hover: color-mix(in oklab, var(--text-1) 12%, transparent);
+}
+:where(.glaze, [data-system="glaze"]) :is(.field, [data-slot="textarea"]) {
+  --paper: var(--field-fill);
+  --flat-hover: var(--field-fill-hover);
+  --line-control: transparent;
+}
+:where(.glaze, [data-system="glaze"]) :is(.field, [data-slot="textarea"]):hover:not(:focus-within, :focus, :disabled, [data-disabled]) {
+  --paper: var(--field-fill-hover);
+}
+
+/* The secondary button keeps Glaze's hairline, drawn as FF's one stroke. */
+:where(.glaze, [data-system="glaze"]) .flat {
+  --flat-ring: var(--border);
+}

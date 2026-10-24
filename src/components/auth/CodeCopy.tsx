@@ -1,17 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import Button from "@/components/fundations/elements/Button";
-import Check from "@/components/fundations/icons/Check";
-import Copy from "@/components/fundations/icons/Copy";
-import { Footer, Heading, linkClass } from "@/components/auth/AuthForms";
+import TextLink from "@/components/fundations/elements/TextLink";
+import { Button } from "@/components/glaze/ui/button";
+import { Check, Copy, Icon } from "@/components/glaze/icon";
+import { Footer, Heading } from "@/components/auth/AuthForms";
 
 // /code: where an email's Copy code button lands (src/emails/_components/layout.tsx, Code). No
 // inbox runs scripts, so the copying happens here. The code comes in the address's #fragment,
 // which browsers never send to a server, and is taken out of the address (and so out of the
 // history) as soon as it's read. It tries to copy straight away; browsers that want a tap first
-// get the button.
+// get the button. Glaze's: the code on the grey field in mono, the card's one primary Button.
 export function CodeCopy() {
   const [code, setCode] = useState<string | null | undefined>(undefined);
   const [copied, setCopied] = useState(false);
@@ -44,9 +43,7 @@ export function CodeCopy() {
           Open Copy code from the email again, or type the code from the email into Curatit.
         </Heading>
         <Footer>
-          <Link href="/" className={linkClass}>
-            Go to Curatit
-          </Link>
+          <TextLink href="/">Go to Curatit</TextLink>
         </Footer>
       </>
     );
@@ -57,18 +54,11 @@ export function CodeCopy() {
       <Heading title={copied ? "Code copied" : "Your verification code"}>
         Paste it in the Curatit tab that asked for it. It works for 1 hour.
       </Heading>
-      <p className="mx-auto mt-6 w-fit rounded-lg bg-component px-4 py-2.5 font-mono text-[24px] leading-8 tracking-[0.2em] text-primary-foreground tabular-nums select-all">
-        {code ?? " "}
+      <p className="mx-auto mt-6 w-fit rounded-(--corner-xs) bg-field px-4 py-2.5 type-title text-text-1 tabular-nums select-all">
+        <span className="mono">{code ?? " "}</span>
       </p>
-      <Button
-        size="base"
-        variant="default"
-        type="button"
-        disabled={!code}
-        onClick={() => code && copy(code)}
-        className="mt-6 w-full gap-2 disabled:opacity-70"
-      >
-        {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+      <Button type="button" disabled={!code} onClick={() => code && copy(code)} className="mt-6 w-full">
+        <Icon icon={copied ? Check : Copy} />
         {copied ? "Copied" : "Copy code"}
       </Button>
       <span role="status" className="sr-only">

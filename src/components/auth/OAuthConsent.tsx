@@ -7,14 +7,18 @@
 // line, what allowing lets the app do and what it can't, who's signed in, where the browser
 // goes next. The details come from Supabase by the authorization id in the address; allowing
 // or denying returns the address to send the browser on to. Signed-out visitors go to sign-in
-// and come back.
+// and come back. Since 2026-10-24 on Glaze: the marks on the grey field with the faint line, the
+// check on the ink, the permissions on the grey shell (Glaze's panel corners, no shadow), each
+// allowed thing with a Check glyph and each never with a Close glyph, the headings text-2 labels,
+// the error a fail Alert, Allow the primary Button and Deny the secondary, each pending with its
+// -ing verb.
 
 import { useEffect, useState } from "react";
 import Symbol from "@/components/assets/Symbol";
-import Button from "@/components/fundations/elements/Button";
 import Text from "@/components/fundations/elements/Text";
-import Check from "@/components/fundations/icons/Check";
-import Plugs from "@/components/fundations/icons/Plugs";
+import { Button } from "@/components/glaze/ui/button";
+import { DataList, DataListItem, DataListLabel, DataListValue } from "@/components/glaze/ui/data-list";
+import { Check, Close, Icon, Plugs } from "@/components/glaze/icon";
 import { createClient } from "@/utils/supabase/client";
 import { AuthNotice } from "./AuthParts";
 
@@ -106,46 +110,30 @@ export default function OAuthConsent() {
   return (
     <div>
       {/* The app's mark and Curatit's, joined: who is asking, who is asked */}
-      <div
-        className="mb-6 flex items-center justify-center gap-3"
-        aria-hidden="true"
-      >
-        <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-component ring-1 ring-edge">
+      <div className="mb-6 flex items-center justify-center gap-3" aria-hidden="true">
+        <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-field ring-1 ring-line-faint">
           {details?.client.logo_uri ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={details.client.logo_uri}
-              alt=""
-              className="size-full object-cover"
-            />
+            <img src={details.client.logo_uri} alt="" className="size-full object-cover" />
           ) : (
-            <Plugs className="size-5 text-tertiary-foreground" />
+            <Icon icon={Plugs} size={20} className="text-text-2" />
           )}
         </span>
         <span className="flex items-center gap-1">
-          <span className="h-px w-5 bg-border-strong" />
-          <span className="flex size-5 items-center justify-center rounded-full bg-inverted-solid text-on-inverted-foreground">
-            <Check className="size-3" />
+          <span className="h-px w-5 bg-line" />
+          <span className="flex size-5 items-center justify-center rounded-full bg-ink text-text-inverse">
+            <Icon icon={Check} size={12} />
           </span>
-          <span className="h-px w-5 bg-border-strong" />
+          <span className="h-px w-5 bg-line" />
         </span>
-        <span className="flex size-12 items-center justify-center rounded-full bg-component ring-1 ring-edge">
-          <Symbol
-            className="size-6 text-primary-foreground"
-            aria-hidden="true"
-          />
+        <span className="flex size-12 items-center justify-center rounded-full bg-field ring-1 ring-line-faint">
+          <Symbol className="size-6 text-text-1" aria-hidden="true" />
         </span>
       </div>
 
       {/* The auth card's title, the same size as the sign-in and sign-up pages' */}
-      <Text
-        tag="h1"
-        variant="h5"
-        className="text-center text-balance text-primary-foreground"
-      >
-        {details
-          ? `${app} wants to use Curatit as you`
-          : "Allow access to Curatit?"}
+      <Text tag="h1" variant="h5" className="text-center text-balance text-text-1">
+        {details ? `${app} wants to use Curatit as you` : "Allow access to Curatit?"}
       </Text>
 
       {error && (
@@ -154,53 +142,28 @@ export default function OAuthConsent() {
         </div>
       )}
       {!details && !error && (
-        <Text
-          tag="p"
-          variant="bodySM"
-          className="mt-4 text-center text-secondary-foreground"
-        >
+        <Text tag="p" variant="bodySM" className="mt-4 text-center text-text-2">
           Checking the request…
         </Text>
       )}
 
       {details && (
         <>
-          <div className="mt-6 rounded-xl bg-card p-4 shadow-xs">
-            <Text
-              tag="p"
-              variant="captionLG"
-              className="font-medium tracking-wider text-secondary-foreground uppercase"
-            >
-              Allowing lets it
-            </Text>
+          <div className="mt-6 rounded-panel bg-shell p-4">
+            <p className="type-label-sm text-text-2">Allowing lets it</p>
             <ul className="mt-2 space-y-1.5">
               {ALLOWS.map((line) => (
-                <li
-                  key={line}
-                  className="flex items-start gap-2 text-body-sm text-primary-foreground"
-                >
-                  <Check className="mt-1 size-3.5 shrink-0 text-tertiary-foreground" />
+                <li key={line} className="flex items-start gap-2 type-body-sm text-text-1">
+                  <Icon icon={Check} className="mt-0.75 text-text-2" />
                   {line}
                 </li>
               ))}
             </ul>
-            <Text
-              tag="p"
-              variant="captionLG"
-              className="mt-4 font-medium tracking-wider text-secondary-foreground uppercase"
-            >
-              It can never
-            </Text>
+            <p className="mt-4 type-label-sm text-text-2">It can never</p>
             <ul className="mt-2 space-y-1.5">
               {NEVER.map((line) => (
-                <li
-                  key={line}
-                  className="flex items-start gap-2 text-body-sm text-secondary-foreground"
-                >
-                  <span
-                    className="mt-2 size-1 shrink-0 rounded-full bg-tertiary-foreground"
-                    aria-hidden="true"
-                  />
+                <li key={line} className="flex items-start gap-2 type-body-sm text-text-2">
+                  <Icon icon={Close} className="mt-0.75 text-text-3" />
                   {line}
                 </li>
               ))}
@@ -209,53 +172,47 @@ export default function OAuthConsent() {
 
           <div className="mt-6 flex gap-3">
             <Button
-              type="button"
-              size="sm"
-              variant="default"
+              variant="primary"
               className="flex-1"
               onClick={() => decide("approve")}
-              loading={busy === "approve"}
+              pending={busy === "approve"}
+              pendingLabel="Allowing…"
               disabled={busy === "deny"}
             >
-              {busy === "approve" ? "Allowing…" : `Allow ${app}`}
+              {`Allow ${app}`}
             </Button>
             <Button
-              type="button"
-              size="sm"
-              variant="muted"
+              variant="secondary"
               className="flex-1"
               onClick={() => decide("deny")}
-              loading={busy === "deny"}
+              pending={busy === "deny"}
+              pendingLabel="Denying…"
               disabled={busy === "approve"}
             >
-              {busy === "deny" ? "Denying…" : "Deny"}
+              Deny
             </Button>
           </div>
 
-          <dl className="mt-5 space-y-1 text-caption-lg text-secondary-foreground">
-            <div className="flex justify-between gap-4">
-              <dt>Signed in as</dt>
-              <dd className="truncate text-primary-foreground">
-                {details.user.email ?? "you"}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt>Then goes to</dt>
-              <dd className="truncate text-primary-foreground">
-                {safeHost(details.redirect_uri)}
-              </dd>
-            </div>
+          <DataList className="mt-5">
+            <DataListItem>
+              <DataListLabel>Signed in as</DataListLabel>
+              <DataListValue>{details.user.email ?? "you"}</DataListValue>
+            </DataListItem>
+            <DataListItem>
+              <DataListLabel>Then goes to</DataListLabel>
+              <DataListValue>{safeHost(details.redirect_uri)}</DataListValue>
+            </DataListItem>
             {appHost && (
-              <div className="flex justify-between gap-4">
-                <dt>App website</dt>
-                <dd className="truncate text-primary-foreground">{appHost}</dd>
-              </div>
+              <DataListItem>
+                <DataListLabel>App website</DataListLabel>
+                <DataListValue>{appHost}</DataListValue>
+              </DataListItem>
             )}
-          </dl>
+          </DataList>
           <Text
             tag="p"
             variant="captionLG"
-            className="mt-4 text-center text-pretty text-secondary-foreground"
+            className="mt-4 text-center text-pretty text-text-2"
           >
             Access lasts until you revoke it from your account. Curatit never
             shares your password with the app.

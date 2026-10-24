@@ -2,15 +2,24 @@ import Link from "next/link";
 // Assets
 import Lockup from "@/components/assets/Lockup";
 // Fundations
-import Badge from "@/components/fundations/elements/Badge";
-import Button from "@/components/fundations/elements/Button";
+import TextLink from "@/components/fundations/elements/TextLink";
 import Wrapper from "@/components/fundations/containers/Wrapper";
+// Glaze
+import { Badge } from "@/components/glaze/ui/badge";
+import { Button } from "@/components/glaze/ui/button";
 // Components
 import ThemeToggle from "@/components/global/ThemeToggle";
 import MobileNav from "./MobileNav";
-// Quick access links; `beta` adds a small Beta chip after the label
+
+// The site's navigation from md up (MobileNav takes over below it): the lockup, the links centred
+// on the page, then the theme menu, Sign in and Create account. Since 2026-10-24 on Glaze: each
+// link is a quiet TextLink (text-2, text-1 on hover, 44px tall on touch screens) with Glaze's
+// Badge for Beta, Sign in a ghost Button and Create account the group's one primary, both small
+// pills rendered as links, the theme switch ThemeToggle's menu, and the lockup takes Glaze's ink
+// focus ring from its base styles.
+
+// Quick access links; `beta` adds a small Beta badge after the label
 const links = [
-  { href: "/#how-it-works", text: "How it works" },
   { href: "/vision", text: "Vision" },
   { href: "/roadmap", text: "Roadmap" },
   { href: "/agents", text: "AI integration", beta: true },
@@ -20,49 +29,34 @@ export default function Navigation() {
   return (
     <>
       <MobileNav />
-      <nav className="fixed w-full top-0 z-20 bg-page py-4 hidden md:block">
+      <nav className="fixed top-0 z-(--z-sticky) hidden w-full bg-page py-4 md:block">
         <Wrapper variant="standard">
           {/* Logo left, links centred on the page, account buttons right */}
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full gap-3 relative">
-            <Link
-              href="/"
-              className="w-fit shrink-0 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-border-focus"
-              aria-label="Go to homepage"
-            >
+          <div className="relative grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3">
+            <Link href="/" className="w-fit shrink-0 rounded-tag" aria-label="Go to homepage">
               <Lockup />
             </Link>
-            {/* On a touch screen each link reaches 44px tall and 8px past its words through an
-                invisible ::after; the gap-6 between them still keeps the areas apart */}
-            <div className="flex items-center justify-center gap-6">
+            {/* The quiet link reaches 44px tall and 4px past its words on a touch screen through
+                its own invisible ::after; the gap-6 between them still keeps the areas apart */}
+            <div className="flex items-center justify-center gap-6 type-body-sm">
               {links.map((link) => (
-                <Link
+                <TextLink
                   key={link.href}
-                  className="relative inline-flex min-h-7 items-center gap-1.5 rounded-sm text-body-sm whitespace-nowrap text-secondary-foreground transition-colors duration-150 ease-out-quint hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus pointer-coarse:after:absolute pointer-coarse:after:-inset-x-2 pointer-coarse:after:-inset-y-2"
+                  variant="quiet"
                   href={link.href}
+                  className="inline-flex min-h-7 items-center gap-1.5 whitespace-nowrap"
                 >
                   {link.text}
                   {link.beta && <Badge size="sm">Beta</Badge>}
-                </Link>
+                </TextLink>
               ))}
             </div>
             <div className="flex items-center justify-end gap-2">
               <ThemeToggle className="shrink-0" />
-              <Button
-                isLink
-                size="xs"
-                variant="transparent"
-                href="/signin"
-                className="shrink-0"
-              >
+              <Button size="sm" variant="ghost" render={<Link href="/signin" />} nativeButton={false}>
                 Sign in
               </Button>
-              <Button
-                isLink
-                size="xs"
-                variant="default"
-                href="/signup"
-                className="shrink-0"
-              >
+              <Button size="sm" variant="primary" render={<Link href="/signup" />} nativeButton={false}>
                 Create account
               </Button>
             </div>

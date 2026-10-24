@@ -20,6 +20,12 @@ function galleryAnalysis(edit?: (dna: Gallery["dna"], slides: Gallery["slides"])
   return toPublicAnalysis({ creative_dna: dna, current_version_id: "v", image_analysis_complete: true, expected_slides: 7, processed_slides: 7 }, rows, 7)!;
 }
 
+const scrollPane = (el: HTMLDivElement | null) => {
+  if (!el) return;
+  el.style.overflowY = "auto";
+  el.style.height = "200px";
+};
+
 // PostView in miniature: one slide index for a stand-in stage, the breakdown and the slide rows,
 // and the modal's document-level ← / → handler, which skips a key something already handled
 function Harness({ analysis, videos }: { analysis: PublicAnalysis; videos?: boolean[] }) {
@@ -36,7 +42,8 @@ function Harness({ analysis, videos }: { analysis: PublicAnalysis; videos?: bool
     return () => document.removeEventListener("keydown", onKey);
   }, [count]);
   return (
-    <div id="scroll-pane" style={{ overflowY: "auto", height: "200px" }}>
+    // The scrolling pane, its overflow set on the element (Glaze's lint keeps style props to custom properties)
+    <div id="scroll-pane" ref={scrollPane}>
       <p data-testid="stage">image {index}</p>
       <section data-testid="breakdown">
         <CreativeBreakdown analysis={analysis} index={index} onSlide={setIndex} videos={flags} source={{ ...SOURCE, slides: count, format: count > 1 ? "carousel" : "static" }} />
@@ -66,14 +73,24 @@ afterEach(() => {
 const render = (ui: React.ReactNode) => act(() => root.render(ui));
 const stage = () => container.querySelector('[data-testid="stage"]')!.textContent;
 const within = (id: string) => container.querySelector(`[data-testid="${id}"]`)!;
-// The shown view: the shared Tabs gives each view its own panel with a generated id
-const panel = () => container.querySelector('[role="tabpanel"]:not([hidden])')!;
-const tabNames = () => [...container.querySelectorAll('[role="tab"]')].map((t) => t.textContent);
-const tab = (name: string) => [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find((t) => t.textContent === name);
+// The shown view: the panel the selected tab labels. Glaze's Tabs (Base UI) gives each view its own
+// panel with a generated id, and keeps the one it leaves in the page for a frame as it goes
+const panel = () => {
+  const selected = container.querySelector('[role="tab"][aria-selected="true"]')!;
+  return container.querySelector(`[role="tabpanel"][aria-labelledby="${selected.id}"]`)!;
+};
+// A tab's words: Glaze's tab holds its label as plain text
+const tabName = (t: Element) => t.textContent;
+const tabNames = () => [...container.querySelectorAll('[role="tab"]')].map(tabName);
+const tab = (name: string) => [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find((t) => tabName(t) === name);
 const button = (scope: Element, label: RegExp) => [...scope.querySelectorAll<HTMLButtonElement>("button")].find((b) => label.test(b.getAttribute("aria-label") ?? b.textContent ?? ""));
+// A press and a click, as a pointer gives them
 const click = (element: Element | undefined) => {
   if (!element) throw new Error("No such element");
-  act(() => (element as HTMLElement).click());
+  act(() => {
+    element.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true, button: 0 }));
+    (element as HTMLElement).click();
+  });
 };
 const key = (target: EventTarget, name: string) => {
   const event = new KeyboardEvent("keydown", { key: name, bubbles: true, cancelable: true });
@@ -81,7 +98,8 @@ const key = (target: EventTarget, name: string) => {
   return event;
 };
 
-const cards = () => [...panel().querySelectorAll<HTMLButtonElement>("ol > li > button[aria-expanded]")];
+// The decisions: Glaze's Collapsible rows, each trigger in its heading
+const cards = () => [...panel().querySelectorAll<HTMLButtonElement>("ol > li > h3 > button[aria-expanded]")];
 
 describe("CreativeBreakdown: Breakdown", () => {
   it("opens on the strategy, its traits and the key decisions, the first open on its explanation", () => {
@@ -119,8 +137,8 @@ describe("CreativeBreakdown: Breakdown", () => {
     click(button(panel(), /Keep one name treatment/));
     expect(stage()).toBe("image 0");
     click(button(panel(), /^Show the reasoning$/));
-    click(button(panel(), /^Slides 1–6$/));
-    expect(stage()).toBe("image 0");
+    // Where it shows is the line under its title; the reasoning repeats no slide tags
+    expect(button(panel(), /^Slides? \d+(–\d+)?$/)).toBeFalsy();
   });
 
   it("shows an older analysis's observations, labelled for what they are, instead of decisions", () => {
@@ -155,10 +173,12 @@ describe("CreativeBreakdown: Breakdown", () => {
     expect(text).not.toMatch(/\bVerified\b|\bSound\b/);
   });
 
-  it("turns tabs, not slides, with the arrow keys on the tab list", () => {
+  it("turns tabs, not slides, with the arrow keys on the tab list", async () => {
     render(<Harness analysis={galleryAnalysis()} />);
     act(() => tab("Breakdown")!.focus());
     expect(key(tab("Breakdown")!, "ArrowRight").defaultPrevented).toBe(true);
+    // Base UI moves focus to the next tab a tick later, and the selection follows the focus
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
     expect(tab("Visual DNA")!.getAttribute("aria-selected")).toBe("true");
     expect(document.activeElement).toBe(tab("Visual DNA"));
     expect(stage()).toBe("image 0");
@@ -180,7 +200,7 @@ describe("CreativeBreakdown: Breakdown", () => {
 });
 
 describe("CreativeBreakdown: Visual DNA", () => {
-  it("gives each part an insight, a few attributes and the slides that show them, and the colours to copy", async () => {
+  it("gives each part an insight and a few attributes with no slide tags, and the colours as a palette to copy", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
     render(<Harness analysis={galleryAnalysis()} />);
@@ -191,8 +211,9 @@ describe("CreativeBreakdown: Visual DNA", () => {
     expect(text).toContain("The logo appears once, oversized, on slide 7.");
     expect(text).toContain("Layout changes on");
     expect(text).not.toMatch(/Unknown|Other\b/);
+    expect(button(panel(), /^Slides? \d+(–\d+)?$/)).toBeFalsy();
     const colours = panel().querySelector('[aria-label="Colours (measured from the image)"]')!;
-    expect(colours.textContent).toContain("Player names");
+    expect(text).toContain("#0b0a10");
     await act(async () => button(colours, /^Copy #0b0a10, Background$/)!.click());
     expect(writeText).toHaveBeenCalledWith("#0b0a10");
     expect(panel().textContent).toContain("Copied #0b0a10");

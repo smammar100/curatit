@@ -1,18 +1,35 @@
 "use client";
 
 // The pieces of the welcome flow (Welcome.tsx): the answers being made, and the pickers for the
-// name and occupation and the brands; the live wall; the end. The industries are folders (Folders.tsx).
-import { useEffect, useId, useRef, useState, type ReactNode, type Ref } from "react";
+// name and occupation and the brands; the live wall; the end. The industries are folders
+// (Folders.tsx).
+//
+// Since 2026-10-24 on Glaze: the role chips are filter Chips (on while chosen), the name field is
+// Glaze's Input, and every picture sits on the grey field with the faint line drawn over it; a
+// picked brand wears a 2px line of the ink inside its own edge, so nothing has to match the
+// ground it sits on. The picture tiles (brands, the folders) are toggles with aria-pressed: Glaze
+// has no picture toggle, so they're Base UI's Toggle (the primitive Glaze's Chip is built on)
+// drawn with Glaze's tokens, and Glaze's base draws their focus ring.
+import { useEffect, useId, useRef, useState, type CSSProperties, type Ref } from "react";
 import Image from "next/image";
-import Check from "@/components/fundations/icons/Check";
-import Button from "@/components/fundations/elements/Button";
-import Input from "@/components/fundations/elements/Input";
+import Link from "next/link";
+import { Toggle } from "@base-ui/react/toggle";
+import { Button } from "@/components/glaze/ui/button";
+import { Chip, ChipGroup } from "@/components/glaze/ui/chip";
+import { Input } from "@/components/glaze/ui/input";
+import { Check, Icon } from "@/components/glaze/icon";
 import { ratio } from "@/components/dashboard/Grid";
 import { rank } from "@/components/dashboard/forYou";
 import type { Profile } from "@/components/dashboard/profile";
 import type { DashPost } from "@/components/dashboard/types";
 import { categoriesWithPosts, inCategory } from "@/lib/categories";
 import { cx } from "@/lib/cx";
+
+// The faint line round a picture, drawn over it so the image can't cover it; `picked` thickens
+// it into a 2px line of the ink. The picture's own corner is inherited
+export const edge =
+  "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:outline-1 after:-outline-offset-1 after:outline-line-faint after:transition-[outline-color,outline-width] after:duration-(--dur-state) after:ease-out";
+export const picked = "after:outline-2 after:-outline-offset-2 after:outline-ink";
 
 // The answers while they're being made: the profile without the time it was finished
 export type Draft = Omit<Profile, "onboardedAt" | "editor">;
@@ -39,10 +56,10 @@ export function categoriesOf(posts: DashPost[]): Category[] {
 export function Heading({ ref, id, title, sub, align = "center" }: { ref?: Ref<HTMLHeadingElement>; id?: string; title: string; sub?: string; align?: "center" | "left" }) {
   return (
     <div className={cx("text-balance", align === "center" && "text-center")}>
-      <h1 ref={ref} id={id} tabIndex={-1} className="font-display text-display font-light text-primary-foreground outline-none">
+      <h1 ref={ref} id={id} tabIndex={-1} className="type-title text-text-1">
         {title}
       </h1>
-      {sub && <p className="mt-2 text-subtitle text-secondary-foreground">{sub}</p>}
+      {sub && <p className="mt-2 type-body text-text-2">{sub}</p>}
     </div>
   );
 }
@@ -52,41 +69,26 @@ export function Progress({ step, total, className }: { step: number; total: numb
   return (
     <div role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={step + 1} aria-label={`Step ${step + 1} of ${total}`} className={cx("flex gap-1.5", className)}>
       {Array.from({ length: total }, (_, i) => (
-        <span key={i} className={cx("h-1 flex-1 rounded-full transition-colors duration-150 ease-out-quint", i <= step ? "bg-inverted-solid" : "bg-border-strong")} />
+        <span key={i} className={cx("h-1 flex-1 rounded-full transition-colors duration-(--dur-state) ease-out", i <= step ? "bg-ink" : "bg-line")} />
       ))}
     </div>
-  );
-}
-
-// A toggle chip: the dashboard's 44px pill Button, pressed. On, it's the primary fill; off, it
-// brings its own grey mat (variant="none"), which no variant has
-export function Chip({ on, onClick, children, className }: { on: boolean; onClick: () => void; children: ReactNode; className?: string }) {
-  return (
-    <Button
-      variant={on ? "default" : "none"}
-      size="lg"
-      shape="pill"
-      aria-pressed={on}
-      onClick={onClick}
-      className={cx(!on && "bg-card text-primary-foreground hover:bg-transparent-hover", className)}
-    >
-      {children}
-    </Button>
   );
 }
 
 // The name, then what they do as one tap, or Other and a few words of their own (the column takes
 // 40 characters). The name takes focus on arrival, except on touch (the keyboard would jump up);
 // Enter in it submits the step. The step's question is its visible label, so the fields are named
-// by aria-label rather than a Field.
+// by aria-label rather than a Field. The roles are filter Chips rather than a SegmentedControl:
+// seven of them, and a second tap clears the choice
 export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: Partial<Draft>) => void }) {
-  const ref = useRef<HTMLInputElement>(null);
+  // Glaze's Input takes no ref, so the field is found inside its box
+  const box = useRef<HTMLDivElement>(null);
   const groupLabel = useId();
   const own = value.occupation && !OCCUPATIONS.includes(value.occupation) ? value.occupation : "";
   const [other, setOther] = useState(!!own);
   const [text, setText] = useState(own);
   useEffect(() => {
-    if (!matchMedia("(pointer: coarse)").matches) ref.current?.focus();
+    if (!matchMedia("(pointer: coarse)").matches) box.current?.querySelector("input")?.focus();
   }, []);
   const pick = (occupation: string) => {
     setOther(false);
@@ -94,48 +96,47 @@ export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: 
   };
   return (
     <div className="space-y-5">
-      <Input
-        ref={ref}
-        size="lg"
-        name="name"
-        aria-label="Your name"
-        value={value.name}
-        onChange={(e) => onChange({ name: e.target.value })}
-        placeholder="Your name"
-        autoComplete="given-name"
-        maxLength={60}
-      />
+      <div ref={box}>
+        <Input
+          name="name"
+          aria-label="Your name"
+          value={value.name}
+          onValueChange={(name) => onChange({ name })}
+          placeholder="Your name"
+          autoComplete="given-name"
+          maxLength={60}
+        />
+      </div>
       <div>
-        <p id={groupLabel} className="mb-2 text-caption font-medium text-secondary-foreground">
+        <p id={groupLabel} className="mb-2 type-label-sm text-text-2">
           And you’re a…
         </p>
-        <div role="group" aria-labelledby={groupLabel} className="flex flex-wrap gap-1.5">
+        <ChipGroup role="group" aria-labelledby={groupLabel}>
           {OCCUPATIONS.map((occupation) => (
-            <Chip key={occupation} on={!other && value.occupation === occupation} onClick={() => pick(occupation)}>
+            <Chip key={occupation} pressed={!other && value.occupation === occupation} onPressedChange={() => pick(occupation)}>
               {occupation}
             </Chip>
           ))}
           <Chip
-            on={other}
-            onClick={() => {
+            pressed={other}
+            onPressedChange={() => {
               setOther(!other);
               onChange({ occupation: other ? null : text.trim() || null });
             }}
           >
             Other
           </Chip>
-        </div>
+        </ChipGroup>
         {/* Opened by a tap on Other, so it takes focus even on touch */}
         {other && (
           <Input
-            size="lg"
             name="occupation"
             aria-label="What do you do?"
             placeholder="What do you do?"
             value={text}
-            onChange={(e) => {
-              setText(e.target.value);
-              onChange({ occupation: e.target.value.trim() || null });
+            onValueChange={(next) => {
+              setText(next);
+              onChange({ occupation: next.trim() || null });
             }}
             maxLength={40}
             autoFocus
@@ -147,31 +148,40 @@ export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: 
   );
 }
 
+// The check that marks a pick: the ink, with the inverse text for the mark
 export const Tick = ({ className }: { className?: string }) => (
-  <span className={cx("flex size-5 items-center justify-center rounded-full bg-inverted-solid text-on-inverted-foreground shadow-sm", className)}>
-    <Check className="size-3" />
+  <span className={cx("flex size-5 items-center justify-center rounded-full bg-ink text-text-inverse", className)}>
+    <Icon icon={Check} size={12} />
   </span>
 );
 
-// The brands as their marks, with a check over a picked one
+// The brands as their marks, with a check over a picked one. A tile of a mark and a two-line
+// name: a toggle on the row look (the panel corner, the hover wash, the press)
 export function BrandGrid({ brands, value, onChange, className }: { brands: Brand[]; value: string[]; onChange: (next: string[]) => void; className?: string }) {
   return (
     <div className={cx("grid gap-1", className)}>
       {brands.map((b) => {
         const on = value.includes(b.slug);
         return (
-          <button key={b.slug} type="button" aria-pressed={on} onClick={() => onChange(toggle(value, b.slug))} className="group flex min-w-0 flex-col items-center gap-1.5 rounded-xl p-2 transition-[background-color,scale] duration-150 ease-out-quint hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.96]">
-            <span className={cx("relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-component outline-1 -outline-offset-1 outline-edge transition-[box-shadow] duration-150 ease-out-quint", on && "ring-2 ring-primary-foreground ring-offset-2 ring-offset-page")}>
+          <Toggle
+            key={b.slug}
+            pressed={on}
+            onPressedChange={() => onChange(toggle(value, b.slug))}
+            className="group flex min-w-0 flex-col items-center gap-1.5 rounded-panel p-2 transition-[background-color,scale] duration-(--dur-state) ease-out hover:bg-hover motion-safe:active:scale-(--scale-press)"
+          >
+            <span className={cx("relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-field", edge, on && picked)}>
               {b.logo && <Image src={b.logo} alt="" fill sizes="44px" className="object-cover" />}
-              {/* A scrim over the logo, dark in both themes */}
+              {/* A scrim over the logo in the ink, with the check in the inverse text */}
               {on && (
-                <span className="absolute inset-0 flex items-center justify-center bg-standout/55 text-on-standout-primary-foreground">
-                  <Check size="sm" />
+                <span className="absolute inset-0 flex items-center justify-center bg-ink/60 text-text-inverse">
+                  <Icon icon={Check} />
                 </span>
               )}
             </span>
-            <span className={cx("line-clamp-2 w-full text-center text-caption leading-tight", on ? "font-medium text-primary-foreground" : "text-secondary-foreground")}>{b.name}</span>
-          </button>
+            <span className={cx("line-clamp-2 w-full text-center type-caption", on ? "font-medium text-text-1" : "text-text-2")}>
+              {b.name}
+            </span>
+          </Toggle>
         );
       })}
     </div>
@@ -194,7 +204,11 @@ export function Collage({ posts, className }: { posts: DashPost[]; className?: s
       {columns.map((column, c) => (
         <div key={c} className="flex flex-col gap-3">
           {column.map(({ post, i }) => (
-            <div key={post.shortCode} className="welcome-rise relative overflow-hidden rounded-lg bg-component outline-1 -outline-offset-1 outline-edge" style={{ aspectRatio: ratio(post), animationDelay: `${i * 30}ms` }}>
+            <div
+              key={post.shortCode}
+              className={cx("welcome-rise relative aspect-(--ratio) overflow-hidden rounded-panel bg-field [animation-delay:var(--delay)]", edge)}
+              style={{ "--ratio": ratio(post), "--delay": `${i * 30}ms` } as CSSProperties}
+            >
               <Image src={post.cover} alt="" fill sizes="240px" className="object-cover" />
             </div>
           ))}
@@ -214,17 +228,23 @@ export function Done({ posts, draft, headingRef }: { posts: DashPost[]; draft: D
     <div className="welcome-rise flex flex-col items-center text-center">
       <div className="mb-8 flex h-32 items-start justify-center" aria-hidden="true">
         {top.map((p, i) => (
+          // Fanned: each card's tilt, drop and delay come from its place, through custom properties.
+          // The cards are a drawing that lifts off the page, so they take Fluid Functionalism's
+          // surface pair
           <span
             key={p.shortCode}
-            className="welcome-rise relative -mx-2 aspect-4/5 w-16 overflow-hidden sm:w-20 rounded-lg bg-component shadow-xl outline-1 -outline-offset-1 outline-edge"
-            style={{ rotate: `${(i - 2.5) * 7}deg`, translate: `0 ${Math.abs(i - 2.5) * 5}px`, animationDelay: `${i * 60}ms` }}
+            className={cx(
+              "welcome-rise relative -mx-2 aspect-4/5 w-16 rotate-(--tilt) translate-y-(--drop) overflow-hidden rounded-panel bg-surface-6 shadow-surface-6 [animation-delay:var(--delay)] sm:w-20",
+              edge,
+            )}
+            style={{ "--tilt": `${(i - 2.5) * 7}deg`, "--drop": `${Math.abs(i - 2.5) * 5}px`, "--delay": `${i * 60}ms` } as CSSProperties}
           >
             <Image src={p.cover} alt="" fill sizes="80px" className="object-cover" />
           </span>
         ))}
       </div>
       <Heading ref={headingRef} title={`You’re all set${who ? `, ${who}` : ""}.`} sub={`We’ve sorted ${posts.length} posts so the ones that fit you come first.`} />
-      <Button isLink href="/dashboard" size="base" variant="default" className="mt-8 w-fit">
+      <Button render={<Link href="/dashboard" />} nativeButton={false} size="lg" className="mt-8 w-fit">
         Go to my feed
       </Button>
     </div>

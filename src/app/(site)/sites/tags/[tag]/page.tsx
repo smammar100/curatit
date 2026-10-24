@@ -1,6 +1,7 @@
+import Link from "next/link";
 // Fundation
 import Text from "@/components/fundations/elements/Text";
-import Button from "@/components/fundations/elements/Button";
+import { Button } from "@/components/glaze/ui/button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 // Components
 import BigCard from "@/components/sites/SiteCard";
@@ -27,23 +28,14 @@ export default async function SitesTagPage({ params }: { params: Promise<{ tag: 
       <Search />
       <section>
         <Wrapper variant="standard" className="page-start">
-          <Text tag="h1" variant="h1" className="text-primary-foreground text-center max-w-xl mx-auto text-balance"
+          <Text tag="h1" variant="h1" className="text-text-1 text-center max-w-xl mx-auto text-balance"
           >
             Explore all sites related to {tag}
           </Text>
           <div className="flex items-center gap-1 mt-24">
             <div className="relative flex snap-x snap-proximity gap-1 py-2 px-2 overflow-x-scroll scrollbar-hide">
               {sortedTags.map((tag) => (
-                <Button
-                  key={tag}
-                  isLink
-                  size="sm"
-                  variant="muted"
-                  title={tag}
-                  aria-label={tag}
-                  href={`/sites/tags/${tag}`}
-                  className="capitalize"
-                >
+                <Button key={tag} size="sm" variant="secondary" title={tag} aria-label={tag} render={<Link href={`/sites/tags/${tag}`} />} nativeButton={false}>
                   {tag}
                 </Button>
               ))}

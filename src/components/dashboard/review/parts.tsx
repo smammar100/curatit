@@ -1,11 +1,15 @@
 "use client";
 
-// Small pieces the review pages share: the page frame, status pills, section headings, evidence
-// chips, the selects' recipe and the formatting of costs and times.
-import type { ReactNode } from "react";
+// Small pieces the review pages share: the page frame, status labels, section headings, evidence
+// chips and the formatting of costs and times. Since 2026-10-24 on Glaze: the labels are Badges
+// (Approved and Rejected the ok and fail outcomes, the rest outlined, Public on the grey field),
+// the evidence chips are filter Chips pressed while theirs is on show, the page-level message is
+// the title role, and the selects are Glaze's NativeSelect where they're used.
+import type { MouseEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import Badge from "@/components/fundations/elements/Badge";
+import { Badge } from "@/components/glaze/ui/badge";
+import { Chip } from "@/components/glaze/ui/chip";
 import { term, type Dimension } from "@/lib/creative/taxonomy";
 import { feedHref } from "../Feed";
 import Header from "../Header";
@@ -30,34 +34,43 @@ export function Frame({ children }: { children: ReactNode }) {
   );
 }
 
+// Glaze's row and card links (ItemLink, CardLink) are plain anchors. This keeps a plain left
+// click on one inside the app, as next/link would; a click with a modifier (a new tab, a new
+// window) is left to the browser
+export function useSoftNav() {
+  const router = useRouter();
+  return (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const href = event.currentTarget.getAttribute("href");
+    if (!href) return;
+    event.preventDefault();
+    router.push(href);
+  };
+}
+
 export const label = (dimension: Dimension, slug: string | null | undefined) => (slug ? (term(dimension, slug)?.label ?? slug) : "—");
 
 const STATUS: Record<ReviewStatus, string> = { draft: "Draft", needs_review: "Needs review", approved: "Approved", rejected: "Rejected" };
 const SOURCE: Record<Source, string> = { ai: "Written by AI", human: "Written by an editor", mixed: "AI, edited by an editor" };
 
-// A status label: the shared Badge at 24px with round ends, outlined, inverted or danger
-export function Pill({ children, tone = "plain", title }: { children: ReactNode; tone?: "plain" | "strong" | "danger"; title?: string }) {
+// A label: Glaze's Badge, outlined, on the grey field (strong), or an outcome (ok, fail)
+export function Pill({ children, tone = "plain", title }: { children: ReactNode; tone?: "plain" | "strong" | "ok" | "danger"; title?: string }) {
   return (
-    <Badge
-      size="lg"
-      shape="pill"
-      variant={tone === "strong" ? "inverted" : tone === "danger" ? "danger" : "outline"}
-      title={title}
-    >
+    <Badge variant={tone === "strong" ? "neutral" : tone === "ok" ? "ok" : tone === "danger" ? "fail" : "outline"} title={title}>
       {children}
     </Badge>
   );
 }
 
-export const StatusPill = ({ status }: { status: ReviewStatus }) => <Pill tone={status === "approved" ? "strong" : status === "rejected" ? "danger" : "plain"}>{STATUS[status]}</Pill>;
+export const StatusPill = ({ status }: { status: ReviewStatus }) => <Pill tone={status === "approved" ? "ok" : status === "rejected" ? "danger" : "plain"}>{STATUS[status]}</Pill>;
 export const SourcePill = ({ source }: { source: Source }) => <Pill>{SOURCE[source]}</Pill>;
 export const sourceLabel = (source: Source) => SOURCE[source];
 
 export function Section({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
   return (
-    <section className="mt-6 border-t border-border-default pt-5">
+    <section className="mt-6 border-t border-line-faint pt-5">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-caption font-medium text-secondary-foreground">{title}</h2>
+        <h2 className="type-label-sm text-text-2">{title}</h2>
         {action}
       </div>
       {children}
@@ -65,18 +78,18 @@ export function Section({ title, children, action }: { title: string; children: 
   );
 }
 
-// An evidence reference, as written in the analysis (slide:N is zero-based); clicking shows it
+// An evidence reference, as written in the analysis (slide:N is zero-based); pressing shows it.
+// A filter Chip, on (the pressed wash, aria-pressed) while it's the one on show. The reference is
+// what an editor reads back against the analysis, so it's set in mono
 export function EvidenceChip({ value, onShow, active }: { value: string; onShow: (value: string) => void; active?: boolean }) {
   return (
-    <button
-      type="button"
-      onClick={() => onShow(value)}
-      aria-pressed={active}
+    <Chip
+      pressed={!!active}
+      onPressedChange={() => onShow(value)}
       title={value.startsWith("slide:") ? `Show position ${value.slice(6)}` : value === "caption" ? "Show the caption" : "From the post's metadata"}
-      className="inline-flex h-6 items-center rounded-full bg-card px-2 font-mono text-micro text-secondary-foreground ring-1 ring-border-default transition-[background-color,color] duration-150 ease-out-quint hover:bg-transparent-hover hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus aria-pressed:bg-inverted-solid aria-pressed:text-on-inverted-foreground"
     >
-      {value}
-    </button>
+      <span className="mono">{value}</span>
+    </Chip>
   );
 }
 
@@ -93,11 +106,14 @@ export function ago(iso: string | null | undefined) {
   return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 }
 
-export function Notice({ title, children }: { title: string; children?: ReactNode }) {
+// A message that stands in for the whole page ("Editors only", "No such post"): the page's own
+// heading in the title role over a line of explanation. Not an Alert, which sits beside
+// content; this is the page
+export function PageMessage({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <div className="mx-auto mt-24 max-w-md text-center">
-      <h1 className="font-display text-display font-light text-balance text-primary-foreground">{title}</h1>
-      {children && <div className="mt-3 text-subtitle text-pretty text-secondary-foreground">{children}</div>}
+      <h1 className="type-title text-balance text-text-1">{title}</h1>
+      {children && <div className="mt-3 type-body text-pretty text-text-2">{children}</div>}
     </div>
   );
 }
@@ -120,13 +136,3 @@ export function useBusy() {
   }
   return { busy, error, setError, run };
 }
-
-// The buttons are the shared Button (`default` for the main action, `secondary` for the rest, at
-// size sm with round ends), the text fields the shared Field with Input and Textarea (since
-// 2026-10-19). The selects are native until the design system has a Select, so they keep the
-// field recipe's parts here (surface, default shadow, brand focus ring, 16px on touch screens so
-// iOS doesn't zoom) at their own heights, in the dashboard's body role. focus:ring-0 takes off the
-// 1px blue ring @tailwindcss/forms draws on a focused select, which would sit over the brand ring
-const focusRing = "focus:shadow-[0_0_0_2px_var(--color-brand-border-focus)]";
-export const fieldParts = `border-0 bg-component-on-container-subtle text-primary-foreground shadow-sm placeholder:text-tertiary-foreground transition-[box-shadow] duration-150 ease-out-quint focus:ring-0 focus:outline-hidden pointer-coarse:text-[16px] ${focusRing}`;
-export const selectClass = `h-10 rounded-lg py-0 pr-8 pl-3 text-body ${fieldParts}`;

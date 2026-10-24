@@ -1,6 +1,7 @@
+import Link from "next/link";
 // Fundation
 import Text from "@/components/fundations/elements/Text";
-import Button from "@/components/fundations/elements/Button";
+import { Button } from "@/components/glaze/ui/button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 // Components
 import Search from "@/components/sites/Search";
@@ -16,22 +17,13 @@ export default function SitesTagsPage() {
       <Search />
       <section>
         <Wrapper variant="narrow" className="page-start">
-          <Text tag="h1" variant="h1" className="text-primary-foreground text-center">
+          <Text tag="h1" variant="h1" className="text-text-1 text-center">
             We got tags!
           </Text>
 
           <ul role="list" className="flex flex-col gap-1 mt-12">
             {tags.map((tag) => (
-              <Button
-                key={tag}
-                isLink
-                size="sm"
-                variant="muted"
-                title={tag}
-                aria-label={tag}
-                href={`/sites/tags/${tag}`}
-                className="capitalize"
-              >
+              <Button key={tag} size="sm" variant="secondary" title={tag} aria-label={tag} render={<Link href={`/sites/tags/${tag}`} />} nativeButton={false}>
                 {tag}
               </Button>
             ))}

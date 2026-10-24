@@ -7,9 +7,9 @@ import SystemNav from "@/components/system/SystemNav";
 import ThemeModeSwitch from "@/components/system/ThemeModeSwitch";
 import { SYSTEM_THEME_KEY } from "@/components/system/topics";
 
-// The design system page (2026-10-18, the "Sheets" direction chosen from a three-way prototype):
-// one topic per page, each a dense sheet of live specimens in both themes. The saved Light /
-// Dark choice is applied before paint, so a sheet never shows both themes first
+// The design system page (the "Sheets" direction, 2026-10-18; rebuilt for Glaze on 2026-10-24):
+// one topic per page, each a sheet of live specimens in both themes. The saved Light / Dark choice
+// is applied before paint, so a sheet never shows both themes first
 const restoreMode = `try{var m=localStorage.getItem(${JSON.stringify(SYSTEM_THEME_KEY)});if(m==="light"||m==="dark")document.documentElement.dataset.systemTheme=m}catch(e){}`;
 
 export default function SystemLayout({ children }: { children: ReactNode }) {
@@ -19,27 +19,27 @@ export default function SystemLayout({ children }: { children: ReactNode }) {
       <Wrapper className="page-start">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-2xl">
-            <Text tag="h1" variant="displayLG" className="text-primary-foreground">
+            <Text tag="h1" variant="h1" className="text-text-1">
               Design system
             </Text>
-            <Text className="mt-4 text-secondary-foreground">
-              Every token and shared component, live, in both themes. Variants run down each sheet,
-              sizes and states across.
-            </Text>
+            <p className="mt-4 type-body text-text-2">
+              Glaze&rsquo;s components with Fluid Functionalism&rsquo;s type, motion and surfaces, live, in both
+              themes. Variants run down each sheet, sizes and states across.
+            </p>
           </div>
           <ThemeModeSwitch />
         </div>
         {/* Below lg the topics are one row that scrolls sideways; from lg a sticky sidebar */}
-        <div className="mt-10 shadow-[inset_0_-1px_0_var(--color-border-default)] lg:hidden">
+        <div className="mt-8 border-b border-line-faint lg:hidden">
           <SystemNav layout="row" />
         </div>
-        <div className="mt-10 lg:mt-14 lg:grid lg:grid-cols-[11rem_minmax(0,1fr)] lg:gap-12">
-          <aside className="hidden lg:block">
-            <div className="sticky top-28 max-h-[calc(100dvh-8rem)] overflow-y-auto pb-8 [scrollbar-width:none]">
+        <div className="mt-8 lg:mt-12 lg:flex lg:gap-12">
+          <aside className="hidden w-44 shrink-0 lg:block">
+            <div className="sticky top-28 max-h-[calc(100dvh-var(--space-10)*3)] overflow-y-auto pb-8 [scrollbar-width:none]">
               <SystemNav layout="sidebar" />
             </div>
           </aside>
-          <div className="min-w-0">{children}</div>
+          <div className="min-w-0 flex-1">{children}</div>
         </div>
       </Wrapper>
     </section>

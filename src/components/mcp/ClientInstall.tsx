@@ -2,8 +2,7 @@
 
 // The install block of the MCP landing page (/agents), after ElevenLabs' MCP page (2026-10-13): a
 // row of client tabs, each with its mark, and an MCP / REST switch on the right; under them one
-// wide panel washed with a soft gradient (.mcp-gradient in global.css) holding a white card with
-// the chosen client's steps under a small connection illustration. Changing tab swaps the card's
+// wide card holding the chosen client's steps under a small connection illustration. Changing tab swaps the card's
 // content; every client's steps are in the HTML and only the chosen one shows. Tabs follow the
 // ARIA pattern: ← / → move between them, Home and End jump.
 // Claude and ChatGPT come first (2026-10-18, at the owner's request: most Curatit members aren't
@@ -14,17 +13,27 @@
 // personal access token; the token stays in the environment wherever the client reads it there.
 // (2026-10-15: Gemini CLI, Windsurf and Claude Desktop were taken out; the Claude tab now covers
 // the desktop app, since connectors added in Claude show up there too.)
+//
+// Since 2026-10-24 it is Glaze's: the row is Tabs (Base UI owns the roles and the arrow keys; the
+// chosen tab sits on the paper pill that slides under it, every tab with its mark), the MCP / REST
+// switch a SegmentedControl, the step numbers outline Badges, the actions Buttons, the snippets
+// CodeBlocks (CopyBlock). The gradient wash is gone (Glaze has no gradients): the frame is the
+// card's grey shell and the steps sit on its panel. The row stays inside the gutter, scrolls
+// sideways and fades the edge with more beyond it (a mask, which paints nothing); the hairline
+// before the developer tools is drawn on the first of them.
 
-import { Fragment, useEffect, useRef, useState, type HTMLAttributes, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
+import { useEffect, useRef, useState, type CSSProperties, type HTMLAttributes, type ReactNode } from "react";
 import ClientMark, { MARK_COLORS, MARKS } from "@/components/assets/ClientMarks";
 import Symbol from "@/components/assets/Symbol";
-import Badge from "@/components/fundations/elements/Badge";
-import Button from "@/components/fundations/elements/Button";
-import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
-import TerminalWindow from "@/components/fundations/icons/TerminalWindow";
+import TextLink from "@/components/fundations/elements/TextLink";
+import { ArrowUpRight, Icon, Terminal } from "@/components/glaze/icon";
+import { Badge } from "@/components/glaze/ui/badge";
+import { Button } from "@/components/glaze/ui/button";
+import { Card, CardContent } from "@/components/glaze/ui/card";
+import { SegmentedControl, SegmentedControlItem } from "@/components/glaze/ui/segmented-control";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/glaze/ui/tabs";
 import { cx } from "@/lib/cx";
-import Segmented from "@/components/fundations/elements/Segmented";
 import CopyBlock from "./CopyBlock";
 import { SITE_URL } from "@/lib/site";
 import { MCP_URL } from "./tools";
@@ -41,13 +50,13 @@ type Step = {
   /** A button that opens the place in the client where the next move happens */
   open?: { label: string; href: string };
 };
-type Card = { title: string; intro: ReactNode; steps: Step[]; testing?: boolean };
-type Client = Card & { id: string; name: string; mark: keyof typeof MARKS; developer?: boolean };
+type Guide = { title: string; intro: ReactNode; steps: Step[]; testing?: boolean };
+type Client = Guide & { id: string; name: string; mark: keyof typeof MARKS; developer?: boolean };
 
-// A step under the 13px prose it sits in, since the mono face reads larger
-const code = "font-mono text-caption-lg text-primary-foreground";
-const ui = "font-medium text-primary-foreground";
-const link = "underline decoration-border-strong underline-offset-2 transition-colors duration-150 ease-out-quint hover:text-brand-foreground";
+// Mono inside the prose at 0.8 of its size, since the mono face reads larger; an interface's own
+// words in the label weight
+const code = "mono text-text-1";
+const ui = "font-medium text-text-1";
 
 // The chat apps' first step: the one thing to copy
 const linkStep: Step = {
@@ -218,7 +227,7 @@ const CLIENTS: Client[] = [
   },
 ];
 
-const REST: Card = {
+const REST: Guide = {
   title: "Call Curatit over HTTP",
   intro: (
     <>
@@ -240,9 +249,9 @@ const REST: Card = {
       body: (
         <>
           Every route and field is described in{" "}
-          <a href="/api/v1/openapi.json" className={link}>
+          <TextLink href="/api/v1/openapi.json" external>
             openapi.json
-          </a>
+          </TextLink>
           .
         </>
       ),
@@ -250,49 +259,47 @@ const REST: Card = {
   ],
 };
 
-// What the card says for one client (or for REST); the white card around it is shared
-function CardBody({ card, label, ...rest }: { card: Card; label: string } & HTMLAttributes<HTMLElement>) {
+// What the card says for one client (or for REST); the panel around it is shared
+function CardBody({ card, label, ...rest }: { card: Guide; label: string } & HTMLAttributes<HTMLElement>) {
   return (
     <section {...rest}>
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-body-base font-medium text-primary-foreground">{card.title}</h2>
+        <h2 className="type-heading text-text-1">{card.title}</h2>
         {card.testing && <Badge>In testing</Badge>}
       </div>
-      <p className="mt-1 text-body-sm text-pretty text-secondary-foreground">{card.intro}</p>
+      <p className="mt-1 type-body-sm text-pretty text-text-2">{card.intro}</p>
       <ol className="mt-6 space-y-5">
         {card.steps.map((step, n) => (
-          <li key={step.title} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-3">
-            <span className="flex size-6 items-center justify-center rounded-full bg-card text-caption-lg font-medium text-primary-foreground tabular-nums ring-1 ring-border-default" aria-hidden="true">
+          <li key={step.title} className="grid grid-cols-[auto_minmax(0,1fr)] gap-3">
+            <Badge variant="outline" aria-hidden="true" className="data self-start">
               {n + 1}
-            </span>
+            </Badge>
             <div className="min-w-0">
-              <h3 className="text-body-sm/6 font-medium text-primary-foreground">
+              <h3 className="type-label text-text-1">
                 <span className="sr-only">Step {n + 1}: </span>
                 {step.title}
               </h3>
-              <p className="mt-0.5 text-body-sm text-pretty text-secondary-foreground">{step.body}</p>
+              <p className="mt-0.5 type-body-sm text-pretty text-text-2">{step.body}</p>
               {step.code && (
                 <div className="mt-3">
                   <CopyBlock code={step.code} label={step.codeLabel ?? label} tone="light" />
                 </div>
               )}
               {step.token && (
-                <Button isLink size="sm" variant="default" href={TOKEN_HREF} className="mt-3 w-fit">
+                <Button size="sm" render={<Link href={TOKEN_HREF} />} nativeButton={false} className="mt-3">
                   Get a token
                 </Button>
               )}
               {step.open && (
                 <Button
-                  isLink
                   size="sm"
                   variant="secondary"
-                  href={step.open.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  rightIcon={<ArrowUpRight className="size-3.5" aria-hidden="true" />}
-                  className="mt-3 w-fit"
+                  render={<a href={step.open.href} target="_blank" rel="noopener noreferrer" />}
+                  nativeButton={false}
+                  className="mt-3"
                 >
                   {step.open.label}
+                  <Icon icon={ArrowUpRight} />
                   <span className="sr-only"> (opens in a new tab)</span>
                 </Button>
               )}
@@ -304,55 +311,60 @@ function CardBody({ card, label, ...rest }: { card: Card; label: string } & HTML
   );
 }
 
-// The marks' tiles match the card, so the hairline (edge, as round the OAuth consent screen's
-// marks) is what shows them on the dark site, where the shadow loses its drop
-const tile = "grid size-12 place-items-center rounded-xl bg-container text-primary-foreground ring-1 ring-edge shadow-lg";
+// The marks' tiles are an illustration's cards, raised a step above the panel on the surface ladder
+// (its shadow carries the ring, so they show on the dark site too, as round the OAuth consent
+// screen's marks)
+const tile = "grid size-12 place-items-center rounded-(--corner-xs) bg-surface-4 text-text-1 shadow-surface-4";
 // The client marks share one cell and cross-fade; after a change made from the keyboard, and
 // under reduced motion, they swap at once
 const markClass = (shown: boolean, snap: boolean) =>
   cx(
-    "size-6 [grid-area:1/1]",
-    snap ? "transition-none" : "transition-[opacity,scale] duration-200 ease-out-quint motion-reduce:transition-none",
+    "col-start-1 row-start-1 size-6",
+    snap ? "transition-none" : "transition-[opacity,scale] duration-(--dur-slide) ease-out motion-reduce:transition-none",
     shown ? "opacity-100" : "scale-90 opacity-0",
   );
+// A mark's own brand colour, read by text-(--mark); the black marks have none and take the text's
+const markColor = (mark: keyof typeof MARKS) => ({ "--mark": MARK_COLORS[mark] }) as CSSProperties;
 
 // The top of the card: Curatit's mark and the chosen client's in two tiles, joined by a dashed
 // line along which a small post card travels from Curatit to the client (references flowing into
 // your assistant). After the mark pairing on the OAuth consent screen. Decorative: the heading
 // says it in words. The client's mark cross-fades when the tab changes; the card's travel is
-// .mcp-flow-* in global.css (transform and opacity only, still under reduced motion).
+// .mcp-flow-* in global.css (transform and opacity only, still under reduced motion), over --flow,
+// the line's length less the card's width.
 function Connection({ current, snap }: { current: number | null; snap: boolean }) {
   return (
     <div className="mb-6 flex items-center justify-center" aria-hidden="true">
       <span className={tile}>
         <Symbol className="size-6" />
       </span>
-      <span className="mcp-flow relative mx-2 flex h-12 w-20 items-center [--flow:4.25rem] sm:w-24 sm:[--flow:5.25rem]">
-        <span className="h-px w-full border-t border-dashed border-border-strong" />
-        <span className="mcp-flow-card absolute top-1/2 left-0 -mt-[7px] h-3.5 w-3 rounded-sm bg-primary-foreground ring-2 ring-container" />
+      <span className="mcp-flow relative mx-2 flex h-12 w-20 items-center [--flow:--spacing(17)] sm:w-24 sm:[--flow:--spacing(21)]">
+        <span className="h-px w-full border-t border-dashed border-line" />
+        <span className="mcp-flow-card absolute top-1/2 left-0 -mt-1.75 h-3.5 w-3 rounded-tag bg-ink ring-2 ring-paper" />
       </span>
       <span className={tile}>
         {CLIENTS.map((client, i) => (
-          <ClientMark
-            key={client.id}
-            path={MARKS[client.mark]}
-            style={{ color: MARK_COLORS[client.mark] }}
-            className={markClass(i === current, snap)}
-          />
+          <ClientMark key={client.id} path={MARKS[client.mark]} style={markColor(client.mark)} className={cx("text-(--mark)", markClass(i === current, snap))} />
         ))}
-        <TerminalWindow className={markClass(current === null, snap)} />
+        <span className={cx("grid place-items-center", markClass(current === null, snap))}>
+          <Icon icon={Terminal} size={24} />
+        </span>
       </span>
     </div>
   );
 }
 
+// The first developer tool carries the hairline that sets the developer tools apart from the
+// chat apps (a tab is the only thing a tab list holds)
+const firstDeveloper = CLIENTS.findIndex((client) => client.developer);
+const divider = "ml-4 before:absolute before:top-1/2 before:-left-2.5 before:h-4 before:w-px before:-translate-y-1/2 before:bg-line";
+
 export default function ClientInstall() {
-  const [current, setCurrent] = useState(0);
+  const [current, setCurrent] = useState(CLIENTS[0].id);
   const [mode, setMode] = useState<"mcp" | "rest">("mcp");
-  // Whether the last input in the controls was a key: then the tabs' fill and the card's mark
-  // switch at once, so arrowing along the row never trails (the switch's thumb snaps the same way)
+  // Whether the last input in the controls was a key: then the card's mark switches at once, so
+  // arrowing along the row never trails
   const [snap, setSnap] = useState(false);
-  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   // The tab row fades the edge that has more tabs beyond it, only while it does
   const row = useRef<HTMLDivElement>(null);
   const [more, setMore] = useState({ start: false, end: false });
@@ -374,102 +386,63 @@ export default function ClientInstall() {
       resize.disconnect();
     };
   }, [mode]);
+  // The edge fade is a mask (it paints nothing), handed to the row as --fade
   const fade =
     more.start || more.end
       ? `linear-gradient(to right, ${more.start ? "transparent, black 2.5rem" : "black"}, ${more.end ? "black calc(100% - 2.5rem), transparent" : "black"})`
-      : undefined;
+      : "none";
 
-  const onKey = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
-    const last = CLIENTS.length - 1;
-    const next = event.key === "ArrowRight" ? (index === last ? 0 : index + 1) : event.key === "ArrowLeft" ? (index === 0 ? last : index - 1) : event.key === "Home" ? 0 : event.key === "End" ? last : null;
-    if (next === null) return;
-    event.preventDefault();
-    setCurrent(next);
-    tabs.current[next]?.focus();
-  };
+  const index = CLIENTS.findIndex((client) => client.id === current);
 
   return (
-    <div>
-      <div onKeyDown={() => setSnap(true)} onPointerDown={() => setSnap(false)} className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
-        {/* The tab row scrolls sideways when it doesn't fit, bleeding to the gutter below lg; its
-            padding leaves room for the focus ring */}
-        <div ref={row} style={{ maskImage: fade }} className="-mx-4 min-h-12 min-w-0 overflow-x-auto px-4 py-1 sm:-mx-8 sm:px-8 lg:-mx-1 lg:flex-1 lg:px-1 scrollbar-hide">
-          {mode === "mcp" ? (
-            <div role="tablist" aria-label="Your AI tool" className="flex w-max items-center gap-1">
-              {CLIENTS.map((client, i) => (
-                <Fragment key={client.id}>
-                  {/* A hairline sets the developer tools apart from the chat apps */}
-                  {client.developer && !CLIENTS[i - 1]?.developer && <span className="mx-2 h-5 w-px shrink-0 bg-border-strong" aria-hidden="true" />}
-                  <button
-                    ref={(el) => {
-                      tabs.current[i] = el;
-                    }}
-                    type="button"
-                    role="tab"
-                    id={`install-tab-${client.id}`}
-                    aria-selected={i === current}
-                    aria-controls={`install-panel-${client.id}`}
-                    tabIndex={i === current ? 0 : -1}
-                    onClick={() => setCurrent(i)}
-                    onKeyDown={(event) => onKey(event, i)}
-                    className={cx(
-                      "flex h-10 shrink-0 items-center gap-2 rounded-full px-3.5 text-body-sm font-medium whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus",
-                      // The chosen tab's ring is a box-shadow, so on a click it fades in with the
-                      // fill; from the keyboard both switch at once
-                      snap ? "transition-none" : "transition-[color,background-color,box-shadow] duration-150 ease-out-quint",
-                      i === current ? "bg-component-on-container-subtle text-primary-foreground ring-1 ring-border-strong" : "text-secondary-foreground hover:text-primary-foreground",
-                    )}
-                  >
-                    <ClientMark path={MARKS[client.mark]} style={{ color: MARK_COLORS[client.mark] }} className="size-4 shrink-0" aria-hidden="true" />
-                    {client.name}
-                  </button>
-                </Fragment>
-              ))}
-            </div>
-          ) : (
-            <p className="flex h-10 items-center text-body-sm text-secondary-foreground">For tools without MCP, and your own scripts.</p>
-          )}
-        </div>
-        <Segmented
-          aria-label="Connect over"
-          size="md"
-          shape="pill"
-          className="w-fit"
-          value={mode}
-          onValueChange={setMode}
-          options={[
-            { value: "mcp", label: "MCP" },
-            { value: "rest", label: "REST" },
-          ]}
-        />
+    <Tabs value={current} onValueChange={(next) => setCurrent(String(next))} className="gap-0">
+      <div onKeyDown={() => setSnap(true)} onPointerDown={() => setSnap(false)} className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
+        {/* The tab row scrolls sideways when it doesn't fit */}
+        {mode === "mcp" ? (
+          <TabsList
+            ref={row}
+            aria-label="Your AI tool"
+            style={{ "--fade": fade } as CSSProperties}
+            className="[mask-image:var(--fade)] lg:min-w-0"
+          >
+            {CLIENTS.map((client, i) => (
+              <TabsTrigger key={client.id} value={client.id} className={cx(i === firstDeveloper && divider)}>
+                <ClientMark path={MARKS[client.mark]} style={markColor(client.mark)} className="text-(--mark)" aria-hidden="true" />
+                {client.name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        ) : (
+          <p className="flex min-h-(--control) items-center type-body-sm text-text-2 lg:flex-1">For tools without MCP, and your own scripts.</p>
+        )}
+        <SegmentedControl aria-label="Connect over" value={mode} onValueChange={(next) => setMode(next as "mcp" | "rest")} className="w-fit">
+          <SegmentedControlItem value="mcp">MCP</SegmentedControlItem>
+          <SegmentedControlItem value="rest">REST</SegmentedControlItem>
+        </SegmentedControl>
       </div>
 
-      {/* The gradient frame; on phones the card fills it with the wash as a border */}
-      <div className="mcp-gradient mt-4 flex min-h-[28rem] items-center justify-center rounded-5xl px-3 py-10 sm:rounded-[2rem] sm:px-10 sm:py-14 lg:min-h-[32rem]">
-        <div className="w-full max-w-xl rounded-2xl bg-container p-5 text-left shadow-xl sm:p-7">
-          <Connection current={mode === "mcp" ? current : null} snap={snap} />
-          {CLIENTS.map((client, i) => (
-            <CardBody
-              key={client.id}
-              card={client}
-              label={`the ${client.name} configuration`}
-              role="tabpanel"
-              id={`install-panel-${client.id}`}
-              aria-labelledby={`install-tab-${client.id}`}
-              hidden={mode !== "mcp" || i !== current}
-            />
-          ))}
-          <CardBody card={REST} label="the REST example" aria-label="Call Curatit over HTTP" hidden={mode !== "rest"} />
-        </div>
-      </div>
-      <p className="mt-4 text-body-sm text-pretty text-secondary-foreground">
+      {/* Glaze's card: the grey shell is the frame, the chosen client's steps sit on its panel */}
+      <Card className="mt-4">
+        <CardContent className="flex min-h-112 items-center justify-center px-3 py-10 sm:px-10 sm:py-14 lg:min-h-128">
+          <div className="w-full max-w-xl min-w-0 text-left">
+            <Connection current={mode === "mcp" ? index : null} snap={snap} />
+            {mode === "mcp" ? (
+              CLIENTS.map((client) => (
+                <TabsContent key={client.id} value={client.id}>
+                  <CardBody card={client} label={`the ${client.name} configuration`} />
+                </TabsContent>
+              ))
+            ) : (
+              <CardBody card={REST} label="the REST example" aria-label="Call Curatit over HTTP" />
+            )}
+          </div>
+        </CardContent>
+      </Card>
+      <p className="mt-4 type-body-sm text-pretty text-text-2">
         Another AI tool? Give it the same link, <code className={`${code} break-all`}>{MCP_URL}</code>: it signs in with your Curatit account, or sends your
         token in an <code className={code}>Authorization: Bearer</code> header. More in the{" "}
-        <Link href="/docs/mcp" className={link}>
-          connect guide
-        </Link>
-        .
+        <TextLink href="/docs/mcp">connect guide</TextLink>.
       </p>
-    </div>
+    </Tabs>
   );
 }
