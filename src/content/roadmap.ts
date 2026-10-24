@@ -21,7 +21,7 @@ export type SummaryItem = { title: string; commit: string };
 
 export const ROADMAP: RoadmapItem[] = [
   { stage: "Now", area: "AI agents", title: "Curatit MCP in beta", detail: "Claude, ChatGPT, Claude Code, Cursor and VS Code can search the library and pull a post's breakdown from inside the tool. Connect yours from the AI integration page, and tell us what breaks." },
-  { stage: "Now", area: "Creative Intelligence", title: "Breakdowns for the newest posts", detail: "Breakdowns are drafted by AI and appear only once an editor approves them. Every post that was in the library by 17 October has one, and the newest posts are getting theirs." },
+  { stage: "Now", area: "Creative Intelligence", title: "Breakdowns for every new post", detail: "Breakdowns are drafted by AI and appear only once an editor approves them. Every post in the library has one, and new posts get theirs as they join." },
   { stage: "Now", area: "Library", title: "More brands", detail: "New brands join a few at a time. Betterment and Airtasker are the latest, with 19 more posts from Wealthsimple, and newly added posts show near the top of your feed.", brands: true },
   { stage: "Next", area: "AI agents", title: "Testing Curatit MCP", detail: "Trying the connection in more AI tools and with more people before it leaves beta, and fixing what breaks." },
   { stage: "Later", area: "Library", title: "More and more posts", detail: "More brands and more of their recent posts, added a few at a time." },
@@ -56,7 +56,7 @@ export const CHANGELOG: ChangelogDay[] = [
       { area: "Dashboard", title: "Discover, laid out like an explore page", detail: "Discover opens on the categories, each in its own colour, then the playbooks: the kinds of post the breakdowns keep finding, as collections of covers. Opening one shows its posts under its name. The playbooks moved here from For you, which now opens straight on the posts.", commits: ["bd5a41b","b29c1b9","7fc7166"] },
       { area: "Dashboard", title: "A calmer post page", detail: "A post's page sits in the same frame as the feed, with the post filling the window and its slides as thumbnails under it. Likes and comments sit right under Save, a slide's notes read as bullets, colours show as a simple palette, and the slide-number tags are gone.", commits: ["4488342","72865a5","33125f3","bd5a41b"] },
       { area: "Dashboard", title: "A balanced header and account menu", detail: "Every control in the dashboard header is one height, with your avatar as tall as the buttons. The account menu is roomier, and theme and grid size are two small switches, so it no longer scrolls.", commits: ["ea268f1","7ea285b","258ebce"] },
-      { area: "Library", title: "Betterment and Airtasker join the library", detail: "Betterment joins Finance and Airtasker joins Lifestyle, with 19 more posts from Wealthsimple: 54 new posts in all.", commits: ["0f7f8ed"] },
+      { area: "Library", title: "Betterment and Airtasker join the library", detail: "Betterment joins Finance and Airtasker joins Lifestyle, with 19 more posts from Wealthsimple: 54 new posts in all, each with an editor-approved breakdown, taking the library to 291 posts.", commits: ["0f7f8ed","e5e3cae"] },
     ],
   },
   {
