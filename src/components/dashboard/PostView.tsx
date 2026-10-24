@@ -18,7 +18,7 @@
 // Since 2026-10-24 it is built from Glaze: Buttons in the app bar and on the stage, the cards
 // Glaze's Card (shell and panel, the cells split on its row rule), the traits Badges, the
 // categories secondary Buttons that link to Discover, the boards it's on Items, and the board
-// picker a NativeSelect beside an Input.
+// picker a Select beside an Input.
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -32,7 +32,7 @@ import { Button } from "@/components/glaze/ui/button";
 import { Card, CardContent } from "@/components/glaze/ui/card";
 import { Input, InputAction } from "@/components/glaze/ui/input";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemLink, ItemMedia, ItemTitle } from "@/components/glaze/ui/item";
-import { NativeSelect } from "@/components/glaze/ui/select";
+import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/glaze/ui/select";
 import type { PublicAnalysis } from "@/lib/creative/publicView";
 import { cn } from "@/lib/glaze/utils";
 import type { PostDetail } from "@/lib/posts";
@@ -56,6 +56,15 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
   const count = post.images.length;
   const [index, setIndex] = useState(0);
   const go = (next: number) => setIndex(Math.min(count - 1, Math.max(0, next)));
+  // Keeps the slide on stage in view in the indicator row, scrolling the row alone (never the page)
+  const stripRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const strip = stripRef.current;
+    const thumb = strip?.querySelector<HTMLElement>(`[data-slide="${index}"]`);
+    if (!strip || !thumb || strip.scrollWidth <= strip.clientWidth) return;
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    strip.scrollTo({ left: thumb.offsetLeft - (strip.clientWidth - thumb.offsetWidth) / 2, behavior: still ? "auto" : "smooth" });
+  }, [index]);
 
   // The posts either side of this one in the feed
   const at = list.findIndex((item) => item.shortCode === post.shortCode);
@@ -132,8 +141,9 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
         {/* The post, sticky while the column beside it scrolls */}
         <div className="min-w-0 flex-1 lg:sticky lg:top-4">
           {/* The stage: the post on a grey mat, the slide arrows at its sides, and under the image (never
-              over it) where you are in the carousel: the slide's number and role on the left, one bar
-              per slide on the right, the current one long and in ink, each a button */}
+              over it) where you are in the carousel: the slides themselves as the indicator, small at
+              the post's shape, the one on stage in full with an ink ring and the rest dimmed until
+              pointed at (the row scrolls sideways when they don't fit), and the slide's number and role */}
           <div className="relative flex flex-col items-center overflow-hidden rounded-shell bg-shell p-4 sm:p-8 lg:h-(--stage-h)">
             <div className="flex min-h-0 w-full flex-1 items-center justify-center">
               <div className="relative aspect-(--ratio) h-full max-h-full w-full max-w-(--stage-w)">
@@ -149,8 +159,27 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
               </div>
             </div>
             {(count > 1 || video) && (
-              <div className="mt-4 flex w-full max-w-(--stage-w) items-center justify-between gap-4">
-                <p className="min-w-0 truncate type-caption text-text-2" aria-live="polite">
+              <div className="mt-3 flex w-full flex-col items-center gap-1.5">
+                {count > 1 && (
+                  <div ref={stripRef} role="group" aria-label="Slides" className="relative flex max-w-full gap-1.5 overflow-x-auto p-1 [scrollbar-width:none]">
+                    {post.images.map((src, i) => (
+                      <ButtonPrimitive
+                        key={src}
+                        data-slide={i}
+                        aria-label={`Slide ${i + 1}`}
+                        aria-pressed={i === index}
+                        onClick={() => go(i)}
+                        className={cn(
+                          "relative block aspect-(--ratio) w-8 shrink-0 overflow-hidden rounded-tag bg-field transition-opacity duration-(--dur-state) ease-out",
+                          i === index ? "outline-2 outline-offset-2 outline-ink" : "opacity-45 hover:opacity-100",
+                        )}
+                      >
+                        <Image src={src} alt="" fill sizes="32px" className="object-cover" />
+                      </ButtonPrimitive>
+                    ))}
+                  </div>
+                )}
+                <p className="max-w-full truncate type-caption text-text-2" aria-live="polite">
                   {count > 1 && (
                     <>
                       <span className="data font-medium text-text-1">{index + 1}</span> of <span className="data">{count}</span>
@@ -164,26 +193,6 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
                     </span>
                   )}
                 </p>
-                {count > 1 && (
-                  <div role="group" aria-label="Slides" className="flex shrink-0 items-center gap-1">
-                    {post.images.map((src, i) => (
-                      <ButtonPrimitive
-                        key={src}
-                        aria-label={`Slide ${i + 1}`}
-                        aria-pressed={i === index}
-                        onClick={() => go(i)}
-                        className="group flex h-6 items-center rounded-pill px-0.5"
-                      >
-                        <span
-                          className={cn(
-                            "block h-1 rounded-pill transition-[background-color] duration-(--dur-state) ease-out",
-                            i === index ? "w-6 bg-ink" : "w-3 bg-line-strong group-hover:bg-text-2",
-                          )}
-                        />
-                      </ButtonPrimitive>
-                    ))}
-                  </div>
-                )}
               </div>
             )}
             {count > 1 && (
@@ -193,27 +202,6 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
               </>
             )}
           </div>
-          {/* Under the stage, every slide as a thumbnail at the post's shape: the one on stage in full
-              with an ink ring, the rest dimmed until pointed at */}
-          {count > 1 && (
-            <ol className="mt-3 flex gap-2 overflow-x-auto p-1">
-              {post.images.map((src, i) => (
-                <li key={src} className="shrink-0">
-                  <ButtonPrimitive
-                    aria-label={`Show slide ${i + 1}`}
-                    aria-pressed={i === index}
-                    onClick={() => go(i)}
-                    className={cn(
-                      "group relative block aspect-(--ratio) w-10 overflow-hidden rounded-tag bg-field transition-opacity duration-(--dur-state) ease-out",
-                      i === index ? "outline-2 outline-offset-2 outline-ink" : "opacity-50 hover:opacity-100",
-                    )}
-                  >
-                    <Image src={src} alt="" fill sizes="40px" className="object-cover" />
-                  </ButtonPrimitive>
-                </li>
-              ))}
-            </ol>
-          )}
         </div>
 
         <div className="flex min-w-0 flex-col gap-4 lg:w-104 lg:shrink-0">
@@ -501,8 +489,8 @@ function BoardsOn({ post }: { post: PostDetail }) {
 
 // The board picker and Save, in the card's third cell like lafys.com's one primary action.
 // "New board…" swaps the picker for a name field (and is all there is before the first board),
-// and Save then makes the board with this post on it. The picker is Glaze's NativeSelect (a value
-// in a form, left to the browser) and the name field its Input, both on the field pill.
+// and Save then makes the board with this post on it. The picker is Glaze's Select (its own popup,
+// a check beside the chosen board) and the name field its Input, both on the field pill.
 const NEW = "new";
 
 function SaveForm({ post }: { post: PostDetail }) {
@@ -545,15 +533,25 @@ function SaveForm({ post }: { post: PostDetail }) {
           }
         />
       ) : (
-        <NativeSelect aria-label="Board" value={status === "loading" ? "" : board} disabled={status === "loading"} onChange={(event) => setChoice(event.target.value)} className="min-w-0 flex-1">
-          {status === "loading" && <option value="">Loading boards…</option>}
-          {boards.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name}
-            </option>
-          ))}
-          <option value={NEW}>New board…</option>
-        </NativeSelect>
+        <Select
+          items={[...boards.map((b) => ({ value: b.id, label: b.name })), { value: NEW, label: "New board…" }]}
+          value={status === "loading" ? null : board}
+          onValueChange={(value) => value && setChoice(value)}
+          disabled={status === "loading"}
+        >
+          <SelectTrigger aria-label="Board" className="min-w-0 flex-1">
+            <SelectValue placeholder="Loading boards…" />
+          </SelectTrigger>
+          <SelectContent>
+            {boards.map((b) => (
+              <SelectItem key={b.id} value={b.id}>
+                {b.name}
+              </SelectItem>
+            ))}
+            {boards.length > 0 && <SelectSeparator />}
+            <SelectItem value={NEW}>New board…</SelectItem>
+          </SelectContent>
+        </Select>
       )}
       {/* "Saved" is a confirmation, not a dead control: it stays legible as a flat secondary and
           is only aria-disabled (the submit above ignores it); loading and an empty name still
