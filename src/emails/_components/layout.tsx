@@ -257,9 +257,13 @@ export function FallbackLink({ href }: { href: string }) {
   );
 }
 
-// The 6-digit code, for people confirming on another device.
-export function Code({ code }: { code: string }) {
-  return (
+// The 6-digit code, for people confirming on another device. No inbox runs scripts, so a
+// button can't copy it from inside the email: `copyUrl` adds a Copy code button that opens
+// /code on the site, which copies it there (the code rides in the #fragment, so it never
+// reaches a server or its logs). The code itself selects whole on one tap where the client
+// supports user-select (Apple Mail, iOS Mail).
+export function Code({ code, copyUrl }: { code: string; copyUrl?: string }) {
+  const chip = (
     <Text
       className="c-fill c-fg"
       style={{
@@ -274,10 +278,25 @@ export function Code({ code }: { code: string }) {
         letterSpacing: '0.2em',
         color: l.foreground,
         fontVariantNumeric: 'tabular-nums',
+        userSelect: 'all',
+        WebkitUserSelect: 'all',
       }}
     >
       {code}
     </Text>
+  );
+  if (!copyUrl) return chip;
+  return (
+    <table role="presentation" cellPadding={0} cellSpacing={0} border={0}>
+      <tbody>
+        <tr>
+          <td style={{ verticalAlign: 'middle', paddingRight: '12px' }}>{chip}</td>
+          <td style={{ verticalAlign: 'middle' }}>
+            <SecondaryButton href={copyUrl}>Copy code</SecondaryButton>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   );
 }
 

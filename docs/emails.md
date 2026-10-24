@@ -36,7 +36,22 @@ Images point at the deployed site (`CURATIT_PUBLIC_BASE_URL`, else `https://www.
 | Share link expiring | `share-link-expiring.tsx` | The app | No: share links never expire |
 | Bookmark limit, team invite, plan confirmed, payment failed, plan cancelled | | The app | No: there are no limits, teams or billing yet |
 
-The last rows describe features Curatit doesn't have. Their copy (a five-post limit, a Team plan, what Free loses) is the designer's guess; match it to the real rules, and point their links (`/settings/billing`, `/settings/team`, `/invite/…`, which 404 today) at real pages, before sending any of them. Onboarding and the weekly edition are marketing email, so they need a working unsubscribe link (`unsubscribeUrl`; there's no `/unsubscribe` page yet, and Resend Broadcasts can supply its own).
+The last rows describe features Curatit doesn't have. Their copy (a five-post limit, a Team plan, what Free loses) is the designer's guess; match it to the real rules, and point their links (`/settings/billing`, `/settings/team`, `/invite/…`, which 404 today) at real pages, before sending any of them. Onboarding and the weekly edition are marketing email: send them as optional emails, which gives them a working unsubscribe link (see Unsubscribing).
+
+## Unsubscribing
+
+Optional emails (onboarding, the weekly edition, share link expiring, bookmark limit) carry an Unsubscribe link in the footer; the account emails (confirm, reset, verification code, change email, the two security notices), the welcome and the billing emails don't, because nobody can opt out of those. Send an optional email with `sendEmail({ ..., optional: "<email name>", react: (unsubscribeUrl) => <Template unsubscribeUrl={unsubscribeUrl} ... /> })`: it skips anyone who has unsubscribed, puts their own link in the footer, and adds the one-click `List-Unsubscribe` and `List-Unsubscribe-Post` headers Gmail and Yahoo ask bulk senders for. It doesn't send at all while it can't check the list or sign a link.
+
+- The link is `/unsubscribe?t=<token>&s=<email name>`. The token is the address and an HMAC of it (`src/lib/unsubscribe.ts`, signed with `EMAIL_UNSUBSCRIBE_SECRET`, else `CURATIT_MCP_SIGNING_SECRET`), so the page knows whose address it is without a sign-in and an edited link is refused. Changing the secret breaks links in emails already sent.
+- The page (`src/app/(auth)/unsubscribe`) names the address, asks why (optional: too many emails, not relevant to my work, I never signed up, something else, and a note of up to 500 characters) and unsubscribes on one button.
+- Gmail's and Yahoo's own Unsubscribe buttons POST to `/api/unsubscribe` with the same token: no page, so no reason, and a reason given earlier is kept.
+- Answers are in `public.email_unsubscribes` (email, reason, note, source, created and updated), one row per address, readable only with the secret key (Table Editor in Supabase). Deleting a row subscribes the address again.
+
+Resend Broadcasts (the weekly edition) has its own list and unsubscribe page; pass `{{{RESEND_UNSUBSCRIBE_URL}}}` there instead.
+
+## The verification code
+
+No inbox runs scripts, so a button inside an email can't copy anything. The verification code email (`reauthentication.tsx`) has a Copy code button that opens `/code#<code>` on the site, which copies the code there (one tap where the browser wants one). The code rides in the `#` part of the address, which browsers never send to a server, and the page takes it out of the address once read. The code in the email is also set to select whole on one tap in Apple Mail and iOS Mail, and Gmail adds its own Copy button to codes it recognises.
 
 ## The welcome email
 

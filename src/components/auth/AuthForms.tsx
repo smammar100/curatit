@@ -56,7 +56,7 @@ function Next() {
   return next ? <input type="hidden" name="next" value={next} /> : null;
 }
 
-function Heading({ title, children }: { title: string; children: ReactNode }) {
+export function Heading({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="text-center text-balance">
       <Text tag="h1" variant="h5" className="text-text-1">
@@ -69,7 +69,7 @@ function Heading({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Footer({ children }: { children: ReactNode }) {
+export function Footer({ children }: { children: ReactNode }) {
   return (
     <Text
       tag="p"
@@ -150,7 +150,7 @@ function useValidation(
 // words and ignores presses (pending: focus stays on it, aria-busy is set and its name stays the
 // idle words); `waiting` is for before it can be used at all, and disables it outright, which
 // also holds back a press made before the page's script has loaded
-function Submit({
+export function Submit({
   pending,
   waiting = false,
   idle,

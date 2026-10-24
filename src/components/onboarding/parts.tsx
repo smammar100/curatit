@@ -1,27 +1,25 @@
 "use client";
 
 // The pieces of the welcome flow (Welcome.tsx): the answers being made, and the pickers for the
-// name and occupation, the brands and the taste test; the live wall; the chips of what the taps
-// say; the end. The industries are folders (Folders.tsx).
+// name and occupation and the brands; the live wall; the end. The industries are folders
+// (Folders.tsx).
 //
 // Since 2026-10-24 on Glaze: the role chips are filter Chips (on while chosen), the name field is
-// Glaze's Input, the learned chips are Badges, and every picture sits on the grey field with the
-// faint line drawn over it; a picked brand or post wears a 2px line of the ink inside its own
-// edge, so nothing has to match the ground it sits on. The picture tiles (brands, posts, the
-// folders) are toggles with aria-pressed: Glaze has no picture toggle, so they're Base UI's
-// Toggle (the primitive Glaze's Chip is built on) drawn with Glaze's tokens, and Glaze's base
-// draws their focus ring.
-import { useEffect, useId, useRef, type CSSProperties, type Ref } from "react";
+// Glaze's Input, and every picture sits on the grey field with the faint line drawn over it; a
+// picked brand wears a 2px line of the ink inside its own edge, so nothing has to match the
+// ground it sits on. The picture tiles (brands, the folders) are toggles with aria-pressed: Glaze
+// has no picture toggle, so they're Base UI's Toggle (the primitive Glaze's Chip is built on)
+// drawn with Glaze's tokens, and Glaze's base draws their focus ring.
+import { useEffect, useId, useRef, useState, type CSSProperties, type Ref } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Toggle } from "@base-ui/react/toggle";
-import { Badge } from "@/components/glaze/ui/badge";
 import { Button } from "@/components/glaze/ui/button";
 import { Chip, ChipGroup } from "@/components/glaze/ui/chip";
 import { Input } from "@/components/glaze/ui/input";
 import { Check, Icon } from "@/components/glaze/icon";
 import { ratio } from "@/components/dashboard/Grid";
-import { learnedChips, rank } from "@/components/dashboard/forYou";
+import { rank } from "@/components/dashboard/forYou";
 import type { Profile } from "@/components/dashboard/profile";
 import type { DashPost } from "@/components/dashboard/types";
 import { categoriesWithPosts, inCategory } from "@/lib/categories";
@@ -77,17 +75,25 @@ export function Progress({ step, total, className }: { step: number; total: numb
   );
 }
 
-// The name, then what they do as one tap. The name takes focus on arrival, except on touch
-// (the keyboard would jump up); Enter in it submits the step. The step's question is its visible
-// label, so the field is named by aria-label rather than a Field. The roles are filter Chips
-// rather than a SegmentedControl: six of them, and a second tap clears the choice
+// The name, then what they do as one tap, or Other and a few words of their own (the column takes
+// 40 characters). The name takes focus on arrival, except on touch (the keyboard would jump up);
+// Enter in it submits the step. The step's question is its visible label, so the fields are named
+// by aria-label rather than a Field. The roles are filter Chips rather than a SegmentedControl:
+// seven of them, and a second tap clears the choice
 export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: Partial<Draft>) => void }) {
   // Glaze's Input takes no ref, so the field is found inside its box
   const box = useRef<HTMLDivElement>(null);
   const groupLabel = useId();
+  const own = value.occupation && !OCCUPATIONS.includes(value.occupation) ? value.occupation : "";
+  const [other, setOther] = useState(!!own);
+  const [text, setText] = useState(own);
   useEffect(() => {
     if (!matchMedia("(pointer: coarse)").matches) box.current?.querySelector("input")?.focus();
   }, []);
+  const pick = (occupation: string) => {
+    setOther(false);
+    onChange({ occupation: value.occupation === occupation ? null : occupation });
+  };
   return (
     <div className="space-y-5">
       <div ref={box}>
@@ -107,15 +113,36 @@ export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: 
         </p>
         <ChipGroup role="group" aria-labelledby={groupLabel}>
           {OCCUPATIONS.map((occupation) => (
-            <Chip
-              key={occupation}
-              pressed={value.occupation === occupation}
-              onPressedChange={() => onChange({ occupation: value.occupation === occupation ? null : occupation })}
-            >
+            <Chip key={occupation} pressed={!other && value.occupation === occupation} onPressedChange={() => pick(occupation)}>
               {occupation}
             </Chip>
           ))}
+          <Chip
+            pressed={other}
+            onPressedChange={() => {
+              setOther(!other);
+              onChange({ occupation: other ? null : text.trim() || null });
+            }}
+          >
+            Other
+          </Chip>
         </ChipGroup>
+        {/* Opened by a tap on Other, so it takes focus even on touch */}
+        {other && (
+          <Input
+            name="occupation"
+            aria-label="What do you do?"
+            placeholder="What do you do?"
+            value={text}
+            onValueChange={(next) => {
+              setText(next);
+              onChange({ occupation: next.trim() || null });
+            }}
+            maxLength={40}
+            autoFocus
+            className="mt-3"
+          />
+        )}
       </div>
     </div>
   );
@@ -161,37 +188,6 @@ export function BrandGrid({ brands, value, onChange, className }: { brands: Bran
   );
 }
 
-// Posts to tap, as a grid of 4:5 tiles; once `max` are picked the rest step back. A picked tile
-// wears the ring of the ink inside its own edge and the check in its corner
-export function TasteGrid({ posts, value, onChange, max, className }: { posts: DashPost[]; value: string[]; onChange: (next: string[]) => void; max: number; className?: string }) {
-  return (
-    <div className={cx("grid gap-2", className)}>
-      {posts.map((p) => {
-        const on = value.includes(p.shortCode);
-        const full = !on && value.length >= max;
-        return (
-          <Toggle
-            key={p.shortCode}
-            pressed={on}
-            aria-label={p.hook}
-            disabled={full}
-            onPressedChange={() => onChange(toggle(value, p.shortCode))}
-            className={cx(
-              "relative block aspect-4/5 w-full overflow-hidden rounded-panel bg-field transition-[opacity,scale] duration-(--dur-slide) ease-out motion-safe:active:scale-(--scale-press)",
-              edge,
-              on && picked,
-              full && "opacity-40",
-            )}
-          >
-            <Image src={p.cover} alt="" fill sizes="200px" className="object-cover" />
-            {on && <Tick className="absolute end-2 top-2 size-6" />}
-          </Toggle>
-        );
-      })}
-    </div>
-  );
-}
-
 // A wall of posts at their own shapes, each tile rising in when the wall changes. Posts are
 // dealt to the shortest of three columns, as the feed's grid does, so the order reads across
 // the top row: the ones that come first are the ones you see first
@@ -222,36 +218,12 @@ export function Collage({ posts, className }: { posts: DashPost[]; className?: s
   );
 }
 
-export function LearnedChips({ posts, taste, max = 5, className }: { posts: DashPost[]; taste: string[]; max?: number; className?: string }) {
-  const chips = learnedChips(posts, taste, max);
-  if (!chips.length) return null;
-  return (
-    <ul className={cx("flex flex-wrap gap-1.5", className)} aria-label="What your picks say">
-      {chips.map((chip) => (
-        <li key={chip} className="welcome-chip">
-          <Badge>{chip}</Badge>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-// A small ring that fills as you pick
-export function Ring({ value, max, className }: { value: number; max: number; className?: string }) {
-  const r = 11;
-  const c = 2 * Math.PI * r;
-  return (
-    <svg viewBox="0 0 28 28" aria-hidden="true" className={cx("size-7 -rotate-90", className)}>
-      <circle cx="14" cy="14" r={r} fill="none" strokeWidth="3" className="stroke-line" />
-      <circle cx="14" cy="14" r={r} fill="none" strokeWidth="3" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(1, value / max))} className="stroke-ink transition-[stroke-dashoffset] duration-(--dur-overlay) ease-out motion-reduce:transition-none" />
-    </svg>
-  );
-}
-
-// The end: the feed's new top six, fanned, and the way in
+// The end, alone in the middle of the page: the feed's new top six, fanned, and the way in. The
+// name is shown capitalised, however it was typed
 export function Done({ posts, draft, headingRef }: { posts: DashPost[]; draft: Draft; headingRef?: Ref<HTMLHeadingElement> }) {
   const top = rank(posts, draft).slice(0, 6);
-  const who = firstName(draft.name);
+  const first = firstName(draft.name);
+  const who = first.charAt(0).toLocaleUpperCase() + first.slice(1);
   return (
     <div className="welcome-rise flex flex-col items-center text-center">
       <div className="mb-8 flex h-32 items-start justify-center" aria-hidden="true">
@@ -271,9 +243,9 @@ export function Done({ posts, draft, headingRef }: { posts: DashPost[]; draft: D
           </span>
         ))}
       </div>
-      <Heading ref={headingRef} title={`${who ? `${who}, your` : "Your"} For you is ready.`} sub={`${posts.length} posts, the ones for you first.`} />
+      <Heading ref={headingRef} title={`You’re all set${who ? `, ${who}` : ""}.`} sub={`We’ve sorted ${posts.length} posts so the ones that fit you come first.`} />
       <Button render={<Link href="/dashboard" />} nativeButton={false} size="lg" className="mt-8 w-fit">
-        Open For you
+        Go to my feed
       </Button>
     </div>
   );
