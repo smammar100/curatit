@@ -9,23 +9,23 @@
 // that you've been here, so it doesn't ask again. The feed ranks on them from then on. Open
 // again from the account menu to change them.
 //
-// Since 2026-10-23 on the design system: Skip, Cancel and "No one in particular" are transparent
-// Buttons (the 44px hit area is the system's own on touch screens), a profile that can't load is
-// a danger Notice with Reload, the wall's ground is bg-muted, and the pickers are in parts.tsx
-// and Folders.tsx.
+// Since 2026-10-24 on Glaze: Back, Skip, Cancel and "No one in particular" are ghost Buttons,
+// the step's one action the primary (with its arc while the answers save), a profile that can't
+// load or answers that can't save are fail Alerts, the wall's ground is the grey shell, and the
+// pickers are in parts.tsx and Folders.tsx.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Symbol from "@/components/assets/Symbol";
-import Button from "@/components/fundations/elements/Button";
-import CaretLeft from "@/components/fundations/icons/CaretLeft";
-import Notice from "@/components/fundations/molecules/Notice";
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/glaze/ui/alert";
+import { Button } from "@/components/glaze/ui/button";
+import { ChevronLeft, Icon } from "@/components/glaze/icon";
 import { useBoards } from "@/components/dashboard/boards";
 import { rank } from "@/components/dashboard/forYou";
 import { useProfile } from "@/components/dashboard/profile";
 import { cx } from "@/lib/cx";
 import { track } from "@/lib/analytics";
 import { FolderTiles } from "./Folders";
-import { BrandGrid, Collage, Done, Heading, LearnedChips, NameRole, Progress, Ring, TasteGrid, brandsOf, categoriesOf, semibold, type Draft } from "./parts";
+import { BrandGrid, Collage, Done, Heading, LearnedChips, NameRole, Progress, Ring, TasteGrid, brandsOf, categoriesOf, type Draft } from "./parts";
 
 const TASTE = 3;
 const TASTE_TILES = 16;
@@ -91,18 +91,15 @@ export default function Welcome() {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-page px-6" role="status" aria-live="polite">
         {status === "error" ? (
-          <Notice
-            tone="danger"
-            title="We couldn’t load your profile."
-            action={
-              <Button size="xs" variant="muted" onClick={() => location.reload()}>
+          <Alert status="fail" announce={false} className="max-w-sm">
+            <AlertTitle>We couldn’t load your profile.</AlertTitle>
+            <AlertDescription>Check your connection and reload the page.</AlertDescription>
+            <AlertAction>
+              <Button size="sm" variant="secondary" onClick={() => location.reload()}>
                 Reload
               </Button>
-            }
-            className="max-w-sm"
-          >
-            Check your connection and reload the page.
-          </Notice>
+            </AlertAction>
+          </Alert>
         ) : (
           <span className="sr-only">Loading your profile</span>
         )}
@@ -173,16 +170,23 @@ export default function Welcome() {
         <div className="grid grid-cols-[1fr_auto_1fr] items-center">
           <div>
             {step > 0 && !done && (
-              <Button variant="transparent" iconOnly aria-label="Back" onClick={() => setStep((s) => s - 1)}>
-                <CaretLeft className="size-3.5" />
+              <Button variant="ghost" size="icon" aria-label="Back" onClick={() => setStep((s) => s - 1)}>
+                <Icon icon={ChevronLeft} />
               </Button>
             )}
           </div>
-          <Symbol className="size-7 text-foreground" aria-hidden="true" />
-          <div className="text-right">
+          <Symbol className="size-7 text-text-1" aria-hidden="true" />
+          <div className="text-end">
             {!done && (
-              <Button variant="transparent" size="sm" onClick={skip} disabled={saving !== null}>
-                {start.redo ? "Cancel" : saving === "skip" ? "One moment…" : "Skip for now"}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={skip}
+                pending={saving === "skip"}
+                pendingLabel="One moment"
+                disabled={saving === "finish"}
+              >
+                {start.redo ? "Cancel" : "Skip for now"}
               </Button>
             )}
           </div>
@@ -215,7 +219,7 @@ export default function Welcome() {
                     <TasteGrid posts={taste.slice(0, 9)} value={draft.taste} onChange={(taste) => patch({ taste })} max={TASTE} className="grid-cols-3 lg:hidden" />
                     <div className="mt-4 flex items-center gap-3 lg:mt-0">
                       <Ring value={draft.taste.length} max={TASTE} className="size-9 shrink-0" />
-                      <p className="text-title text-pretty text-foreground tabular-nums" style={semibold} aria-live="polite">
+                      <p className="type-heading text-pretty text-text-1 tabular-nums" aria-live="polite">
                         {count}
                       </p>
                     </div>
@@ -224,17 +228,24 @@ export default function Welcome() {
                 )}
               </div>
               {failed && (
-                <Notice tone="danger" live className="mt-4">
-                  We couldn’t save that. Check your connection and try again.
-                </Notice>
+                <Alert status="fail" className="mt-4">
+                  <AlertDescription>We couldn’t save that. Check your connection and try again.</AlertDescription>
+                </Alert>
               )}
               <div className="mt-8 flex items-center gap-4">
-                <Button type="submit" size="base" variant="default" disabled={!ready || saving !== null} className="w-fit">
-                  {step === STEPS.length - 1 ? (saving === "finish" ? "Saving…" : "Open my feed") : "Next"}
+                <Button
+                  type="submit"
+                  size="lg"
+                  pending={saving === "finish"}
+                  pendingLabel="Saving"
+                  disabled={!ready || saving === "skip"}
+                  className="w-fit"
+                >
+                  {step === STEPS.length - 1 ? "Open my feed" : "Next"}
                 </Button>
                 {step === 2 && (
                   <Button
-                    variant="transparent"
+                    variant="ghost"
                     size="sm"
                     onClick={() => {
                       patch({ brands: [] });
@@ -252,10 +263,10 @@ export default function Welcome() {
       </section>
 
       {/* Your For you, taking shape. The caption isn't a live region: each pick already says
-          whether it's on, and this would say it twice. The ground is the muted tint; a picked
-          tile's ring sits inside its own edge, so the ground needn't be solid */}
-      <aside className="relative hidden bg-muted lg:block" aria-label="Your feed, taking shape">
-        <p className="absolute top-6 right-10 left-10 z-10 text-caption text-muted-foreground">{caption}</p>
+          whether it's on, and this would say it twice. The ground is the grey shell; a picked
+          tile's line sits inside its own edge, so the ground needn't be solid */}
+      <aside className="relative hidden bg-shell lg:block" aria-label="Your feed, taking shape">
+        <p className="absolute inset-x-10 top-6 z-(--z-raised) type-caption text-text-2">{caption}</p>
         <div className={cx("absolute inset-0 overflow-hidden px-10 pt-14 pb-10", step === 3 && !done && "overflow-y-auto")}>
           {step === 3 && !done ? (
             <TasteGrid posts={taste} value={draft.taste} onChange={(taste) => patch({ taste })} max={TASTE} className="grid-cols-4" />

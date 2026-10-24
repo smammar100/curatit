@@ -4,32 +4,34 @@
 // name and occupation, the brands and the taste test; the live wall; the chips of what the taps
 // say; the end. The industries are folders (Folders.tsx).
 //
-// Since 2026-10-23 on the design system: the role chips are pressed Buttons (the ink while
-// chosen, the hairline otherwise), the learned chips are Badges, and every picture sits on
-// bg-muted with the one hairline drawn over it (as CardMedia does) and 12px corners; a picked
-// brand or post wears a 2px ring of the ink inside its own edge, so no ring offset has to match
-// the ground it sits on.
-import { useEffect, useId, useRef, type ReactNode, type Ref } from "react";
+// Since 2026-10-24 on Glaze: the role chips are filter Chips (on while chosen), the name field is
+// Glaze's Input, the learned chips are Badges, and every picture sits on the grey field with the
+// faint line drawn over it; a picked brand or post wears a 2px line of the ink inside its own
+// edge, so nothing has to match the ground it sits on. The picture tiles (brands, posts, the
+// folders) are toggles with aria-pressed: Glaze has no picture toggle, so they're Base UI's
+// Toggle (the primitive Glaze's Chip is built on) drawn with Glaze's tokens, and Glaze's base
+// draws their focus ring.
+import { useEffect, useId, useRef, type CSSProperties, type Ref } from "react";
 import Image from "next/image";
-import Check from "@/components/fundations/icons/Check";
-import Badge from "@/components/fundations/elements/Badge";
-import Button from "@/components/fundations/elements/Button";
-import Input from "@/components/fundations/elements/Input";
+import Link from "next/link";
+import { Toggle } from "@base-ui/react/toggle";
+import { Badge } from "@/components/glaze/ui/badge";
+import { Button } from "@/components/glaze/ui/button";
+import { Chip, ChipGroup } from "@/components/glaze/ui/chip";
+import { Input } from "@/components/glaze/ui/input";
+import { Check, Icon } from "@/components/glaze/icon";
 import { ratio } from "@/components/dashboard/Grid";
 import { learnedChips, rank } from "@/components/dashboard/forYou";
 import type { Profile } from "@/components/dashboard/profile";
 import type { DashPost } from "@/components/dashboard/types";
 import { categoriesWithPosts, inCategory } from "@/lib/categories";
 import { cx } from "@/lib/cx";
-import { fontWeights } from "@/lib/font-weight";
 
-export const semibold = { fontVariationSettings: fontWeights.semibold };
-
-// The hairline round a picture, drawn over it so the image can't cover it (as CardMedia does);
-// `picked` thickens it into a 2px ring of the ink
+// The faint line round a picture, drawn over it so the image can't cover it; `picked` thickens
+// it into a 2px line of the ink. The picture's own corner is inherited
 export const edge =
-  "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:outline-1 after:-outline-offset-1 after:outline-border after:transition-[outline-color,outline-width] after:duration-80";
-export const picked = "after:outline-2 after:-outline-offset-2 after:outline-foreground";
+  "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:outline-1 after:-outline-offset-1 after:outline-line-faint after:transition-[outline-color,outline-width] after:duration-(--dur-state) after:ease-out";
+export const picked = "after:outline-2 after:-outline-offset-2 after:outline-ink";
 
 // The answers while they're being made: the profile without the time it was finished
 export type Draft = Omit<Profile, "onboardedAt" | "editor">;
@@ -56,10 +58,10 @@ export function categoriesOf(posts: DashPost[]): Category[] {
 export function Heading({ ref, id, title, sub, align = "center" }: { ref?: Ref<HTMLHeadingElement>; id?: string; title: string; sub?: string; align?: "center" | "left" }) {
   return (
     <div className={cx("text-balance", align === "center" && "text-center")}>
-      <h1 ref={ref} id={id} tabIndex={-1} className="font-display text-display font-light text-foreground outline-none">
+      <h1 ref={ref} id={id} tabIndex={-1} className="type-title text-text-1">
         {title}
       </h1>
-      {sub && <p className="mt-2 text-subtitle text-muted-foreground">{sub}</p>}
+      {sub && <p className="mt-2 type-body text-text-2">{sub}</p>}
     </div>
   );
 }
@@ -69,95 +71,90 @@ export function Progress({ step, total, className }: { step: number; total: numb
   return (
     <div role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={step + 1} aria-label={`Step ${step + 1} of ${total}`} className={cx("flex gap-1.5", className)}>
       {Array.from({ length: total }, (_, i) => (
-        <span key={i} className={cx("h-1 flex-1 rounded-full transition-colors duration-80", i <= step ? "bg-foreground" : "bg-border")} />
+        <span key={i} className={cx("h-1 flex-1 rounded-full transition-colors duration-(--dur-state) ease-out", i <= step ? "bg-ink" : "bg-line")} />
       ))}
     </div>
   );
 }
 
-// A toggle chip: a pressed Button, the ink while it's on and the hairline while it's off
-export function Chip({ on, onClick, children, className }: { on: boolean; onClick: () => void; children: ReactNode; className?: string }) {
-  return (
-    <Button variant={on ? "default" : "secondary"} aria-pressed={on} onClick={onClick} className={className}>
-      {children}
-    </Button>
-  );
-}
-
 // The name, then what they do as one tap. The name takes focus on arrival, except on touch
 // (the keyboard would jump up); Enter in it submits the step. The step's question is its visible
-// label, so the field is named by aria-label rather than a Field. The roles are chips rather than
-// a Segmented: six of them, and a second tap clears the choice
+// label, so the field is named by aria-label rather than a Field. The roles are filter Chips
+// rather than a SegmentedControl: six of them, and a second tap clears the choice
 export function NameRole({ value, onChange }: { value: Draft; onChange: (patch: Partial<Draft>) => void }) {
-  const ref = useRef<HTMLInputElement>(null);
+  // Glaze's Input takes no ref, so the field is found inside its box
+  const box = useRef<HTMLDivElement>(null);
   const groupLabel = useId();
   useEffect(() => {
-    if (!matchMedia("(pointer: coarse)").matches) ref.current?.focus();
+    if (!matchMedia("(pointer: coarse)").matches) box.current?.querySelector("input")?.focus();
   }, []);
   return (
     <div className="space-y-5">
-      <Input
-        ref={ref}
-        name="name"
-        aria-label="Your name"
-        value={value.name}
-        onChange={(e) => onChange({ name: e.target.value })}
-        placeholder="Your name"
-        autoComplete="given-name"
-        maxLength={60}
-      />
+      <div ref={box}>
+        <Input
+          name="name"
+          aria-label="Your name"
+          value={value.name}
+          onValueChange={(name) => onChange({ name })}
+          placeholder="Your name"
+          autoComplete="given-name"
+          maxLength={60}
+        />
+      </div>
       <div>
-        <p id={groupLabel} className="mb-2 text-caption text-muted-foreground" style={semibold}>
+        <p id={groupLabel} className="mb-2 type-label-sm text-text-2">
           And you’re a…
         </p>
-        <div role="group" aria-labelledby={groupLabel} className="flex flex-wrap gap-1.5">
+        <ChipGroup role="group" aria-labelledby={groupLabel}>
           {OCCUPATIONS.map((occupation) => (
-            <Chip key={occupation} on={value.occupation === occupation} onClick={() => onChange({ occupation: value.occupation === occupation ? null : occupation })}>
+            <Chip
+              key={occupation}
+              pressed={value.occupation === occupation}
+              onPressedChange={() => onChange({ occupation: value.occupation === occupation ? null : occupation })}
+            >
               {occupation}
             </Chip>
           ))}
-        </div>
+        </ChipGroup>
       </div>
     </div>
   );
 }
 
-// The check that marks a pick: the ink, with the page's own colour for the mark
+// The check that marks a pick: the ink, with the inverse text for the mark
 export const Tick = ({ className }: { className?: string }) => (
-  <span className={cx("flex size-5 items-center justify-center rounded-full bg-foreground text-background shadow-sm", className)}>
-    <Check className="size-3" />
+  <span className={cx("flex size-5 items-center justify-center rounded-full bg-ink text-text-inverse", className)}>
+    <Icon icon={Check} size={12} />
   </span>
 );
 
 // The brands as their marks, with a check over a picked one. A tile of a mark and a two-line
-// name, so a plain pressed button rather than a Button, on the row look (12px corners, the
-// hover tint, the one focus ring)
+// name: a toggle on the row look (the panel corner, the hover wash, the press)
 export function BrandGrid({ brands, value, onChange, className }: { brands: Brand[]; value: string[]; onChange: (next: string[]) => void; className?: string }) {
   return (
     <div className={cx("grid gap-1", className)}>
       {brands.map((b) => {
         const on = value.includes(b.slug);
         return (
-          <button
+          <Toggle
             key={b.slug}
-            type="button"
-            aria-pressed={on}
-            onClick={() => onChange(toggle(value, b.slug))}
-            className="group flex min-w-0 flex-col items-center gap-1.5 rounded-[12px] p-2 transition-[background-color,scale] duration-80 hover:bg-hover focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)] motion-safe:active:scale-[0.96]"
+            pressed={on}
+            onPressedChange={() => onChange(toggle(value, b.slug))}
+            className="group flex min-w-0 flex-col items-center gap-1.5 rounded-panel p-2 transition-[background-color,scale] duration-(--dur-state) ease-out hover:bg-hover motion-safe:active:scale-(--scale-press)"
           >
-            <span className={cx("relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted", edge, on && picked)}>
+            <span className={cx("relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-field", edge, on && picked)}>
               {b.logo && <Image src={b.logo} alt="" fill sizes="44px" className="object-cover" />}
-              {/* A scrim over the logo in the ink, with the check in the page's colour */}
+              {/* A scrim over the logo in the ink, with the check in the inverse text */}
               {on && (
-                <span className="absolute inset-0 flex items-center justify-center bg-foreground/60 text-background">
-                  <Check size="sm" />
+                <span className="absolute inset-0 flex items-center justify-center bg-ink/60 text-text-inverse">
+                  <Icon icon={Check} />
                 </span>
               )}
             </span>
-            <span className={cx("line-clamp-2 w-full text-center text-caption", on ? "text-foreground" : "text-muted-foreground")} style={on ? semibold : undefined}>
+            <span className={cx("line-clamp-2 w-full text-center type-caption", on ? "font-medium text-text-1" : "text-text-2")}>
               {b.name}
             </span>
-          </button>
+          </Toggle>
         );
       })}
     </div>
@@ -173,23 +170,22 @@ export function TasteGrid({ posts, value, onChange, max, className }: { posts: D
         const on = value.includes(p.shortCode);
         const full = !on && value.length >= max;
         return (
-          <button
+          <Toggle
             key={p.shortCode}
-            type="button"
-            aria-pressed={on}
+            pressed={on}
             aria-label={p.hook}
             disabled={full}
-            onClick={() => onChange(toggle(value, p.shortCode))}
+            onPressedChange={() => onChange(toggle(value, p.shortCode))}
             className={cx(
-              "relative block aspect-4/5 w-full overflow-hidden rounded-[12px] bg-muted shadow-surface-1 transition-[opacity,scale] duration-150 ease-out-quint focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)] motion-safe:active:scale-[0.97]",
+              "relative block aspect-4/5 w-full overflow-hidden rounded-panel bg-field transition-[opacity,scale] duration-(--dur-slide) ease-out motion-safe:active:scale-(--scale-press)",
               edge,
               on && picked,
               full && "opacity-40",
             )}
           >
             <Image src={p.cover} alt="" fill sizes="200px" className="object-cover" />
-            {on && <Tick className="absolute top-2 right-2 size-6" />}
-          </button>
+            {on && <Tick className="absolute end-2 top-2 size-6" />}
+          </Toggle>
         );
       })}
     </div>
@@ -212,7 +208,11 @@ export function Collage({ posts, className }: { posts: DashPost[]; className?: s
       {columns.map((column, c) => (
         <div key={c} className="flex flex-col gap-3">
           {column.map(({ post, i }) => (
-            <div key={post.shortCode} className={cx("welcome-rise relative overflow-hidden rounded-[12px] bg-muted shadow-surface-1", edge)} style={{ aspectRatio: ratio(post), animationDelay: `${i * 30}ms` }}>
+            <div
+              key={post.shortCode}
+              className={cx("welcome-rise relative aspect-(--ratio) overflow-hidden rounded-panel bg-field [animation-delay:var(--delay)]", edge)}
+              style={{ "--ratio": ratio(post), "--delay": `${i * 30}ms` } as CSSProperties}
+            >
               <Image src={post.cover} alt="" fill sizes="240px" className="object-cover" />
             </div>
           ))}
@@ -242,8 +242,8 @@ export function Ring({ value, max, className }: { value: number; max: number; cl
   const c = 2 * Math.PI * r;
   return (
     <svg viewBox="0 0 28 28" aria-hidden="true" className={cx("size-7 -rotate-90", className)}>
-      <circle cx="14" cy="14" r={r} fill="none" strokeWidth="3" className="stroke-border" />
-      <circle cx="14" cy="14" r={r} fill="none" strokeWidth="3" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(1, value / max))} className="stroke-foreground transition-[stroke-dashoffset] duration-300 ease-out-quint motion-reduce:transition-none" />
+      <circle cx="14" cy="14" r={r} fill="none" strokeWidth="3" className="stroke-line" />
+      <circle cx="14" cy="14" r={r} fill="none" strokeWidth="3" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(1, value / max))} className="stroke-ink transition-[stroke-dashoffset] duration-(--dur-overlay) ease-out motion-reduce:transition-none" />
     </svg>
   );
 }
@@ -256,17 +256,23 @@ export function Done({ posts, draft, headingRef }: { posts: DashPost[]; draft: D
     <div className="welcome-rise flex flex-col items-center text-center">
       <div className="mb-8 flex h-32 items-start justify-center" aria-hidden="true">
         {top.map((p, i) => (
+          // Fanned: each card's tilt, drop and delay come from its place, through custom properties.
+          // The cards are a drawing that lifts off the page, so they take Fluid Functionalism's
+          // surface pair
           <span
             key={p.shortCode}
-            className={cx("welcome-rise relative -mx-2 aspect-4/5 w-16 overflow-hidden rounded-[12px] bg-muted shadow-xl sm:w-20", edge)}
-            style={{ rotate: `${(i - 2.5) * 7}deg`, translate: `0 ${Math.abs(i - 2.5) * 5}px`, animationDelay: `${i * 60}ms` }}
+            className={cx(
+              "welcome-rise relative -mx-2 aspect-4/5 w-16 rotate-(--tilt) translate-y-(--drop) overflow-hidden rounded-panel bg-surface-6 shadow-surface-6 [animation-delay:var(--delay)] sm:w-20",
+              edge,
+            )}
+            style={{ "--tilt": `${(i - 2.5) * 7}deg`, "--drop": `${Math.abs(i - 2.5) * 5}px`, "--delay": `${i * 60}ms` } as CSSProperties}
           >
             <Image src={p.cover} alt="" fill sizes="80px" className="object-cover" />
           </span>
         ))}
       </div>
       <Heading ref={headingRef} title={`${who ? `${who}, your` : "Your"} For you is ready.`} sub={`${posts.length} posts, the ones for you first.`} />
-      <Button isLink href="/dashboard" size="base" variant="default" className="mt-8 w-fit">
+      <Button render={<Link href="/dashboard" />} nativeButton={false} size="lg" className="mt-8 w-fit">
         Open For you
       </Button>
     </div>
