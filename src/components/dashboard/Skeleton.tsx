@@ -58,12 +58,12 @@ export function HeaderSkeleton() {
   );
 }
 
-// PostView's frame: the stage beside a 26rem card, the stage the window less the bar, the 4:5 cover
-// as tall as the stage allows
+// PostView's frame, the feed's: a 92px bar, 24px gutters from sm, the stage beside a 26rem card, the
+// stage the window less the bar and its gaps, the 4:5 cover as tall as the stage allows
 const POST_FRAME = {
   "--columns": "minmax(0, 1fr) 26rem",
-  "--stage-h": "calc(100dvh - 10rem)",
-  "--cover-max": "min(100%, calc((100dvh - 14rem) * 0.8))",
+  "--stage-h": "calc(100dvh - 7.25rem)",
+  "--cover-max": "min(100%, calc((100dvh - 11.25rem) * 0.8))",
 } as CSSProperties;
 
 // A post on its way, in the shape PostView opens in (the "Card" page, 2026-10-23): the app bar,
@@ -71,18 +71,18 @@ const POST_FRAME = {
 export function PostSkeleton() {
   return (
     <div role="status" aria-label="Loading post" className="fixed inset-0 z-(--z-overlay) overflow-hidden bg-page">
-      <div aria-hidden="true" className="grid h-14 grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-8">
+      <div aria-hidden="true" className="grid h-23 grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-6">
         <div>
-          <Block className="h-(--control) w-20 rounded-pill" />
+          <Block className="h-(--control-lg) w-28 rounded-pill" />
         </div>
         <Block className="h-6 w-24 rounded-pill" />
         <div className="flex items-center justify-end gap-1.5">
-          <Block className="size-(--control) rounded-pill" />
-          <Block className="size-(--control) rounded-pill" />
-          <Block className="size-(--control) rounded-pill" />
+          <Block className="size-(--control-lg) rounded-pill" />
+          <Block className="size-(--control-lg) rounded-pill" />
+          <Block className="size-(--control-lg) rounded-pill" />
         </div>
       </div>
-      <div aria-hidden="true" className="mx-auto grid max-w-384 grid-cols-1 gap-6 px-4 pt-2 sm:px-8 lg:grid-cols-(--columns) lg:gap-10 lg:pt-4" style={POST_FRAME}>
+      <div aria-hidden="true" className="grid grid-cols-1 gap-6 px-4 pt-2 sm:px-6 lg:grid-cols-(--columns) lg:gap-10" style={POST_FRAME}>
         <div className="flex items-center justify-center rounded-(--radius-float) bg-shell p-4 sm:p-8 lg:h-(--stage-h)">
           <Block className="aspect-4/5 h-full max-h-full w-full max-w-(--cover-max) rounded-(--radius-nested)" />
         </div>

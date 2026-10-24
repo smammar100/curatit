@@ -1,15 +1,15 @@
 "use client";
 
 // Discover's row of categories above the grid, after Cosmos's Explore: All, then each of the
-// library's categories as an icon and its name, with only the one that's on pressed, tinted with
-// its category's hue (the swatch hue the homepage and the search panel use; All takes Glaze's
-// pressed wash). Only categories with posts are listed, and a post counts in its brand's main
+// library's categories as an icon and its name, each in its category's hue (the swatch hue the
+// homepage and the search panel use), the one that's on filled with it (All takes Glaze's pressed
+// wash). Only categories with posts are listed, and a post counts in its brand's main
 // category and in its extra tags (lib/categories). When the row is wider than the window it
 // scrolls sideways, and the edge with more beyond it fades out, only while there is more, so the
 // last category is never left faded.
 //
 // Since 2026-10-24 each is Glaze's Chip, a toggle (pressing the one that's on goes back to All,
-// which a tab can't do). The one that's on keeps its category's hue, the palette's recorded
+// which a tab can't do). Every chip keeps its category's hue, the palette's recorded
 // exception, through light-dark() in custom properties the chip's classes read.
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Chip } from "@/components/glaze/ui/chip";
@@ -19,13 +19,22 @@ import { categoriesWithPosts } from "@/lib/categories";
 import type { DashPost } from "./types";
 
 
-// The selected category's chip: a pale tint of its hue with the icon and name in a deep shade of
-// it (6.3:1 or more in both themes)
-const TINT = "data-pressed:border-transparent data-pressed:bg-(--tint) data-pressed:text-(--tint-ink) data-pressed:[&_svg]:text-(--tint-ink)";
+// Every category's chip in its own colour (2026-10-24, at the owner's request): at rest a pale tint of
+// its hue with the icon and name in a deep shade of it (6:1 or more in both themes), a step deeper
+// under the pointer; the one that's on filled with the deep shade, its words in near-white (in near-black
+// on the dark site)
+const TINT = [
+  "border-transparent bg-(--tint) text-(--tint-ink) [&_svg]:text-(--tint-ink)",
+  "hover:not-data-disabled:border-transparent hover:not-data-disabled:bg-(--tint-hover)",
+  "data-pressed:border-transparent data-pressed:bg-(--tint-ink) data-pressed:text-(--tint-on) data-pressed:[&_svg]:text-(--tint-on)",
+  "hover:not-data-disabled:data-pressed:bg-(--tint-ink)",
+].join(" ");
 const tint = (hue: number) =>
   ({
-    "--tint": `light-dark(oklch(0.93 0.04 ${hue}), oklch(0.32 0.05 ${hue}))`,
+    "--tint": `light-dark(oklch(0.95 0.035 ${hue}), oklch(0.27 0.04 ${hue}))`,
+    "--tint-hover": `light-dark(oklch(0.91 0.05 ${hue}), oklch(0.32 0.05 ${hue}))`,
     "--tint-ink": `light-dark(oklch(0.42 0.09 ${hue}), oklch(0.86 0.08 ${hue}))`,
+    "--tint-on": `light-dark(oklch(0.99 0.01 ${hue}), oklch(0.2 0.03 ${hue}))`,
   }) as CSSProperties;
 
 export default function CategoryBar({ posts, value, onChange }: { posts: DashPost[]; value: string | null; onChange: (category: string | null) => void }) {

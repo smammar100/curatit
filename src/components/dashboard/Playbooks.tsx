@@ -1,7 +1,7 @@
 "use client";
 
-// The top of For you (2026-10-20): the library's playbooks, then the wall of posts underneath
-// (Feed). The breakdowns file every post under a type of post (Relatable humour, Community
+// The top of Discover (on For you from 2026-10-20, moved to Discover on 2026-10-24 at the owner's
+// request): the library's playbooks, then the categories and the wall of posts underneath (Feed). The breakdowns file every post under a type of post (Relatable humour, Community
 // prompt, Collaboration…); this shows the types as a sideways row of collection cards (three
 // covers in one strip, the name, how many posts from how many brands). Picking one searches for
 // it (typeNamed in search.ts), and the grid shows the result. Laid out after Cosmos's Explore (its

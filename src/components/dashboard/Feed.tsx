@@ -3,9 +3,9 @@
 // The dashboard: the library as a feed, after Cosmos's signed-in home (chosen from a three-way
 // prototype on 2026-10-10). The header's tabs pick the view, its search filters the posts, and
 // the grid shows them. For you is the library ranked on the person's onboarding answers
-// (forYou.ts), under the Playbooks (2026-10-20) until something is typed; someone whose
-// profile has none yet is sent to /dashboard/welcome first. Discover
-// adds a row of categories to browse the library by. ?view=
+// (forYou.ts); someone whose profile has none yet is sent to /dashboard/welcome first. Discover
+// opens on the Playbooks (on For you from 2026-10-20, moved here on 2026-10-24) while nothing is
+// typed and every category is showing, then a row of categories to browse the library by. ?view=
 // discover|saved, ?category= (on Discover) and ?q= open the feed on a view, category or
 // search, which is how other dashboard pages send you back here.
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
@@ -113,7 +113,6 @@ export default function Feed() {
   }, [list, saved, query, view, category, profile, search.order]);
   // For you waits for the answers it ranks on, so it never shows one order and then another, and
   // keeps waiting while a first visit is on its way to the welcome flow
-  const rows = view === "For you" && !query.trim();
   const waiting = (view === "Saved" && status === "loading") || (view === "For you" && (profileStatus === "loading" || (onFeed && unset)));
 
   return (
@@ -124,11 +123,9 @@ export default function Feed() {
       </Suspense>
       <Header view={view} onView={setView} query={query} onQuery={setQuery} />
       <main className="px-4 pt-2 pb-24 sm:px-6">
-        {view === "Discover" && <CategoryBar posts={list} value={category} onChange={setCategory} />}
-        {/* The Saved view opens on the boards, then every saved post */}
-        {view === "Saved" && !query.trim() && status !== "loading" && <BoardList />}
-        {/* For you with nothing typed opens on the playbooks, the wall of posts under them */}
-        {rows && (
+        {/* Discover with nothing typed and every category opens on the playbooks (moved here from For
+            you on 2026-10-24, at the owner's request), then the categories and the wall */}
+        {view === "Discover" && !query.trim() && !category && (
           <Playbooks
             posts={list}
             onPick={(next) => {
@@ -137,6 +134,9 @@ export default function Feed() {
             }}
           />
         )}
+        {view === "Discover" && <CategoryBar posts={list} value={category} onChange={setCategory} />}
+        {/* The Saved view opens on the boards, then every saved post */}
+        {view === "Saved" && !query.trim() && status !== "loading" && <BoardList />}
         {search.result && !search.result.error && <p role="status" className="mb-5 type-body-sm text-text-2">
           {shown.length} {shown.length === 1 ? "post" : "posts"}{search.result.labels.length ? ` · ${search.result.labels.join(" · ")}` : ""}
           {search.result.capped ? " · First 500 matches. Narrow your search to see more." : ""}
@@ -163,7 +163,6 @@ export default function Feed() {
         ) : shown.length ? (
           <>
             {view === "Saved" && !query.trim() && boards.length > 0 && <h2 className="mb-5 type-heading text-text-1">All saved posts</h2>}
-            {rows && <h2 className="mb-5 type-heading text-text-1">Picked for you</h2>}
             <Grid posts={shown} />
           </>
         ) : (
