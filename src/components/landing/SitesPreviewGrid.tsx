@@ -2,7 +2,7 @@
 
 import { Fragment, useState, type ReactNode } from "react";
 // Fundation
-import Button from "@/components/fundations/elements/Button";
+import { Button } from "@/components/glaze/ui/button";
 
 // Shows the first few cards and reveals the rest in steps; the sponsor card sits after the third card.
 export default function SitesPreviewGrid({
@@ -29,7 +29,7 @@ export default function SitesPreviewGrid({
         <div className="flex justify-center mt-12">
           <Button
             type="button"
-            variant="muted"
+            variant="secondary"
             size="sm"
             onClick={() => setVisible(visible + initialVisible)}
           >

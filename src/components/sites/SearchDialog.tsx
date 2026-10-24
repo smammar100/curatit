@@ -1,25 +1,23 @@
 "use client";
 
-// The /sites directory's search (Fuse.js over the sites' titles and taglines). Since 2026-10-23
-// it is the system's Dialog holding a SearchField: a floating bar at the foot of the page (a
-// raised surface holding one muted Button with ⌘K after its words) opens it, Cmd/Ctrl+K opens it
-// from anywhere, the dialog focuses the field, keeps the page behind it still, closes on Escape
-// (SearchField takes the first Escape to clear typed text) and puts focus back on the bar. Each
-// result is a link row on the hover tint; nothing found is an EmptyState. Closing clears the query.
+// The /sites directory's search (Fuse.js over the sites' titles and taglines). Since 2026-10-24 it
+// is Glaze's: a floating bar at the foot of the page (a floating surface on the ladder holding one
+// secondary Button with the ⌘K hint after its words) opens a Dialog holding a search Input; Cmd/Ctrl+K
+// opens it from anywhere, the dialog focuses the field, keeps the page behind it still, closes on
+// Escape (the search field takes the first Escape to clear typed text) and puts focus back on the
+// bar. Each result is an Item whose ItemLink covers the row; nothing found is an Empty that writes
+// the query back. Closing clears the query.
 import Fuse from "fuse.js";
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-// Fundations
-import Button from "@/components/fundations/elements/Button";
-import Kbd from "@/components/fundations/elements/Kbd";
-import Dialog from "@/components/fundations/molecules/Dialog";
-import EmptyState from "@/components/fundations/molecules/EmptyState";
-import SearchField from "@/components/fundations/molecules/SearchField";
-import { fontWeights } from "@/lib/font-weight";
+// Glaze
+import { Button } from "@/components/glaze/ui/button";
+import { Dialog, DialogBody, DialogContent, DialogHeader, DialogTitle } from "@/components/glaze/ui/dialog";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/glaze/ui/empty-state";
+import { Input } from "@/components/glaze/ui/input";
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemLink, ItemTitle } from "@/components/glaze/ui/item";
+import { Kbd } from "@/components/glaze/ui/kbd";
 
 type SearchItem = { title: string; tagline: string; id: string };
-
-const semibold = { fontVariationSettings: fontWeights.semibold };
 
 export default function SearchDialog({ items }: { items: SearchItem[] }) {
   const [open, setOpen] = useState(false);
@@ -59,41 +57,51 @@ export default function SearchDialog({ items }: { items: SearchItem[] }) {
 
   return (
     <>
-      {/* A floating bar over the page: a raised surface, so the covers scrolling under it never
+      {/* A floating bar over the page: a lifted surface, so the covers scrolling under it never
           show through */}
-      <div className="fixed bottom-6 left-1/2 z-50 w-[calc(100%-2rem)] max-w-xs -translate-x-1/2 rounded-[24px] bg-surface-3 p-2 shadow-surface-4">
-        <Button
-          variant="muted"
-          size="base"
-          className="w-full"
-          rightIcon={<Kbd size="sm" keys={["cmd", "k"]} hideOnTouch />}
-          onClick={() => setOpen(true)}
-        >
+      <div className="fixed inset-x-4 bottom-6 z-(--z-sticky) mx-auto max-w-xs rounded-pill bg-surface-6 p-1 shadow-surface-6">
+        <Button variant="secondary" className="w-full" aria-keyshortcuts="Meta+K Control+K" onClick={() => setOpen(true)}>
           Search for tools
+          <Kbd keys="mod+k" />
         </Button>
       </div>
-      <Dialog open={open} onOpenChange={change} title="Search" titleVariant="quiet" size="md">
-        <SearchField aria-label="Search sites" placeholder="Search posts..." value={query} onValueChange={setQuery} />
-        {trimmed && (
-          <div className="mt-2 space-y-1">
-            {results.length === 0 && (
-              <EmptyState size="sm" context="site" title={<>There&apos;s nothing here,...</>} />
+      <Dialog open={open} onOpenChange={change}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Search</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <Input mode="search" aria-label="Search sites" placeholder="Search posts..." value={query} onValueChange={setQuery} />
+            {trimmed && (
+              <div className="mt-2">
+                {results.length === 0 ? (
+                  <Empty reason="no-results" variant="plain" size="sm">
+                    <EmptyHeader>
+                      <EmptyTitle>
+                        Nothing matches <code>{trimmed}</code>
+                      </EmptyTitle>
+                    </EmptyHeader>
+                  </Empty>
+                ) : (
+                  <ItemGroup variant="plain" aria-label="Results">
+                    {results.map(({ item }) => (
+                      <Item key={item.id}>
+                        <ItemContent>
+                          <ItemTitle>
+                            <ItemLink href={`/sites/site/${item.id}`} onClick={() => change(false)}>
+                              {item.title}
+                            </ItemLink>
+                          </ItemTitle>
+                          <ItemDescription>{item.tagline}</ItemDescription>
+                        </ItemContent>
+                      </Item>
+                    ))}
+                  </ItemGroup>
+                )}
+              </div>
             )}
-            {results.map(({ item }) => (
-              <Link
-                key={item.id}
-                href={`/sites/site/${item.id}`}
-                onClick={() => change(false)}
-                className="block rounded-[12px] px-4 py-3 transition-colors duration-80 hover:bg-hover focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]"
-              >
-                <p className="text-body-base text-foreground" style={semibold}>
-                  {item.title}
-                </p>
-                <p className="text-body-sm text-muted-foreground">{item.tagline}</p>
-              </Link>
-            ))}
-          </div>
-        )}
+          </DialogBody>
+        </DialogContent>
       </Dialog>
     </>
   );

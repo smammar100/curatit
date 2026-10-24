@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 import Text from "@/components/fundations/elements/Text";
-import Card from "@/components/fundations/molecules/Card";
+import { Badge } from "@/components/glaze/ui/badge";
+import { Panel } from "@/components/glaze/ui/panel";
 import { Lifeline, type LifelineEvent, type LifelineMarker } from "@/components/lifeline";
 import { CHANGELOG, EARLIER, ROADMAP, type RoadmapStage } from "@/content/roadmap";
-import { fontWeights } from "@/lib/font-weight";
 import { getPublishedPosts } from "@/lib/posts";
 
 export const metadata: Metadata = {
@@ -15,8 +15,6 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 const REPO = "https://github.com/smammar100/curatit/commit/";
-
-const semibold = { fontVariationSettings: fontWeights.semibold };
 
 const STAGES: { stage: RoadmapStage; when: string; note: string }[] = [
   { stage: "Now", when: "In progress", note: "Being built or rolled out" },
@@ -41,9 +39,10 @@ const dateRange = (from: string, to: string) =>
 // carries the whole story on one rail: the days before the newest in a few lines, then each day
 // since in full, every update linked to the commit behind it, then Now, Next and Later. Below it, what's
 // coming in detail. Both come from src/content/roadmap.ts, written from this repo's history (npm
-// run changelog:draft lists the commits since the newest day). Since 2026-10-23 the three stage
-// columns are the system's Cards on the grey mat, each item a white tile on the surface ladder's
-// first step, the words on the tokens at the library's semibold where they were medium.
+// run changelog:draft lists the commits since the newest day). Since 2026-10-24 on Glaze: each
+// stage column is a heading over one Panel of rows split by hairlines (no grey mat, no tile per
+// item), each item's area a Badge after its title rather than a label above it, and the fireworks
+// entries lose their emoji (Glaze has none in copy; the fireworks still go off).
 export default async function RoadmapPage() {
   const posts = await getPublishedPosts();
   const updates = CHANGELOG.reduce((n, day) => n + day.entries.length, 0);
@@ -61,7 +60,7 @@ export default async function RoadmapPage() {
     : null;
 
   const update = (title: string, commit?: string): LifelineEvent => {
-    if (!commit) return { text: `${title} 🎆`, effect: "fireworks" };
+    if (!commit) return { text: title, effect: "fireworks" };
     const text = [{ type: "link" as const, value: title, href: `${REPO}${commit}` }];
     const post = posts.find((candidate) => candidate.shortCode === PICTURED[title]);
     return post ? { text, image: { src: post.images[0], alt: `${post.brand.name} on Instagram` } } : text;
@@ -99,7 +98,7 @@ export default async function RoadmapPage() {
         // An item to celebrate (the closed beta launch) sets off the fireworks, like this page's own
         // entry; More brands shows the library's brand marks under it
         events: ROADMAP.filter((item) => item.stage === stage).map((item): LifelineEvent =>
-          item.celebrate ? { text: `${item.title} 🎆`, effect: "fireworks" } : item.brands && brandGallery ? { text: item.title, gallery: brandGallery } : item.title,
+          item.celebrate ? { text: item.title, effect: "fireworks" } : item.brands && brandGallery ? { text: item.title, gallery: brandGallery } : item.title,
         ),
       }),
     ),
@@ -110,14 +109,14 @@ export default async function RoadmapPage() {
       <section>
         <Wrapper variant="standard" className="page-start">
           <div className="max-w-2xl">
-            <Text tag="h1" variant="h1" className="text-balance text-foreground">
+            <Text tag="h1" variant="h1" className="text-balance text-text-1">
               Roadmap
             </Text>
-            <Text className="mt-6 text-pretty text-muted-foreground">
+            <Text className="mt-6 text-pretty text-text-2">
               What&apos;s been built, what&apos;s being built and what&apos;s next, on one line. Curatit is built in the open: every update links to the
               change that made it.
             </Text>
-            <Text variant="bodySM" className="mt-4 text-muted-foreground">
+            <Text variant="bodySM" className="mt-4 text-text-2">
               {updates} updates across {days.length} days of building. Scroll over the line to travel along it.
             </Text>
           </div>
@@ -126,7 +125,7 @@ export default async function RoadmapPage() {
 
       <section aria-label="Curatit's lifeline">
         <Wrapper variant="standard" className="section-y">
-          <div className="h-[580px] w-full overflow-hidden">
+          <div className="h-145 w-full overflow-hidden">
             <Lifeline mode="embed" markers={markers} birthYear={0} title="Curatit's lifeline" labels={{ age: "Stage", year: "When" }} className="h-full" />
           </div>
         </Wrapper>
@@ -134,37 +133,31 @@ export default async function RoadmapPage() {
 
       <section aria-labelledby="coming">
         <Wrapper variant="standard" className="section-y">
-          <Text tag="h2" id="coming" variant="h3" className="text-foreground">
+          <Text tag="h2" id="coming" variant="h3" className="text-text-1">
             What&apos;s coming
           </Text>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <div className="mt-8 grid gap-8 md:grid-cols-3 md:gap-4">
             {STAGES.map(({ stage, note }) => (
               <section key={stage} aria-labelledby={`stage-${stage}`}>
-                <Card variant="mat" padding="lg" className="h-full">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <Text tag="h3" id={`stage-${stage}`} className="text-foreground" style={semibold}>
-                      {stage}
-                    </Text>
-                    <Text variant="captionLG" className="text-muted-foreground">
-                      {note}
-                    </Text>
-                  </div>
-                  <ul className="mt-5 space-y-3">
+                <div className="flex items-baseline justify-between gap-3">
+                  <h3 id={`stage-${stage}`} className="type-heading text-text-1">
+                    {stage}
+                  </h3>
+                  <p className="type-caption text-text-2">{note}</p>
+                </div>
+                <Panel padding="none" className="mt-3">
+                  <ul>
                     {ROADMAP.filter((item) => item.stage === stage).map((item) => (
-                      <li key={item.title} className="rounded-[12px] bg-surface-3 p-4 shadow-surface-1">
-                        <Text variant="captionLG" className="text-muted-foreground" style={semibold}>
-                          {item.area}
-                        </Text>
-                        <Text variant="bodySM" className="mt-1 text-foreground" style={semibold}>
-                          {item.title}
-                        </Text>
-                        <Text variant="bodySM" className="mt-1 text-pretty text-muted-foreground">
-                          {item.detail}
-                        </Text>
+                      <li key={item.title} className="rule-row p-4">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <p className="type-label text-text-1">{item.title}</p>
+                          <Badge>{item.area}</Badge>
+                        </div>
+                        <p className="mt-1 type-body-sm text-pretty text-text-2">{item.detail}</p>
                       </li>
                     ))}
                   </ul>
-                </Card>
+                </Panel>
               </section>
             ))}
           </div>

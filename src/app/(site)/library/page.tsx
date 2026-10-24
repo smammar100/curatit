@@ -18,10 +18,10 @@ export default function LibraryPage() {
     <section>
       <Wrapper variant="standard" className="page-start">
         <div className="text-balance max-w-3xl mx-auto text-center">
-          <Text tag="h1" variant="h1" className="text-primary-foreground">
+          <Text tag="h1" variant="h1" className="text-text-1">
             The library
           </Text>
-          <Text tag="p" variant="body" className="text-secondary-foreground mt-4 max-w-xl mx-auto">
+          <Text tag="p" variant="body" className="mx-auto mt-4 max-w-xl text-text-2">
             A preview of the library: real brand posts, newest first, each linking back to the original.
             Create an account to search the whole library and read the breakdowns.
           </Text>

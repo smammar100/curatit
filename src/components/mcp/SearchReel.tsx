@@ -9,17 +9,17 @@
 // pointed at or focused, stops in a hidden tab, and under reduced motion shows the first search
 // still. The queries are buttons too, under the row, so anyone can pick one.
 //
-// Since 2026-10-23 the tiles are grey mats with the container corner, the cover inside them the
-// tile corner with the one stroke and the ladder's shadow, the brand's mark a raised tile, and
-// the queries are the system's Buttons (secondary; the chosen one the tinted muted look, with
-// aria-pressed saying which) in a wrapping row.
+// Since 2026-10-24 on Glaze: the tiles are grey mats (the shell colour on the shell corner), the
+// cover inside them on the panel corner with the image hairline, the brand's mark a tile lifted
+// on the surface ladder, and the queries Chips in a wrapping ChipGroup (the one showing pressed,
+// aria-pressed saying which). The caret no longer blinks once the query is typed (Glaze has no
+// blinking cursor): it shows, steady, only while the query types out.
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
-import Button from "@/components/fundations/elements/Button";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Text from "@/components/fundations/elements/Text";
-import SearchSparkle from "@/components/fundations/icons/SearchSparkle";
-import { cx } from "@/lib/cx";
+import { Icon, Search } from "@/components/glaze/icon";
+import { Chip, ChipGroup } from "@/components/glaze/ui/chip";
 import { useReducedMotion } from "@/lib/motion";
 import { useMounted } from "@/lib/useMounted";
 import type { ExampleSearch } from "./searchExamples";
@@ -92,6 +92,7 @@ export default function SearchReel({
 
   if (!search) return null;
 
+
   return (
     <div
       ref={ref}
@@ -100,96 +101,55 @@ export default function SearchReel({
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      {/* The query, typed */}
-      <Text
-        variant="h3"
-        className="flex min-h-12 items-center gap-3 text-foreground"
-        aria-live="off"
-      >
-        <SearchSparkle
-          className="size-6 shrink-0 lg:size-7"
-          aria-hidden="true"
-        />
+      {/* The query, typed, with a steady caret while it types (no blink) */}
+      <Text variant="h3" className="flex min-h-12 items-center gap-3 text-text-1" aria-live="off">
+        <Icon icon={Search} size={24} className="shrink-0" />
         <span className="sr-only">Search: </span>
         <span>{search.query.slice(0, typed)}</span>
-        <span
-          aria-hidden="true"
-          className={cx(
-            "-ml-2 h-[0.9em] w-px bg-foreground",
-            done && "search-reel-caret",
-          )}
-        />
+        {!done && <span aria-hidden="true" className="-ml-2 h-5.5 w-px bg-ink md:h-6.5 lg:h-8" />}
       </Text>
 
       {/* The results: a row that runs off the right edge (the section clips it) */}
-      <ul
-        key={active}
-        aria-label={`Results for “${search.query}”`}
-        className="mt-8 flex gap-4 sm:gap-6"
-      >
+      <ul key={active} aria-label={`Results for “${search.query}”`} className="mt-8 flex gap-4 sm:gap-6">
         {search.results.map((result, i) => (
           <li
             key={result.shortCode}
-            className="search-reel-tile group relative w-60 shrink-0 rounded-[24px] bg-card p-5 sm:w-72 sm:p-6 lg:w-80"
-            style={{ animationDelay: `${i * 70}ms` }}
+            className="search-reel-tile group relative w-60 shrink-0 rounded-shell bg-shell p-5 [animation-delay:var(--delay)] sm:w-72 sm:p-6 lg:w-80"
+            style={{ "--delay": `${i * 70}ms` } as CSSProperties}
           >
             {/* The cover zooms in a touch under the pointer, inside its clipped frame (isolate
                 keeps Safari clipping the rounded corners while it scales) */}
-            <div className="relative isolate aspect-4/5 overflow-hidden rounded-[12px] bg-muted shadow-surface-2 ring-1 ring-border">
+            <div className="relative isolate aspect-4/5 overflow-hidden rounded-panel bg-field ring-1 ring-line-faint">
               {mounted && (
                 <Image
                   src={result.cover}
                   alt=""
                   fill
                   sizes="(min-width: 1024px) 272px, (min-width: 640px) 240px, 200px"
-                  className="object-cover transition-[scale] duration-300 ease-out-quint motion-safe:group-hover:scale-[1.03]"
+                  className="object-cover transition-[scale] duration-(--dur-overlay) ease-out motion-safe:group-hover:scale-103"
                 />
               )}
             </div>
-            {/* The brand's mark on the tile's corner, like an app icon */}
-            <div className="absolute top-3 left-3 size-12 overflow-hidden rounded-[12px] bg-surface-3 shadow-surface-2 sm:size-14">
-              {mounted && result.logo ? (
-                <Image
-                  src={result.logo}
-                  alt=""
-                  fill
-                  sizes="56px"
-                  className="object-cover"
-                />
-              ) : null}
+            {/* The brand's mark on the tile's corner, like an app icon: an illustration's card,
+                lifted on the surface ladder */}
+            <div className="absolute top-3 left-3 size-12 overflow-hidden rounded-panel bg-surface-4 shadow-surface-4 sm:size-14">
+              {mounted && result.logo ? <Image src={result.logo} alt="" fill sizes="56px" className="object-cover" /> : null}
             </div>
-            <a
-              href={result.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="absolute inset-0 rounded-[24px] focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]"
-            >
-              <span className="sr-only">
-                Open this {result.brand} post on Instagram (opens in a new tab)
-              </span>
+            <a href={result.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 rounded-shell">
+              <span className="sr-only">Open this {result.brand} post on Instagram (opens in a new tab)</span>
             </a>
           </li>
         ))}
       </ul>
 
-      {/* Every search as a button, so it can be picked rather than waited for */}
-      <div
-        role="group"
-        aria-label="Example searches"
-        className="mt-6 flex flex-wrap gap-2"
-      >
+      {/* Every search as a chip, the one showing pressed, so it can be picked rather than waited for */}
+      <ChipGroup role="group" aria-label="Example searches" className="mt-6">
         {searches.map((option, i) => (
-          <Button
-            key={option.query}
-            variant={i === active ? "muted" : "secondary"}
-            size="sm"
-            aria-pressed={i === active}
-            onClick={() => choose(i)}
-          >
+          <Chip key={option.query} pressed={i === active} onPressedChange={() => choose(i)}>
             {option.query}
-          </Button>
+          </Chip>
         ))}
-      </div>
+      </ChipGroup>
     </div>
   );
 }

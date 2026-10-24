@@ -1,8 +1,9 @@
+import Link from "next/link";
 // Fundation
 import Text from "@/components/fundations/elements/Text";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 // Components
-import Button from "@/components/fundations/elements/Button";
+import { Button } from "@/components/glaze/ui/button";
 
 export default function SubmitPage() {
   return (
@@ -10,10 +11,10 @@ export default function SubmitPage() {
       <Wrapper variant="standard" className="page-start">
         <div className="mx-auto max-w-xl sm:px-8">
           <div className="text-balance">
-            <Text tag="h1" variant="h1" className="text-primary-foreground">
+            <Text tag="h1" variant="h1" className="text-text-1">
               Submit your site to Curatit
             </Text>
-            <Text tag="p" variant="body" className="mt-2 text-secondary-foreground text-balance">
+            <Text tag="p" variant="body" className="mt-2 text-text-2 text-balance">
               Get your web tool noticed by top develpers and designers and increase their reach!
             </Text>
           </div>
@@ -30,15 +31,15 @@ export default function SubmitPage() {
               not guaranteed.
             </p>
             <div className="flex items-center not-prose gap-2">
-              <Button size="sm" variant="default" className="w-fit" data-modal-open="submit-modal">
+              <Button size="sm" data-modal-open="submit-modal">
                 Submit a site
               </Button>
-              <Button isLink size="sm" variant="accent" href="/pricing" className="w-fit">
+              <Button size="sm" variant="secondary" render={<Link href="/pricing" />} nativeButton={false}>
                 Skip the waiting line for $299
               </Button>
             </div>
             <h4>If not selected</h4>
-            <p>Don’t give up—refine your tool and try again with future projects.</p>
+            <p>Don’t give up. Refine your tool and try again with future projects.</p>
           </Wrapper>
         </div>
       </Wrapper>

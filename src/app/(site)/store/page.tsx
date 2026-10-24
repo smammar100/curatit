@@ -12,10 +12,10 @@ export default function StorePage() {
     <section>
       <Wrapper variant="standard" className="page-start">
         <div className="text-balance max-w-xl text-center mx-auto">
-          <Text tag="h1" variant="h1" className="text-primary-foreground">
+          <Text tag="h1" variant="h1" className="text-text-1">
             Our products
           </Text>
-          <Text tag="p" variant="body" className="text-secondary-foreground mt-4">
+          <Text tag="p" variant="body" className="text-text-2 mt-4">
             Shop my selection of digital products to help you grow your business, and to make your
             life easier and more productive
           </Text>

@@ -1,6 +1,7 @@
+import Link from "next/link";
 // Fundation
 import Text from "@/components/fundations/elements/Text";
-import Button from "@/components/fundations/elements/Button";
+import { Button } from "@/components/glaze/ui/button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 // Content
 import { getCollection } from "@/lib/content";
@@ -12,21 +13,12 @@ export default function BlogTagsPage() {
   return (
     <section>
       <Wrapper variant="narrow" className="page-start">
-        <Text tag="h1" variant="h1" className="text-primary-foreground text-center">
+        <Text tag="h1" variant="h1" className="text-text-1 text-center">
           Explore all tags
         </Text>
         <ul role="list" className="flex flex-col gap-1 mt-12">
           {tags.map((tag) => (
-            <Button
-              key={tag}
-              isLink
-              size="sm"
-              variant="muted"
-              title={tag}
-              aria-label={tag}
-              href={`/blog/tags/${tag}`}
-              className="capitalize"
-            >
+            <Button key={tag} size="sm" variant="secondary" title={tag} aria-label={tag} render={<Link href={`/blog/tags/${tag}`} />} nativeButton={false}>
               {tag}
             </Button>
           ))}

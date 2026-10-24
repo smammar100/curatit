@@ -1,11 +1,14 @@
+import Link from "next/link";
 // Assets
 import Image from "next/image";
 // Fundation
 import Text from "@/components/fundations/elements/Text";
-import Button from "@/components/fundations/elements/Button";
+// Glaze
+import { Button } from "@/components/glaze/ui/button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 // Icons
-import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
+import { ArrowUpRight, Icon } from "@/components/glaze/icon";
+import { DataList, DataListItem, DataListLabel, DataListValue } from "@/components/glaze/ui/data-list";
 // Components
 import BigCard from "@/components/sites/SiteCard";
 import Search from "@/components/sites/Search";
@@ -25,26 +28,18 @@ export default function SitesLayout({
         <Wrapper variant="standard" className="page-start">
           <div className="flex flex-wrap justify-between gap-4">
             <div className="max-w-xl text-balance">
-              <Text tag="h1" variant="h1" className="text-primary-foreground capitalize">
+              <Text tag="h1" variant="h1" className="text-text-1">
                 {frontmatter.title}
               </Text>
-              <Text tag="p" variant="bodySM" className="text-secondary-foreground mt-4">
+              <Text tag="p" variant="bodySM" className="mt-4 text-text-2">
                 {frontmatter.description}
               </Text>
             </div>
-            <Button
-              isLink
-              iconOnly
-              size="xs"
-              variant="default"
-              href={frontmatter.live}
-              aria-label={`Visit ${frontmatter.title}`}
-              title={`Visit ${frontmatter.title}`}
-            >
-              <ArrowUpRight className="size-4" />
+            <Button size="icon" aria-label={`Visit ${frontmatter.title}`} title={`Visit ${frontmatter.title}`} render={<a href={frontmatter.live} />} nativeButton={false}>
+              <Icon icon={ArrowUpRight} />
             </Button>
           </div>
-          <div className="p-8 bg-card rounded-2xl mt-12">
+          <div className="mt-12 rounded-shell bg-shell p-8">
             <Image
               width={1400}
               height={1400}
@@ -52,34 +47,26 @@ export default function SitesLayout({
               src={frontmatter.thumbnail.url}
               alt={frontmatter.thumbnail.alt}
               sizes="100vw"
-              className="size-full aspect-8/5 object-top rounded shadow"
+              className="aspect-8/5 size-full rounded-panel object-cover object-top outline-1 -outline-offset-1 outline-line-faint"
             />
           </div>
-          <dl className="mt-4 divide-y divide-border-default">
+          <DataList className="mt-4">
             {frontmatter.details?.map((details) => (
-              <div key={details.label} className="flex itmes-center gap-2 justify-between py-2">
-                <dt>
-                  <Text tag="h3" variant="bodySM" className="text-primary-foreground font-medium">
-                    {details.label}
-                  </Text>
-                </dt>
-                <dd>
-                  <Text tag="p" variant="bodySM" className="text-secondary-foreground">
-                    {details.value}
-                  </Text>
-                </dd>
-              </div>
+              <DataListItem key={details.label}>
+                <DataListLabel>{details.label}</DataListLabel>
+                <DataListValue>{details.value}</DataListValue>
+              </DataListItem>
             ))}
-          </dl>
+          </DataList>
         </Wrapper>
       </section>
       <section>
         <Wrapper variant="standard" className="section-y">
           <div className="flex flex-wrap gap-4 justify-between items-center">
-            <Text tag="h2" variant="h3" className="text-primary-foreground">
+            <Text tag="h2" variant="h3" className="text-text-1">
               Latest additions
             </Text>
-            <Button isLink size="sm" variant="muted" href="/sites">
+            <Button size="sm" variant="secondary" render={<Link href="/sites" />} nativeButton={false}>
               See all tools
             </Button>
           </div>

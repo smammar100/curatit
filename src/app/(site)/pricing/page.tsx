@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 // Fundation
 import Text from "@/components/fundations/elements/Text";
-import Button from "@/components/fundations/elements/Button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
-import Card from "@/components/fundations/molecules/Card";
+// Glaze
+import { Button } from "@/components/glaze/ui/button";
+import { Card, CardContent } from "@/components/glaze/ui/card";
+import { DataList, DataListItem, DataListLabel, DataListValue } from "@/components/glaze/ui/data-list";
 // Components
 import Faq from "@/components/global/Faq";
 
@@ -11,8 +14,8 @@ import Faq from "@/components/global/Faq";
 // FAQs are gone). There is no billing in the product yet, so this says what's true: one free plan
 // while Curatit is in beta, with everything in it, and paid team plans to come. Don't add prices
 // or limits here until billing exists; the plan below is what an account actually gets. Since
-// 2026-10-23 the plan is the system's raised Card (a white card on the surface ladder with the one
-// hairline), its rows divided by the one stroke, the words on the tokens.
+// 2026-10-24 the plan is Glaze's Card (the grey shell with the white panel), what's included a
+// DataList and Create account the page's one large primary Button.
 
 export const metadata: Metadata = {
   title: { absolute: "Curatit pricing | Plans for social media inspiration" },
@@ -61,74 +64,46 @@ const faqs = [
   },
 ];
 
+
 export default function PricingPage() {
   return (
     <>
       <section>
         <Wrapper variant="standard" className="page-start">
-          <div className="text-balance max-w-3xl mx-auto text-center">
-            <Text tag="h1" variant="h1" className="text-foreground">
+          <div className="mx-auto max-w-3xl text-center text-balance">
+            <Text tag="h1" variant="h1" className="text-text-1">
               Free while we&apos;re in beta.
             </Text>
-            <Text
-              tag="p"
-              variant="body"
-              className="text-muted-foreground mt-4 max-w-xl mx-auto"
-            >
-              The whole library, breakdowns, boards and sharing. Team plans come
-              later.
+            <Text tag="p" variant="body" className="mx-auto mt-4 max-w-xl text-text-2">
+              The whole library, breakdowns, boards and sharing. Team plans come later.
             </Text>
           </div>
           <div className="mx-auto mt-12 max-w-xl">
-            <Card variant="raised" padding="lg" className="flex flex-col sm:p-8">
-              <div className="space-y-3">
-                <Text
-                  tag="p"
-                  variant="h3"
-                  className="text-foreground text-balance"
-                >
-                  Free
+            <Card>
+              <CardContent className="p-6 sm:p-8">
+                <div className="space-y-3">
+                  <Text tag="p" variant="h3" className="text-balance text-text-1">
+                    Free
+                  </Text>
+                  <Text tag="p" variant="bodySM" className="text-text-2">
+                    For anyone making social content for brands. Everything in Curatit, for one person.
+                  </Text>
+                </div>
+                <Text tag="p" variant="h1" className="mt-5 text-text-1">
+                  $0
                 </Text>
-                <Text tag="p" variant="bodySM" className="text-muted-foreground">
-                  For anyone making social content for brands. Everything in
-                  Curatit, for one person.
-                </Text>
-              </div>
-              <Text tag="p" variant="h1" className="text-foreground mt-8">
-                $0
-              </Text>
-              <ul className="divide-y divide-border mt-4">
-                {included.map((item) => (
-                  <li
-                    key={item.label}
-                    className="flex items-start justify-between gap-6 py-3"
-                  >
-                    <Text
-                      tag="span"
-                      variant="body"
-                      className="shrink-0 text-foreground"
-                    >
-                      {item.label}
-                    </Text>
-                    <Text
-                      tag="span"
-                      variant="bodySM"
-                      className="text-right text-muted-foreground"
-                    >
-                      {item.value}
-                    </Text>
-                  </li>
-                ))}
-              </ul>
-              <Button
-                isLink
-                size="base"
-                variant="default"
-                href="/signup"
-                className="w-fit mt-8"
-              >
-                Create account
-              </Button>
+                <DataList aria-label="What's included" className="mt-2">
+                  {included.map((item) => (
+                    <DataListItem key={item.label}>
+                      <DataListLabel>{item.label}</DataListLabel>
+                      <DataListValue>{item.value}</DataListValue>
+                    </DataListItem>
+                  ))}
+                </DataList>
+                <Button size="lg" render={<Link href="/signup" />} nativeButton={false} className="mt-5 self-start">
+                  Create account
+                </Button>
+              </CardContent>
             </Card>
           </div>
         </Wrapper>

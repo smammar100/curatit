@@ -1,6 +1,7 @@
+import Link from "next/link";
 // Fundation
 import Text from "@/components/fundations/elements/Text";
-import Button from "@/components/fundations/elements/Button";
+import { Button } from "@/components/glaze/ui/button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
 // Components
 import StoreCard from "@/components/store/StoreCard";
@@ -13,10 +14,10 @@ export default function StorePreview() {
     <section>
       <Wrapper variant="standard" className="section-y">
         <div className="flex flex-wrap gap-4 justify-between items-center">
-          <Text tag="h2" variant="h3" className="text-primary-foreground">
+          <Text tag="h2" variant="h3" className="text-text-1">
             Our latest templates
           </Text>
-          <Button isLink size="sm" variant="muted" href="/store">
+          <Button size="sm" variant="secondary" render={<Link href="/store" />} nativeButton={false}>
             See them all!
           </Button>
         </div>
