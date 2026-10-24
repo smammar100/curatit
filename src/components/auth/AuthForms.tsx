@@ -2,11 +2,12 @@
 
 // The auth forms, each driven by a server action in src/app/auth/actions.ts. The pages are
 // static, so ?next= (where to go after signing in) and ?error= (a link that failed in
-// /auth/callback) are read from the address once the page has loaded. Since 2026-10-23 every
-// piece is the system's: the fields are AuthField (a Field holding an Input), the server's
-// message a danger Notice, the links TextLinks (inline in the footers and inside notes, quiet for
-// "Forgot password?" at the label's right), the words on the tokens and the library's semibold
-// where they were medium. The validation, the copy and the analytics are as they were.
+// /auth/callback) are read from the address once the page has loaded. Since 2026-10-24 every
+// piece is Glaze's: the fields are AuthField (a Field with an Input and a FieldError), the
+// server's message a fail Alert, the submit a primary Button that pends with its -ing verb, the
+// links TextLinks (inline in the footers and inside notes, quiet for "Forgot password?" at the
+// label's right), the words text-1 and text-2 and the medium weight where they were semibold.
+// The validation, the copy and the analytics are as they were.
 import {
   useActionState,
   useEffect,
@@ -16,9 +17,10 @@ import {
   type ReactNode,
 } from "react";
 // Fundations
-import Button from "@/components/fundations/elements/Button";
 import Text from "@/components/fundations/elements/Text";
 import TextLink from "@/components/fundations/elements/TextLink";
+// Glaze
+import { Button } from "@/components/glaze/ui/button";
 // Components
 import {
   requestPasswordReset,
@@ -36,12 +38,9 @@ import {
   passwordProblem,
   SIGNUP_EMAIL_KEY,
 } from "@/lib/auth";
-import { fontWeights } from "@/lib/font-weight";
 import { SUPPORT_MAILTO } from "@/lib/site";
 import { AuthField, AuthNotice } from "./AuthParts";
 import PasswordField from "./PasswordField";
-
-const semibold = { fontVariationSettings: fontWeights.semibold };
 
 function useParam(name: string) {
   const [value, setValue] = useState<string | null>(null);
@@ -60,10 +59,10 @@ function Next() {
 function Heading({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="text-center text-balance">
-      <Text tag="h1" variant="h5" className="text-foreground">
+      <Text tag="h1" variant="h5" className="text-text-1">
         {title}
       </Text>
-      <Text tag="p" variant="bodySM" className="mt-2 text-muted-foreground">
+      <Text tag="p" variant="bodySM" className="mt-2 text-text-2">
         {children}
       </Text>
     </div>
@@ -75,8 +74,7 @@ function Footer({ children }: { children: ReactNode }) {
     <Text
       tag="p"
       variant="captionLG"
-      className="mt-5 text-center text-muted-foreground"
-      style={semibold}
+      className="mt-5 text-center font-medium text-text-2"
     >
       {children}
     </Text>
@@ -148,10 +146,10 @@ function useValidation(
   };
 }
 
-// The form's button. While its action runs it shows a spinner and ignores presses (loading:
-// focus stays on it, and the busy words are its name for screen readers); `waiting` is for
-// before it can be used at all, and disables it outright, which also holds back a press made
-// before the page's script has loaded
+// The form's button, the card's one primary. While its action runs it shows the arc and the busy
+// words and ignores presses (pending: focus stays on it, aria-busy is set and its name stays the
+// idle words); `waiting` is for before it can be used at all, and disables it outright, which
+// also holds back a press made before the page's script has loaded
 function Submit({
   pending,
   waiting = false,
@@ -165,15 +163,15 @@ function Submit({
 }) {
   return (
     <Button
-      // The compact step, 28px, the same as the fields above it
-      size="lg"
-      variant="default"
+      // Glaze's default step, 32px, the same as the fields above it
+      variant="primary"
       type="submit"
-      loading={pending}
+      pending={pending}
+      pendingLabel={busy}
       disabled={waiting}
       className="w-full"
     >
-      {pending ? busy : idle}
+      {idle}
     </Button>
   );
 }
@@ -216,8 +214,8 @@ export function SignInForm() {
           autoComplete="current-password"
           required
           aside={
-            // The label's own size (Field sets it on the label alone)
-            <TextLink variant="quiet" href="/forgot-password" className="text-body">
+            // The label's own size
+            <TextLink variant="quiet" href="/forgot-password" className="type-body-sm">
               Forgot password?
             </TextLink>
           }
@@ -320,9 +318,7 @@ function CheckEmail({ email }: { email: string }) {
     <>
       <Heading title="Check your email">
         We sent a link to{" "}
-        <span className="text-foreground" style={semibold}>
-          {email}
-        </span>
+        <span className="font-medium text-text-1">{email}</span>
         . Open it in this browser to finish signing up.
       </Heading>
       <form
@@ -340,19 +336,19 @@ function CheckEmail({ email }: { email: string }) {
             tag="p"
             variant="bodySM"
             role="status"
-            className="text-center text-secondary-foreground"
+            className="text-center text-text-2"
           >
             Sent again. It can take a minute to arrive.
           </Text>
         )}
         <Button
-          size="base"
-          variant="muted"
+          variant="secondary"
           type="submit"
-          loading={pending}
+          pending={pending}
+          pendingLabel="Sending…"
           className="w-full"
         >
-          {pending ? "Sending…" : "Send the link again"}
+          Send the link again
         </Button>
       </form>
       <Footer>
@@ -384,9 +380,7 @@ export function ForgotPasswordForm() {
       <>
         <Heading title="Check your email">
           If there&apos;s an account for{" "}
-          <span className="text-foreground" style={semibold}>
-            {state.sent}
-          </span>
+          <span className="font-medium text-text-1">{state.sent}</span>
           , a link to choose a new password is on its way. Open it in this browser.
         </Heading>
         <Footer>

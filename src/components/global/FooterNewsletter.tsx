@@ -3,23 +3,19 @@
 // The footer's email field (Footer). There's no mailing list yet, so it doesn't pretend to
 // subscribe anyone: a valid address goes to sign-up with the email already filled in (handed over
 // through sessionStorage, never the address bar, and read once by SignUpForm). Checked on submit,
-// on leaving the field once something's typed, and live once a note shows. Since 2026-10-23 it is
-// the system's Field, Input and Button. The footer panel inverts the page through its own --f-*
-// palette, which the semantic tokens don't follow, so the form maps the library's variables onto
-// that palette (the way Button's accent variant swaps its ink): the field, its words and the
-// button then draw in the panel's colours in both themes. Under the field one line is always
-// there, the note or the error, so neither moves what's below.
+// on leaving the field once something's typed, and live once a note shows. Since 2026-10-24 it is
+// Glaze's Field, Input and Button; the footer panel is a Glaze scope in the dark theme, so they
+// draw in its colours with no palette of their own. Under the field one line is always there, the
+// note or the error, so neither moves what's below.
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import Button from "@/components/fundations/elements/Button";
-import Input from "@/components/fundations/elements/Input";
-import Field from "@/components/fundations/molecules/Field";
+import { Button } from "@/components/glaze/ui/button";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/glaze/ui/field";
+import { Input } from "@/components/glaze/ui/input";
+import { Failed, Icon } from "@/components/glaze/icon";
 import { emailProblem, SIGNUP_EMAIL_KEY } from "@/lib/auth";
 
 const NOTE = "Free to start. New brands land in your feed as they join.";
-
-const palette =
-  "[--foreground:var(--f-ink)] [--background:var(--f-bg)] [--muted-foreground:var(--f-quiet)] [--border:var(--f-line)] [--hover:var(--f-glint)] [--surface-3:var(--f-bg)] [--destructive:var(--f-danger)] [--focus-ring:var(--f-focus)]";
 
 export default function FooterNewsletter() {
   const router = useRouter();
@@ -44,8 +40,10 @@ export default function FooterNewsletter() {
   }
 
   return (
-    <form noValidate onSubmit={submit} className={`w-full max-w-md ${palette}`}>
-      <Field label="Your email" error={error} description={error ? undefined : NOTE} descriptionAt="control">
+    <form noValidate onSubmit={submit} className="w-full max-w-md">
+      {/* The form's own checks decide what's wrong (invalid) and say it */}
+      <Field invalid={!!error}>
+        <FieldLabel>Your email</FieldLabel>
         <Input
           ref={input}
           name="email"
@@ -63,8 +61,16 @@ export default function FooterNewsletter() {
           }}
           onBlur={() => email.trim() && setError(emailProblem(email))}
         />
+        {error ? (
+          <FieldError className="flex-row items-start gap-1.5">
+            <Icon icon={Failed} className="mt-0.75" />
+            {error}
+          </FieldError>
+        ) : (
+          <FieldDescription>{NOTE}</FieldDescription>
+        )}
       </Field>
-      <Button type="submit" size="sm" variant="default" loading={pending} className="mt-3">
+      <Button type="submit" size="sm" variant="primary" pending={pending} className="mt-3">
         Join free
       </Button>
     </form>

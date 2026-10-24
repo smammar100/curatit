@@ -6,18 +6,20 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 // Assets
 import Lockup from "@/components/assets/Lockup";
 // Fundations
-import Badge from "@/components/fundations/elements/Badge";
-import Button from "@/components/fundations/elements/Button";
-import ThemeToggle from "@/components/global/ThemeToggle";
 import Wrapper from "@/components/fundations/containers/Wrapper";
+// Glaze
+import { Badge } from "@/components/glaze/ui/badge";
+import { Button } from "@/components/glaze/ui/button";
+import ThemeToggle from "@/components/global/ThemeToggle";
 import { cx } from "@/lib/cx";
-import { fontWeights } from "@/lib/font-weight";
 import { playMenuSound } from "./menuSound";
 
 // The navigation below md: the lockup, the theme menu and a menu button over a sheet that unfolds
-// (Makisu, below). Since 2026-10-23 the rows are on the system's tokens: the one stroke under
-// each, the link in the ink at the library's semibold, the site's one focus ring; the account
-// actions are Buttons, the theme switch ThemeToggle's menu. The fold itself is unchanged.
+// (Makisu, below). Since 2026-10-24 on Glaze: the faint line under each row, the link in text-1
+// at the medium weight with Glaze's Badge for Beta and its ink focus ring, the menu button the
+// bar's one primary (an ink glass icon pill), the account actions a ghost Sign in and a primary
+// Create account, the dimmer Glaze's scrim, the theme switch ThemeToggle's menu. The fold itself
+// is unchanged.
 
 // Same links as the desktop nav
 const links = [
@@ -67,18 +69,18 @@ function menuTimes(count: number) {
 
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// On touch screens Button's xs size already reaches 44px tall (its own ::after); the two icon
-// buttons in the bar also reach 44px wide through a ::before past their edges. They sit 8px apart,
-// so each takes 4px of the gap and the rest outwards.
-const themeTarget = "relative pointer-coarse:before:absolute pointer-coarse:before:-inset-y-2 pointer-coarse:before:-right-1 pointer-coarse:before:-left-3";
-const menuTarget = "relative pointer-coarse:before:absolute pointer-coarse:before:-inset-y-2 pointer-coarse:before:-right-3 pointer-coarse:before:-left-1";
+// On touch screens the two 26px icon buttons in the bar reach 44px through a ::before past their
+// edges (Glaze's Button is already relative). They sit 8px apart, so each takes 4px of the gap and
+// the rest outwards.
+const themeTarget = "pointer-coarse:before:absolute pointer-coarse:before:-inset-y-2.5 pointer-coarse:before:-right-1 pointer-coarse:before:-left-3";
+const menuTarget = "pointer-coarse:before:absolute pointer-coarse:before:-inset-y-2.5 pointer-coarse:before:-right-3 pointer-coarse:before:-left-1";
 
 // Each row holds the next one, so folding a row folds everything under it
 function Rows({ rows, index = 0 }: { rows: ReactNode[]; index?: number }) {
   if (index >= rows.length) return null;
   return (
     <div className={cx("makisu-node", index === 0 && "makisu-first")} style={timing(index, rows.length)}>
-      <div className={cx("makisu-face relative bg-page", index === rows.length - 1 && "border-b border-border")}>
+      <div className={cx("makisu-face relative bg-page", index === rows.length - 1 && "border-b border-line-faint")}>
         {rows[index]}
         <span aria-hidden="true" className="makisu-back" />
         <span aria-hidden="true" className="makisu-shade" />
@@ -209,8 +211,7 @@ export default function MobileNav() {
       <Wrapper key={link.href} variant="standard">
         <Link
           ref={index === 0 ? firstLinkRef : undefined}
-          className="flex min-h-11 items-center gap-2 border-b border-border text-body-lg text-foreground focus-visible:outline-1 focus-visible:-outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]"
-          style={{ fontVariationSettings: fontWeights.semibold }}
+          className="flex min-h-11 items-center gap-2 border-b border-line-faint text-body-lg font-medium text-text-1"
           href={link.href}
         >
           {link.text}
@@ -220,10 +221,10 @@ export default function MobileNav() {
     )),
     <Wrapper key="account" variant="standard" className="pt-8 pb-4">
       <div className="flex items-center gap-2">
-        <Button isLink size="xs" variant="transparent" href="/signin" className="shrink-0">
+        <Button size="sm" variant="ghost" render={<Link href="/signin" />} nativeButton={false}>
           Sign in
         </Button>
-        <Button isLink size="xs" variant="default" href="/signup" className="shrink-0">
+        <Button size="sm" variant="primary" render={<Link href="/signup" />} nativeButton={false}>
           Create account
         </Button>
       </div>
@@ -232,24 +233,22 @@ export default function MobileNav() {
 
   return (
     <>
-      <nav ref={navRef} className="fixed inset-x-0 top-0 z-40 md:hidden">
-        <div className="relative z-10 bg-page">
+      <nav ref={navRef} className="fixed inset-x-0 top-0 z-(--z-overlay) md:hidden">
+        <div className="relative z-(--z-raised) bg-page">
           <Wrapper variant="standard" className="py-3">
             <div className="flex items-center justify-between">
               <Link
                 href="/"
                 aria-label="Go to homepage"
-                className="rounded-[4px] focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--focus-ring)]"
+                className="rounded-tag"
               >
                 <Lockup />
               </Link>
               <div className="flex items-center gap-2">
                 <ThemeToggle className={themeTarget} />
                 <Button
-                  iconOnly
-                  size="xs"
-                  variant="default"
-                  type="button"
+                  size="icon-sm"
+                  variant="primary"
                   aria-expanded={open}
                   aria-controls="mobile-menu"
                   aria-label={open ? "Close menu" : "Open menu"}
@@ -296,7 +295,7 @@ export default function MobileNav() {
         aria-hidden="true"
         style={{ "--makisu-dim": `${fold.keyframes === "opening" ? times.open : times.close}s` } as CSSProperties}
         className={cx(
-          "fixed inset-0 z-30 bg-black/25 md:hidden",
+          "fixed inset-0 z-(--z-sticky) bg-scrim md:hidden",
           fold.keyframes === "opening" && "motion-safe:animate-[fade-in_var(--makisu-dim)_ease-in-out_both]",
           fold.keyframes === "closing" && "motion-safe:animate-[fade-out_var(--makisu-dim)_ease-in-out_both]",
           fold.keyframes === "closed" && "opacity-0",

@@ -1,18 +1,22 @@
 "use client";
 
-// The theme menu behind ThemeToggle's button: Light, Dark and System as a radio group in the
-// system's Menu (one choice on a fill that travels, the keyboard moving the highlight, Escape and
-// a press outside closing it, focus back on the button after). The choice goes through
-// setThemeMode, which flips data-theme on <html>, stores it (System stores nothing and follows
-// the OS) and freezes transitions for two frames (data-theme-switching) so nothing tweens. Read
-// only on the client (ThemeToggle loads this file on intent), so the saved choice can be read
-// when it mounts. Split from ThemeToggle so the menu's code (Radix's dropdown and motion/react)
-// stays out of every page's first load: the navigation is in the homepage hero's path.
+// The theme menu behind ThemeToggle's button: Light, Dark and System as a radio group in Glaze's
+// DropdownMenu (a check on the choice, the keyboard moving the highlight, Escape and a press
+// outside closing it, focus back on the button after). The choice goes through setThemeMode,
+// which flips data-theme on <html>, stores it (System stores nothing and follows the OS) and
+// freezes transitions for two frames (data-theme-switching) so nothing tweens. Read only on the
+// client (ThemeToggle loads this file on intent), so the saved choice can be read when it mounts.
+// Split from ThemeToggle so the menu's code (Base UI's menu) stays out of every page's first
+// load: the navigation is in the homepage hero's path.
 import { useEffect, useRef, useState, type ReactElement } from "react";
-import Menu, { MenuItemRadio, MenuRadioGroup } from "@/components/fundations/molecules/Menu";
-import CircleHalf from "@/components/fundations/icons/CircleHalf";
-import Moon from "@/components/fundations/icons/Moon";
-import Sun from "@/components/fundations/icons/Sun";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/glaze/ui/dropdown-menu";
+import { CircleHalf, Dark, Icon, Light } from "@/components/glaze/icon";
 import { getThemeMode, setThemeMode, type ThemeMode } from "./theme";
 
 export default function ThemeMenu({
@@ -35,24 +39,30 @@ export default function ThemeMenu({
     restoreFocus?.();
   }, [restoreFocus]);
   return (
-    <Menu label="Theme" align="end" trigger={trigger} defaultOpen={defaultOpen}>
-      <MenuRadioGroup
-        value={mode}
-        onValueChange={(next) => {
-          setThemeMode(next);
-          setMode(next);
-        }}
-      >
-        <MenuItemRadio value="light" icon={<Sun />}>
-          Light
-        </MenuItemRadio>
-        <MenuItemRadio value="dark" icon={<Moon />}>
-          Dark
-        </MenuItemRadio>
-        <MenuItemRadio value="system" icon={<CircleHalf />}>
-          System
-        </MenuItemRadio>
-      </MenuRadioGroup>
-    </Menu>
+    <DropdownMenu defaultOpen={defaultOpen}>
+      <DropdownMenuTrigger render={trigger} />
+      <DropdownMenuContent align="end" size="sm" aria-label="Theme">
+        <DropdownMenuRadioGroup
+          value={mode}
+          onValueChange={(next) => {
+            setThemeMode(next as ThemeMode);
+            setMode(next as ThemeMode);
+          }}
+        >
+          <DropdownMenuRadioItem value="light">
+            <Icon icon={Light} />
+            Light
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="dark">
+            <Icon icon={Dark} />
+            Dark
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="system">
+            <Icon icon={CircleHalf} />
+            System
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

@@ -5,8 +5,8 @@
 // set by its length. The strokes are "Syed M. Ammar" set in EMS Allure (a single-line version of
 // Allura by Rob Leuschke, SIL Open Font License, via Evil Mad Scientist's Hershey Text), its
 // polylines smoothed into curves once, offline; no font is loaded. Under reduced motion it's
-// simply there. Ink is currentColor.
-import { useEffect, useRef, useState } from "react";
+// simply there. Ink is currentColor; each stroke's timing reaches the CSS as custom properties.
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 const VIEWBOX = "-11 49 7246 1178";
 const STROKES = [
@@ -53,7 +53,8 @@ export default function Signature({ className }: { className?: string }) {
           strokeWidth={32}
           strokeLinecap="round"
           strokeLinejoin="round"
-          style={{ animationDelay: `${stroke.delay}ms`, animationDuration: `${stroke.duration}ms` }}
+          className="[animation-delay:var(--delay)] [animation-duration:var(--duration)]"
+          style={{ "--delay": `${stroke.delay}ms`, "--duration": `${stroke.duration}ms` } as CSSProperties}
         />
       ))}
     </svg>

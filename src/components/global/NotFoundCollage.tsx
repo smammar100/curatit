@@ -7,9 +7,10 @@
 // another post; the whole collage leans a little toward the cursor. On a touch screen a tap flips
 // the covers around it, and while nobody's touching it a cover turns over now and then by itself.
 // Purely decorative: hidden from assistive tech, and the page's own text says what happened.
-// Since 2026-10-23 a face is an image tile on the system's tokens: 12px corners, the muted tint
-// under a cover that hasn't loaded, the one stroke inside its edge. The lift, the lens and the
-// flip (.nf-* in global.css) are as they were.
+// Since 2026-10-24 a face is an image tile on Glaze's tokens: the panel's corners, the grey field
+// under a cover that hasn't loaded, the faint line inside its edge; each tile's place, delay and
+// turn reach the CSS as custom properties. The lift, the lens and the flip (.nf-* in global.css)
+// are as they were.
 import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type Ref } from "react";
 import Image from "next/image";
 import { cx } from "@/lib/cx";
@@ -43,7 +44,7 @@ function useReducedMotion() {
 
 const Face = memo(function Face({ src, back }: { src: string | undefined; back?: boolean }) {
   return (
-    <div className={cx("nf-face absolute inset-0 overflow-hidden rounded-[12px] bg-muted outline-1 -outline-offset-1 outline-border", back && "nf-back")}>
+    <div className={cx("nf-face absolute inset-0 overflow-hidden rounded-panel bg-field outline-1 -outline-offset-1 outline-line-faint", back && "nf-back")}>
       {src && <Image src={src} alt="" fill sizes="(min-width: 1024px) 80px, 9vw" quality={60} draggable={false} className="object-cover" />}
     </div>
   );
@@ -54,21 +55,22 @@ const Tile = memo(function Tile({ place, card, covers, ref }: { place: Placement
   return (
     <div
       ref={ref}
-      className="nf-tile absolute"
+      // The delay is marked important: .nf-tile's own animation shorthand would otherwise reset it
+      className="nf-tile absolute top-(--top) left-(--left) w-(--width) [animation-delay:var(--delay)]!"
       style={
         {
-          left: `${place.left}%`,
-          top: `${place.top}%`,
-          width: `${place.width}%`,
+          "--left": `${place.left}%`,
+          "--top": `${place.top}%`,
+          "--width": `${place.width}%`,
           "--r": `${place.rotate}deg`,
           "--s": place.scale,
           "--z": `${place.depth}px`,
-          animationDelay: `${place.order * 22}ms`,
+          "--delay": `${place.order * 22}ms`,
         } as CSSProperties
       }
     >
       <div className="nf-shadow" />
-      <div className="nf-card relative aspect-4/5" style={{ transform: `rotateY(${card.turns * 180}deg)` }}>
+      <div className="nf-card relative aspect-4/5 [transform:rotateY(var(--turn))]" style={{ "--turn": `${card.turns * 180}deg` } as CSSProperties}>
         <Face src={cover(card.faces[0])} />
         <Face src={cover(card.faces[1])} back />
       </div>
@@ -76,7 +78,7 @@ const Tile = memo(function Tile({ place, card, covers, ref }: { place: Placement
   );
 });
 
-export default function NotFoundCollage({ covers, className }: { covers: string[]; className?: string }) {
+export default function NotFoundCollage({ covers, className, style }: { covers: string[]; className?: string; style?: CSSProperties }) {
   const places = useMemo(() => layout404(), []);
   const count = places.length;
   // Each cover starts with one post showing and the next one waiting on its back
@@ -210,8 +212,8 @@ export default function NotFoundCollage({ covers, className }: { covers: string[
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
       onPointerDown={onPointerDown}
-      className={cx("nf-stage relative select-none", className)}
-      style={{ aspectRatio: `${BOX.width} / ${BOX.height}` }}
+      className={cx("nf-stage relative aspect-(--box) select-none", className)}
+      style={{ ...style, "--box": `${BOX.width} / ${BOX.height}` } as CSSProperties}
     >
       <div ref={tilt} className="nf-tilt absolute inset-0">
         {places.map((place, i) => (
