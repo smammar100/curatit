@@ -3,8 +3,12 @@ import { Hedvig_Letters_Serif, Inter } from "next/font/google";
 import ThemeScript from "@/components/global/ThemeScript";
 import FluidRoot from "@/components/global/FluidRoot";
 import type { ReactNode } from "react";
-// Import global styles
+import { GlazePortalProvider } from "@/lib/glaze/portal";
+// Import global styles, then Glaze (scoped to .glaze, as its own stylesheet) and the bridge that gives Glaze
+// Fluid Functionalism's type, motion and surfaces
 import "@/styles/global.css";
+import "@/components/glaze/styles.css";
+import "@/styles/glaze-bridge.css";
 import { SITE_URL } from "@/lib/site";
 
 // Inter: https://rsms.me/inter/
@@ -69,9 +73,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       // Smooth anchor scrolling only with motion allowed
       className={`${inter.variable} ${hedvig.variable} motion-safe:scroll-smooth selection:bg-accent-100 selection:text-primary-foreground`}
     >
-      <body className="bg-page flex flex-col lg:min-h-svh">
+      {/* glaze: the design system's scope (2026-10-24); its overlays portal inside it through GlazePortalProvider */}
+      <body className="glaze bg-page flex flex-col lg:min-h-svh">
         <ThemeScript />
-        <FluidRoot>{children}</FluidRoot>
+        <GlazePortalProvider>
+          <FluidRoot>{children}</FluidRoot>
+        </GlazePortalProvider>
       </body>
     </html>
   );
