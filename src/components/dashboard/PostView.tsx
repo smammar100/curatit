@@ -113,14 +113,17 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
   const role = analysis?.sequence?.roles?.[index] ?? analysis?.slides?.[index]?.role ?? null;
   const caption = useMemo(() => splitCaption(post), [post]);
   const source = { brand: post.brand.name, shortCode: post.shortCode, url: post.url, format: post.format, slides: post.images.length, images: post.images, videos: post.videos, width: post.width, height: post.height };
-  // The stage's sizes: the mat fills the window under the bar, and the image keeps the post's
-  // shape inside it (its width capped by the height it may take)
-  const stage = { "--stage-h": "calc(100dvh - 10rem)", "--ratio": String(r), "--stage-w": `min(100%, calc((100dvh - 14rem) * ${r}))` } as CSSProperties;
+  // The stage's sizes: from lg the mat fills the window under the bar (3.5rem) with the page's 1rem
+  // above and below it, and the image keeps the post's shape inside it, its width capped by the
+  // height left after the mat's padding (4rem) and the slide row under it
+  const below = count > 1 ? "5.25rem" : video ? "2rem" : "0rem";
+  const stage = { "--stage-h": "calc(100dvh - 5.5rem)", "--ratio": String(r), "--stage-w": `min(100%, calc((100dvh - 9.5rem - ${below}) * ${r}))` } as CSSProperties;
 
   return (
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="post-title" tabIndex={-1} style={stage} className="fixed inset-0 z-(--z-overlay) overflow-y-auto bg-page type-body-sm text-text-1">
-      {/* The app bar: back to the feed, the lockup, the feed's neighbours and Close */}
-      <header className="flex h-14 items-center px-4 sm:px-8">
+      {/* The app bar: back to the feed, the lockup, the feed's neighbours and Close. It stays at the
+          top while the details scroll, so the stage under it can keep the window's full height */}
+      <header className="sticky top-0 z-10 flex h-14 items-center bg-page px-4 sm:px-8">
         <div className="flex-1">
           <Button variant="secondary" onClick={close}>
             <Icon icon={ChevronLeft} />
@@ -139,7 +142,7 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
 
       <main className="mx-auto flex max-w-384 flex-col gap-6 px-4 pt-2 pb-16 sm:px-8 lg:flex-row lg:items-start lg:gap-10 lg:pt-4">
         {/* The post, sticky while the column beside it scrolls */}
-        <div className="min-w-0 flex-1 lg:sticky lg:top-4">
+        <div className="min-w-0 flex-1 lg:sticky lg:top-18">
           {/* The stage: the post on a grey mat, the slide arrows at its sides, and under the image (never
               over it) where you are in the carousel: the slides themselves as the indicator, small at
               the post's shape, the one on stage in full with an ink ring and the rest dimmed until
@@ -239,6 +242,23 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
               <div className="rule-row p-4">
                 <SaveForm post={post} />
               </div>
+              <Cell label="Observed">
+                {/* The public counts as scraped, and nothing more: no ratio against the brand's average
+                    or rank in the category (too few posts a brand for a fair benchmark) */}
+                <dl className="flex flex-wrap gap-x-5 gap-y-1 type-body-sm text-text-1">
+                  <div className="flex items-center gap-1.5">
+                    <Icon icon={Heart} className="text-text-2" />
+                    <dt className="sr-only">Likes</dt>
+                    <dd className="data font-medium">{countLabel(post.likes)}</dd>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Icon icon={ChatCircle} className="text-text-2" />
+                    <dt className="sr-only">Comments</dt>
+                    <dd className="data font-medium">{countLabel(post.comments)}</dd>
+                  </div>
+                </dl>
+                <p className="mt-1.5 type-caption text-text-2">As scraped. Not a verdict on whether it worked.</p>
+              </Cell>
               {analysis && traits(analysis).length > 0 && (
                 <Cell label="Traits">
                   <ul className="flex flex-wrap gap-1.5">
@@ -265,23 +285,6 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
                     </li>
                   ))}
                 </ul>
-              </Cell>
-              <Cell label="Observed">
-                {/* The public counts as scraped, and nothing more: no ratio against the brand's average
-                    or rank in the category (too few posts a brand for a fair benchmark) */}
-                <dl className="flex flex-wrap gap-x-5 gap-y-1 type-body-sm text-text-1">
-                  <div className="flex items-center gap-1.5">
-                    <Icon icon={Heart} className="text-text-2" />
-                    <dt className="sr-only">Likes</dt>
-                    <dd className="data font-medium">{countLabel(post.likes)}</dd>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Icon icon={ChatCircle} className="text-text-2" />
-                    <dt className="sr-only">Comments</dt>
-                    <dd className="data font-medium">{countLabel(post.comments)}</dd>
-                  </div>
-                </dl>
-                <p className="mt-1.5 type-caption text-text-2">As scraped. Not a verdict on whether it worked.</p>
               </Cell>
               <Cell label="Boards">
                 <BoardsOn post={post} />
