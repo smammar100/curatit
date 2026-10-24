@@ -3,13 +3,13 @@
 // Who's signed in, for the account menu and avatar. The dashboard's pages are static (the
 // proxy keeps signed-out visitors away), so the user is read here in the browser, from the
 // session cookie Supabase keeps. Signing out anywhere, this tab or another, goes to sign-in.
-// The Avatar here is the system's Avatar atom bound to the session (2026-10-23): the picture,
-// or the initials on the brand tint, and a Skeleton circle until the session is read.
+// The Avatar here is Glaze's Avatar bound to the session (2026-10-24): the picture, or the
+// initials, and a Skeleton circle of the same size until the session is read.
 import { createContext, use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { User as AuthUser } from "@supabase/supabase-js";
-import AvatarAtom, { type AvatarProps } from "@/components/fundations/elements/Avatar";
-import Skeleton from "@/components/fundations/elements/Skeleton";
+import { Avatar as GlazeAvatar } from "@/components/glaze/ui/avatar";
+import { Skeleton } from "@/components/glaze/ui/skeleton";
 import { identify, resetAnalytics } from "@/lib/analytics";
 import { createClient } from "@/utils/supabase/client";
 
@@ -61,11 +61,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
 export const useUser = () => use(UserContext);
 
-// The signed-in person's picture, or their initials on the brand's tint (the Avatar atom); a
-// Skeleton circle of the same size until the session is read. `decorative` when the name is
-// written beside it, or the control holding it is already named
-export function Avatar({ size = "md", decorative, className }: Pick<AvatarProps, "size" | "decorative" | "className">) {
+// The signed-in person's picture, or their initials (Glaze's Avatar); a Skeleton circle of the
+// same size until the session is read. `decorative` when the name is written beside it, or the
+// control holding it is already named
+const SKELETON = { xs: "size-4", sm: "size-5", default: "size-6", lg: "size-8" } as const;
+export function Avatar({ size = "default", decorative, className }: { size?: keyof typeof SKELETON; decorative?: boolean; className?: string }) {
   const user = useUser();
-  if (!user) return <Skeleton shape="circle" size={size} className={className} />;
-  return <AvatarAtom src={user.avatar} name={user.name} size={size} decorative={decorative} className={className} />;
+  if (!user) return <Skeleton className={`${SKELETON[size]} rounded-pill${className ? ` ${className}` : ""}`} />;
+  return <GlazeAvatar src={user.avatar ?? undefined} name={user.name} size={size} decorative={decorative} className={className} />;
 }
