@@ -37,7 +37,9 @@ const tabsListVariants = cva(
 
 type TabsListProps = TabsPrimitive.List.Props & VariantProps<typeof tabsListVariants>;
 
-function TabsList({className, size = 'default', children, ref, ...props}: TabsListProps) {
+// Curatit: activateOnFocus defaults to true, as Glaze's tabs page documents ("Arrow keys select the tab they land
+// on"); Base UI's own default is false, which left arrow keys only moving focus
+function TabsList({className, size = 'default', children, ref, activateOnFocus = true, ...props}: TabsListProps) {
   const list = useRef<HTMLDivElement>(null);
   const refs = useMemo(() => mergeRefs(list, ref), [ref]);
   const s = size ?? 'default';
@@ -66,6 +68,7 @@ function TabsList({className, size = 'default', children, ref, ...props}: TabsLi
       data-slot="tabs-list"
       data-size={s}
       className={mergeClass(tabsListVariants({size: s}), className)}
+      activateOnFocus={activateOnFocus}
       {...props}
     >
       {/* The paper pill under the selected label. First, so the labels paint over it. */}

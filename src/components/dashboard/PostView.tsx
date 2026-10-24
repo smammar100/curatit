@@ -8,35 +8,33 @@
 // next post, Close) over two columns: the post large on a grey mat on the left, sticky while the
 // right column scrolls, its slides as thumbnails under it; on the right one ruled card (the hook as
 // the title with the rest of the caption, the brand, the board picker and Save, the strategy's
-// traits and the post's categories as chips, the observed counts, the boards it's on), then the
-// creative breakdown (post-analysis/CreativeBreakdown, the "Document" direction) and the slide
-// breakdown (post-analysis/SlideBreakdown) as cards of their own when it has a published analysis.
+// traits and the post's categories, the observed counts, the boards it's on), then the creative
+// breakdown (post-analysis/CreativeBreakdown) and the slide breakdown (post-analysis/SlideBreakdown)
+// as cards of their own when it has a published analysis.
 // One slide index drives the stage, the arrows, the thumbnails, the sequence bar and the slide
 // rows, so they never disagree. Close (or Escape) goes back to the feed. From the feed this
 // renders in the layout's @modal slot over the live feed (an intercepted route); opened from a
 // link, the page puts the feed underneath, so both look the same.
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+// Since 2026-10-24 it is built from Glaze: Buttons in the app bar and on the stage, the cards
+// Glaze's Card (shell and panel, the cells split on its row rule), the traits Badges, the
+// categories secondary Buttons that link to Discover, the boards it's on Items, and the board
+// picker a NativeSelect beside an Input.
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-// Icons
-import ArrowUpRight from "@/components/fundations/icons/ArrowUpRight";
-import CaretLeft from "@/components/fundations/icons/CaretLeft";
-import CaretRight from "@/components/fundations/icons/CaretRight";
-import ChatCircle from "@/components/fundations/icons/ChatCircle";
-import Close from "@/components/fundations/icons/Close";
-import Heart from "@/components/fundations/icons/Heart";
-import Play from "@/components/fundations/icons/Play";
-import SealCheck from "@/components/fundations/icons/SealCheck";
-// Components
 import Lockup from "@/components/assets/Lockup";
-import Avatar from "@/components/fundations/elements/Avatar";
-import Badge from "@/components/fundations/elements/Badge";
-import Button from "@/components/fundations/elements/Button";
+import { ArrowUpRight, ChatCircle, ChevronLeft, ChevronRight, Close, Heart, Icon, Play, SealCheck } from "@/components/glaze/icon";
+import { Avatar } from "@/components/glaze/ui/avatar";
+import { Badge } from "@/components/glaze/ui/badge";
+import { Button } from "@/components/glaze/ui/button";
+import { Card, CardContent } from "@/components/glaze/ui/card";
+import { Input, InputAction } from "@/components/glaze/ui/input";
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemLink, ItemMedia, ItemTitle } from "@/components/glaze/ui/item";
+import { NativeSelect } from "@/components/glaze/ui/select";
 import type { PublicAnalysis } from "@/lib/creative/publicView";
-import { fontWeights } from "@/lib/font-weight";
+import { cn } from "@/lib/glaze/utils";
 import type { PostDetail } from "@/lib/posts";
-import { cx } from "@/lib/cx";
 import { BoardThumb, NAME_MAX, useBoards } from "./boards";
 import { boardHref } from "./BoardView";
 import { feedHref } from "./Feed";
@@ -46,7 +44,6 @@ import { countLabel } from "./post-analysis/ObservedEngagement";
 import SlideBreakdown from "./post-analysis/SlideBreakdown";
 
 const day = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
-const semibold = { fontVariationSettings: fontWeights.semibold };
 
 // The page under the post, which goes inert while it's open (the id is set in the dashboard layout)
 const PAGE_ID = "dashboard-page";
@@ -106,31 +103,35 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
   const role = analysis?.sequence?.roles?.[index] ?? analysis?.slides?.[index]?.role ?? null;
   const caption = useMemo(() => splitCaption(post), [post]);
   const source = { brand: post.brand.name, shortCode: post.shortCode, url: post.url, format: post.format, slides: post.images.length, images: post.images, videos: post.videos, width: post.width, height: post.height };
+  // The stage's sizes: the mat fills the window under the bar, and the image keeps the post's
+  // shape inside it (its width capped by the height it may take)
+  const stage = { "--stage-h": "calc(100dvh - 10rem)", "--ratio": String(r), "--stage-w": `min(100%, calc((100dvh - 14rem) * ${r}))` } as CSSProperties;
 
   return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="post-title" tabIndex={-1} className="fixed inset-0 z-40 overflow-y-auto bg-page text-body text-foreground outline-none">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="post-title" tabIndex={-1} style={stage} className="fixed inset-0 z-(--z-overlay) overflow-y-auto bg-page type-body-sm text-text-1">
       {/* The app bar: back to the feed, the lockup, the feed's neighbours and Close */}
-      <header className="grid h-14 grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-8">
-        <div>
-          <Button variant="secondary" size="sm" leftIcon={<CaretLeft className="size-3.5" />} onClick={close}>
+      <header className="flex h-14 items-center px-4 sm:px-8">
+        <div className="flex-1">
+          <Button variant="secondary" onClick={close}>
+            <Icon icon={ChevronLeft} />
             Library
           </Button>
         </div>
         <Lockup />
-        <div className="flex items-center justify-end gap-1.5">
+        <div className="flex flex-1 items-center justify-end gap-1.5">
           <StepLink side="left" shortCode={previous?.shortCode} />
           <StepLink side="right" shortCode={next?.shortCode} />
-          <Button variant="secondary" iconOnly aria-label="Close" onClick={close}>
-            <Close className="size-3.5" />
+          <Button variant="secondary" size="icon" aria-label="Close" onClick={close}>
+            <Icon icon={Close} />
           </Button>
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-[96rem] grid-cols-1 gap-6 px-4 pt-2 pb-16 sm:px-8 lg:grid-cols-[minmax(0,1fr)_26rem] lg:gap-10 lg:pt-4">
+      <main className="mx-auto flex max-w-384 flex-col gap-6 px-4 pt-2 pb-16 sm:px-8 lg:flex-row lg:items-start lg:gap-10 lg:pt-4">
         {/* The post, sticky while the column beside it scrolls */}
-        <div className="min-w-0 lg:sticky lg:top-4 lg:self-start">
-          <div className="relative flex items-center justify-center overflow-hidden rounded-[24px] bg-muted p-4 shadow-surface-1 sm:p-8 lg:h-[calc(100dvh-10rem)]">
-            <div className="relative h-full max-h-full w-full max-w-full" style={{ aspectRatio: r, maxWidth: `calc((100dvh - 14rem) * (${r}))` }}>
+        <div className="min-w-0 flex-1 lg:sticky lg:top-4">
+          <div className="relative flex items-center justify-center overflow-hidden rounded-shell bg-shell p-4 sm:p-8 lg:h-(--stage-h)">
+            <div className="relative aspect-(--ratio) h-full max-h-full w-full max-w-(--stage-w)">
               <Image
                 key={post.images[index]}
                 src={post.images[index]}
@@ -138,19 +139,19 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
                 fill
                 sizes="(min-width: 1024px) 60vw, 100vw"
                 priority
-                className="rounded-[12px] object-contain"
+                className="rounded-panel object-contain"
               />
             </div>
-            <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center gap-1.5 text-caption">
+            <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center gap-1.5 type-caption">
               {count > 1 && (
-                <p className="rounded-full bg-[var(--foreground)] px-2.5 py-1 text-[var(--background)] tabular-nums" aria-live="polite">
+                <p className="data rounded-pill bg-ink px-2.5 py-1 text-text-inverse" aria-live="polite">
                   {index + 1} / {count}
                   {role && <span className="opacity-70"> · {role}</span>}
                 </p>
               )}
               {video && (
-                <p className="flex items-center gap-1 rounded-full bg-[var(--foreground)] px-2.5 py-1 text-[var(--background)]" title="A video on Instagram; the library keeps its cover frame">
-                  <Play className="size-3" />
+                <p className="flex items-center gap-1 rounded-pill bg-ink px-2.5 py-1 text-text-inverse" title="A video on Instagram; the library keeps its cover frame">
+                  <Icon icon={Play} size={12} />
                   Video cover
                 </p>
               )}
@@ -162,27 +163,25 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
               </>
             )}
           </div>
-          {/* Under the stage: the slide count as a quiet chip and every slide as a thumbnail */}
-          <div className="mt-3 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
-            <Badge variant="outline" className="shrink-0 font-mono tracking-[0.08em] uppercase">
+          {/* Under the stage: the slide count as a quiet tag and every slide as a thumbnail */}
+          <div className="mt-3 flex items-center gap-3 overflow-x-auto p-1">
+            <Badge variant="outline" className="shrink-0">
               {count} {count === 1 ? "slide" : "slides"}
             </Badge>
             {count > 1 && (
               <ol className="flex gap-1.5">
                 {post.images.map((src, i) => (
                   <li key={src}>
-                    <button
-                      type="button"
-                      aria-label={`Slide ${i + 1}`}
-                      aria-pressed={i === index}
-                      onClick={() => go(i)}
-                      className={cx(
-                        "relative block size-11 overflow-hidden rounded-[10px] transition-opacity duration-150 ease-out-quint focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]",
-                        i === index ? "ring-2 ring-foreground" : "opacity-60 ring-1 ring-border hover:opacity-100",
-                      )}
-                    >
-                      <Image src={src} alt="" fill sizes="44px" className="object-cover" />
-                    </button>
+                    <Button variant="ghost" size="icon-lg" aria-label={`Slide ${i + 1}`} aria-pressed={i === index} onClick={() => go(i)}>
+                      <span
+                        className={cn(
+                          "relative block size-full overflow-hidden rounded-tag transition-opacity duration-(--dur-state) ease-out",
+                          i === index ? "border-2 border-ink" : "opacity-60 group-hover/button:opacity-100",
+                        )}
+                      >
+                        <Image src={src} alt="" fill sizes="36px" className="object-cover" />
+                      </span>
+                    </Button>
                   </li>
                 ))}
               </ol>
@@ -190,113 +189,112 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
           </div>
         </div>
 
-        <div className="flex min-w-0 flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-4 lg:w-104 lg:shrink-0">
           {/* The card: one cell per thing, ruled apart */}
-          <section className="divide-y divide-border rounded-[24px] bg-surface-3 shadow-surface-2">
-            <div className="p-5">
-              <h1 id="post-title" className="font-display text-[22px] leading-7 text-balance text-foreground">
-                {caption.title}
-              </h1>
-              {/* The rest of the caption reads on from the title (2026-10-13, at the person's request) */}
-              {caption.body.length > 0 && (
-                <div className="mt-2.5">
-                  <Caption paragraphs={caption.body} />
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-3 px-5 py-3.5">
-              <Avatar src={post.brand.logo} name={post.brand.name} size="md" decorative />
-              <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-1 text-foreground" style={semibold}>
-                  <span className="truncate">{post.brand.name}</span>
-                  {post.verified && <SealCheck className="size-3.5 shrink-0 text-muted-foreground" aria-label="Verified" />}
-                </p>
-                <p className="truncate text-caption text-muted-foreground">
-                  {post.handle && <>@{post.handle} · </>}
-                  {day.format(new Date(post.postedAt))}
-                </p>
+          <Card>
+            <CardContent flush>
+              <div className="rule-row p-4">
+                <h1 id="post-title" className="type-title text-balance text-text-1">
+                  {caption.title}
+                </h1>
+                {/* The rest of the caption reads on from the title (2026-10-13, at the person's request) */}
+                {caption.body.length > 0 && (
+                  <div className="mt-2.5">
+                    <Caption paragraphs={caption.body} />
+                  </div>
+                )}
               </div>
-              <Button variant="transparent" size="sm" isLink href={post.url} target="_blank" rel="noopener noreferrer" rightIcon={<ArrowUpRight className="size-3.5" />}>
-                Instagram
-              </Button>
-            </div>
-            <div className="p-5">
-              <SaveForm post={post} />
-            </div>
-            {analysis && traits(analysis).length > 0 && (
-              <Cell label="Traits">
-                <ul className="flex flex-wrap gap-1.5">
-                  {traits(analysis).map((trait) => (
-                    <li key={trait.label}>
-                      <Badge>
-                        <span className="text-muted-foreground">{trait.label}</span>
-                        <span className="ml-1" style={semibold}>
+              <div className="rule-row flex items-center gap-3 px-4 py-3">
+                <Avatar src={post.brand.logo ?? undefined} name={post.brand.name} size="lg" decorative />
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-1 type-label text-text-1">
+                    <span className="truncate">{post.brand.name}</span>
+                    {post.verified && <Icon icon={SealCheck} label="Verified" className="text-text-2" />}
+                  </p>
+                  <p className="truncate type-caption text-text-2">
+                    {post.handle && <>@{post.handle} · </>}
+                    {day.format(new Date(post.postedAt))}
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" render={<a href={post.url} target="_blank" rel="noopener noreferrer" />} nativeButton={false}>
+                  Instagram
+                  <Icon icon={ArrowUpRight} />
+                </Button>
+              </div>
+              <div className="rule-row p-4">
+                <SaveForm post={post} />
+              </div>
+              {analysis && traits(analysis).length > 0 && (
+                <Cell label="Traits">
+                  <ul className="flex flex-wrap gap-1.5">
+                    {traits(analysis).map((trait) => (
+                      <li key={trait.label}>
+                        <Badge>
+                          <span className="text-text-2">{trait.label}</span>
                           {trait.value}
-                        </span>
-                      </Badge>
+                        </Badge>
+                      </li>
+                    ))}
+                  </ul>
+                </Cell>
+              )}
+              <Cell label="Categories">
+                {/* The main category, then any extra ones; each opens Discover on it */}
+                <ul className="flex flex-wrap gap-1.5">
+                  {post.categories.map((category) => (
+                    <li key={category.slug}>
+                      <Button variant="secondary" size="sm" render={<Link href={feedHref("Discover", "", category.slug)} />} nativeButton={false}>
+                        <span className="text-text-3">#</span>
+                        {category.name}
+                      </Button>
                     </li>
                   ))}
                 </ul>
               </Cell>
-            )}
-            <Cell label="Categories">
-              {/* The main category, then any extra ones; each opens Discover on it */}
-              <ul className="flex flex-wrap gap-1.5">
-                {post.categories.map((category) => (
-                  <li key={category.slug}>
-                    <Link href={feedHref("Discover", "", category.slug)} className="block rounded-full focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]">
-                      <Badge variant="outline" className="font-mono">
-                        <span className="text-muted-foreground">#</span>
-                        {category.name}
-                      </Badge>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </Cell>
-            <Cell label="Observed">
-              {/* The public counts as scraped, and nothing more: no ratio against the brand's average
-                  or rank in the category (too few posts a brand for a fair benchmark) */}
-              <dl className="flex flex-wrap gap-x-5 gap-y-1 text-body text-foreground">
-                <div className="flex items-center gap-1.5">
-                  <Heart className="size-3.5 text-muted-foreground" aria-hidden="true" />
-                  <dt className="sr-only">Likes</dt>
-                  <dd className="tabular-nums" style={semibold}>
-                    {countLabel(post.likes)}
-                  </dd>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <ChatCircle className="size-3.5 text-muted-foreground" aria-hidden="true" />
-                  <dt className="sr-only">Comments</dt>
-                  <dd className="tabular-nums" style={semibold}>
-                    {countLabel(post.comments)}
-                  </dd>
-                </div>
-              </dl>
-              <p className="mt-1.5 text-caption text-muted-foreground">As scraped. Not a verdict on whether it worked.</p>
-            </Cell>
-            <Cell label="Boards">
-              <BoardsOn post={post} />
-            </Cell>
-          </section>
+              <Cell label="Observed">
+                {/* The public counts as scraped, and nothing more: no ratio against the brand's average
+                    or rank in the category (too few posts a brand for a fair benchmark) */}
+                <dl className="flex flex-wrap gap-x-5 gap-y-1 type-body-sm text-text-1">
+                  <div className="flex items-center gap-1.5">
+                    <Icon icon={Heart} className="text-text-2" />
+                    <dt className="sr-only">Likes</dt>
+                    <dd className="data font-medium">{countLabel(post.likes)}</dd>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Icon icon={ChatCircle} className="text-text-2" />
+                    <dt className="sr-only">Comments</dt>
+                    <dd className="data font-medium">{countLabel(post.comments)}</dd>
+                  </div>
+                </dl>
+                <p className="mt-1.5 type-caption text-text-2">As scraped. Not a verdict on whether it worked.</p>
+              </Cell>
+              <Cell label="Boards">
+                <BoardsOn post={post} />
+              </Cell>
+            </CardContent>
+          </Card>
 
           {/* The breakdown, then the slides */}
           {analysis ? (
             <>
-              <section aria-label="Creative breakdown" className="rounded-[24px] bg-surface-3 px-6 pb-5 shadow-surface-2">
-                <CreativeBreakdown analysis={analysis} index={index} onSlide={go} videos={post.videos} source={source} />
-              </section>
+              <Card role="region" aria-label="Creative breakdown">
+                <CardContent className="px-4 pt-0 pb-4">
+                  <CreativeBreakdown analysis={analysis} index={index} onSlide={go} videos={post.videos} source={source} />
+                </CardContent>
+              </Card>
               {count > 1 && analysis.slides.some(Boolean) && (
-                <section aria-labelledby="slides-heading" className="rounded-[24px] bg-surface-3 p-5 shadow-surface-2">
-                  <h2 id="slides-heading" className="mb-3 text-subtitle text-foreground" style={semibold}>
-                    Slide breakdown
-                  </h2>
-                  <SlideBreakdown analysis={analysis} index={index} onSlide={go} images={post.images} videos={post.videos} />
-                </section>
+                <Card role="region" aria-labelledby="slides-heading">
+                  <CardContent className="p-4">
+                    <h2 id="slides-heading" className="type-heading-sm text-text-1">
+                      Slide breakdown
+                    </h2>
+                    <SlideBreakdown analysis={analysis} index={index} onSlide={go} images={post.images} videos={post.videos} />
+                  </CardContent>
+                </Card>
               )}
             </>
           ) : (
-            <p className="px-5 text-caption text-muted-foreground">No creative breakdown for this post yet.</p>
+            <p className="px-4 type-caption text-text-2">No creative breakdown for this post yet.</p>
           )}
         </div>
       </main>
@@ -304,45 +302,42 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
   );
 }
 
-// One cell of the card: a small label over its content
+// One cell of the card: its name over its content
 function Cell({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="p-5">
-      <p className="mb-2.5 text-micro tracking-[0.08em] text-muted-foreground uppercase">{label}</p>
+    <div className="rule-row p-4">
+      <p className="mb-2 type-label-sm text-text-2">{label}</p>
       {children}
     </div>
   );
 }
 
 // The previous or next post in the feed, in the app bar. It replaces the address rather than
-// adding to it, so Back still closes the post instead of stepping through every one seen.
-// A plain next/link rather than Button isLink: the step needs Link's `replace` and `scroll`,
-// which Button's link form doesn't pass through; styled as the bar's other secondary buttons
+// adding to it, so Back still closes the post instead of stepping through every one seen. At
+// either end of the feed it's a disabled button
 function StepLink({ side, shortCode }: { side: "left" | "right"; shortCode?: string }) {
-  const Caret = side === "left" ? CaretLeft : CaretRight;
+  const caret = side === "left" ? ChevronLeft : ChevronRight;
   const label = side === "left" ? "Previous post" : "Next post";
-  const cls = "flex size-7 items-center justify-center rounded-full bg-muted text-foreground transition-colors duration-150 ease-out-quint hover:bg-hover focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]";
   if (!shortCode) {
     return (
-      <span aria-label={label} aria-disabled="true" className={cx(cls, "opacity-40")}>
-        <Caret className="size-3.5" />
-      </span>
+      <Button variant="secondary" size="icon" aria-label={label} disabled>
+        <Icon icon={caret} />
+      </Button>
     );
   }
   return (
-    <Link href={postHref(shortCode)} replace scroll={false} aria-label={label} className={cls}>
-      <Caret className="size-3.5" />
-    </Link>
+    <Button variant="secondary" size="icon" aria-label={label} render={<Link href={postHref(shortCode)} replace scroll={false} />} nativeButton={false}>
+      <Icon icon={caret} />
+    </Button>
   );
 }
 
 // The slide arrows on the stage. The wrapper places them and fades one out at either end
 function SlideButton({ side, disabled, onClick }: { side: "left" | "right"; disabled: boolean; onClick: () => void }) {
-  const Caret = side === "left" ? CaretLeft : CaretRight;
   return (
-    <div className={cx("absolute top-1/2 -translate-y-1/2 transition-opacity duration-150 ease-out-quint", side === "left" ? "left-3" : "right-3", disabled && "pointer-events-none opacity-0")}>
-      <Button variant="secondary" iconOnly aria-label={side === "left" ? "Previous slide" : "Next slide"} disabled={disabled} onClick={onClick}>
-        <Caret className="size-3.5" />
+    <div className={cn("absolute top-1/2 -translate-y-1/2 transition-opacity duration-(--dur-state) ease-out", side === "left" ? "left-3" : "right-3", disabled && "pointer-events-none opacity-0")}>
+      <Button variant="secondary" size="icon" aria-label={side === "left" ? "Previous slide" : "Next slide"} disabled={disabled} onClick={onClick}>
+        <Icon icon={side === "left" ? ChevronLeft : ChevronRight} />
       </Button>
     </div>
   );
@@ -393,7 +388,7 @@ function Caption({ paragraphs }: { paragraphs: string[] }) {
   if (!paragraphs.length) return null;
   return (
     <div>
-      <div ref={ref} className={cx("space-y-2 text-body text-pretty text-muted-foreground", !open && "line-clamp-3")}>
+      <div ref={ref} className={cn("space-y-2 type-body-sm text-pretty text-text-2", !open && "line-clamp-3")}>
         {paragraphs.map((paragraph, i) => (
           <p key={i} className="whitespace-pre-line">
             {linkify(paragraph)}
@@ -401,9 +396,9 @@ function Caption({ paragraphs }: { paragraphs: string[] }) {
         ))}
       </div>
       {(clipped || open) && (
-        <button type="button" onClick={() => setOpen((o) => !o)} className="mt-1.5 text-caption text-foreground hover:underline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]" style={semibold}>
+        <Button variant="ghost" size="sm" onClick={() => setOpen((o) => !o)} className="mt-1 -ms-2.5">
           {open ? "Show less" : "Show more"}
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -420,7 +415,7 @@ function linkify(text: string): ReactNode[] {
     out.push(text.slice(last, match.index));
     const href = handle ? `https://www.instagram.com/${handle}/` : `https://www.instagram.com/explore/tags/${encodeURIComponent(tag)}/`;
     out.push(
-      <a key={match.index} href={href} target="_blank" rel="noopener noreferrer" className="text-foreground underline-offset-2 hover:underline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]" style={semibold}>
+      <a key={match.index} href={href} target="_blank" rel="noopener noreferrer" className="rounded-tag font-medium text-text-1 underline-offset-2 hover:underline">
         {token}
       </a>,
     );
@@ -430,36 +425,48 @@ function linkify(text: string): ReactNode[] {
   return out;
 }
 
-// The boards this post is on, each with a way to take it off
+// The boards this post is on, each a row that opens the board, with a way to take it off. The
+// row's link is Glaze's ItemLink, an <a>, so a plain click goes through the router as next/link
+// did (a client-side navigation); a click with a modifier opens a tab as a link does
 function BoardsOn({ post }: { post: PostDetail }) {
+  const router = useRouter();
   const { boards, status, remove } = useBoards();
   const on = boards.filter((b) => b.items.some((item) => item.post === post.shortCode));
-  if (status === "loading") return <p className="text-body text-muted-foreground">Loading your boards…</p>;
+  if (status === "loading") return <p className="type-body-sm text-text-2">Loading your boards…</p>;
+  const open = (href: string) => (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    router.push(href);
+  };
   return (
     <>
-      <p className="text-body text-muted-foreground">{on.length ? `On ${on.length === 1 ? "1 board" : `${on.length} boards`}` : "Not on a board yet"}</p>
+      <p className="type-body-sm text-text-2">{on.length ? `On ${on.length === 1 ? "1 board" : `${on.length} boards`}` : "Not on a board yet"}</p>
       {on.length > 0 && (
-        <ul className="mt-2.5 space-y-1.5">
+        <ItemGroup variant="plain" aria-label="Boards with this post" className="mt-1">
           {on.map((b) => (
-            <li key={b.id} className="flex items-center gap-3 rounded-[14px] bg-muted p-2 shadow-surface-1">
-              <Link href={boardHref(b.id)} className="flex min-w-0 flex-1 items-center gap-3 rounded-[10px] focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--focus-ring)]">
+            <Item key={b.id} className="px-0">
+              <ItemMedia>
                 <BoardThumb board={b} className="size-8" />
-                <div className="min-w-0">
-                  <p className="truncate text-body text-foreground" style={semibold}>
+              </ItemMedia>
+              <ItemContent>
+                <ItemTitle>
+                  <ItemLink href={boardHref(b.id)} onClick={open(boardHref(b.id))}>
                     {b.name}
-                  </p>
-                  <p className="text-caption text-muted-foreground tabular-nums">
-                    {b.items.length} {b.items.length === 1 ? "post" : "posts"}
-                    {b.shareToken && " · Shared"}
-                  </p>
-                </div>
-              </Link>
-              <Button variant="transparent" size="sm" iconOnly onClick={() => remove(post.shortCode, b.id)} aria-label={`Remove from ${b.name}`}>
-                <Close className="size-3.5" />
-              </Button>
-            </li>
+                  </ItemLink>
+                </ItemTitle>
+                <ItemDescription className="data">
+                  {b.items.length} {b.items.length === 1 ? "post" : "posts"}
+                  {b.shareToken && " · Shared"}
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Button variant="ghost" size="icon-sm" onClick={() => remove(post.shortCode, b.id)} aria-label={`Remove from ${b.name}`}>
+                  <Icon icon={Close} />
+                </Button>
+              </ItemActions>
+            </Item>
           ))}
-        </ul>
+        </ItemGroup>
       )}
     </>
   );
@@ -467,12 +474,9 @@ function BoardsOn({ post }: { post: PostDetail }) {
 
 // The board picker and Save, in the card's third cell like lafys.com's one primary action.
 // "New board…" swaps the picker for a name field (and is all there is before the first board),
-// and Save then makes the board with this post on it. The picker is a native <select> (a value
-// in a form, which Menu's own notes leave to the browser; there's no Select atom yet), set as the
-// system's field (28px pill, the one stroke, the brand ring on focus) so it matches the Input.
+// and Save then makes the board with this post on it. The picker is Glaze's NativeSelect (a value
+// in a form, left to the browser) and the name field its Input, both on the field pill.
 const NEW = "new";
-const fieldClass =
-  "h-7 w-full rounded-full border-0 bg-transparent pr-8 pl-3 text-body pointer-coarse:text-[16px] text-foreground ring-1 ring-border transition-[box-shadow,background-color] duration-150 ease-out-quint hover:bg-hover focus:bg-surface-3 focus:ring-[var(--focus-ring)] focus:outline-hidden disabled:text-muted-foreground";
 
 function SaveForm({ post }: { post: PostDetail }) {
   const { boards, status, save, createBoard } = useBoards();
@@ -497,36 +501,38 @@ function SaveForm({ post }: { post: PostDetail }) {
       }}
     >
       {naming ? (
-        <label className="relative min-w-0 flex-1">
-          <span className="sr-only">New board name</span>
-          <input autoFocus={choice === NEW} value={name} onChange={(event) => setName(event.target.value)} maxLength={NAME_MAX} placeholder={boards.length ? "Name the new board" : "Name your first board"} className={cx(fieldClass, "placeholder:text-muted-foreground")} />
-          {boards.length > 0 && (
-            <span className="absolute top-1/2 right-0 -translate-y-1/2">
-              <Button variant="transparent" size="sm" iconOnly onClick={() => setChoice(null)} aria-label="Back to your boards">
-                <Close className="size-3.5" />
-              </Button>
-            </span>
-          )}
-        </label>
+        <Input
+          aria-label="New board name"
+          autoFocus={choice === NEW}
+          value={name}
+          onValueChange={setName}
+          maxLength={NAME_MAX}
+          placeholder={boards.length ? "Name the new board" : "Name your first board"}
+          className="min-w-0 flex-1"
+          trailing={
+            boards.length > 0 ? (
+              <InputAction onClick={() => setChoice(null)} aria-label="Back to your boards">
+                <Icon icon={Close} />
+              </InputAction>
+            ) : undefined
+          }
+        />
       ) : (
-        <label className="min-w-0 flex-1">
-          <span className="sr-only">Board</span>
-          <select value={status === "loading" ? "" : board} disabled={status === "loading"} onChange={(event) => setChoice(event.target.value)} className={cx(fieldClass, "truncate")}>
-            {status === "loading" && <option value="">Loading boards…</option>}
-            {boards.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-            <option value={NEW}>New board…</option>
-          </select>
-        </label>
+        <NativeSelect aria-label="Board" value={status === "loading" ? "" : board} disabled={status === "loading"} onChange={(event) => setChoice(event.target.value)} className="min-w-0 flex-1">
+          {status === "loading" && <option value="">Loading boards…</option>}
+          {boards.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+          <option value={NEW}>New board…</option>
+        </NativeSelect>
       )}
-      {/* "Saved" is a confirmation, not a dead control: it stays legible on a quiet grey fill
-          and is only aria-disabled (the submit above ignores it); loading and an empty name
-          still disable Save outright */}
+      {/* "Saved" is a confirmation, not a dead control: it stays legible as a flat secondary and
+          is only aria-disabled (the submit above ignores it); loading and an empty name still
+          disable Save outright */}
       {inChosen && !naming ? (
-        <Button type="submit" variant="muted" aria-disabled className="aria-disabled:cursor-default">
+        <Button type="submit" variant="secondary" aria-disabled className="aria-disabled:cursor-default">
           Saved
         </Button>
       ) : (

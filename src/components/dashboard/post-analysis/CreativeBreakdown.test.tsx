@@ -20,6 +20,12 @@ function galleryAnalysis(edit?: (dna: Gallery["dna"], slides: Gallery["slides"])
   return toPublicAnalysis({ creative_dna: dna, current_version_id: "v", image_analysis_complete: true, expected_slides: 7, processed_slides: 7 }, rows, 7)!;
 }
 
+const scrollPane = (el: HTMLDivElement | null) => {
+  if (!el) return;
+  el.style.overflowY = "auto";
+  el.style.height = "200px";
+};
+
 // PostView in miniature: one slide index for a stand-in stage, the breakdown and the slide rows,
 // and the modal's document-level ← / → handler, which skips a key something already handled
 function Harness({ analysis, videos }: { analysis: PublicAnalysis; videos?: boolean[] }) {
@@ -36,7 +42,8 @@ function Harness({ analysis, videos }: { analysis: PublicAnalysis; videos?: bool
     return () => document.removeEventListener("keydown", onKey);
   }, [count]);
   return (
-    <div id="scroll-pane" style={{ overflowY: "auto", height: "200px" }}>
+    // The scrolling pane, its overflow set on the element (Glaze's lint keeps style props to custom properties)
+    <div id="scroll-pane" ref={scrollPane}>
       <p data-testid="stage">image {index}</p>
       <section data-testid="breakdown">
         <CreativeBreakdown analysis={analysis} index={index} onSlide={setIndex} videos={flags} source={{ ...SOURCE, slides: count, format: count > 1 ? "carousel" : "static" }} />
@@ -66,19 +73,18 @@ afterEach(() => {
 const render = (ui: React.ReactNode) => act(() => root.render(ui));
 const stage = () => container.querySelector('[data-testid="stage"]')!.textContent;
 const within = (id: string) => container.querySelector(`[data-testid="${id}"]`)!;
-// The shown view: the shared Tabs gives each view its own panel with a generated id
-const panel = () => container.querySelector('[role="tabpanel"]:not([hidden])')!;
-// A tab's words: its text without the library's invisible (aria-hidden) semibold copy, which
-// reserves the heavier label's width
-const tabName = (t: Element) =>
-  [...t.querySelectorAll("*")]
-    .filter((el) => el.children.length === 0 && !el.closest('[aria-hidden="true"]'))
-    .map((el) => el.textContent)
-    .join("");
+// The shown view: the panel the selected tab labels. Glaze's Tabs (Base UI) gives each view its own
+// panel with a generated id, and keeps the one it leaves in the page for a frame as it goes
+const panel = () => {
+  const selected = container.querySelector('[role="tab"][aria-selected="true"]')!;
+  return container.querySelector(`[role="tabpanel"][aria-labelledby="${selected.id}"]`)!;
+};
+// A tab's words: Glaze's tab holds its label as plain text
+const tabName = (t: Element) => t.textContent;
 const tabNames = () => [...container.querySelectorAll('[role="tab"]')].map(tabName);
 const tab = (name: string) => [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find((t) => tabName(t) === name);
 const button = (scope: Element, label: RegExp) => [...scope.querySelectorAll<HTMLButtonElement>("button")].find((b) => label.test(b.getAttribute("aria-label") ?? b.textContent ?? ""));
-// A press and a click: Radix's tabs select on mousedown, so a bare click() wouldn't turn one
+// A press and a click, as a pointer gives them
 const click = (element: Element | undefined) => {
   if (!element) throw new Error("No such element");
   act(() => {
@@ -92,7 +98,8 @@ const key = (target: EventTarget, name: string) => {
   return event;
 };
 
-const cards = () => [...panel().querySelectorAll<HTMLButtonElement>("ol > li > button[aria-expanded]")];
+// The decisions: Glaze's Collapsible rows, each trigger in its heading
+const cards = () => [...panel().querySelectorAll<HTMLButtonElement>("ol > li > h3 > button[aria-expanded]")];
 
 describe("CreativeBreakdown: Breakdown", () => {
   it("opens on the strategy, its traits and the key decisions, the first open on its explanation", () => {
@@ -170,7 +177,7 @@ describe("CreativeBreakdown: Breakdown", () => {
     render(<Harness analysis={galleryAnalysis()} />);
     act(() => tab("Breakdown")!.focus());
     expect(key(tab("Breakdown")!, "ArrowRight").defaultPrevented).toBe(true);
-    // Radix moves focus to the next tab a tick later, and the selection follows the focus
+    // Base UI moves focus to the next tab a tick later, and the selection follows the focus
     await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
     expect(tab("Visual DNA")!.getAttribute("aria-selected")).toBe("true");
     expect(document.activeElement).toBe(tab("Visual DNA"));
