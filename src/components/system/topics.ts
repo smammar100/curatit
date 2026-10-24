@@ -2,45 +2,48 @@
 // layout's inline script, so it lives here rather than in the client switch)
 export const SYSTEM_THEME_KEY = "curatit-system-theme";
 
-// The design system page's topics (/system/<slug>), in the order of its navigation. Foundations
-// are the tokens; atoms are single elements (src/components/fundations/elements); molecules are
-// atoms composed into a pattern (src/components/fundations/molecules). DESIGN.md and
-// docs/design/components.md hold the same inventory.
-export const GROUPS = ["Foundations", "Atoms", "Molecules"] as const;
+// The design system page's topics (/system/<slug>), in the order of its navigation. Since
+// 2026-10-24 the site is built on Glaze (src/components/glaze), with Fluid Functionalism's type,
+// motion and surfaces (src/styles/glaze-bridge.css): Foundations are those tokens, the rest one
+// sheet per Glaze component the site uses, grouped as Glaze groups them.
+export const GROUPS = ["Foundations", "Actions", "Inputs", "Display", "Feedback", "Overlays"] as const;
 
 export const TOPICS = [
-  { slug: "colour", title: "Colour", group: "Foundations", blurb: "Semantic tokens for surfaces, text, brand, status and borders, and the scales under them." },
-  { slug: "type", title: "Type", group: "Foundations", blurb: "Hedvig headings and Inter text on Interfere's scale, and the dashboard's six roles." },
-  { slug: "shape", title: "Shape and depth", group: "Foundations", blurb: "The radius scale, the layered shadows and the alpha borders." },
-  { slug: "motion", title: "Motion", group: "Foundations", blurb: "Easing, durations, the shared keyframes and the motion hooks, live." },
-  { slug: "icons", title: "Icons", group: "Foundations", blurb: "Every Phosphor icon in the set, its sizes and how to add one." },
-  { slug: "layout", title: "Layout", group: "Foundations", blurb: "Wrapper widths, the page gutter and the rhythm between sections." },
-  { slug: "brand", title: "Brand", group: "Foundations", blurb: "The wordmark, the mark and the lockup." },
-  { slug: "button", title: "Button", group: "Atoms", blurb: "Every variant, size and state, as a button and as a link." },
-  { slug: "text-link", title: "Text link", group: "Atoms", blurb: "Links inside running text and quiet navigation links." },
-  { slug: "badge", title: "Badge", group: "Atoms", blurb: "Small labels: variants, sizes and when a badge isn't the answer." },
-  { slug: "input", title: "Input", group: "Atoms", blurb: "The text input: sizes, states and slots for icons." },
-  { slug: "textarea", title: "Textarea", group: "Atoms", blurb: "Multi-line text entry on the input's recipe." },
-  { slug: "checkbox", title: "Checkbox", group: "Atoms", blurb: "Independent on/off choices in a list." },
-  { slug: "controls", title: "Segmented and switch", group: "Atoms", blurb: "One choice from a few, and on or off." },
-  { slug: "avatar", title: "Avatar", group: "Atoms", blurb: "A person: their picture, or their initials." },
-  { slug: "spinner", title: "Spinner", group: "Atoms", blurb: "An inline wait under a second or two." },
-  { slug: "skeleton", title: "Skeleton", group: "Atoms", blurb: "The shape of content that is still loading." },
-  { slug: "kbd", title: "Kbd", group: "Atoms", blurb: "A key to press." },
-  { slug: "separator", title: "Separator", group: "Atoms", blurb: "A hairline between groups." },
-  { slug: "field", title: "Field", group: "Molecules", blurb: "A label, a control, a hint and an error, wired together." },
-  { slug: "search-field", title: "Search field", group: "Molecules", blurb: "Search input with its icon, clear button and shortcut." },
-  { slug: "auth-fields", title: "Auth fields", group: "Molecules", blurb: "The sign-in forms' fields, password meter and notice." },
-  { slug: "notice", title: "Notice", group: "Molecules", blurb: "An inline message: information, success, warning or error." },
-  { slug: "toast", title: "Toast", group: "Molecules", blurb: "A short message after an action, that leaves on its own." },
-  { slug: "empty-state", title: "Empty state", group: "Molecules", blurb: "What a place looks like with nothing in it yet, and the way forward." },
-  { slug: "card", title: "Card", group: "Molecules", blurb: "A grouped surface: the grey mat and the white card." },
-  { slug: "menu", title: "Menu", group: "Molecules", blurb: "A list of actions or choices opened from a button." },
-  { slug: "dialog", title: "Dialog", group: "Molecules", blurb: "A task that takes the screen's focus until it's done." },
-  { slug: "tooltip", title: "Tooltip", group: "Molecules", blurb: "A few words about a control, on hover and focus." },
-  { slug: "tabs", title: "Tabs", group: "Molecules", blurb: "Views of the same thing, one at a time." },
-  { slug: "code", title: "Code", group: "Molecules", blurb: "Snippets with a copy button, dark and light." },
-  { slug: "patterns", title: "Patterns", group: "Molecules", blurb: "The theme switch, the FAQ, the agent's thinking line." },
+  { slug: "colour", title: "Colour", group: "Foundations", blurb: "Ink and paper, greys as ink at alphas, and colour only for status." },
+  { slug: "type", title: "Type", group: "Foundations", blurb: "Fluid Functionalism's scale as Glaze's type roles, and the Text scale for marketing pages." },
+  { slug: "surfaces", title: "Surfaces", group: "Foundations", blurb: "The eight-step ladder, and where the card, overlays and dialogs sit on it." },
+  { slug: "motion", title: "Motion", group: "Foundations", blurb: "Three tiers of duration, two curves and the springs." },
+  { slug: "radius", title: "Radius", group: "Foundations", blurb: "Pills for one-line controls, the card's two corners, overlays and tags." },
+  { slug: "space", title: "Space and sizes", group: "Foundations", blurb: "The 4px grid, control heights, icon sizes and the page's gutter and rhythm." },
+  { slug: "icons", title: "Icons", group: "Foundations", blurb: "The Icon entry and every glyph registered in it." },
+  { slug: "brand", title: "Brand", group: "Foundations", blurb: "The mark, the wordmark and the lockup." },
+  { slug: "button", title: "Button", group: "Actions", blurb: "Starts an action: one glass primary per group, flat secondaries." },
+  { slug: "copy-button", title: "Copy button", group: "Actions", blurb: "Copies a value and confirms in place." },
+  { slug: "text-link", title: "Text link", group: "Actions", blurb: "A link that is words, inside running text or on its own." },
+  { slug: "field", title: "Field and input", group: "Inputs", blurb: "A label, a one-line input, a hint and an error, wired together." },
+  { slug: "textarea", title: "Textarea", group: "Inputs", blurb: "Several lines of text, with an optional limit." },
+  { slug: "select", title: "Select", group: "Inputs", blurb: "Picks one option from a list." },
+  { slug: "checkbox", title: "Checkbox", group: "Inputs", blurb: "Turns one option on or off in a list or a form." },
+  { slug: "switch", title: "Switch", group: "Inputs", blurb: "Turns a setting on or off at once." },
+  { slug: "segmented-control", title: "Segmented control", group: "Inputs", blurb: "Switches between a few views of one thing." },
+  { slug: "chip", title: "Chip", group: "Inputs", blurb: "A filter or a chosen value." },
+  { slug: "tabs", title: "Tabs", group: "Display", blurb: "Switches between panels of one view." },
+  { slug: "card", title: "Card and panel", group: "Display", blurb: "The grey shell and the paper panel inside it." },
+  { slug: "item", title: "Item", group: "Display", blurb: "One thing as a row in a list." },
+  { slug: "data-list", title: "Data list", group: "Display", blurb: "Label and value pairs about one thing." },
+  { slug: "collapsible", title: "Collapsible", group: "Display", blurb: "Shows and hides a region." },
+  { slug: "badge", title: "Badge", group: "Display", blurb: "Labels what something is or how it stands." },
+  { slug: "avatar", title: "Avatar", group: "Display", blurb: "Who or what acted." },
+  { slug: "kbd", title: "Kbd", group: "Display", blurb: "A key or a shortcut." },
+  { slug: "code-block", title: "Code block", group: "Display", blurb: "Code or commands to copy." },
+  { slug: "alert", title: "Alert", group: "Feedback", blurb: "A problem or a note about the current view." },
+  { slug: "toast", title: "Toast", group: "Feedback", blurb: "Confirms an action or reports an event out of view." },
+  { slug: "empty-state", title: "Empty state", group: "Feedback", blurb: "Why a region is empty, and the way forward." },
+  { slug: "skeleton", title: "Skeleton", group: "Feedback", blurb: "The shape of content while it loads." },
+  { slug: "dialog", title: "Dialog", group: "Overlays", blurb: "Asks for a decision on top of the page." },
+  { slug: "dropdown-menu", title: "Dropdown menu", group: "Overlays", blurb: "The actions on one thing." },
+  { slug: "popover", title: "Popover", group: "Overlays", blurb: "A few lines next to a control." },
+  { slug: "tooltip", title: "Tooltip", group: "Overlays", blurb: "Names a control on hover or focus." },
 ] as const;
 
 export type Topic = (typeof TOPICS)[number];

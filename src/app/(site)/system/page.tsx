@@ -1,47 +1,44 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import Text from "@/components/fundations/elements/Text";
-import { TOPICS } from "@/components/system/topics";
+import { Card, CardDescription, CardHeader, CardLink, CardTitle } from "@/components/glaze/ui/card";
+import { GROUPS, TOPICS } from "@/components/system/topics";
 
 export const metadata: Metadata = {
   title: "Design system",
-  description: "Curatit's tokens and shared components, live, in both themes.",
+  description: "Curatit's tokens and Glaze components, live, in both themes.",
 };
 
 // The overview: the system's character in a few lines, then every topic
 export default function SystemOverview() {
-  const groups = ["Foundations", "Components"] as const;
   return (
-    <div className="flex flex-col gap-16">
-      <div className="grid max-w-4xl gap-4 text-body-base text-secondary-foreground sm:grid-cols-3">
+    <div className="flex flex-col gap-12">
+      <div className="grid gap-4 type-body-sm text-text-2 sm:grid-cols-3">
         <p>
-          <strong className="font-medium text-primary-foreground">Gallery calm.</strong> The posts are the
-          colour. Everything around them is neutral grey and quiet.
+          <strong className="font-medium text-text-1">Ink and paper.</strong> Greys are ink at alphas and the
+          posts are the only colour. Colour in the interface means a status.
         </p>
         <p>
-          <strong className="font-medium text-primary-foreground">Serif headings, Inter for the rest.</strong>{" "}
-          Hedvig Letters Serif in its one regular weight; never bold.
+          <strong className="font-medium text-text-1">Glass on what you press.</strong> One glass primary leads
+          each group; every other action is the flat card surface.
         </p>
         <p>
-          <strong className="font-medium text-primary-foreground">Colour is an event.</strong> Terracotta only
-          on hovers, focus rings, links and the accent button.
+          <strong className="font-medium text-text-1">Fluid Functionalism underneath.</strong> Its type scale,
+          its three motion tiers and its surface ladder, read through Glaze&rsquo;s tokens.
         </p>
       </div>
-      {groups.map((group) => (
+      {GROUPS.map((group) => (
         <section key={group}>
-          <Text tag="h2" variant="h5" className="text-primary-foreground">
-            {group}
-          </Text>
-          <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <h2 className="type-heading text-text-1">{group}</h2>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {TOPICS.filter((t) => t.group === group).map((t) => (
-              <li key={t.slug}>
-                <Link
-                  href={`/system/${t.slug}`}
-                  className="group flex h-full flex-col rounded-2xl bg-card p-5 transition-colors duration-150 ease-out-quint hover:bg-component focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
-                >
-                  <span className="text-body-sm font-medium text-primary-foreground">{t.title}</span>
-                  <span className="mt-1 text-body-sm text-secondary-foreground">{t.blurb}</span>
-                </Link>
+              <li key={t.slug} className="flex">
+                <Card className="w-full">
+                  <CardHeader>
+                    <CardTitle>
+                      <CardLink href={`/system/${t.slug}`}>{t.title}</CardLink>
+                    </CardTitle>
+                    <CardDescription>{t.blurb}</CardDescription>
+                  </CardHeader>
+                </Card>
               </li>
             ))}
           </ul>

@@ -14,10 +14,12 @@
      border, a dialog or a sheet on step 8.
      In the dark theme the ladder steps each surface lighter and the shadows turn to rings and highlights, as before.
 
-   Loaded after Glaze's styles.css in the root layout, with the same scope, so on equal specificity it wins. Glaze's
-   own files are left as installed, so a reinstall doesn't lose this. */
+   Loaded after Glaze's styles.css in the root layout. The tokens are declared on Glaze's own selectors (tokens.css:
+   [data-system="glaze"] and .glaze, and its dark and reduced-motion blocks), never under :where(), so at equal
+   specificity the later file wins; the recipes below sit where Glaze's utilities do. Glaze's own files are left as
+   installed, so a reinstall doesn't lose this. */
 
-:where(.glaze, [data-system="glaze"]) {
+[data-system="glaze"], .glaze {
   /* == Type == */
   --font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: var(--font-hedvig), "Hedvig Letters Serif", ui-serif, Georgia, serif;
@@ -54,8 +56,15 @@
   --code-surface: var(--surface-3);
 }
 
+/* Glaze's dark block sets its own surfaces; the ladder takes them back (each FF step is lighter in dark). */
+[data-system="glaze"][data-theme="dark"], .glaze[data-theme="dark"], [data-theme="dark"] [data-system="glaze"], [data-theme="dark"] .glaze {
+  --page: var(--color-page);
+  --paper: var(--surface-3);
+  --shell: color-mix(in oklab, var(--surface-2), var(--ink) 3%);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  :where(.glaze, [data-system="glaze"]) {
+  [data-system="glaze"], .glaze {
     --dur-press: 0ms;
     --dur-glass-press: 0ms;
     --dur-glass-release: 0ms;

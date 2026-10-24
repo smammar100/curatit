@@ -5,11 +5,15 @@
 // in localStorage. The layout's inline script applies the saved choice before paint, so the
 // sheets never flash both themes first. Independent of the site's own theme.
 import { useEffect, useState } from "react";
-import Segmented from "@/components/fundations/elements/Segmented";
+import { SegmentedControl, SegmentedControlItem } from "@/components/glaze/ui/segmented-control";
 import { SYSTEM_THEME_KEY } from "./topics";
 
-const MODES = ["light", "dark", "both"] as const;
-type Mode = (typeof MODES)[number];
+const MODES = [
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+  { value: "both", label: "Both" },
+] as const;
+type Mode = (typeof MODES)[number]["value"];
 
 function apply(mode: Mode) {
   const root = document.documentElement;
@@ -48,12 +52,17 @@ export default function ThemeModeSwitch() {
   };
 
   return (
-    <Segmented
+    <SegmentedControl
       key={restored ? "restored" : "initial"}
       aria-label="Show specimens in"
       value={mode}
-      onValueChange={choose}
-      options={MODES.map((m) => ({ value: m, label: m[0].toUpperCase() + m.slice(1) }))}
-    />
+      onValueChange={(value) => choose(value as Mode)}
+    >
+      {MODES.map((m) => (
+        <SegmentedControlItem key={m.value} value={m.value}>
+          {m.label}
+        </SegmentedControlItem>
+      ))}
+    </SegmentedControl>
   );
 }
