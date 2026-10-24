@@ -1,10 +1,6 @@
 @import "tailwindcss";
-@plugin "@tailwindcss/forms";
 @plugin "@tailwindcss/typography";
 @plugin "tailwind-scrollbar-hide";
-/* Stylesheets of components copied into src/components/ui, loaded with the page (not with
-   the component's own chunk) so server-rendered markup is styled from the first paint */
-@import "../components/ui/thought-line.css" layer(components);
 /* Dark mode follows the data-theme attribute on <html>, set before paint by ThemeScript and
    switched by ThemeToggle. Colours flip through the tokens below, so `dark:` is only for a
    component that needs a different treatment (a ring instead of a shadow), never for colour */
@@ -726,55 +722,6 @@
 [data-theme-switching] *::after {
   transition: none !important;
 }
-/* A native <dialog> that scales in from 0.97 and fades, and leaves faster than it came
-   (2026-10-18). The exit keeps the dialog in the top layer while it plays (overlay and display,
-   allow-discrete), so it only runs where `overlay` can be transitioned: a browser that could
-   delay `display` but not `overlay` (Firefox) would drop the dialog out of the top layer for the
-   fade, so there it closes at once */
-.dialog-motion,
-.dialog-motion::backdrop {
-  transition-property: opacity, scale;
-  transition-duration: 140ms;
-  transition-timing-function: var(--ease-in-quart);
-}
-@supports (overlay: auto) {
-  .dialog-motion,
-  .dialog-motion::backdrop {
-    transition-property: opacity, scale, overlay, display;
-    transition-behavior: allow-discrete;
-  }
-}
-.dialog-motion {
-  opacity: 0;
-  scale: 0.97;
-}
-.dialog-motion::backdrop {
-  opacity: 0;
-}
-.dialog-motion[open] {
-  scale: 1;
-}
-.dialog-motion[open],
-.dialog-motion[open]::backdrop {
-  opacity: 1;
-  transition-duration: 200ms;
-  transition-timing-function: var(--ease-out-quint);
-}
-@starting-style {
-  .dialog-motion[open] {
-    opacity: 0;
-    scale: 0.97;
-  }
-  .dialog-motion[open]::backdrop {
-    opacity: 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .dialog-motion,
-  .dialog-motion::backdrop {
-    transition: none;
-  }
-}
 /* Prose colours come from the site's tokens, so markdown pages flip with the theme */
 .prose {
   --tw-prose-body: var(--color-base-600);
@@ -1153,55 +1100,6 @@
   transform: rotateY(180deg);
 }
 
-/* The site footer (global/Footer), "Night": an inset panel that inverts the page. On the light site
-   it's dark (from the dark end of the scale); on the dark site it's paper (the scale is reversed
-   there, so the same roles read from the other end), with dark type and a dark email field. Keyed
-   off data-theme like everything else, not light-dark(), which follows color-scheme. Text roles
-   keep 5.8:1 or more on the panel in both themes. The mark turns once every three minutes; the newest covers drift along a filmstrip (.footer-strip) */
-.footer-panel {
-  --f-bg: var(--color-base-950);
-  --f-raise: var(--color-base-800);
-  --f-line: var(--color-base-800);
-  --f-quiet: var(--color-base-400);
-  --f-body: var(--color-base-300);
-  --f-ink: var(--color-base-100);
-  --f-field: var(--color-white);
-  --f-field-ink: var(--color-base-900);
-  --f-placeholder: var(--color-base-500);
-  --f-hover: var(--color-accent-400);
-  --f-focus: var(--color-accent-500);
-  /* danger-500 is 4.3:1 on this ground, so the note lifts it toward danger-100 */
-  --f-danger: color-mix(in oklab, var(--color-danger-500) 70%, var(--color-danger-100));
-  --f-danger-ring: var(--color-danger-500);
-  --f-edge: color-mix(in oklab, var(--color-paper) 10%, transparent);
-  --f-glint: color-mix(in oklab, var(--color-paper) 8%, transparent);
-  background-color: var(--f-bg);
-  color: var(--f-body);
-  /* Light catching the panel's top edge */
-  box-shadow: inset 0 1px 0 0 var(--f-glint);
-}
-
-/* The dark site's paper panel: the reversed scale's dark end for type, a dark field with a light
-   button set into it, the accent's deeper steps for hover, and a darkened red (the dark theme's
-   reds are made for dark grounds) */
-:root[data-theme="dark"] .footer-panel {
-  --f-bg: var(--color-paper);
-  --f-raise: var(--color-base-900);
-  --f-line: var(--color-base-800);
-  --f-quiet: var(--color-base-400);
-  --f-body: var(--color-base-300);
-  --f-ink: var(--color-base-100);
-  --f-field: var(--color-white);
-  --f-field-ink: var(--color-base-900);
-  --f-placeholder: var(--color-base-500);
-  --f-hover: var(--color-accent-700);
-  --f-focus: var(--color-accent-600);
-  --f-danger: color-mix(in oklab, var(--color-danger-500) 75%, black);
-  --f-danger-ring: color-mix(in oklab, var(--color-danger-500) 75%, black);
-  --f-edge: color-mix(in oklab, black 10%, transparent);
-  box-shadow: none;
-}
-
 .footer-mark {
   animation: footer-turn 180s linear infinite;
 }
@@ -1209,58 +1107,6 @@
 @keyframes footer-turn {
   to {
     rotate: 360deg;
-  }
-}
-
-/* The email field: light on the dark panel, a 2px ring outside it on focus, red when wrong */
-.footer-field {
-  background-color: var(--f-field);
-  color: var(--f-field-ink);
-  caret-color: var(--f-field-ink);
-  border: 0;
-  box-shadow: none;
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  transition: outline-color 150ms var(--ease-out-quint);
-}
-
-.footer-field::placeholder {
-  color: var(--f-placeholder);
-  opacity: 1;
-}
-
-.footer-field:focus-visible {
-  outline-color: var(--f-focus);
-}
-
-.footer-field[aria-invalid="true"] {
-  outline-color: var(--f-danger-ring);
-}
-
-/* Join free sits inside the field, cut from the panel's own dark */
-.footer-submit {
-  background-color: var(--f-bg);
-  color: var(--f-ink);
-  outline: 2px solid transparent;
-  transition: background-color 150ms var(--ease-out-quint), scale 150ms var(--ease-out-quint);
-}
-
-.footer-submit:focus-visible {
-  outline-color: var(--f-focus);
-}
-
-.footer-submit:active {
-  scale: 0.97;
-}
-
-.footer-submit[aria-disabled="true"] {
-  cursor: progress;
-  scale: 1;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .footer-submit:hover {
-    background-color: var(--f-raise);
   }
 }
 
@@ -1799,66 +1645,6 @@ img[data-fade="in"] {
 :root[data-theme="dark"] .lifeline-typeset {
   --color-white: var(--color-base-950);
   --color-black: oklch(0.175 0.004 80);
-}
-
-/* The MCP landing page's install panel (/agents, 2026-10-13, after ElevenLabs' MCP page, whose
-   panel is a blurred photo of leaves; this is the same look built in CSS, no image): a sky-to-sage
-   wash, then green blades and white light bands sweeping up from the bottom left (soft ellipses on
-   a layer turned to the diagonal and blurred, ::before), then a fine film grain (SVG noise,
-   ::after). A deliberate exception to the site's no-tinted-panels rule, kept to this one panel;
-   the dark theme swaps in a deeper, dimmer version of the same scene. Static: nothing moves. */
-.mcp-gradient {
-  --g-sky: oklch(0.87 0.022 228);
-  --g-haze: oklch(0.935 0.012 210);
-  --g-meadow: oklch(0.9 0.045 135);
-  --g-blade: oklch(0.76 0.16 128);
-  --g-blade-deep: oklch(0.68 0.15 130);
-  --g-blade-pale: oklch(0.87 0.08 132);
-  --g-light: oklch(0.99 0.004 110);
-  --g-cloud: oklch(0.85 0.024 232);
-  --g-grain: 0.32;
-  position: relative;
-  isolation: isolate;
-  overflow: clip;
-  background: linear-gradient(180deg, var(--g-sky) 0%, var(--g-haze) 42%, var(--g-meadow) 100%);
-}
-.mcp-gradient::before {
-  content: "";
-  position: absolute;
-  inset: -30%;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 52% 9% at 33% 47%, var(--g-blade) 0%, color-mix(in oklch, var(--g-blade) 55%, transparent) 45%, transparent 76%),
-    radial-gradient(ellipse 44% 6% at 27% 52%, var(--g-blade-deep) 0%, transparent 74%),
-    radial-gradient(ellipse 58% 5% at 42% 44%, var(--g-light) 0%, color-mix(in oklch, var(--g-light) 60%, transparent) 40%, transparent 74%),
-    radial-gradient(ellipse 62% 10% at 54% 40%, color-mix(in oklch, var(--g-light) 85%, transparent) 0%, transparent 70%),
-    radial-gradient(ellipse 36% 14% at 63% 84%, var(--g-blade-pale) 0%, transparent 72%),
-    radial-gradient(ellipse 30% 7% at 49% 76%, color-mix(in oklch, var(--g-blade) 70%, transparent) 0%, transparent 74%),
-    radial-gradient(ellipse 64% 20% at 60% 28%, var(--g-cloud) 0%, transparent 70%);
-  transform: rotate(-30deg);
-  filter: blur(18px);
-}
-.mcp-gradient::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: var(--g-grain);
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-:root[data-theme="dark"] .mcp-gradient {
-  --g-sky: oklch(0.25 0.02 230);
-  --g-haze: oklch(0.21 0.012 210);
-  --g-meadow: oklch(0.26 0.045 138);
-  --g-blade: oklch(0.47 0.12 136);
-  --g-blade-deep: oklch(0.4 0.11 138);
-  --g-blade-pale: oklch(0.34 0.06 134);
-  --g-light: oklch(0.42 0.025 120);
-  --g-cloud: oklch(0.3 0.025 232);
-  --g-grain: 0.22;
 }
 
 /* The install card's connection illustration (mcp/ClientInstall): a small post card travels the
