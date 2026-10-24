@@ -396,14 +396,14 @@ export default function ClientInstall() {
 
   return (
     <Tabs value={current} onValueChange={(next) => setCurrent(String(next))} className="gap-0">
-      <div onKeyDown={() => setSnap(true)} onPointerDown={() => setSnap(false)} className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
+      <div onKeyDown={() => setSnap(true)} onPointerDown={() => setSnap(false)} className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
         {/* The tab row scrolls sideways when it doesn't fit */}
         {mode === "mcp" ? (
           <TabsList
             ref={row}
             aria-label="Your AI tool"
             style={{ "--fade": fade } as CSSProperties}
-            className="[mask-image:var(--fade)] lg:min-w-0 lg:flex-1"
+            className="[mask-image:var(--fade)] lg:min-w-0"
           >
             {CLIENTS.map((client, i) => (
               <TabsTrigger key={client.id} value={client.id} className={cx(i === firstDeveloper && divider)}>

@@ -12,7 +12,7 @@ import {
   UploadSimpleIcon, UserIcon, WarningIcon, WarningCircleIcon, WrenchIcon, XIcon, XCircleIcon, HourglassSimpleMediumIcon,
   // Curatit's glyphs (below)
   ImageIcon,
-  AddressBookIcon, AirplaneTiltIcon, BarbellIcon, BasketballIcon, BookOpenIcon, BookmarkSimpleIcon, BriefcaseIcon, HamburgerIcon, CameraIcon, ChatCircleIcon, ChatDotsIcon, ChatsCircleIcon, ShoppingCartIcon, CircleHalfIcon, CoatHangerIcon, CommandIcon, CpuIcon, CreditCardIcon, CurrencyBtcIcon, DotOutlineIcon, FilmStripIcon, FirstAidIcon, ForkKnifeIcon, GraduationCapIcon, HandshakeIcon, HeartIcon, HouseIcon, LightningIcon, LinkedinLogoIcon, ListChecksIcon, MapTrifoldIcon, MusicNotesIcon, NewspaperIcon, PaintBrushIcon, PaletteIcon, PlugsIcon, PopcornIcon, QuestionIcon, SealCheckIcon, ShareNetworkIcon, ShoppingBagIcon, SignOutIcon, SquaresFourIcon, TextAaIcon, UsersThreeIcon,
+  AddressBookIcon, AirplaneTiltIcon, BarbellIcon, BasketballIcon, BookOpenIcon, BookmarkSimpleIcon, BriefcaseIcon, HamburgerIcon, CameraIcon, ChatCircleIcon, ChatDotsIcon, ChatsCircleIcon, ShoppingCartIcon, CircleHalfIcon, CoatHangerIcon, CommandIcon, CpuIcon, CreditCardIcon, CurrencyBtcIcon, DotOutlineIcon, FilmStripIcon, FirstAidIcon, ForkKnifeIcon, GraduationCapIcon, GridNineIcon, HandshakeIcon, HeartIcon, HouseIcon, LightningIcon, LinkedinLogoIcon, ListChecksIcon, MapTrifoldIcon, MusicNotesIcon, NewspaperIcon, PaintBrushIcon, PaletteIcon, PlugsIcon, PopcornIcon, QuestionIcon, SealCheckIcon, ShareNetworkIcon, ShoppingBagIcon, SignOutIcon, SquaresFourIcon, TextAaIcon, UsersThreeIcon,
 } from '@phosphor-icons/react/ssr';
 import {cn} from '@/lib/glaze/utils';
 
@@ -151,6 +151,9 @@ export const ShareNetwork = ShareNetworkIcon;
 export const ShoppingBag = ShoppingBagIcon;
 export const SignOut = SignOutIcon;
 export const SquaresFour = SquaresFourIcon;
+// The grid sizes in the account menu: one large tile, four, nine
+export const TileLarge = SquareIcon;
+export const TileSmall = GridNineIcon;
 export const TextAa = TextAaIcon;
 export const UsersThree = UsersThreeIcon;
 

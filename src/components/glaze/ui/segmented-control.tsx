@@ -190,4 +190,9 @@ function SegmentedControlItem({className, children, count, countMax: itemMax, ..
   return <RadioPrimitive.Root {...shared} {...props} className={state => cn(itemBase, itemSize[size], state.checked ? (sliding ? onThumb : on) : off, className)}>{content}</RadioPrimitive.Root>;
 }
 
-export {SegmentedControl, SegmentedControlItem, segmentedVariants, type SegmentedControlProps, type SegmentedControlItemProps};
+/** Curatit: a segment's classes, for a segment another primitive draws (the menu's segmented row), chosen or not. */
+function segmentClass(size: Size, checked: boolean) {
+  return cn(itemBase, itemSize[size], checked ? on : off);
+}
+
+export {SegmentedControl, SegmentedControlItem, segmentedVariants, segmentClass, type SegmentedControlProps, type SegmentedControlItemProps};

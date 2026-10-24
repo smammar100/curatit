@@ -6,8 +6,8 @@
 // system) and the grid size, both remembered on this device. Since 2026-10-24 it is Glaze's
 // DropdownMenu: the trigger is a ghost icon Button holding the Avatar, the name and email a label
 // at the top, the pages LinkItems (so they open in a new tab too), every row with its glyph before
-// the words, and the two settings radio groups (a check on the choice; picking one closes the
-// menu, as a menu does).
+// the words, and the two settings as rows with a segmented switch each (icons, named for screen
+// readers; picking one keeps the menu open so the change shows behind it).
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/glaze/ui/button";
@@ -18,12 +18,12 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuLinkItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
+  DropdownMenuSegment,
+  DropdownMenuSegmented,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/glaze/ui/dropdown-menu";
-import { Bookmark, ChatDots, CircleHalf, Dark, Icon, Key, Light, SealCheck, SignOut, Sparkle } from "@/components/glaze/icon";
+import { Bookmark, ChatDots, CircleHalf, Dark, Icon, Key, Light, SealCheck, SignOut, Sparkle, SquaresFour, TileLarge, TileSmall } from "@/components/glaze/icon";
 import { getThemeMode, setThemeMode, type ThemeMode } from "@/components/global/theme";
 import { SUPPORT_MAILTO } from "@/lib/site";
 import { signOut } from "@/app/auth/actions";
@@ -100,33 +100,28 @@ export default function AccountMenu({ onShowSaved }: { onShowSaved: () => void }
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Theme</DropdownMenuLabel>
-          <DropdownMenuRadioGroup value={theme} onValueChange={(mode) => chooseTheme(mode as ThemeMode)}>
-            <DropdownMenuRadioItem value="light">
-              <Icon icon={Light} />
-              Light
-            </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="dark">
-              <Icon icon={Dark} />
-              Dark
-            </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="system">
-              <Icon icon={CircleHalf} />
-              Match system
-            </DropdownMenuRadioItem>
-          </DropdownMenuRadioGroup>
-        </DropdownMenuGroup>
-
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Grid size</DropdownMenuLabel>
-          <DropdownMenuRadioGroup value={gridSize} onValueChange={(size) => onGridSize(size as GridSize)}>
-            <DropdownMenuRadioItem value="large">Large tiles</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="medium">Medium tiles</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="small">Small tiles</DropdownMenuRadioItem>
-          </DropdownMenuRadioGroup>
-        </DropdownMenuGroup>
+        <DropdownMenuSegmented label="Theme" value={theme} onValueChange={(mode) => chooseTheme(mode as ThemeMode)}>
+          <DropdownMenuSegment value="light" label="Light">
+            <Icon icon={Light} />
+          </DropdownMenuSegment>
+          <DropdownMenuSegment value="dark" label="Dark">
+            <Icon icon={Dark} />
+          </DropdownMenuSegment>
+          <DropdownMenuSegment value="system" label="Match system">
+            <Icon icon={CircleHalf} />
+          </DropdownMenuSegment>
+        </DropdownMenuSegmented>
+        <DropdownMenuSegmented label="Grid size" value={gridSize} onValueChange={(size) => onGridSize(size as GridSize)}>
+          <DropdownMenuSegment value="large" label="Large tiles">
+            <Icon icon={TileLarge} />
+          </DropdownMenuSegment>
+          <DropdownMenuSegment value="medium" label="Medium tiles">
+            <Icon icon={SquaresFour} />
+          </DropdownMenuSegment>
+          <DropdownMenuSegment value="small" label="Small tiles">
+            <Icon icon={TileSmall} />
+          </DropdownMenuSegment>
+        </DropdownMenuSegmented>
       </DropdownMenuContent>
     </DropdownMenu>
   );

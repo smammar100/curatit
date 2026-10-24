@@ -6,6 +6,7 @@ import {ContextMenu as ContextMenuPrimitive} from '@base-ui/react/context-menu';
 import {menuCheckItemClass, menuItemClass, menuLabelClass, menuPopupClass, menuSeparatorClass} from '@/lib/glaze/overlay';
 import {Icon, ChevronRight, Check} from '@/components/glaze/icon';
 import {Kbd} from '@/components/glaze/ui/kbd';
+import {segmentClass, segmentedVariants} from '@/components/glaze/ui/segmented-control';
 import {cn, mergeClass} from '@/lib/glaze/utils';
 import {useGlazePortal} from '@/lib/glaze/portal';
 
@@ -244,6 +245,31 @@ function DropdownMenuRadioItem({className, children, inset, ...props}: MenuPrimi
   </MenuPrimitive.RadioItem>;
 }
 
+// Curatit (2026-10-24): a setting inside a menu as one row, its name on the left and a segmented switch on the right,
+// the segmented control's track and segments. The segments are the menu's own radio items, so the arrow keys reach
+// them like any row and a screen reader hears each as a checked or unchecked choice; picking one keeps the menu open,
+// so the change shows behind it. An icon-only segment takes a label, read aloud and shown as its title.
+function DropdownMenuSegmented({label, value, onValueChange, className, children}: {label: React.ReactNode; value: string; onValueChange: (value: string) => void; className?: string; children: React.ReactNode}) {
+  const id = React.useId();
+  return <div data-slot="dropdown-menu-segmented" className={cn('flex items-center justify-between gap-3 py-1 ps-2', className)}>
+    <span id={id} className="type-label text-text-1">{label}</span>
+    <MenuPrimitive.RadioGroup aria-labelledby={id} value={value} onValueChange={next => onValueChange(next as string)} className={segmentedVariants({size: 'default'})}>
+      {children}
+    </MenuPrimitive.RadioGroup>
+  </div>;
+}
+
+function DropdownMenuSegment({label, className, ...props}: Omit<MenuPrimitive.RadioItem.Props, 'className' | 'closeOnClick'> & {label: string; className?: string}) {
+  return <MenuPrimitive.RadioItem
+    data-slot="dropdown-menu-segment"
+    aria-label={label}
+    title={label}
+    closeOnClick={false}
+    className={state => cn(segmentClass('default', state.checked), 'px-2.5', className)}
+    {...props}
+  />;
+}
+
 function DropdownMenuSeparator({className, ...props}: MenuPrimitive.Separator.Props) {
   return <MenuPrimitive.Separator data-slot="dropdown-menu-separator" className={mergeClass(menuSeparatorClass, className)} {...props}/>;
 }
@@ -257,6 +283,8 @@ function DropdownMenuShortcut({className, keys, children, ...props}: React.Compo
 }
 
 export {
+  DropdownMenuSegmented,
+  DropdownMenuSegment,
   DropdownMenu,
   DropdownMenuPortal,
   DropdownMenuTrigger,
