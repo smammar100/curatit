@@ -111,6 +111,13 @@ export default function Feed() {
     // For you never lets one brand's run (a new import, or a brand the answers favour) fill the top
     return view === "For you" && !query.trim() ? spread(rank(filtered, profile, list, { fresh: true }), 6) : filtered;
   }, [list, saved, query, view, category, profile, search.order]);
+  // A playbook opened from its card (or typed in full): the search names a type of post exactly. It
+  // gets a headline over its posts, set like a board's title, with how many posts from how many brands
+  const playbook = useMemo(
+    () => (!query.trim() || brandNamed(list, query) || categoryNamed(query) ? null : typeNamed(list, query)),
+    [list, query],
+  );
+  const playbookBrands = useMemo(() => new Set(shown.map((post) => post.brand.slug)).size, [shown]);
   // For you waits for the answers it ranks on, so it never shows one order and then another, and
   // keeps waiting while a first visit is on its way to the welcome flow
   const waiting = (view === "Saved" && status === "loading") || (view === "For you" && (profileStatus === "loading" || (onFeed && unset)));
@@ -135,6 +142,14 @@ export default function Feed() {
               scrollTo({ top: 0 });
             }}
           />
+        )}
+        {playbook && (
+          <div className="mb-6">
+            <h1 className="type-title text-balance text-text-1">{playbook}</h1>
+            <p className="mt-1 type-body-sm text-text-2 tabular-nums">
+              {shown.length} {shown.length === 1 ? "post" : "posts"} from {playbookBrands} {playbookBrands === 1 ? "brand" : "brands"}
+            </p>
+          </div>
         )}
         {/* The Saved view opens on the boards, then every saved post */}
         {view === "Saved" && !query.trim() && status !== "loading" && <BoardList />}
