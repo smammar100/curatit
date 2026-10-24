@@ -8,8 +8,9 @@
 // - Breakdown: the strategy as a serif headline and a sentence or two, its traits as a list of
 //   label and value, the key creative decisions as numbered rows (the first open on its
 //   explanation; each opens to what was observed, its possible effect, the principle and what to
-//   watch out for, and shows its slide on the stage), the data checks summed up in one row, and the
-//   caveats.
+//   watch out for, and shows its slide on the stage), and the caveats. The data checks that followed
+//   the decisions were taken off every post on 2026-10-24 at the owner's request; they stay in the
+//   analysis and on the editors' review page.
 // - Visual DNA: composition, typography, colour (a palette of the post's colours, each hex under its
 //   block, copyable), imagery, visual devices, and branding & consistency, each a section with its
 //   glyph, one insight and a few attributes; on a carousel, what stays the same and the sequence as
@@ -28,7 +29,7 @@
 // tiles or cards inside a card, so each section's glyph sits inline with its title and the
 // decisions' numbers are plain figures.
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentProps, type CSSProperties, type ReactNode } from "react";
-import { Check, ChevronDown, Copy, Failed, FilmStrip, Icon, Palette, Picture, Question, SealCheck, Show, Sparkle, SquaresFour, TextAa } from "@/components/glaze/icon";
+import { Check, ChevronDown, Copy, FilmStrip, Icon, Palette, Picture, SealCheck, Show, Sparkle, SquaresFour, TextAa } from "@/components/glaze/icon";
 import { Badge } from "@/components/glaze/ui/badge";
 import { Button } from "@/components/glaze/ui/button";
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
@@ -38,14 +39,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/glaze/ui/
 import {
   briefMarkdown,
   evidenceGroups,
-  integritySummary,
-  STATUS_LABEL,
   type BriefSource,
   type ColourView,
   type DecisionView,
   type EvidenceTarget,
-  type IntegrityStatus,
-  type IntegrityView,
   type PublicAnalysis,
   type VisualSection,
 } from "@/lib/creative/publicView";
@@ -198,7 +195,8 @@ function Breakdown({ analysis, stage }: { analysis: PublicAnalysis; stage: Stage
         )
       )}
 
-      {analysis.integrity.length > 0 && <DataChecks checks={analysis.integrity} stage={stage} />}
+      {/* Data checks (integrity notes) were a section here until 2026-10-24, taken off every post at the
+          owner's request. They're still in each analysis, and editors still see them when reviewing */}
 
       {((!decisions.length && analysis.hypotheses.length > 0) || analysis.caveats.length > 0) && (
         <CollapsibleGroup variant="plain" multiple className="mt-4 border-t border-line-faint">
@@ -330,48 +328,6 @@ function Reason({ label, strong, children }: { label: string; strong?: boolean; 
       <DataListLabel className="type-caption">{label}</DataListLabel>
       <DataListValue className={cn("text-pretty", strong ? "type-label text-text-1" : "type-body-sm text-text-2")}>{children}</DataListValue>
     </DataListItem>
-  );
-}
-
-// The data checks summed up in one row; open, each with what kind of statement it is, in words
-// and a glyph, never by colour alone
-const STATUS_ICON: Record<IntegrityStatus, Glyph> = { concern: Failed, observed: Show, cannot_verify: Question, verified: SealCheck };
-
-function DataChecks({ checks, stage }: { checks: IntegrityView[]; stage: Stage }) {
-  return (
-    <CollapsibleGroup variant="plain" className="mt-4 border-t border-line-faint">
-      <Collapsible value="checks">
-        <CollapsibleTrigger>
-          <span className="block">Data checks</span>
-          <span className="block type-body-sm text-pretty text-text-2">{integritySummary(checks)}</span>
-        </CollapsibleTrigger>
-        <CollapsibleContent hiddenUntilFound={false}>
-          <ul className="space-y-2.5">
-            {checks.map((check, i) => {
-              const concern = check.status === "concern";
-              return (
-                <li key={i} className="flex gap-2">
-                  <Icon icon={STATUS_ICON[check.status]} className={cn("mt-0.5", concern ? "text-warn-text" : "text-text-2")} />
-                  <div className="min-w-0">
-                    <p className="flex flex-wrap items-baseline gap-x-2">
-                      <span className="type-label text-text-1">{check.aspect}</span>
-                      <span className={cn("type-caption", concern ? "font-medium text-warn-text" : "text-text-2")}>{STATUS_LABEL[check.status]}</span>
-                    </p>
-                    <p className="text-pretty text-text-2">{check.note}</p>
-                    {stage.carousel && check.evidence.some((target) => target.kind === "slide") && (
-                      <div className="mt-1 type-caption">
-                        <Evidence evidence={check.evidence} stage={stage} />
-                      </div>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          <p className="mt-3 type-caption text-pretty text-text-2">Read from the post itself. No figure here was checked against its sources.</p>
-        </CollapsibleContent>
-      </Collapsible>
-    </CollapsibleGroup>
   );
 }
 
