@@ -8,7 +8,8 @@
 // next post, Close) over two columns: the post large on a grey mat on the left, sticky while the
 // right column scrolls, its slides as thumbnails under it; on the right one ruled card (the hook as
 // the title with the rest of the caption, the brand, the board picker and Save, the strategy's
-// traits and the post's categories, the observed counts, the boards it's on), then the creative
+// traits and the post's categories, the observed counts; the list of the boards a post is on was
+// taken out on 2026-10-24 at the owner's request), then the creative
 // breakdown (post-analysis/CreativeBreakdown) and the slide breakdown (post-analysis/SlideBreakdown)
 // as cards of their own when it has a published analysis.
 // One slide index drives the stage, the arrows, the thumbnails, the sequence bar and the slide
@@ -17,9 +18,9 @@
 // link, the page puts the feed underneath, so both look the same.
 // Since 2026-10-24 it is built from Glaze: Buttons in the app bar and on the stage, the cards
 // Glaze's Card (shell and panel, the cells split on its row rule), the traits Badges, the
-// categories secondary Buttons that link to Discover, the boards it's on Items, and the board
-// picker a Select beside an Input.
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
+// categories secondary Buttons that link to Discover, and the board picker a Select beside an
+// Input.
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -31,13 +32,11 @@ import { Badge } from "@/components/glaze/ui/badge";
 import { Button } from "@/components/glaze/ui/button";
 import { Card, CardContent } from "@/components/glaze/ui/card";
 import { Input, InputAction } from "@/components/glaze/ui/input";
-import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemLink, ItemMedia, ItemTitle } from "@/components/glaze/ui/item";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/glaze/ui/select";
 import type { PublicAnalysis } from "@/lib/creative/publicView";
 import { cn } from "@/lib/glaze/utils";
 import type { PostDetail } from "@/lib/posts";
-import { BoardThumb, NAME_MAX, useBoards } from "./boards";
-import { boardHref } from "./BoardView";
+import { NAME_MAX, useBoards } from "./boards";
 import { feedHref } from "./Feed";
 import { backToPage, postHref, ratio } from "./Grid";
 import CreativeBreakdown, { traits } from "./post-analysis/CreativeBreakdown";
@@ -286,9 +285,6 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
                   ))}
                 </ul>
               </Cell>
-              <Cell label="Boards">
-                <BoardsOn post={post} />
-              </Cell>
             </CardContent>
           </Card>
 
@@ -441,53 +437,6 @@ function linkify(text: string): ReactNode[] {
   }
   out.push(text.slice(last));
   return out;
-}
-
-// The boards this post is on, each a row that opens the board, with a way to take it off. The
-// row's link is Glaze's ItemLink, an <a>, so a plain click goes through the router as next/link
-// did (a client-side navigation); a click with a modifier opens a tab as a link does
-function BoardsOn({ post }: { post: PostDetail }) {
-  const router = useRouter();
-  const { boards, status, remove } = useBoards();
-  const on = boards.filter((b) => b.items.some((item) => item.post === post.shortCode));
-  if (status === "loading") return <p className="type-body-sm text-text-2">Loading your boards…</p>;
-  const open = (href: string) => (event: MouseEvent<HTMLAnchorElement>) => {
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    router.push(href);
-  };
-  return (
-    <>
-      <p className="type-body-sm text-text-2">{on.length ? `On ${on.length === 1 ? "1 board" : `${on.length} boards`}` : "Not on a board yet"}</p>
-      {on.length > 0 && (
-        <ItemGroup variant="plain" aria-label="Boards with this post" className="mt-1">
-          {on.map((b) => (
-            <Item key={b.id} className="px-0">
-              <ItemMedia>
-                <BoardThumb board={b} className="size-8" />
-              </ItemMedia>
-              <ItemContent>
-                <ItemTitle>
-                  <ItemLink href={boardHref(b.id)} onClick={open(boardHref(b.id))}>
-                    {b.name}
-                  </ItemLink>
-                </ItemTitle>
-                <ItemDescription className="data">
-                  {b.items.length} {b.items.length === 1 ? "post" : "posts"}
-                  {b.shareToken && " · Shared"}
-                </ItemDescription>
-              </ItemContent>
-              <ItemActions>
-                <Button variant="ghost" size="icon-sm" onClick={() => remove(post.shortCode, b.id)} aria-label={`Remove from ${b.name}`}>
-                  <Icon icon={Close} />
-                </Button>
-              </ItemActions>
-            </Item>
-          ))}
-        </ItemGroup>
-      )}
-    </>
-  );
 }
 
 // The board picker and Save, in the card's third cell like lafys.com's one primary action.

@@ -137,8 +137,8 @@ describe("CreativeBreakdown: Breakdown", () => {
     click(button(panel(), /Keep one name treatment/));
     expect(stage()).toBe("image 0");
     click(button(panel(), /^Show the reasoning$/));
-    click(button(panel(), /^Slides 1–6$/));
-    expect(stage()).toBe("image 0");
+    // Where it shows is the line under its title; the reasoning repeats no slide tags
+    expect(button(panel(), /^Slides? \d+(–\d+)?$/)).toBeFalsy();
   });
 
   it("shows an older analysis's observations, labelled for what they are, instead of decisions", () => {
@@ -200,7 +200,7 @@ describe("CreativeBreakdown: Breakdown", () => {
 });
 
 describe("CreativeBreakdown: Visual DNA", () => {
-  it("gives each part an insight, a few attributes and the slides that show them, and the colours to copy", async () => {
+  it("gives each part an insight and a few attributes with no slide tags, and the colours as a palette to copy", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
     render(<Harness analysis={galleryAnalysis()} />);
@@ -211,8 +211,9 @@ describe("CreativeBreakdown: Visual DNA", () => {
     expect(text).toContain("The logo appears once, oversized, on slide 7.");
     expect(text).toContain("Layout changes on");
     expect(text).not.toMatch(/Unknown|Other\b/);
+    expect(button(panel(), /^Slides? \d+(–\d+)?$/)).toBeFalsy();
     const colours = panel().querySelector('[aria-label="Colours (measured from the image)"]')!;
-    expect(colours.textContent).toContain("Player names");
+    expect(text).toContain("#0b0a10");
     await act(async () => button(colours, /^Copy #0b0a10, Background$/)!.click());
     expect(writeText).toHaveBeenCalledWith("#0b0a10");
     expect(panel().textContent).toContain("Copied #0b0a10");

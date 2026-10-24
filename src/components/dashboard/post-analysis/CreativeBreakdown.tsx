@@ -10,10 +10,11 @@
 //   explanation; each opens to what was observed, its possible effect, the principle and what to
 //   watch out for, and shows its slide on the stage), the data checks summed up in one row, and the
 //   caveats.
-// - Visual DNA: composition, typography, colour (the post's colours with their jobs, copyable),
-//   imagery, visual devices, and branding & consistency, each a section with its glyph, one
-//   insight, a few attributes and the slides that show them; on a carousel, what stays the same and
-//   the sequence as a bar.
+// - Visual DNA: composition, typography, colour (a palette of the post's colours, each hex under its
+//   block, copyable), imagery, visual devices, and branding & consistency, each a section with its
+//   glyph, one insight and a few attributes; on a carousel, what stays the same and the sequence as
+//   a bar. Since 2026-10-24, at the owner's request, no slide tags: where a statement rests is in
+//   plain words where it matters, and a section's header is its title alone.
 // Beside the tabs, Copy brief puts the reference-led visual adaptation prompt on the clipboard
 // (2026-10-14; the Download .md button beside it was taken out on 2026-10-15). The tabs are
 // Glaze's Tabs (Base UI), whose ← / → / Home / End are marked handled so PostView's slide arrows
@@ -30,7 +31,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ComponentProps, type
 import { Check, ChevronDown, Copy, Failed, FilmStrip, Icon, Palette, Picture, Question, SealCheck, Show, Sparkle, SquaresFour, TextAa } from "@/components/glaze/icon";
 import { Badge } from "@/components/glaze/ui/badge";
 import { Button } from "@/components/glaze/ui/button";
-import { Chip } from "@/components/glaze/ui/chip";
+import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { Collapsible, CollapsibleContent, CollapsibleGroup, CollapsibleTrigger } from "@/components/glaze/ui/collapsible";
 import { DataList, DataListItem, DataListLabel, DataListValue } from "@/components/glaze/ui/data-list";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/glaze/ui/tabs";
@@ -306,13 +307,12 @@ function Decision({ n, value, decision, open, stage }: { n: number; value: numbe
                   {decision.principle}
                 </Reason>
                 {decision.watchOut && <Reason label="Watch out">{decision.watchOut}</Reason>}
-                {stage.carousel && (
+                {/* Where it shows is the line under the title; the slide tags that repeated it here
+                    were taken out on 2026-10-24 at the owner's request */}
+                {decision.confidence === "low" && (
                   <DataListItem>
-                    <DataListLabel className="sr-only">Evidence</DataListLabel>
-                    <DataListValue className="type-caption">
-                      <Evidence evidence={decision.evidence} stage={stage} />
-                      {decision.confidence === "low" && <span className="text-text-2">Low confidence</span>}
-                    </DataListValue>
+                    <DataListLabel className="sr-only">Confidence</DataListLabel>
+                    <DataListValue className="type-caption text-text-2">Low confidence</DataListValue>
                   </DataListItem>
                 )}
               </DataList>
@@ -391,10 +391,14 @@ function VisualDna({ analysis, stage, videos }: { analysis: PublicAnalysis; stag
   return (
     <div>
       {analysis.visual.map((section) => (
-        <DnaSection key={section.key} icon={DNA_ICONS[section.key]} title={section.title} evidence={stage.carousel && section.key !== "branding" ? section.evidence : []} stage={stage}>
-          {section.insight && <p className="mt-0.5 text-pretty text-text-2">{section.insight}</p>}
-          {section.key === "colour" && analysis.colours.length > 0 && <Swatches colours={analysis.colours} />}
-          {section.chips.length > 0 && (
+        <DnaSection key={section.key} icon={DNA_ICONS[section.key]} title={section.title}>
+          {/* Colour is the palette alone (2026-10-24, at the owner's request): no note, no chips */}
+          {section.key === "colour" && analysis.colours.length > 0 ? (
+            <ColourPalette colours={analysis.colours} />
+          ) : (
+            section.insight && <p className="mt-0.5 text-pretty text-text-2">{section.insight}</p>
+          )}
+          {section.key !== "colour" && section.chips.length > 0 && (
             <ul className="mt-2 flex flex-wrap gap-1">
               {section.chips.map((chip) => (
                 <li key={chip}>
@@ -407,7 +411,7 @@ function VisualDna({ analysis, stage, videos }: { analysis: PublicAnalysis; stag
         </DnaSection>
       ))}
       {stage.carousel && (
-        <DnaSection icon={FilmStrip} title="Sequence" evidence={[]} stage={stage}>
+        <DnaSection icon={FilmStrip} title="Sequence">
           <Sequence analysis={analysis} stage={stage} videos={videos} />
           {analysis.sequence.arc && <p className="mt-2 text-pretty text-text-2">{analysis.sequence.arc}</p>}
         </DnaSection>
@@ -416,29 +420,23 @@ function VisualDna({ analysis, stage, videos }: { analysis: PublicAnalysis; stag
   );
 }
 
-// One dimension: its glyph and title, the slides that show it, and the rest, ruled from the next
-function DnaSection({ icon, title, evidence, stage, children }: { icon: Glyph; title: string; evidence: EvidenceTarget[]; stage: Stage; children: ReactNode }) {
+// One dimension: its glyph and title, then the rest, ruled from the next. The slides a dimension
+// shows on were a tag beside the title until 2026-10-24, taken out at the owner's request
+function DnaSection({ icon, title, children }: { icon: Glyph; title: string; children: ReactNode }) {
   return (
     <section className="rule-row py-3 first:pt-0">
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <h3 className="flex items-center gap-1.5 type-label text-text-1">
-          <Icon icon={icon} className="text-text-2" />
-          {title}
-        </h3>
-        {evidence.length > 0 && (
-          <span className="type-caption">
-            <span className="sr-only">Seen on </span>
-            <Evidence evidence={evidence} stage={stage} />
-          </span>
-        )}
-      </div>
+      <h3 className="flex items-center gap-1.5 type-label text-text-1">
+        <Icon icon={icon} className="text-text-2" />
+        {title}
+      </h3>
       {children}
     </section>
   );
 }
 
-// The post's colours as a row: the swatch, the job it does and its hex. Pressing one copies the hex
-function Swatches({ colours }: { colours: ColourView[] }) {
+// The post's colours as a palette: one strip of equal blocks, each hex under its block. Pressing a
+// block copies its hex, and the hex under it says Copied for a moment
+function ColourPalette({ colours }: { colours: ColourView[] }) {
   const [copied, setCopied] = useState<string | null>(null);
   useEffect(() => {
     if (!copied) return;
@@ -448,17 +446,23 @@ function Swatches({ colours }: { colours: ColourView[] }) {
   const copy = (hex: string) => navigator.clipboard?.writeText(hex).then(() => setCopied(hex), () => setCopied(null));
   return (
     <>
-      <ul className="mt-2 -ms-2.5 flex flex-wrap gap-x-1 gap-y-1" aria-label="Colours (measured from the image)">
+      <ul className="mt-2.5 flex h-12 overflow-hidden rounded-(--corner-xs) border border-line-faint" aria-label="Colours (measured from the image)">
         {colours.map((colour) => (
-          <li key={colour.hex} className="min-w-0 max-w-full">
-            <Button variant="ghost" size="sm" onClick={() => copy(colour.hex)} aria-label={`Copy ${colour.hex}${colour.role ? `, ${colour.role}` : ""}`} title={colour.role ?? undefined}>
-              <span aria-hidden="true" className="size-4 shrink-0 rounded-pill border border-line-faint bg-(--swatch)" style={{ "--swatch": colour.hex } as CSSProperties} />
-              {colour.role && <span className="min-w-0 truncate">{colour.role}</span>}
-              <span className="mono text-text-2">{colour.hex}</span>
-              <span aria-hidden="true" className="flex text-text-2 opacity-0 transition-opacity duration-(--dur-state) ease-out group-hover/button:opacity-100 group-focus-visible/button:opacity-100">
-                <Icon icon={copied === colour.hex ? Check : Copy} size={12} />
-              </span>
-            </Button>
+          <li key={colour.hex} className="min-w-0 flex-1">
+            <ButtonPrimitive
+              onClick={() => copy(colour.hex)}
+              aria-label={`Copy ${colour.hex}${colour.role ? `, ${colour.role}` : ""}`}
+              title={colour.role ?? undefined}
+              className="block size-full cursor-pointer bg-(--swatch) focus-visible:focus-ring-inset"
+              style={{ "--swatch": colour.hex } as CSSProperties}
+            />
+          </li>
+        ))}
+      </ul>
+      <ul aria-hidden="true" className="mt-1.5 flex">
+        {colours.map((colour) => (
+          <li key={colour.hex} className="min-w-0 flex-1 truncate type-caption text-text-2">
+            <span className="mono">{copied === colour.hex ? "Copied" : colour.hex}</span>
           </li>
         ))}
       </ul>
@@ -597,26 +601,11 @@ function slideList(evidence: EvidenceTarget[]) {
   return parts.length === 1 && !parts[0].includes("–") ? `Slide ${parts[0]}` : `Slides ${parts.join(", ")}`;
 }
 
-// The slides a statement rests on, as chips that show them on the stage ("Slide 1", "Slides 4–5"),
-// pressed while their slide is on it; the caption and the post's details as plain words. A single
-// image is always on screen, so it gets no slide chips
+// The slides a statement rests on, the caption and the post's details, in plain words: "Slides 4–5 ·
+// Caption". They were chips that showed the slide on the stage until 2026-10-24, when the owner
+// asked for the tags to go. A single image is always on screen, so it names no slides
 function Evidence({ evidence, stage }: { evidence: EvidenceTarget[]; stage: Stage }) {
   const groups = evidenceGroups(evidence).filter((group) => stage.carousel || group.target.kind !== "slide");
   if (!groups.length) return null;
-  return (
-    <span className="inline-flex flex-wrap items-center gap-1">
-      {groups.map((group) => {
-        const target = group.target;
-        return target.kind === "slide" ? (
-          <Chip key={group.label} pressed={target.index === stage.index} onPressedChange={() => stage.onSlide(target.index)}>
-            {group.label}
-          </Chip>
-        ) : (
-          <span key={group.label} className="px-1 text-text-2">
-            {group.label}
-          </span>
-        );
-      })}
-    </span>
-  );
+  return <span className="text-text-2">{groups.map((group) => group.label).join(" · ")}</span>;
 }

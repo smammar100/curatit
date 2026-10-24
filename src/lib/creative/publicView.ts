@@ -133,6 +133,19 @@ export function evidenceGroups(targets: EvidenceTarget[]): { label: string; targ
   return groups;
 }
 
+// A slide's observation as its separate points, for a bulleted list: the stored prose joins them with
+// semicolons or runs them as sentences. A sentence break needs a lowercase letter, a digit or a
+// closing bracket or quote before the full stop and a capital or an opening quote after it, so
+// "U.S. stocks" or "e.g. the logo" stay whole. Each point starts with a capital and loses its full
+// stop. Text with one point comes back as one.
+export function observationPoints(text: string): string[] {
+  return text
+    .split(/;\s+|(?<=[a-z0-9)”"’'])\.\s+(?=[A-Z“"‘])/)
+    .map((point) => point.trim().replace(/[.;]$/, "").trim())
+    .filter(Boolean)
+    .map((point) => point.charAt(0).toUpperCase() + point.slice(1));
+}
+
 // The data checks in a line: "2 potential concerns · 3 observations · 1 cannot verify"
 export const STATUS_LABEL: Record<IntegrityStatus, string> = { concern: "Potential concern", observed: "Observed", cannot_verify: "Cannot verify", verified: "Verified" };
 export function integritySummary(checks: IntegrityView[]) {

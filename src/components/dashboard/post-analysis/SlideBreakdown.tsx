@@ -3,7 +3,7 @@
 // The carousel slide by slide, under the creative breakdown in PostView: the "Storyboard" rows
 // from the 2026-10-11 prototype, kept beside the Spec sheet. One row per slide (thumbnail, number,
 // role, one line of what's on it, and how many of the analysis's insights point at it); the row
-// of the slide on the stage opens with its one observation and its approximate colours. A row
+// of the slide on the stage opens with its observation (its points as bullets) and its approximate colours. A row
 // shows its slide on the stage, and ← / → move the open row, so the two never disagree.
 // Since 2026-10-24 each row is Glaze's Item, pressed as a whole (it renders as Base UI's button,
 // the one Glaze's Button is built on, since a row of two lines is no one-line Button): the row on
@@ -15,7 +15,7 @@ import type { CSSProperties } from "react";
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { Badge } from "@/components/glaze/ui/badge";
 import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/glaze/ui/item";
-import type { PublicAnalysis, SlideDetail } from "@/lib/creative/publicView";
+import { observationPoints, type PublicAnalysis, type SlideDetail } from "@/lib/creative/publicView";
 
 type Props = {
   analysis: PublicAnalysis;
@@ -32,6 +32,20 @@ export function signal(slide: SlideDetail | null) {
   if (slide.headline) return `“${slide.headline}”`;
   const facts = slide.facts.filter((fact) => fact.label === "Imagery" || fact.label === "Layout").map((fact) => fact.value);
   return facts.join(" · ") || slide.observation || "";
+}
+
+// The open row's observation: its separate points as a bulleted list, so each reads on its own line;
+// one point stays a line of text
+function Observation({ text }: { text: string }) {
+  const points = observationPoints(text);
+  if (points.length < 2) return <p className="type-caption text-pretty text-text-2">{points[0] ?? text}</p>;
+  return (
+    <ul className="list-disc space-y-1 ps-4 type-caption text-pretty text-text-2 marker:text-text-3">
+      {points.map((point) => (
+        <li key={point}>{point}</li>
+      ))}
+    </ul>
+  );
 }
 
 // How many of the analysis's insights (what it does, why it might work) rest on this slide
@@ -63,7 +77,7 @@ export default function SlideBreakdown({ analysis, index, onSlide, images, video
             </Item>
             {active && slide && !slide.blank && (slide.observation || slide.colours.length > 0) && (
               <div className="ps-14 pe-3 pb-2">
-                {slide.observation && <p className="type-caption text-pretty text-text-2">{slide.observation}</p>}
+                {slide.observation && <Observation text={slide.observation} />}
                 {slide.colours.length > 0 && (
                   <div className="mt-2 flex gap-1" role="img" aria-label={`Approximate colours: ${slide.colours.join(", ")}`}>
                     {slide.colours.map((hex) => (
