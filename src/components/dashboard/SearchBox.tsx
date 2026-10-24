@@ -8,19 +8,25 @@
 // moves to the panel while it's open; it holds still under reduced motion. Escape, a click
 // outside or tabbing out of it closes the panel (Escape keeps you in the field), and the panel
 // and the dim fade out a little faster than they came in.
-import { useEffect, useRef, useState, type ReactNode } from "react";
+//
+// Since 2026-10-24 on Glaze's tokens and controls, the pill's look kept at the owner's request
+// (52px, Fluid Functionalism's raised surface, the BorderBeam): the text is Glaze's bare text
+// control (InputControl), the pill's line darkens to Glaze's focus line while it has the cursor,
+// Clear is a ghost icon Button, the / hint a Kbd, and the panel's picks are secondary Buttons. The
+// beam is the deliberate exception to Glaze's no-glow rule, as it was to the palette before.
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Image from "next/image";
 import { BorderBeam } from "border-beam";
-import Button from "@/components/fundations/elements/Button";
-// Icons
-import Close from "@/components/fundations/icons/Close";
-import Search from "@/components/fundations/icons/Search";
+import { Button } from "@/components/glaze/ui/button";
+import { InputControl } from "@/components/glaze/ui/input";
+import { Kbd } from "@/components/glaze/ui/kbd";
+import { Close, Icon, Search } from "@/components/glaze/icon";
 import { useDarkTheme } from "@/components/global/theme";
 import { categoriesWithPosts } from "@/lib/categories";
 import { cx } from "@/lib/cx";
 import { usePresence, useReducedMotion } from "@/lib/motion";
 import { useBoards } from "./boards";
-import { CATEGORY_ICONS } from "./categoryIcons";
+import { CATEGORY_GLYPHS } from "./CategoryBar";
 import { compact } from "./search";
 
 const RECENT_KEY = "curatit-recent-searches";
@@ -136,13 +142,13 @@ export default function SearchBox({
 
   return (
     <>
-      {/* Dims the page while the panel is open; inside the header's stacking context, so the
-          field and panel stay above it */}
+      {/* Dims the page while the panel is open (Glaze's scrim); inside the header's stacking
+          context, so the field and panel stay above it */}
       {panel.mounted && (
         <div
           aria-hidden="true"
           data-closing={panel.closing || undefined}
-          className="fixed inset-0 z-10 animate-fade-in bg-black/25 motion-reduce:animate-none data-closing:pointer-events-none data-closing:animate-fade-out"
+          className="fixed inset-0 z-(--z-raised) bg-scrim transition-opacity duration-(--dur-overlay) ease-out starting:opacity-0 data-closing:pointer-events-none data-closing:opacity-0 data-closing:duration-(--dur-state) data-closing:ease-in"
         />
       )}
       <div
@@ -154,7 +160,7 @@ export default function SearchBox({
           const next = event.relatedTarget as Node | null;
           if (next && !event.currentTarget.contains(next)) setOpen(false);
         }}
-        className={cx("relative z-20", className)}
+        className={cx("relative z-(--z-sticky)", className)}
       >
         <form
           role="search"
@@ -163,17 +169,17 @@ export default function SearchBox({
             pick(query);
           }}
         >
-          {/* The radius is given rather than read from the pill: rounded-full computes to an
-              effectively infinite radius, which the beam can't draw. The pill is a field: the
-              fields' surface and default shadow, and their 2px brand ring while the input has focus (not
-              the Clear button, which draws its own).
+          {/* The radius is given rather than read from the pill: rounded-pill computes to an
+              effectively infinite radius, which the beam can't draw. The pill is raised on Fluid
+              Functionalism's second surface, and its line darkens to Glaze's focus line while the
+              text has the cursor (not the Clear button, which draws its own ring).
               The beam's wrapper clips everything outside the pill (overflow: hidden), so only the
-              shadow's inner part shows, and the ring is drawn inside */}
+              shadow's inner part shows, and the line is drawn inside */}
           <BorderBeam {...beam} active={beam.active && !open} borderRadius={26}>
-            <label className="relative flex h-13 items-center rounded-full bg-component-on-container-subtle shadow-sm transition-[box-shadow] duration-150 ease-out-quint has-[input:focus]:shadow-[inset_0_0_0_2px_var(--color-brand-border-focus)]">
-              <Search className="pointer-events-none absolute left-5 size-4.5 text-tertiary-foreground" />
+            <label className="relative flex h-13 items-center rounded-pill border border-transparent bg-surface-2 shadow-surface-2 transition-[border-color] duration-(--dur-state) ease-out has-[[data-control]:focus]:border-line-focus">
+              <Icon icon={Search} size={16} className="pointer-events-none absolute left-5 text-text-3" />
               <span className="sr-only">Search the library</span>
-              <input
+              <InputControl
                 ref={inputRef}
                 type="search"
                 value={query}
@@ -188,29 +194,25 @@ export default function SearchBox({
                 placeholder="Describe the posts you’re looking for"
                 maxLength={300}
                 autoComplete="off"
-                className="h-full w-full rounded-full border-0 bg-transparent pr-12 pl-12 text-body pointer-coarse:text-[16px] text-primary-foreground placeholder:text-tertiary-foreground focus:ring-0 focus:outline-hidden [&::-webkit-search-cancel-button]:hidden"
+                className="pr-12 pl-12 text-text-1 placeholder:text-text-3"
               />
               {query ? (
                 // Placed by a plain span: Button is relative itself
                 <span className="absolute right-3 flex">
                   <Button
-                    variant="transparent"
-                    size="sm"
-                    shape="pill"
-                    iconOnly
+                    variant="ghost"
+                    size="icon-sm"
                     aria-label="Clear search"
                     onClick={() => {
                       onQuery("");
                       inputRef.current?.focus();
                     }}
                   >
-                    <Close className="size-3.5" />
+                    <Icon icon={Close} />
                   </Button>
                 </span>
               ) : (
-                <kbd className="pointer-events-none absolute right-4 hidden h-6 min-w-6 items-center justify-center rounded-md px-1.5 font-sans text-caption text-secondary-foreground ring-1 ring-border-strong md:flex">
-                  /
-                </kbd>
+                <Kbd className="pointer-events-none absolute right-4 hidden md:inline-flex">/</Kbd>
               )}
             </label>
           </BorderBeam>
@@ -222,12 +224,13 @@ export default function SearchBox({
           <div
             inert={panel.closing || undefined}
             data-closing={panel.closing || undefined}
-            className="absolute inset-x-0 top-full mt-3 origin-top animate-menu-in motion-reduce:animate-none data-closing:animate-menu-out"
+            className="absolute inset-x-0 top-full mt-3 origin-top transition-[opacity,translate] duration-(--dur-overlay) ease-out starting:-translate-y-1 starting:opacity-0 data-closing:-translate-y-1 data-closing:opacity-0 data-closing:duration-(--dur-state) data-closing:ease-in"
           >
             <BorderBeam {...beam} borderRadius={28}>
-              {/* A large floating panel: the modal surface and the extra large shadow (the beam's
-                  wrapper clips its drops, so what shows is the dark theme's inner highlight) */}
-              <div className="rounded-[28px] bg-modal p-6 shadow-xl">
+              {/* A large floating panel on Fluid Functionalism's sixth surface (the beam's wrapper
+                  rounds it to 28px and clips its drop, so what shows is the dark theme's inner
+                  highlight) */}
+              <div className="rounded-shell bg-surface-6 p-6 shadow-surface-6">
                 {!query.trim() && (
                   <Section title="Try a description">
                     <div className="flex flex-wrap gap-2">
@@ -241,10 +244,10 @@ export default function SearchBox({
                   <Section title="Recent" onClear={clearRecent}>
                     <Row>
                       {recent.map((item) => (
-                        <Chip key={item} onClick={() => pick(item)}>
-                          <Search className="size-4 shrink-0 text-tertiary-foreground" />
+                        <Button key={item} variant="secondary" onClick={() => pick(item)}>
+                          <Icon icon={Search} />
                           {item}
-                        </Chip>
+                        </Button>
                       ))}
                     </Row>
                   </Section>
@@ -253,12 +256,12 @@ export default function SearchBox({
                   <Section title="Brands">
                     <Row>
                       {brands.map((brand) => (
-                        <Chip key={brand.slug} onClick={() => pick(brand.name)}>
-                          <span className="relative size-6 shrink-0 overflow-hidden rounded-full bg-component outline-1 -outline-offset-1 outline-edge">
-                            {brand.logo && <Image src={brand.logo} alt="" fill sizes="24px" className="object-cover" />}
+                        <Button key={brand.slug} variant="secondary" onClick={() => pick(brand.name)}>
+                          <span className="relative size-5 shrink-0 overflow-hidden rounded-pill border border-line-faint bg-field">
+                            {brand.logo && <Image src={brand.logo} alt="" fill sizes="20px" className="object-cover" />}
                           </span>
                           {brand.name}
-                        </Chip>
+                        </Button>
                       ))}
                     </Row>
                   </Section>
@@ -266,11 +269,11 @@ export default function SearchBox({
                 <Section title="Categories">
                   <Row>
                     {chips.map((category) => (
-                      <Chip key={category.slug} onClick={() => pick(category.name)}>
+                      <Button key={category.slug} variant="secondary" onClick={() => pick(category.name)}>
                         {/* The category's swatch, as a tile with its icon (Discover's icons) */}
                         <CategorySwatch slug={category.slug} hue={category.hue} />
                         {category.name}
-                      </Chip>
+                      </Button>
                     ))}
                   </Row>
                 </Section>
@@ -278,15 +281,27 @@ export default function SearchBox({
                   <Section title="Recently saved">
                     <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                       {saved.map((post) => (
-                        <li key={post.shortCode}>
-                          <button
-                            type="button"
+                        // The cover, with its brand under it as a ghost Button whose hit area covers
+                        // the cover too
+                        <li key={post.shortCode} className="group/saved relative">
+                          <span className="relative block aspect-4/5 w-full overflow-hidden rounded-panel border border-line-faint bg-field">
+                            <Image
+                              src={post.cover}
+                              alt=""
+                              fill
+                              sizes="120px"
+                              className="object-cover transition-[filter] duration-(--dur-state) ease-out group-hover/saved:brightness-95"
+                            />
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
                             aria-label={`Posts from ${post.brand.name}`}
                             onClick={() => pick(post.brand.name)}
-                            className="relative block aspect-4/5 w-full overflow-hidden rounded-lg bg-component outline-1 -outline-offset-1 outline-edge transition-[filter] duration-150 ease-out-quint hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
+                            className="static mt-1 w-full after:absolute after:inset-0"
                           >
-                            <Image src={post.cover} alt="" fill sizes="120px" className="object-cover" />
-                          </button>
+                            {post.brand.name}
+                          </Button>
                         </li>
                       ))}
                     </ul>
@@ -305,15 +320,11 @@ function Section({ title, onClear, children }: { title: string; onClear?: () => 
   return (
     <section className="mt-6 first:mt-0">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-subtitle font-medium text-primary-foreground">{title}</h2>
+        <h2 className="type-heading-sm text-text-1">{title}</h2>
         {onClear && (
-          <button
-            type="button"
-            onClick={onClear}
-            className="rounded-sm text-body text-secondary-foreground transition-colors duration-150 ease-out-quint hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-border-focus"
-          >
+          <Button size="sm" variant="ghost" onClick={onClear}>
             Clear
-          </button>
+          </Button>
         )}
       </div>
       {children}
@@ -323,30 +334,20 @@ function Section({ title, onClear, children }: { title: string; onClear?: () => 
 
 // One row that scrolls sideways when it runs out of room
 function Row({ children }: { children: ReactNode }) {
-  return <div className="-mx-6 flex gap-2 overflow-x-auto px-6 scrollbar-hide">{children}</div>;
+  return <div className="-mx-6 flex gap-2 overflow-x-auto px-6 scrollbar-none">{children}</div>;
 }
 
-function Chip({ onClick, children }: { onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-card px-4 text-body font-medium whitespace-nowrap text-primary-foreground transition-[background-color,scale] duration-150 ease-out-quint hover:bg-transparent-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-border-focus motion-safe:active:scale-[0.96]"
-    >
-      {children}
-    </button>
-  );
-}
-
+// The category's hue as a small tile with its glyph: the swatch the homepage and Discover use,
+// through custom properties the tile's classes read
 function CategorySwatch({ slug, hue }: { slug: string; hue: number }) {
-  const Glyph = CATEGORY_ICONS[slug];
+  const glyph = CATEGORY_GLYPHS[slug];
   return (
     <span
       aria-hidden="true"
-      className="flex size-6 shrink-0 items-center justify-center rounded-md"
-      style={{ background: `oklch(0.7 0.12 ${hue})`, color: `oklch(0.28 0.07 ${hue})` }}
+      className="flex size-5 shrink-0 items-center justify-center rounded-tag bg-(--swatch) text-(--swatch-ink)"
+      style={{ "--swatch": `oklch(0.7 0.12 ${hue})`, "--swatch-ink": `oklch(0.28 0.07 ${hue})` } as CSSProperties}
     >
-      {Glyph && <Glyph className="size-3.5" />}
+      {glyph && <Icon icon={glyph} size={12} className="text-(--swatch-ink)" />}
     </span>
   );
 }

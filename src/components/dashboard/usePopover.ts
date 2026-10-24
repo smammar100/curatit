@@ -43,14 +43,15 @@ const EXIT = "pointer-events-none animate-menu-out motion-reduce:animate-none";
 
 // The gliding hover highlight in a menu's list (useGlide in src/lib/motion.ts); add the rows' radius,
 // which is the menu's less its padding (rounded-md in a rounded-2xl p-1.5 menu: 12 − 6)
+// (since 2026-10-24 on Glaze's tokens: the hover wash, a selection's 160ms glide)
 export const GLIDE_HIGHLIGHT =
-  "pointer-events-none absolute top-0 left-0 bg-transparent-hover transition-[translate,height,opacity] duration-150 ease-out-quint data-fresh:transition-[opacity] motion-reduce:transition-[opacity]";
+  "pointer-events-none absolute top-0 left-0 bg-hover transition-[translate,height,opacity] duration-(--dur-slide) ease-out data-fresh:transition-[opacity] motion-reduce:transition-[opacity]";
 // A row under that highlight: no hover fill of its own (the highlight is it), a fill for a press
-// (touch has no highlight), and for keyboard focus the fill plus the focus ring, inset so the
-// menu's padding or a scrolling list can't clip it (the fill alone is too faint to find, and
-// would look like the mouse's highlight). Relative, so it paints over the highlight.
-export const GLIDE_ROW =
-  "relative focus-visible:bg-transparent-hover focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-border-focus active:bg-transparent-hover";
+// (touch has no highlight), and for keyboard focus the fill plus Glaze's focus ring (drawn by its
+// base styles), inset so the menu's padding or a scrolling list can't clip it (the fill alone is
+// too faint to find, and would look like the mouse's highlight). Relative, so it paints over the
+// highlight.
+export const GLIDE_ROW = "relative focus-visible:bg-hover focus-visible:-outline-offset-2 active:bg-pressed";
 
 const itemsOf = (menu: HTMLElement) =>
   Array.from(menu.querySelectorAll<HTMLElement>(ITEMS)).filter((item) => !item.matches(":disabled, [aria-disabled='true']"));

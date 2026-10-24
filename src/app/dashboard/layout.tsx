@@ -5,7 +5,7 @@ import { BoardsProvider } from "@/components/dashboard/boards";
 import { PrefsProvider } from "@/components/dashboard/prefs";
 import { ProfileProvider } from "@/components/dashboard/profile";
 import { UserProvider } from "@/components/dashboard/user";
-import { ToastProvider } from "@/components/fundations/molecules/Toast";
+import { Toaster } from "@/components/glaze/ui/toast";
 import type { DashPost } from "@/components/dashboard/types";
 import { getBreakdownSummaries } from "@/lib/creative/display";
 import { getPublishedPosts } from "@/lib/posts";
@@ -65,14 +65,13 @@ export default async function DashboardLayout({ children, modal }: { children: R
       <div className="contents text-body">
         <ProfileProvider>
           <PrefsProvider>
-            {/* The shared toast (fundations/molecules/Toast): one for the whole dashboard, round the
-                boards, whose saves and failures it confirms */}
-            <ToastProvider>
-              <BoardsProvider posts={posts}>
-                <div id="dashboard-page">{children}</div>
-                {modal}
-              </BoardsProvider>
-            </ToastProvider>
+            <BoardsProvider posts={posts}>
+              <div id="dashboard-page">{children}</div>
+              {modal}
+            </BoardsProvider>
+            {/* Glaze's one Toaster for the whole dashboard: it shows every toast() the boards call
+                to confirm a save or report a failure */}
+            <Toaster />
           </PrefsProvider>
         </ProfileProvider>
       </div>

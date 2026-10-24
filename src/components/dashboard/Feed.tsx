@@ -11,8 +11,9 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { inCategory, OLD_SLUGS } from "@/lib/categories";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import Button from "@/components/fundations/elements/Button";
-import EmptyState from "@/components/fundations/molecules/EmptyState";
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/glaze/ui/alert";
+import { Button } from "@/components/glaze/ui/button";
+import { Empty as EmptyRegion, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/glaze/ui/empty-state";
 import BoardList from "./BoardList";
 import { useBoards } from "./boards";
 import CategoryBar from "./CategoryBar";
@@ -25,7 +26,6 @@ import Header, { VIEWS, type View } from "./Header";
 import { GridSkeleton } from "./Skeleton";
 import { brandNamed, categoryNamed, hookNamed, typeNamed } from "./search";
 import { useLibrarySearch } from "./useLibrarySearch";
-import Notice from "@/components/fundations/molecules/Notice";
 import type { SearchRefinement } from "@/lib/search/refine";
 import type { DashPost } from "./types";
 
@@ -137,25 +137,33 @@ export default function Feed() {
             }}
           />
         )}
-        {search.result && !search.result.error && <p role="status" className="mb-5 text-body text-secondary-foreground">
+        {search.result && !search.result.error && <p role="status" className="mb-5 type-body-sm text-text-2">
           {shown.length} {shown.length === 1 ? "post" : "posts"}{search.result.labels.length ? ` · ${search.result.labels.join(" · ")}` : ""}
           {search.result.capped ? " · First 500 matches. Narrow your search to see more." : ""}
         </p>}
         {search.result?.corrections?.length ? (
-          <Notice className="mb-5" live>
-            {search.result.corrections.map((item) => `Read “${item.from}” as “${item.to}”.`).join(" ")} Put a phrase in quotes to search its exact wording.
-          </Notice>
+          <Alert className="mb-5">
+            <AlertDescription>
+              {search.result.corrections.map((item) => `Read “${item.from}” as “${item.to}”.`).join(" ")} Put a phrase in quotes to search its exact wording.
+            </AlertDescription>
+          </Alert>
         ) : null}
         {waiting || search.loading ? (
           <GridSkeleton label={search.loading ? "Searching the library" : view === "Saved" ? "Loading your saved posts" : "Loading your feed"} />
         ) : search.result?.error ? (
-          <Notice live tone={search.result.invalid ? "neutral" : "danger"} title={search.result.invalid ? "Adjust your search" : "Search couldn't finish"} action={<Button size="xs" variant="secondary" onClick={search.result.invalid ? () => setQuery("") : search.retry}>{search.result.invalid ? "Clear search" : "Try again"}</Button>}>
-            {search.result.error}
-          </Notice>
+          <Alert status={search.result.invalid ? "neutral" : "fail"}>
+            <AlertTitle>{search.result.invalid ? "Adjust your search" : "Search couldn't finish"}</AlertTitle>
+            <AlertDescription>{search.result.error}</AlertDescription>
+            <AlertAction>
+              <Button size="sm" variant="secondary" onClick={search.result.invalid ? () => setQuery("") : search.retry}>
+                {search.result.invalid ? "Clear search" : "Try again"}
+              </Button>
+            </AlertAction>
+          </Alert>
         ) : shown.length ? (
           <>
-            {view === "Saved" && !query.trim() && boards.length > 0 && <h2 className="mb-5 text-title font-medium text-primary-foreground">All saved posts</h2>}
-            {rows && <h2 className="mb-5 text-title font-medium text-primary-foreground">Picked for you</h2>}
+            {view === "Saved" && !query.trim() && boards.length > 0 && <h2 className="mb-5 type-heading text-text-1">All saved posts</h2>}
+            {rows && <h2 className="mb-5 type-heading text-text-1">Picked for you</h2>}
             <Grid posts={shown} />
           </>
         ) : (
@@ -174,37 +182,43 @@ function Empty({ view, query, onClear, onBrowse, refinements, onRefine, scoped, 
   refinements: SearchRefinement[]; onRefine: (query: string) => void; scoped: boolean; onSearchAll: () => void;
 }) {
   // Nothing saved at all: the illustration, then how saving works
+  // (Glaze's Empty, plain on the page; the drawing stands in for the reason's glyph)
   if (view === "Saved" && !query.trim()) {
     return (
-      <EmptyState
-        illustration={<SavedArt />}
-        title="Your swipe file is empty"
-        description="See a carousel that stops your thumb, or a launch you wish you’d made? Hit Save. It waits here for your next brief."
-        action={
-          <Button size="sm" variant="default" onClick={onBrowse}>
+      <EmptyRegion variant="plain" className="py-16">
+        <SavedArt />
+        <EmptyHeader>
+          <EmptyTitle icon={false}>Your swipe file is empty</EmptyTitle>
+          <EmptyDescription>See a carousel that stops your thumb, or a launch you wish you’d made? Hit Save. It waits here for your next brief.</EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button size="sm" onClick={onBrowse}>
             Start your swipe file
           </Button>
-        }
-      />
+        </EmptyContent>
+      </EmptyRegion>
     );
   }
-  // A search that found nothing
+  // A search that found nothing: the lead way out, then the other refinements and Clear search as
+  // ghost buttons
   return (
-    <EmptyState
-      title={`Nothing matches ‘${query}’`}
-      description={scoped ? "This search is limited to your current view. Try the full library." : "Try removing one detail, or describe the posts another way."}
-      action={
-        <Button size="sm" variant="default" onClick={scoped ? onSearchAll : refinements[0] ? () => onRefine(refinements[0].query) : onClear}>
+    <EmptyRegion reason="no-results" variant="plain" className="py-16">
+      <EmptyHeader>
+        <EmptyTitle>Nothing matches ‘{query}’</EmptyTitle>
+        <EmptyDescription>{scoped ? "This search is limited to your current view. Try the full library." : "Try removing one detail, or describe the posts another way."}</EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <Button size="sm" onClick={scoped ? onSearchAll : refinements[0] ? () => onRefine(refinements[0].query) : onClear}>
           {scoped ? "Search full library" : refinements[0]?.label ?? "Clear search"}
         </Button>
-      }
-      secondaryAction={
-        <div className="flex flex-wrap justify-center gap-2">
-          {!scoped && refinements.slice(1).map((item) => <Button key={item.query} size="sm" variant="transparent" onClick={() => onRefine(item.query)}>{item.label}</Button>)}
-          {(scoped || refinements.length > 0) && <Button size="sm" variant="transparent" onClick={onClear}>Clear search</Button>}
-        </div>
-      }
-    />
+      </EmptyContent>
+      {(scoped || refinements.length > 0) && (
+        <EmptyContent>
+          {!scoped && refinements.slice(1).map((item) => <Button key={item.query} size="sm" variant="ghost" onClick={() => onRefine(item.query)}>{item.label}</Button>)}
+          <Button size="sm" variant="ghost" onClick={onClear}>Clear search</Button>
+        </EmptyContent>
+      )}
+    </EmptyRegion>
   );
 }
 

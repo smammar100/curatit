@@ -10,37 +10,36 @@
 // page and Hashnode's token page on Mobbin): the dashboard header on top, the title with the one
 // action beside it, "New token" opening an inline panel above the table (name, expiry as a
 // segmented control, the scopes as two cards), the new secret taking that panel over as a "Keep
-// it safe" banner (after Gamma's reveal), and every token as a row: name and prefix, scope chips,
+// it safe" card (after Gamma's reveal), and every token as a row: name and prefix, scope badges,
 // expiry (or when it died), last used, Revoke. Dead rows are dimmed. On phones the table scrolls
 // sideways. Rejected: "Cards" (each token a card saying in words what it can do, create and
 // reveal in one native dialog; tallest with many tokens) and "Setup" (the token beside the client
 // configuration it goes into, the new secret written straight into the snippet; one motion, but
 // it duplicated /docs/mcp and put the secret inside text that's easy to paste in the wrong place).
 //
-// Since 2026-10-23 it is built from the system: the panels are raised cards (the third surface
-// with its shadow, the container corner), the name and expiry are Fields round an Input and a
-// Segmented, the scopes labelled Checkboxes on muted tiles, errors are live Notices, the wait is
-// Skeleton lines, no tokens is an EmptyState, Revoke asks in an alertdialog Dialog (in place of
-// the browser's confirm), and Create token shows the Button's loading state.
+// Since 2026-10-24 it is built from Glaze: the panels are Cards (the create form's actions in its
+// footer), the name a Field round an Input, the expiry a SegmentedControl, the scopes labelled
+// Checkboxes on bordered tiles, errors fail Alerts, the wait Skeleton lines, no tokens an Empty,
+// the secret a code well beside a CopyButton, Revoke asks in an alertdialog, and Create token
+// shows the Button's pending arc. The table stays hand-built (Glaze's Table isn't installed) on
+// Glaze's tokens.
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import Badge from "@/components/fundations/elements/Badge";
-import Button from "@/components/fundations/elements/Button";
-import Checkbox from "@/components/fundations/elements/Checkbox";
-import Input from "@/components/fundations/elements/Input";
-import Segmented from "@/components/fundations/elements/Segmented";
-import Skeleton from "@/components/fundations/elements/Skeleton";
-import Dialog from "@/components/fundations/molecules/Dialog";
-import EmptyState from "@/components/fundations/molecules/EmptyState";
-import Field, { FieldGroup } from "@/components/fundations/molecules/Field";
-import Notice from "@/components/fundations/molecules/Notice";
-import Check from "@/components/fundations/icons/Check";
-import Copy from "@/components/fundations/icons/Copy";
-import Key from "@/components/fundations/icons/Key";
+import { Alert, AlertTitle } from "@/components/glaze/ui/alert";
+import { Badge } from "@/components/glaze/ui/badge";
+import { Button } from "@/components/glaze/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/glaze/ui/card";
+import { Checkbox } from "@/components/glaze/ui/checkbox";
+import { CopyButton } from "@/components/glaze/ui/copy-button";
+import { Dialog, DialogAction, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/glaze/ui/dialog";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/glaze/ui/empty-state";
+import { Field, FieldLabel, FieldLegend, FieldSet } from "@/components/glaze/ui/field";
+import { Input } from "@/components/glaze/ui/input";
+import { SegmentedControl, SegmentedControlItem } from "@/components/glaze/ui/segmented-control";
+import { Skeleton } from "@/components/glaze/ui/skeleton";
 import { createClient } from "@/utils/supabase/client";
 import { cx } from "@/lib/cx";
-import { fontWeights } from "@/lib/font-weight";
 import { hashToken, mintToken, PAT_DEFAULT_DAYS, PAT_MAX_DAYS } from "@/lib/mcp/auth/pat";
 import { SCOPES, type Scope } from "@/lib/mcp/config";
 import { track } from "@/lib/analytics";
@@ -79,8 +78,6 @@ const when = (iso: string | null) =>
     : null;
 const daysUntil = (iso: string) => Math.ceil((new Date(iso).getTime() - Date.now()) / DAY);
 
-const semibold = { fontVariationSettings: fontWeights.semibold };
-
 type Status = "active" | "expiring" | "expired" | "revoked";
 function statusOf(token: TokenRow): Status {
   if (token.revoked_at) return "revoked";
@@ -101,7 +98,6 @@ export default function ApiTokens() {
   // The token Revoke is asking about: kept while the question closes, so its name doesn't blank
   const [target, setTarget] = useState<TokenRow | null>(null);
   const [asking, setAsking] = useState(false);
-  const cancelRef = useRef<HTMLButtonElement>(null);
 
   const load = async () => {
     const { data, error } = await createClient()
@@ -163,16 +159,12 @@ export default function ApiTokens() {
       <main className="w-full px-4 pt-4 pb-24 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-display text-display font-light text-foreground">API tokens</h1>
-            <p className="mt-1 max-w-prose text-pretty text-muted-foreground">
+            <h1 className="type-title text-text-1">API tokens</h1>
+            <p className="mt-1 max-w-measure type-body text-pretty text-text-2">
               A token lets an MCP client or the Curatit bridge use the library as you. It&apos;s shown once; anything with it can read what you can.
             </p>
           </div>
-          {!open && !fresh && (
-            <Button type="button" size="sm" variant="default" onClick={() => setOpen(true)}>
-              New token
-            </Button>
-          )}
+          {!open && !fresh && <Button onClick={() => setOpen(true)}>New token</Button>}
         </div>
 
         {fresh && <Reveal secret={fresh.secret} name={fresh.name} onClose={() => setFresh(null)} />}
@@ -180,58 +172,48 @@ export default function ApiTokens() {
 
         <section className="mt-8">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-title text-foreground" style={semibold}>
-              Your tokens
-            </h2>
+            <h2 className="type-heading text-text-1">Your tokens</h2>
             {tokens && tokens.length > 0 && (
-              <p className="text-caption text-muted-foreground tabular-nums">
+              <p className="type-caption text-text-2 tabular-nums">
                 {live} active · {tokens.length - live} inactive
               </p>
             )}
           </div>
           {loadError && (
-            <Notice tone="danger" live className="mt-3">
-              {loadError}
-            </Notice>
+            <Alert status="fail" className="mt-3">
+              <AlertTitle>{loadError}</AlertTitle>
+            </Alert>
           )}
           {tokens === null && !loadError ? (
-            <div role="status" aria-label="Loading your tokens" className="mt-3 space-y-2.5 text-body">
-              <Skeleton shape="line" width="1/3" />
-              <Skeleton shape="line" width="1/2" />
-              <Skeleton shape="line" width="1/4" />
+            <div role="status" aria-label="Loading your tokens" className="mt-3 space-y-2.5">
+              <Skeleton className="h-3.5 w-1/3 rounded-pill" />
+              <Skeleton className="h-3.5 w-1/2 rounded-pill" />
+              <Skeleton className="h-3.5 w-1/4 rounded-pill" />
             </div>
           ) : tokens && tokens.length === 0 ? (
-            <div className="mt-3 rounded-[24px] bg-card">
-              <EmptyState
-                illustration={<TokensArt className="w-60" />}
-                title="No tokens yet"
-                description="Make one for each app you connect, so you can revoke them one at a time."
-                action={
-                  !open && (
-                    <Button type="button" size="xs" variant="default" onClick={() => setOpen(true)}>
-                      New token
-                    </Button>
-                  )
-                }
-              />
-            </div>
+            <Empty className="mt-3">
+              <TokensArt className="w-60" />
+              <EmptyHeader>
+                <EmptyTitle icon={false}>No tokens yet</EmptyTitle>
+                <EmptyDescription>Make one for each app you connect, so you can revoke them one at a time.</EmptyDescription>
+              </EmptyHeader>
+              {!open && (
+                <EmptyContent>
+                  <Button size="sm" onClick={() => setOpen(true)}>
+                    New token
+                  </Button>
+                </EmptyContent>
+              )}
+            </Empty>
           ) : tokens ? (
-            <div className="mt-3 overflow-x-auto rounded-[24px] ring-1 ring-border">
-              <table className="w-full min-w-[40rem] border-collapse text-left">
+            <div className="mt-3 overflow-x-auto rounded-shell border border-line-faint">
+              <table className="w-full min-w-160 border-collapse text-left">
                 <thead>
-                  <tr className="text-micro tracking-wider text-muted-foreground uppercase">
-                    <th className="px-4 py-3" style={semibold}>
-                      Name
-                    </th>
-                    <th className="px-4 py-3" style={semibold}>
-                      Scopes
-                    </th>
-                    <th className="px-4 py-3" style={semibold}>
-                      Expires
-                    </th>
-                    <th className="px-4 py-3" style={semibold}>
-                      Last used
-                    </th>
+                  <tr className="type-label-sm text-text-2">
+                    <th className="px-4 py-3">Name</th>
+                    <th className="px-4 py-3">Scopes</th>
+                    <th className="px-4 py-3">Expires</th>
+                    <th className="px-4 py-3">Last used</th>
                     <th className="px-4 py-3">
                       <span className="sr-only">Actions</span>
                     </th>
@@ -256,80 +238,52 @@ export default function ApiTokens() {
       </main>
 
       {/* Revoke asks first: Cancel takes focus, so Enter can't revoke by accident */}
-      <Dialog
-        open={asking}
-        onOpenChange={setAsking}
-        role="alertdialog"
-        size="sm"
-        title={`Revoke "${target?.name ?? ""}"?`}
-        description="Anything using it stops working at once."
-        closeButton={false}
-        initialFocus={cancelRef}
-        footer={
-          <>
-            <Button ref={cancelRef} type="button" variant="muted" onClick={() => setAsking(false)}>
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="danger"
-              onClick={() => {
-                setAsking(false);
+      <Dialog open={asking} onOpenChange={setAsking} role="alertdialog">
+        <DialogContent size="sm">
+          <DialogHeader>
+            <DialogTitle>{`Revoke "${target?.name ?? ""}"?`}</DialogTitle>
+            <DialogDescription>Anything using it stops working at once.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose>Cancel</DialogClose>
+            <DialogAction
+              variant="destructive"
+              onAction={() => {
                 if (target) void revoke(target);
               }}
             >
               Revoke
-            </Button>
-          </>
-        }
-      />
+            </DialogAction>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-// The new secret, shown this once in place of the create panel: a raised card with the key on a
-// tile, the secret in a muted code field beside Copy
+// The new secret, shown this once in place of the create panel: a Card with the secret in a code
+// well beside its CopyButton, and the one way to close it in the footer
 function Reveal({ secret, name, onClose }: { secret: string; name: string; onClose: () => void }) {
-  const [copied, setCopied] = useState(false);
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(secret);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // Clipboard blocked: the text is selectable
-    }
-  };
   return (
-    <section aria-live="polite" className="mt-6 rounded-[24px] bg-surface-3 p-5 shadow-surface-2">
-      <div className="flex items-start gap-3">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-muted text-foreground shadow-surface-1">
-          <Key className="size-4" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-title text-foreground" style={semibold}>
-            Keep it safe
-          </p>
-          <p className="mt-0.5 text-caption text-muted-foreground">
-            This is your token for <span className="text-foreground">{name}</span>. Copy it now; it won&apos;t be shown again.
-          </p>
-          <div className="mt-3 flex items-center gap-2">
-            <code className="min-w-0 flex-1 rounded-[12px] bg-muted px-3 py-2.5 font-mono text-caption leading-relaxed break-all text-foreground shadow-surface-1 select-all">{secret}</code>
-            <Button variant="secondary" size="lg" iconOnly onClick={copy} aria-label={copied ? "Copied" : "Copy token"}>
-              {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-            </Button>
-            <span role="status" className="sr-only">
-              {copied ? "Copied" : ""}
-            </span>
-          </div>
-          <div className="mt-3">
-            <Button type="button" size="xs" variant="muted" onClick={onClose}>
-              Close and hide forever
-            </Button>
-          </div>
+    <Card aria-live="polite" className="mt-6">
+      <CardHeader>
+        <CardTitle>Keep it safe</CardTitle>
+        <CardDescription>
+          This is your token for <span className="text-text-1">{name}</span>. Copy it now; it won&apos;t be shown again.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-2">
+          <code className="min-w-0 flex-1 rounded-panel well px-3 py-2.5 type-code-block break-all text-text-1 select-all">{secret}</code>
+          <CopyButton value={secret} label="token" variant="secondary" size="icon" />
         </div>
-      </div>
-    </section>
+      </CardContent>
+      <CardFooter>
+        <Button size="sm" variant="secondary" onClick={onClose}>
+          Close and hide forever
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }
 
@@ -356,68 +310,80 @@ function CreatePanel({ onCreate, onCancel }: { onCreate: (name: string, scopes: 
   };
 
   return (
-    <form onSubmit={submit} className="mt-6 rounded-[24px] bg-surface-3 p-5 shadow-surface-2">
-      <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
-        <Field label="Name">
-          <Input
-            id="token-name"
-            autoFocus
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            maxLength={80}
-            placeholder="The app or machine it's for"
-            autoComplete="off"
-            spellCheck={false}
-          />
-        </Field>
-        <Field label="Expires in">
-          <Segmented value={String(days)} onValueChange={(value) => setDays(Number(value))} options={EXPIRY_DAYS.map((d) => ({ value: String(d), label: `${d} days` }))} />
-        </Field>
-      </div>
-      <FieldGroup legend="Scopes" className="mt-4">
-        <div className="mt-1 grid gap-2 sm:grid-cols-2">
-          {SCOPES.map((scope) => {
-            const on = scopes.includes(scope);
-            return (
-              // The tile is its label, so a tap anywhere on it flips the box; the one that's on
-              // sits on the pressed tint
-              <label
-                key={scope}
-                className={cx(
-                  "flex cursor-pointer items-start gap-3 rounded-[14px] p-3 ring-1 ring-border transition-colors duration-80",
-                  on ? "bg-active" : "hover:bg-hover",
-                )}
-              >
-                <Checkbox
-                  size="sm"
-                  checked={on}
-                  onCheckedChange={(checked) => setScopes((s) => (checked ? [...s, scope] : s.filter((x) => x !== scope)))}
-                  className="mt-0.5"
-                />
-                <span className="min-w-0">
-                  <span className="block text-subtitle text-foreground" style={semibold}>
-                    {SCOPE_WORDS[scope].short}
-                  </span>
-                  <span className="block text-caption text-muted-foreground">{SCOPE_WORDS[scope].long}</span>
-                </span>
-              </label>
-            );
-          })}
-        </div>
-      </FieldGroup>
-      {error && (
-        <Notice tone="danger" live className="mt-3">
-          {error}
-        </Notice>
-      )}
-      <div className="mt-5 flex gap-2">
-        <Button type="submit" size="sm" variant="default" loading={busy}>
-          Create token
-        </Button>
-        <Button type="button" size="sm" variant="muted" onClick={onCancel}>
-          Cancel
-        </Button>
-      </div>
+    <form onSubmit={submit} className="mt-6">
+      <Card role="group" aria-labelledby="new-token-title">
+        <CardHeader>
+          <CardTitle id="new-token-title">New token</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
+            <Field>
+              <FieldLabel>Name</FieldLabel>
+              <Input
+                autoFocus
+                value={name}
+                onValueChange={setName}
+                maxLength={80}
+                placeholder="The app or machine it's for"
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </Field>
+            <FieldSet>
+              <FieldLegend variant="label">Expires in</FieldLegend>
+              <SegmentedControl aria-label="Expires in" value={String(days)} onValueChange={(value) => setDays(Number(value))}>
+                {EXPIRY_DAYS.map((d) => (
+                  <SegmentedControlItem key={d} value={String(d)}>
+                    {`${d} days`}
+                  </SegmentedControlItem>
+                ))}
+              </SegmentedControl>
+            </FieldSet>
+          </div>
+          <FieldSet className="mt-4">
+            <FieldLegend variant="label">Scopes</FieldLegend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {SCOPES.map((scope) => {
+                const on = scopes.includes(scope);
+                return (
+                  // The tile is its label, so a tap anywhere on it flips the box; the one that's on
+                  // sits on the pressed wash
+                  <label
+                    key={scope}
+                    className={cx(
+                      "flex cursor-pointer items-start gap-3 rounded-panel border border-line-faint p-3 transition-colors duration-(--dur-state) ease-out",
+                      on ? "bg-pressed" : "hover:bg-hover",
+                    )}
+                  >
+                    <Checkbox
+                      checked={on}
+                      onCheckedChange={(checked) => setScopes((s) => (checked ? [...s, scope] : s.filter((x) => x !== scope)))}
+                      className="mt-0.5"
+                    />
+                    <span className="min-w-0">
+                      <span className="block type-label text-text-1">{SCOPE_WORDS[scope].short}</span>
+                      <span className="block type-caption text-text-2">{SCOPE_WORDS[scope].long}</span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </FieldSet>
+          {error && (
+            <Alert status="fail" className="mt-3">
+              <AlertTitle>{error}</AlertTitle>
+            </Alert>
+          )}
+        </CardContent>
+        <CardFooter>
+          <Button type="button" size="sm" variant="secondary" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit" size="sm" pending={busy} pendingLabel="Creating">
+            Create token
+          </Button>
+        </CardFooter>
+      </Card>
     </form>
   );
 }
@@ -427,17 +393,19 @@ function Row({ token, onRevoke }: { token: TokenRow; onRevoke: () => void }) {
   const dead = isDead(status);
   const days = daysUntil(token.expires_at);
   return (
-    <tr className={cx("border-t border-border text-body", dead && "text-muted-foreground")}>
-      <td className="max-w-[22rem] px-4 py-3">
-        <p className={cx("truncate", dead ? "text-muted-foreground" : "text-foreground")} style={semibold} title={token.name}>
+    <tr className={cx("border-t border-line-faint type-body-sm", dead ? "text-text-2" : "text-text-1")}>
+      <td className="max-w-88 px-4 py-3">
+        <p className={cx("truncate type-label", dead ? "text-text-2" : "text-text-1")} title={token.name}>
           {token.name}
         </p>
-        <p className="font-mono text-micro text-muted-foreground">{token.prefix}…</p>
+        <p className="type-caption text-text-2">
+          <span className="mono">{token.prefix}</span>…
+        </p>
       </td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-1">
           {token.scopes.map((scope) => (
-            <Badge key={scope} size="sm" className="font-mono">
+            <Badge key={scope} size="sm">
               {scope.replace("curatit:", "")}
             </Badge>
           ))}
@@ -450,9 +418,7 @@ function Row({ token, onRevoke }: { token: TokenRow; onRevoke: () => void }) {
           `Expired ${when(token.expires_at)}`
         ) : status === "expiring" ? (
           // Soon: the ink, heavier, so it stands out in words rather than a colour
-          <span className="text-foreground" style={semibold}>
-            in {days === 1 ? "1 day" : `${days} days`}
-          </span>
+          <span className="type-label text-text-1">in {days === 1 ? "1 day" : `${days} days`}</span>
         ) : (
           when(token.expires_at)
         )}
@@ -460,7 +426,7 @@ function Row({ token, onRevoke }: { token: TokenRow; onRevoke: () => void }) {
       <td className="px-4 py-3 whitespace-nowrap tabular-nums">{when(token.last_used_at) ?? "Never"}</td>
       <td className="px-4 py-3 text-right">
         {!dead && (
-          <Button type="button" size="xs" variant="muted" onClick={onRevoke}>
+          <Button size="sm" variant="secondary" onClick={onRevoke}>
             Revoke
           </Button>
         )}
