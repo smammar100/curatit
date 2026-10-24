@@ -5,8 +5,8 @@
 // the account menu. The feed drives it directly; other dashboard pages pass `onView` /
 // `onSearch` that take you back to the feed. Since 2026-10-23 every control is the system's:
 // the Tabs, the Menu below lg with a ghost Button as its trigger, Create and Saved as compact
-// Buttons, the count as an inverted Badge on the bookmark's corner, and the account menu's
-// avatar in a ghost icon Button. The search pill (SearchBox) is its own, as before.
+// outlined Buttons (Saved carries its count as its label), and the account menu's avatar in a
+// ghost icon Button. The search pill (SearchBox) is its own, as before.
 import { useMemo, useState } from "react";
 import Link from "next/link";
 // Assets
@@ -14,7 +14,6 @@ import Symbol from "@/components/assets/Symbol";
 // Icons
 import BookmarkSimple from "@/components/fundations/icons/BookmarkSimple";
 import Plus from "@/components/fundations/icons/Plus";
-import Badge from "@/components/fundations/elements/Badge";
 import Button from "@/components/fundations/elements/Button";
 import Menu, { MenuCaret, MenuItemRadio, MenuRadioGroup } from "@/components/fundations/molecules/Menu";
 import Tabs, { Tab, TabList } from "@/components/fundations/molecules/Tabs";
@@ -77,27 +76,34 @@ export default function Header({
       <div className="flex items-center justify-end gap-2">
         <CreateBoard />
         {/* Saved: the primary (the ink) while you're on it (or on one of your boards), the outlined
-            secondary otherwise, with the count. The badge sits beside the button in a positioned
-            wrapper, since the library's button places its own content and would hold it inside */}
-        <span className="relative inline-flex">
+            secondary otherwise. The count is the button's own label beside the bookmark, like
+            Create's plus and word (2026-10-24: a badge pinned on its corner covered the bookmark
+            and ran into its neighbours); with nothing saved it's the bookmark alone */}
+        {savedCount > 0 ? (
+          <Button
+            variant={view === "Saved" ? "default" : "secondary"}
+            size="lg"
+            onClick={() => onView("Saved")}
+            aria-label={`Saved, ${savedCount} ${savedCount === 1 ? "post" : "posts"}`}
+            aria-current={view === "Saved" ? "page" : undefined}
+            title="Saved"
+            leftIcon={<BookmarkSimple className="size-3.5" />}
+          >
+            <span className="tabular-nums">{savedCount}</span>
+          </Button>
+        ) : (
           <Button
             variant={view === "Saved" ? "default" : "secondary"}
             size="lg"
             iconOnly
             onClick={() => onView("Saved")}
-            aria-label={savedCount ? `Saved, ${savedCount} ${savedCount === 1 ? "post" : "posts"}` : "Saved"}
+            aria-label="Saved"
             aria-current={view === "Saved" ? "page" : undefined}
             title="Saved"
           >
             <BookmarkSimple className="size-3.5" />
           </Button>
-          {/* The count: the ink, cut out of the header by a ring of the page's colour */}
-          {savedCount > 0 && (
-            <Badge variant="inverted" size="sm" aria-hidden="true" className="pointer-events-none absolute -top-2 -right-2 tabular-nums ring-2 ring-page">
-              {savedCount}
-            </Badge>
-          )}
-        </span>
+        )}
         <AccountMenu onShowSaved={() => onView("Saved")} />
       </div>
     </header>
@@ -128,14 +134,19 @@ function ViewMenu({ view, onChange }: { view: View | null; onChange: (view: View
   );
 }
 
-// Create: opens the new board dialog. Just the plus below md (the label span is hidden, so the
-// pill closes round the icon); the label joins it from md
+// Create: opens the new board dialog. Below md it's the plus alone, an icon button the size of
+// Saved and the avatar beside it (a hidden label left the icon padding behind, a 34px lozenge);
+// from md the word joins it
 function CreateBoard() {
   const [open, setOpen] = useState(false);
+  const show = () => setOpen(true);
   return (
     <>
-      <Button variant="secondary" size="lg" onClick={() => setOpen(true)} aria-label="Create a board" aria-haspopup="dialog" leftIcon={<Plus className="size-3.5" />}>
-        <span className="hidden md:inline">Create</span>
+      <Button variant="secondary" size="lg" iconOnly onClick={show} aria-label="Create a board" aria-haspopup="dialog" className="md:hidden">
+        <Plus className="size-3.5" />
+      </Button>
+      <Button variant="secondary" size="lg" onClick={show} aria-label="Create a board" aria-haspopup="dialog" leftIcon={<Plus className="size-3.5" />} className="hidden md:inline-flex">
+        Create
       </Button>
       <NewBoardDialog open={open} onClose={() => setOpen(false)} />
     </>
