@@ -137,7 +137,24 @@
   box-shadow: var(--shadow-8);
 }
 
-/* The secondary button and the field keep Glaze's hairline, drawn as FF's one stroke. */
+/* Filled fields (2026-10-24, at the owner's request): every input, select and text area is a soft fill with no
+   edge at rest, in place of Glaze's paper with a hairline. The fill is the text colour at 8% (12% under the pointer),
+   so it reads on paper, on a card and on a dark dialog alike. The edge appears with the cursor in the field
+   (--line-focus) and turns coral when it's invalid, as before. Set on the field itself, so only it changes. */
+:where(.glaze, [data-system="glaze"]) {
+  --field-fill: color-mix(in oklab, var(--text-1) 8%, transparent);
+  --field-fill-hover: color-mix(in oklab, var(--text-1) 12%, transparent);
+}
+:where(.glaze, [data-system="glaze"]) :is(.field, [data-slot="textarea"]) {
+  --paper: var(--field-fill);
+  --flat-hover: var(--field-fill-hover);
+  --line-control: transparent;
+}
+:where(.glaze, [data-system="glaze"]) :is(.field, [data-slot="textarea"]):hover:not(:focus-within, :focus, :disabled, [data-disabled]) {
+  --paper: var(--field-fill-hover);
+}
+
+/* The secondary button keeps Glaze's hairline, drawn as FF's one stroke. */
 :where(.glaze, [data-system="glaze"]) .flat {
   --flat-ring: var(--border);
 }
