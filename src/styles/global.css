@@ -195,8 +195,9 @@
   --color-base-900: #202020;
   --color-base-950: #111111;
   /* Semantic tokens */
-  /* Off-white that never flips: text on an accent fill */
-  --color-paper: #ffffff;
+  /* "paper" is Glaze's surface (glaze/styles.css), which follows the theme. The fixed white this file
+     defined under that name until 2026-10-24 turned every bg-paper white in the dark theme; text
+     on a solid fill uses #ffffff directly */
   /* 1px edge drawn just inside images and on floating surfaces: pure black at 10% (white at
      10% in dark mode), never a tinted neutral */
   --color-edge: var(--border);
@@ -246,7 +247,7 @@
   --color-brand-subtle: color-mix(in oklab, var(--color-accent-500) 10%, transparent);
   --color-brand-subtle-hover: color-mix(in oklab, var(--color-accent-500) 16%, transparent);
   --color-brand-foreground: var(--color-accent-600);
-  --color-on-brand-solid-foreground: var(--color-paper);
+  --color-on-brand-solid-foreground: #ffffff;
   --color-on-brand-subtle-foreground: var(--color-accent-700);
   --color-brand-border-default: color-mix(in oklab, var(--color-accent-500) 40%, transparent);
   --color-brand-border-subtle: color-mix(in oklab, var(--color-accent-500) 30%, transparent);
@@ -266,7 +267,7 @@
   --color-danger-subtle: color-mix(in oklab, var(--color-danger-500) 6%, transparent);
   --color-danger-subtle-hover: color-mix(in oklab, var(--color-danger-500) 12%, transparent);
   --color-danger-foreground: var(--color-danger-700);
-  --color-on-danger-solid-foreground: var(--color-paper);
+  --color-on-danger-solid-foreground: #ffffff;
   --color-danger-border-default: color-mix(in oklab, var(--color-danger-500) 45%, transparent);
   --color-danger-border-subtle: color-mix(in oklab, var(--color-danger-500) 28%, transparent);
   /* Borders */
