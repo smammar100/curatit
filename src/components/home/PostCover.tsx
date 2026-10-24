@@ -13,8 +13,8 @@ import { useMounted } from "@/lib/useMounted";
 // inside a section that hydrates when it scrolls into view, so this keeps the dozens of covers
 // in the demos out of the bytes the first paint waits for (2026-10-16, Lighthouse mobile).
 //
-// The frame is the muted tile with the one stroke inside it (2026-10-23); its corner is the
-// caller's, so a cover takes the radius of whatever it sits in.
+// The frame is Glaze's well (bg-field) with the faint hairline inside it (2026-10-24); its corner
+// is the caller's, so a cover takes the radius of whatever it sits in.
 export default function PostCover({
   post,
   slide = 0,
@@ -32,10 +32,7 @@ export default function PostCover({
   return (
     <div
       aria-hidden="true"
-      className={cx(
-        "relative aspect-4/5 overflow-hidden bg-muted ring-1 ring-border select-none",
-        className,
-      )}
+      className={cx("relative aspect-4/5 overflow-hidden bg-field ring-1 ring-line-faint select-none", className)}
     >
       {mounted && (
         <Image

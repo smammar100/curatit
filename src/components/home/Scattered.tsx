@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
+import { Badge } from "@/components/glaze/ui/badge";
 import { cx } from "@/lib/cx";
-import { fontWeights } from "@/lib/font-weight";
 import { useMounted } from "@/lib/useMounted";
 import PostCover from "./PostCover";
 import { scattered } from "./demo";
@@ -20,15 +20,12 @@ import { useIntroOnce } from "./useIntroOnce";
  * view, once per session. Reduced motion shows the finished scene, and so does
  * a scene already on screen when its section comes alive (see useIntroOnce).
  *
- * Drawn on the system's tokens since 2026-10-23: every scrap is a raised card
- * from the surface ladder with the tile corner (12px), its text the ink and
- * the muted ink in the type roles, its fills the muted tile, the hover tint
- * and the one stroke; the chat's unread count and the design file's cursor
- * tags are the brand's solid and the ink. Weights come from
- * fontVariationSettings, never a font-* class.
+ * Drawn on Glaze's tokens since 2026-10-24: every scrap is a card lifted on Fluid
+ * Functionalism's surface ladder (surfaces stay FF's) with the panel corner, its text in
+ * Glaze's type roles in text-1 and text-2, its fills the grey well and its rules the faint
+ * hairline; the chat's unread count is Glaze's Badge, and the design file's cursor tags are
+ * the ink and the paper (Glaze has no brand accent).
  */
-
-const semibold = { fontVariationSettings: fontWeights.semibold };
 
 const SCENE = { w: 1400, h: 1000 };
 // The scene covers its container through CSS, so the server HTML is already the right size
@@ -39,61 +36,38 @@ const COVER = `max(tan(atan2(100cqw, ${SCENE.w}px)), tan(atan2(100cqh, ${SCENE.h
 
 function Cover({ id, className }: { id: string; className?: string }) {
   const post = usePost(id);
-  return post ? (
-    <PostCover post={post} sizes="120px" className={className} />
-  ) : null;
+  return post ? <PostCover post={post} sizes="120px" className={className} /> : null;
 }
 
 // The chat scrap's avatar, requested only after mount like the covers (PostCover): in the server
 // HTML it's an empty circle of the same size, so it stays out of the bytes the first paint waits for
 function Avatar() {
   const mounted = useMounted();
-  const className = "size-9 shrink-0 rounded-full object-cover";
+  const className = "size-9 shrink-0 rounded-pill object-cover";
   return mounted ? (
-    <Image
-      src="/images/avatar.jpeg"
-      alt=""
-      width={36}
-      height={36}
-      className={className}
-    />
+    <Image src="/images/avatar.jpeg" alt="" width={36} height={36} className={className} />
   ) : (
     <span aria-hidden="true" className={className} />
   );
 }
 
-function Card({
-  className,
-  children,
-}: {
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div
-      className={cx(
-        "rounded-[12px] bg-surface-3 shadow-surface-2",
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
+function Card({ className, children }: { className?: string; children: ReactNode }) {
+  return <div className={cx("rounded-panel bg-surface-3 shadow-surface-2", className)}>{children}</div>;
 }
 
 function Phone({ id, name }: { id: string; name: string }) {
   return (
     <Card className="overflow-hidden">
-      <div className="flex h-5 items-center justify-between px-2.5 text-caption-sm text-foreground" style={semibold}>
+      <div className="flex h-5 items-center justify-between px-2.5 text-micro font-medium text-text-1">
         <span>9:41</span>
         <span className="flex gap-0.5">
-          <span className="h-2 w-1 bg-foreground" />
-          <span className="h-2 w-1 bg-foreground" />
-          <span className="h-2 w-1 bg-border" />
+          <span className="h-2 w-1 bg-ink" />
+          <span className="h-2 w-1 bg-ink" />
+          <span className="h-2 w-1 bg-line" />
         </span>
       </div>
       <Cover id={id} />
-      <p className="px-2.5 py-1.5 text-caption-base text-muted-foreground">{name}</p>
+      <p className="px-2.5 py-1.5 text-micro text-text-2">{name}</p>
     </Card>
   );
 }
@@ -127,18 +101,16 @@ const scraps: Scrap[] = [
     delay: 0.05,
     node: (
       <Card className="p-3">
-        <div className="flex items-center justify-between text-caption-lg">
-          <span className="text-foreground" style={semibold}>Saved</span>
-          <span className="text-muted-foreground">All posts</span>
+        <div className="flex items-center justify-between type-caption">
+          <span className="font-medium text-text-1">Saved</span>
+          <span className="text-text-2">All posts</span>
         </div>
         <div className="mt-2 grid grid-cols-2 gap-1">
           {scattered.saved.map((id) => (
-            <Cover key={id} id={id} className="rounded-[4px]" />
+            <Cover key={id} id={id} className="rounded-tag" />
           ))}
         </div>
-        <p className="mt-2 text-caption-base text-muted-foreground">
-          2,318 posts · no folders
-        </p>
+        <p className="mt-2 text-micro text-text-2">2,318 posts · no folders</p>
       </Card>
     ),
   },
@@ -170,17 +142,14 @@ const scraps: Scrap[] = [
       <Card className="flex gap-3 p-3">
         <Avatar />
         <div className="min-w-0">
-          <p className="text-caption-lg text-muted-foreground">
-            <span className="text-foreground" style={semibold}>Priya</span> · 10:42
+          <p className="type-caption text-text-2">
+            <span className="font-medium text-text-1">Priya</span> · 10:42
           </p>
-          <p className="mt-0.5 text-body-sm text-foreground">
-            do you have that carousel from the money app? the one with the phone
-            on every slide
+          <p className="mt-0.5 type-body-sm text-text-1">
+            do you have that carousel from the money app? the one with the phone on every slide
           </p>
         </div>
-        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-brand-solid text-caption-base text-on-brand-solid-foreground" style={semibold}>
-          3
-        </span>
+        <Badge count={3} className="shrink-0" />
       </Card>
     ),
   },
@@ -192,28 +161,22 @@ const scraps: Scrap[] = [
     delay: 0.5,
     node: (
       <Card className="overflow-hidden">
-        <p className="border-b border-border px-3 py-1.5 text-caption-lg text-foreground" style={semibold}>
-          links_FINAL_v3.xlsx
-        </p>
-        <table className="w-full text-caption-base">
+        <p className="border-b border-line-faint px-3 py-1.5 type-label-sm text-text-1">links_FINAL_v3.xlsx</p>
+        <table className="w-full text-micro">
           <thead>
-            <tr className="bg-muted text-left text-muted-foreground" style={semibold}>
-              <th className="px-3 py-1">Brand</th>
-              <th className="px-3 py-1">Link</th>
-              <th className="px-3 py-1">Why it&apos;s good</th>
+            <tr className="bg-field text-left font-medium text-text-2">
+              <th className="px-3 py-1 font-medium">Brand</th>
+              <th className="px-3 py-1 font-medium">Link</th>
+              <th className="px-3 py-1 font-medium">Why it&apos;s good</th>
             </tr>
           </thead>
           <tbody>
             {sheetRows.map((row, i) => (
-              <tr key={i} className="border-t border-border">
+              <tr key={i} className="border-t border-line-faint">
                 {row.map((cell, j) => (
                   <td
                     key={j}
-                    className={cx(
-                      "px-3 py-1",
-                      j === 0 ? "text-foreground" : "text-muted-foreground",
-                      j === 2 && "italic",
-                    )}
+                    className={cx("px-3 py-1", j === 0 ? "text-text-1" : "text-text-2", j === 2 && "italic")}
                   >
                     {cell}
                   </td>
@@ -233,17 +196,13 @@ const scraps: Scrap[] = [
     delay: 0.65,
     node: (
       <Card className="p-4">
-        <p className="text-body-base text-foreground" style={semibold}>
-          References — Payments launch
-        </p>
-        <ul className="mt-2 space-y-1 text-caption-lg text-muted-foreground">
+        <p className="type-label text-text-1">References: Payments launch</p>
+        <ul className="mt-2 space-y-1 type-caption text-text-2">
           <li>• instagram.com/p/DeJsl6… (green one?)</li>
           <li>• the Coinbase card-pack post → ask Jo</li>
           <li>• pinterest board → link dead</li>
           <li>• see slack thread from March</li>
-          <li className="text-tertiary-foreground">
-            • TODO: find the carousel with the phone
-          </li>
+          <li>• TODO: find the carousel with the phone</li>
         </ul>
       </Card>
     ),
@@ -256,27 +215,17 @@ const scraps: Scrap[] = [
     delay: 0.3,
     node: (
       <Card className="overflow-hidden">
-        <p className="border-b border-border px-3 py-1.5 text-caption-lg text-muted-foreground">
-          <span className="text-foreground" style={semibold}>moodboard-spring-v2</span>{" "}
-          · Design file
+        <p className="border-b border-line-faint px-3 py-1.5 type-caption text-text-2">
+          <span className="font-medium text-text-1">moodboard-spring-v2</span> · Design file
         </p>
-        <div className="relative h-48 bg-muted">
-          <Cover
-            id={scattered.canvas[0]}
-            className="absolute top-4 left-5 w-16 rotate-[-6deg] rounded-[4px] shadow-surface-2"
-          />
-          <Cover
-            id={scattered.canvas[1]}
-            className="absolute top-10 left-28 w-20 rotate-[3deg] rounded-[4px] shadow-surface-2"
-          />
-          <Cover
-            id={scattered.canvas[2]}
-            className="absolute top-3 right-6 w-16 rotate-[8deg] rounded-[4px] shadow-surface-2"
-          />
-          <span className="absolute top-28 left-44 rounded-[4px] bg-foreground px-1.5 py-0.5 text-caption-sm text-background">
+        <div className="relative h-48 bg-field">
+          <Cover id={scattered.canvas[0]} className="absolute top-4 left-5 w-16 -rotate-6 rounded-tag" />
+          <Cover id={scattered.canvas[1]} className="absolute top-10 left-28 w-20 rotate-3 rounded-tag" />
+          <Cover id={scattered.canvas[2]} className="absolute top-3 right-6 w-16 rotate-8 rounded-tag" />
+          <span className="absolute top-28 left-44 rounded-tag bg-ink px-1.5 py-0.5 text-micro text-text-inverse">
             Sam
           </span>
-          <span className="absolute top-36 right-14 rounded-[4px] bg-brand-solid px-1.5 py-0.5 text-caption-sm text-on-brand-solid-foreground">
+          <span className="absolute top-36 right-14 rounded-tag border border-line bg-paper px-1.5 py-0.5 text-micro text-text-1">
             Jo
           </span>
         </div>
@@ -292,16 +241,12 @@ const scraps: Scrap[] = [
     node: (
       <div className="text-center">
         <div className="relative mx-auto h-24 w-32">
-          <div className="absolute top-0 left-0 h-5 w-14 rounded-t-[8px] bg-muted" />
-          <div className="absolute inset-x-0 top-4 bottom-0 rounded-tr-[8px] rounded-b-[8px] bg-muted" />
-          <div className="absolute inset-x-1 top-6 bottom-1 rounded-[8px] bg-border" />
+          <div className="absolute top-0 left-0 h-5 w-14 rounded-t-tag bg-field" />
+          <div className="absolute inset-x-0 top-4 bottom-0 rounded-tr-tag rounded-b-tag bg-field" />
+          <div className="absolute inset-x-1 top-6 bottom-1 rounded-tag bg-line" />
         </div>
-        <p className="mt-2 text-caption-lg text-foreground" style={semibold}>
-          Inspo_final_v3
-        </p>
-        <p className="text-caption-base text-muted-foreground">
-          47 items · modified 3 months ago
-        </p>
+        <p className="mt-2 type-label-sm text-text-1">Inspo_final_v3</p>
+        <p className="text-micro text-text-2">47 items · modified 3 months ago</p>
       </div>
     ),
   },
@@ -313,21 +258,14 @@ const scraps: Scrap[] = [
     delay: 0.7,
     node: (
       <Card className="p-3">
-        <p className="text-body-sm text-foreground" style={semibold}>
-          Re: Re: Re: refs for the deck
+        <p className="type-label text-text-1">Re: Re: Re: refs for the deck</p>
+        <p className="mt-0.5 type-caption text-text-2">
+          <span className="text-text-1">Marcus</span> · Attached 12 screenshots. Not sure which brand the second one was.
         </p>
-        <p className="mt-0.5 text-caption-lg text-muted-foreground">
-          <span className="text-foreground">Marcus</span> · Attached 12
-          screenshots. Not sure which brand the second one was.
-        </p>
-        <div className="mt-2 flex gap-1 text-caption-sm text-muted-foreground">
-          <span className="rounded-[4px] bg-muted px-1.5 py-0.5">
-            IMG_4821.PNG
-          </span>
-          <span className="rounded-[4px] bg-muted px-1.5 py-0.5">
-            IMG_4830.PNG
-          </span>
-          <span className="rounded-[4px] bg-muted px-1.5 py-0.5">+10</span>
+        <div className="mt-2 flex gap-1 text-micro text-text-2">
+          <span className="rounded-tag bg-field px-1.5 py-0.5">IMG_4821.PNG</span>
+          <span className="rounded-tag bg-field px-1.5 py-0.5">IMG_4830.PNG</span>
+          <span className="rounded-tag bg-field px-1.5 py-0.5">+10</span>
         </div>
       </Card>
     ),
@@ -341,17 +279,9 @@ const scraps: Scrap[] = [
     node: (
       <Card className="flex items-center gap-1 px-2 py-1.5">
         {Array.from({ length: 16 }, (_, i) => (
-          <span
-            key={i}
-            className={cx(
-              "h-6 flex-1 rounded-[4px]",
-              i % 3 === 0 ? "bg-border" : "bg-muted",
-            )}
-          />
+          <span key={i} className={cx("h-6 flex-1 rounded-tag", i % 3 === 0 ? "bg-line" : "bg-field")} />
         ))}
-        <span className="shrink-0 px-1 text-caption-base text-muted-foreground">
-          +38 tabs
-        </span>
+        <span className="shrink-0 px-1 text-micro text-text-2">+38 tabs</span>
       </Card>
     ),
   },
@@ -364,15 +294,13 @@ const scraps: Scrap[] = [
     delay: 1,
     node: (
       <Card className="p-3">
-        <p className="text-caption-base text-foreground" style={semibold}>
-          moodboard_v7.pdf
-        </p>
+        <p className="type-label-sm text-text-1">moodboard_v7.pdf</p>
         <div className="mt-2 grid grid-cols-3 gap-1">
           {scattered.pdf.map((id) => (
-            <Cover key={id} id={id} className="rounded-[4px]" />
+            <Cover key={id} id={id} className="rounded-tag" />
           ))}
         </div>
-        <p className="mt-2 text-caption-sm text-muted-foreground">14 MB · page 3 of 22</p>
+        <p className="mt-2 text-micro text-text-2">14 MB · page 3 of 22</p>
       </Card>
     ),
   },
@@ -383,7 +311,7 @@ const scraps: Scrap[] = [
     w: 250,
     delay: 1.1,
     node: (
-      <div className="rounded-[24px] rounded-bl-[4px] bg-muted px-4 py-2.5 text-body-sm text-foreground">
+      <div className="rounded-shell rounded-bl-tag bg-field px-4 py-2.5 type-body-sm text-text-1">
         sending you a few screenshots, the green one is somewhere in there
       </div>
     ),
@@ -400,11 +328,8 @@ const connectors = [
   "M1170 330 C 1250 340, 1240 410, 1270 440",
 ];
 
-
 export default function Scattered({ className }: { className?: string }) {
-  const { ref, intro } = useIntroOnce<HTMLDivElement>(
-    "curatit:scattered-intro",
-  );
+  const { ref, intro } = useIntroOnce<HTMLDivElement>("curatit:scattered-intro");
 
   const hidden = intro === "armed";
 
@@ -413,34 +338,16 @@ export default function Scattered({ className }: { className?: string }) {
       ref={ref}
       role="img"
       aria-label="References for one brief scattered across saved posts, phone screenshots, chat messages, a spreadsheet of links, a notes page, a design file, a folder, an email thread, open browser tabs and a PDF"
-      className={cx(
-        "pointer-events-none select-none overflow-hidden [container-type:size]",
-        className,
-      )}
+      className={cx("pointer-events-none select-none overflow-hidden [container-type:size]", className)}
     >
+      {/* The 1400 × 1000 scene, centred a little above the middle and scaled to cover (--cover) */}
       <div
-        className="absolute top-[42%] left-1/2"
-        style={{
-          width: SCENE.w,
-          height: SCENE.h,
-          translate: "-50% -42%",
-          scale: COVER,
-        }}
+        className="absolute top-[42%] left-1/2 h-250 w-350 -translate-x-1/2 -translate-y-[42%] scale-(--cover)"
+        style={{ "--cover": COVER } as CSSProperties}
       >
-        <svg
-          className="absolute inset-0 size-full"
-          viewBox={`0 0 ${SCENE.w} ${SCENE.h}`}
-          fill="none"
-          aria-hidden="true"
-        >
+        <svg className="absolute inset-0 size-full" viewBox={`0 0 ${SCENE.w} ${SCENE.h}`} fill="none" aria-hidden="true">
           {connectors.map((d) => (
-            <path
-              key={d}
-              d={d}
-              className="stroke-border"
-              strokeWidth="1.5"
-              strokeDasharray="6 6"
-            />
+            <path key={d} d={d} className="stroke-line" strokeWidth="1.5" strokeDasharray="6 6" />
           ))}
         </svg>
         {scraps.map((scrap) => (
@@ -449,14 +356,22 @@ export default function Scattered({ className }: { className?: string }) {
           // so the first section below the hero hydrates without the animation engine.
           <div
             key={scrap.key}
-            className={cx("scattered-scrap absolute", hidden && "scattered-hidden", intro === "play" && "scattered-in")}
-            style={{
-              left: scrap.x,
-              top: scrap.y,
-              width: scrap.w,
-              rotate: `${scrap.rotate ?? 0}deg`,
-              animationDelay: intro === "play" ? `${scrap.delay}s` : undefined,
-            }}
+            className={cx(
+              "scattered-scrap absolute top-(--y) left-(--x) w-(--w) rotate-(--r)",
+              hidden && "scattered-hidden",
+              // The delay is marked important: .scattered-in (global.css, unlayered) sets the whole
+              // animation shorthand, which would otherwise reset it
+              intro === "play" && "scattered-in [animation-delay:var(--delay)]!",
+            )}
+            style={
+              {
+                "--x": `${scrap.x}px`,
+                "--y": `${scrap.y}px`,
+                "--w": `${scrap.w}px`,
+                "--r": `${scrap.rotate ?? 0}deg`,
+                "--delay": `${scrap.delay}s`,
+              } as CSSProperties
+            }
           >
             {scrap.node}
           </div>

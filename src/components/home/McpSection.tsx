@@ -1,44 +1,40 @@
+import Link from "next/link";
 // Fundation
 import Text from "@/components/fundations/elements/Text";
-import Badge from "@/components/fundations/elements/Badge";
-import Button from "@/components/fundations/elements/Button";
 import Wrapper from "@/components/fundations/containers/Wrapper";
+// Glaze
+import { Badge } from "@/components/glaze/ui/badge";
+import { Button } from "@/components/glaze/ui/button";
 // Assets
 import ClientMark, { clientMarks } from "@/components/assets/ClientMarks";
 // Components
 import { McpDemo } from "./islands";
 
+// Since 2026-10-24 on Glaze: the action is its Button rendered as a link, and the Beta label is its
+// Badge beside it (Glaze puts no small label above a title).
 export default function McpSection() {
   return (
     <section>
       <Wrapper variant="standard" className="section-y">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="text-balance lg:col-span-5">
-            <Badge>Beta</Badge>
-            <Text tag="h2" variant="h1" className="mt-6 text-foreground">
+            <Text tag="h2" variant="h1" className="text-text-1">
               Find references in your AI assistant.
             </Text>
-            <Text tag="p" variant="body" className="mt-4 text-muted-foreground">
+            <Text tag="p" variant="body" className="mt-4 text-text-2">
               Search Curatit and read post breakdowns from Claude, Cursor, VS
               Code or ChatGPT.
             </Text>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Button isLink size="base" variant="default" href="/agents">
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Button render={<Link href="/agents" />} nativeButton={false}>
                 Explore the AI integration
               </Button>
+              <Badge>Beta</Badge>
             </div>
-            <ul
-              className="mt-12 flex flex-wrap items-center gap-8"
-              aria-label="Clients it works with"
-            >
+            <ul className="mt-12 flex flex-wrap items-center gap-8" aria-label="Clients it works with">
               {clientMarks.map((mark) => (
-                <li key={mark.name} className="text-foreground">
-                  <ClientMark
-                    path={mark.path}
-                    className="size-9"
-                    role="img"
-                    aria-label={mark.name}
-                  />
+                <li key={mark.name} className="text-text-1">
+                  <ClientMark path={mark.path} className="size-9" role="img" aria-label={mark.name} />
                 </li>
               ))}
             </ul>

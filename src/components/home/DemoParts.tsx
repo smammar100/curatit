@@ -9,9 +9,9 @@ import {
   type FocusEvent,
 } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
-import Badge from "@/components/fundations/elements/Badge";
-import Segmented from "@/components/fundations/elements/Segmented";
-import Search from "@/components/fundations/icons/Search";
+import { Icon, Search } from "@/components/glaze/icon";
+import { Badge } from "@/components/glaze/ui/badge";
+import { SegmentedControl, SegmentedControlItem } from "@/components/glaze/ui/segmented-control";
 import { cx } from "@/lib/cx";
 import { briefs } from "./demo";
 import { BelowFold } from "./HydrateOnView";
@@ -171,16 +171,8 @@ export function useTyped(text: string, enabled: boolean) {
   return { typed: text.slice(0, count), done: count >= text.length };
 }
 
-// The example briefs as the shared segmented control, stretched across the card with the options
-// sharing its width (`[&>button]` reaches the options and leaves the thumb alone, and its selector
-// outranks Segmented's own px-3 rather than relying on stylesheet order). They keep 8px padding,
-// as they had before, so the row still fits a 240px card (a 320px phone, a 1024px window). Until
-// Segmented has a stretch option of its own
-const briefOptions = briefs.map((option, i) => ({
-  value: String(i),
-  label: option.label,
-}));
-
+// The example briefs as Glaze's SegmentedControl (2026-10-24): the small size, filling the card's
+// width with the three briefs sharing it. Arrow keys move and pick, as on the real control
 export function BriefTabs({
   active,
   onChange,
@@ -191,22 +183,26 @@ export function BriefTabs({
   className?: string;
 }) {
   return (
-    <Segmented
+    <SegmentedControl
       aria-label="Try a brief"
-      tone="inverted"
-      options={briefOptions}
+      size="sm"
+      fill
       value={String(active)}
       onValueChange={(value) => onChange(Number(value))}
-      // Three equal segments: the library's items set their label at the left, so each one is
-      // centred here or the outer labels would hug the track's edges
-      className={cx("w-full [&>button]:flex-1 [&>button]:justify-center [&>button]:px-2", className)}
-    />
+      className={className}
+    >
+      {briefs.map((option, i) => (
+        <SegmentedControlItem key={option.label} value={String(i)}>
+          {option.label}
+        </SegmentedControlItem>
+      ))}
+    </SegmentedControl>
   );
 }
 
-// The search field with a brief in it, drawn after the system's Input (2026-10-23: the one
-// stroke on no fill, the compact 28px pill, the icon in the leading slot). While `typing`, a
-// caret follows the text. A drawing, not a field: nothing can be typed into it.
+// The search field with a brief in it, drawn on Glaze's field recipe (the hairline pill on paper,
+// the small control's height, the icon leading in text-3). While `typing`, a caret follows the
+// text. A drawing, not a field: nothing can be typed into it.
 export function QueryField({
   query,
   typing = false,
@@ -217,33 +213,17 @@ export function QueryField({
   className?: string;
 }) {
   return (
-    <div
-      className={cx(
-        "flex h-7 items-center gap-2 rounded-[20px] px-2.5 text-caption-lg ring-1 ring-border",
-        className,
-      )}
-    >
-      <Search className="size-3.5 shrink-0 text-muted-foreground" />
+    <div className={cx("field [--field-h:var(--control-sm)]", className)}>
+      <Icon icon={Search} size={12} className="text-text-3" />
       <span className="sr-only">Brief:</span>
-      <span className="truncate text-foreground">{query}</span>
-      {typing && (
-        <span
-          aria-hidden="true"
-          className="-ml-1.5 h-3.5 w-px shrink-0 bg-foreground"
-        />
-      )}
+      <span className="truncate">{query}</span>
+      {typing && <span aria-hidden="true" className="-ml-1.5 h-3.5 w-px shrink-0 bg-ink" />}
     </div>
   );
 }
 
-// A matched term: the system's Badge (2026-10-23), outlined so it reads as a label
-export function Tag({
-  children,
-  className,
-}: {
-  children: string;
-  className?: string;
-}) {
+// A matched term: Glaze's outline Badge, a label of what the post is
+export function Tag({ children, className }: { children: string; className?: string }) {
   return (
     <Badge variant="outline" className={className}>
       {children}
