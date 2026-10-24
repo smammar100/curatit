@@ -4,8 +4,8 @@
 // prototype on 2026-10-10). The header's tabs pick the view, its search filters the posts, and
 // the grid shows them. For you is the library ranked on the person's onboarding answers
 // (forYou.ts); someone whose profile has none yet is sent to /dashboard/welcome first. Discover
-// opens on the Playbooks (on For you from 2026-10-20, moved here on 2026-10-24) while nothing is
-// typed and every category is showing, then a row of categories to browse the library by. ?view=
+// opens on a row of categories, then the Playbooks (on For you from 2026-10-20, moved here on
+// 2026-10-24) while nothing is typed and every category is showing, after Cosmos's Explore. ?view=
 // discover|saved, ?category= (on Discover) and ?q= open the feed on a view, category or
 // search, which is how other dashboard pages send you back here.
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
@@ -123,8 +123,10 @@ export default function Feed() {
       </Suspense>
       <Header view={view} onView={setView} query={query} onQuery={setQuery} />
       <main className="px-4 pt-2 pb-24 sm:px-6">
-        {/* Discover with nothing typed and every category opens on the playbooks (moved here from For
-            you on 2026-10-24, at the owner's request), then the categories and the wall */}
+        {/* Discover, after Cosmos's Explore: the categories under the header, then (with nothing typed
+            and every category showing) the playbooks, moved here from For you on 2026-10-24 at the
+            owner's request, then the wall */}
+        {view === "Discover" && <CategoryBar posts={list} value={category} onChange={setCategory} />}
         {view === "Discover" && !query.trim() && !category && (
           <Playbooks
             posts={list}
@@ -134,7 +136,6 @@ export default function Feed() {
             }}
           />
         )}
-        {view === "Discover" && <CategoryBar posts={list} value={category} onChange={setCategory} />}
         {/* The Saved view opens on the boards, then every saved post */}
         {view === "Saved" && !query.trim() && status !== "loading" && <BoardList />}
         {search.result && !search.result.error && <p role="status" className="mb-5 type-body-sm text-text-2">
