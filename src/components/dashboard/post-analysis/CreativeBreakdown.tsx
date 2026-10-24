@@ -101,14 +101,17 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
   };
 
   // After a switch the new tab starts in view: when the pane had scrolled past the top of the
-  // tabs, it jumps back to it; when the tabs were in view, nothing moves
+  // tabs, it jumps back to it, landing the tabs where they stick (under the post page's bar, read
+  // from the row's own sticky top); when the tabs were in view, nothing moves
+  const bar = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (!switched.current) return;
     switched.current = false;
     const marker = top.current;
     const pane = marker && scrollParent(marker);
     if (!marker || !pane) return;
-    const offset = marker.getBoundingClientRect().top - pane.getBoundingClientRect().top;
+    const stuck = bar.current ? parseFloat(getComputedStyle(bar.current).top) || 0 : 0;
+    const offset = marker.getBoundingClientRect().top - pane.getBoundingClientRect().top - stuck;
     if (offset < 0) pane.scrollTop = Math.max(0, pane.scrollTop + offset);
   }, [view]);
 
@@ -116,8 +119,9 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
     <div>
       <div ref={top} aria-hidden="true" />
       <Tabs value={view} onValueChange={(next) => choose(next as View)}>
-        {/* Sticky over the card's own padding (px-4 in PostView), so content slides under it */}
-        <div className="sticky top-0 z-(--z-sticky) -mx-4 flex flex-wrap items-center justify-between gap-2 bg-paper px-4 py-2">
+        {/* Sticky over the card's own padding (px-4 in PostView), so content slides under it, just
+            below the post page's 92px bar (h-23), which sticks too */}
+        <div ref={bar} className="sticky top-23 z-(--z-sticky) -mx-4 flex flex-wrap items-center justify-between gap-2 bg-paper px-4 py-2">
           <TabsList aria-label="Creative breakdown" activateOnFocus>
             {views.map((v) => (
               <TabsTrigger key={v.id} value={v.id}>
