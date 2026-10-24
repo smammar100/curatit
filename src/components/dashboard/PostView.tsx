@@ -147,7 +147,7 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
               over it) where you are in the carousel: the slides themselves as the indicator, small at
               the post's shape, the one on stage in full with an ink ring and the rest dimmed until
               pointed at (the row scrolls sideways when they don't fit), and the slide's number and role */}
-          <div className="relative flex flex-col items-center overflow-hidden rounded-shell bg-shell p-4 sm:p-8 lg:h-(--stage-h)">
+          <div className="relative flex flex-col items-center overflow-hidden rounded-(--radius-float) bg-shell p-4 sm:p-8 lg:h-(--stage-h)">
             <div className="flex min-h-0 w-full flex-1 items-center justify-center">
               <div className="relative aspect-(--ratio) h-full max-h-full w-full max-w-(--stage-w)">
                 <Image
@@ -157,7 +157,7 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
                   fill
                   sizes="(min-width: 1024px) 60vw, 100vw"
                   priority
-                  className="rounded-panel object-contain"
+                  className="rounded-(--radius-nested) object-contain"
                 />
               </div>
             </div>
@@ -173,7 +173,7 @@ export default function PostView({ post, analysis }: { post: PostDetail; analysi
                         aria-pressed={i === index}
                         onClick={() => go(i)}
                         className={cn(
-                          "relative block aspect-(--ratio) w-8 shrink-0 overflow-hidden rounded-tag bg-field transition-opacity duration-(--dur-state) ease-out",
+                          "relative block aspect-(--ratio) w-8 shrink-0 overflow-hidden rounded-(--radius-nested) bg-field transition-opacity duration-(--dur-state) ease-out",
                           i === index ? "outline-2 outline-offset-2 outline-ink" : "opacity-45 hover:opacity-100",
                         )}
                       >

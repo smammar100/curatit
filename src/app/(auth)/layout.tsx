@@ -40,7 +40,7 @@ export default async function AuthLayout({
           {/* The card floats over imagery, which no Glaze recipe covers, so it lifts on Fluid
               Functionalism's own pair (surface 3 with the sixth step's shadow, which has its own
               dark treatment) at Glaze's card corners */}
-          <div className="w-full max-w-md rounded-shell bg-surface-3 p-6 shadow-surface-6 sm:p-8">
+          <div className="w-full max-w-md rounded-(--radius-float) bg-surface-3 p-6 shadow-surface-6 sm:p-8">
             <Link href="/" className="mx-auto mb-6 block w-fit rounded-tag" aria-label="Go to homepage">
               <Lockup />
             </Link>

@@ -5,8 +5,8 @@
 // editors), API tokens (for MCP clients), contact and log out, then the theme (light, dark,
 // system) and the grid size, both remembered on this device. Since 2026-10-24 it is Glaze's
 // DropdownMenu: the trigger is a ghost icon Button holding the Avatar, the name and email a label
-// at the top, the pages LinkItems (so they open in a new tab too), every row with its glyph before
-// the words, and the two settings as rows with a segmented switch each (icons, named for screen
+// at the top, the pages LinkItems (so they open in a new tab too), every row with its glyph at the
+// end (as the menu was before Glaze, at the owner's request), and the two settings as rows with a segmented switch each (icons, named for screen
 // readers; picking one keeps the menu open so the change shows behind it).
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -52,7 +52,7 @@ export default function AccountMenu({ onShowSaved }: { onShowSaved: () => void }
       <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Account menu" />}>
         <Avatar size="default" decorative />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
+      <DropdownMenuContent align="end" className="w-80">
         {/* Who's signed in. A non-breaking space holds each line's height until the session is read */}
         <DropdownMenuGroup>
           <DropdownMenuLabel>
@@ -66,27 +66,27 @@ export default function AccountMenu({ onShowSaved }: { onShowSaved: () => void }
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuItem onClick={onShowSaved}>
-          <Icon icon={Bookmark} />
           Saved posts
+          <Icon icon={Bookmark} className="ms-auto" />
         </DropdownMenuItem>
         <DropdownMenuLinkItem render={<Link href="/dashboard/welcome" />}>
-          <Icon icon={Sparkle} />
           Personalise your feed
+          <Icon icon={Sparkle} className="ms-auto" />
         </DropdownMenuLinkItem>
         {editor && (
           <DropdownMenuLinkItem render={<Link href="/dashboard/review" />}>
-            <Icon icon={SealCheck} />
             Analysis review
+            <Icon icon={SealCheck} className="ms-auto" />
           </DropdownMenuLinkItem>
         )}
         <DropdownMenuLinkItem render={<Link href="/dashboard/settings/tokens" />}>
-          <Icon icon={Key} />
           API tokens
+          <Icon icon={Key} className="ms-auto" />
         </DropdownMenuLinkItem>
         {/* A mailto: the browser opens the mail client in place */}
         <DropdownMenuLinkItem href={SUPPORT_MAILTO}>
-          <Icon icon={ChatDots} />
           Contact us
+          <Icon icon={ChatDots} className="ms-auto" />
         </DropdownMenuLinkItem>
         {/* The signOut server action, as the form's submit called it; analytics reset first */}
         <DropdownMenuItem
@@ -95,8 +95,8 @@ export default function AccountMenu({ onShowSaved }: { onShowSaved: () => void }
             void signOut();
           }}
         >
-          <Icon icon={SignOut} />
           Log out
+          <Icon icon={SignOut} className="ms-auto" />
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />

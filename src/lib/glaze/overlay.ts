@@ -289,13 +289,13 @@ const scrimClass = 'fixed inset-0 z-(--z-overlay) bg-scrim transition-opacity du
 /** The list popup: the anchored overlay, 4px of padding, at least --menu-min wide, scrolling past --popup-max. */
 const menuPopupClass = cn(
   overlaySurface, overlayMotion,
-  'flex max-h-[min(var(--popup-max),var(--available-height))] min-w-(--menu-min) max-w-(--available-width) flex-col overflow-y-auto overscroll-contain p-1 [--menu-item-h:var(--menu-row)]',
+  'flex max-h-[min(var(--popup-max),var(--available-height))] min-w-(--menu-min) max-w-(--available-width) flex-col overflow-y-auto overscroll-contain p-3 [--menu-item-h:var(--menu-row)]',
   'data-[size=sm]:[--menu-item-h:var(--menu-row-sm)]',
 );
 
 /** One row: 13/500, 8px in, the icon 14 and 8px from the label. Highlighted takes the wash; destructive reads in coral's word. */
 const menuItemClass = cn(
-  'relative flex min-h-(--menu-item-h) w-full cursor-default items-center gap-2 rounded-tag px-2 type-label text-text-1 outline-none select-none data-inset:ps-7',
+  'relative flex min-h-(--menu-item-h) w-full cursor-default items-center gap-3 rounded-(--corner-xs) px-3 type-label text-text-1 outline-none select-none data-inset:ps-10',
   'in-data-[size=sm]:type-label-sm',
   '[&_svg]:size-(--icon) [&_svg]:shrink-0 [&_svg]:text-text-3',
   'data-highlighted:bg-hover data-disabled:cursor-not-allowed data-disabled:text-text-disabled data-disabled:[&_svg]:text-text-disabled',
@@ -304,13 +304,13 @@ const menuItemClass = cn(
 );
 
 /** A checkbox or radio row: the leading 28px column holds the indicator. */
-const menuCheckItemClass = cn(menuItemClass, 'ps-7');
+const menuCheckItemClass = cn(menuItemClass, 'ps-10');
 
 /** A group's heading: the caption role in text-2, on the rows' 8px inset. */
-const menuLabelClass = 'flex min-h-(--menu-item-h) items-center px-2 type-caption text-text-2 select-none data-inset:ps-7';
+const menuLabelClass = 'flex min-h-(--menu-item-h) items-center px-3 type-caption text-text-2 select-none data-inset:ps-10';
 
 /** The hairline between groups, edge to edge of the popup. */
-const menuSeparatorClass = '-mx-1 my-1 h-px shrink-0 bg-line-faint';
+const menuSeparatorClass = '-mx-3 my-2 h-px shrink-0 bg-line-faint';
 
 /** A key cap: mono at the caption's 0.8, a tag radius, a hairline. In a menu, a command row and a tooltip. */
 

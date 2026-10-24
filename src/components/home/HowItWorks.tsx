@@ -53,7 +53,7 @@ export default function HowItWorks() {
           {steps.map((step) => (
             <li
               key={step.title}
-              className="relative flex min-h-110 min-w-0 flex-col overflow-clip rounded-shell bg-shell md:aspect-3/4"
+              className="relative flex min-h-110 min-w-0 flex-col overflow-clip rounded-(--radius-float) bg-shell md:aspect-3/4"
             >
               <div className="relative z-(--z-raised) px-6 py-7 lg:px-8">
                 <Text tag="h3" variant="h5" className="text-balance text-text-1">

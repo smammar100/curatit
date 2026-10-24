@@ -709,7 +709,6 @@
   :focus-visible {
     outline: 1px solid var(--focus-ring, #6B97FF);
     outline-offset: 2px;
-    border-radius: var(--shape-input-radius, 8px);
   }
   a:focus-visible {
     border-radius: 2px;
@@ -1068,7 +1067,7 @@
 .nf-shadow {
   position: absolute;
   inset: 8% 6% -2%;
-  border-radius: 6px;
+  border-radius: var(--radius-tag);
   box-shadow: 0 18px 30px -8px rgb(0 0 0 / 0.4);
   opacity: var(--lift);
   transition: opacity 260ms cubic-bezier(0.23, 1, 0.32, 1);
@@ -1418,14 +1417,14 @@ img[data-fade="in"] {
   }
   :where(.typeset :not(pre) > code):not(:where(.typeset .not-typeset, .typeset .not-typeset *)) {
     background-color: color-mix(in oklab, currentColor 7%, transparent);
-    border-radius: 4px;
+    border-radius: var(--radius-tag);
     padding: 0.1em 0.3em;
   }
   :where(.typeset pre):not(:where(.typeset .not-typeset, .typeset .not-typeset *)) {
     font-size: var(--typeset-caption);
     line-height: var(--typeset-caption-leading);
     background-color: color-mix(in oklab, currentColor 7%, transparent);
-    border-radius: 8px;
+    border-radius: var(--radius-overlay);
     padding: 0.75em 1em;
     overflow-x: auto;
   }
@@ -1438,7 +1437,7 @@ img[data-fade="in"] {
     font-family: inherit;
     font-size: var(--typeset-caption);
     padding: 0.1em 0.35em;
-    border-radius: 4px;
+    border-radius: var(--radius-tag);
     border: 1px solid var(--border, color-mix(in oklab, currentColor 14%, transparent));
     box-shadow: 0 1px 0 var(--border, color-mix(in oklab, currentColor 14%, transparent));
   }
@@ -1472,7 +1471,7 @@ img[data-fade="in"] {
   :where(.typeset img, .typeset video):not(:where(.typeset .not-typeset, .typeset .not-typeset *)) {
     max-width: 100%;
     height: auto;
-    border-radius: 8px;
+    border-radius: var(--radius-panel);
   }
   :where(.typeset figcaption):not(:where(.typeset .not-typeset, .typeset .not-typeset *)) {
     margin-top: var(--typeset-space-heading);

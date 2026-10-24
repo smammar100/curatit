@@ -42,17 +42,17 @@ export default function DetailDemo() {
                 setSlide(i);
               }}
               className={cx(
-                "relative block w-full cursor-pointer rounded-tag transition-opacity duration-(--dur-state) ease-out",
+                "relative block w-full cursor-pointer rounded-(--corner-xs) transition-opacity duration-(--dur-state) ease-out",
                 i === slide ? "opacity-100" : "opacity-60 hover:opacity-100",
               )}
             >
-              <PostCover post={post} slide={i} sizes="56px" className="rounded-tag" />
+              <PostCover post={post} slide={i} sizes="56px" className="rounded-(--corner-xs)" />
               {/* One ring that glides to the selected slide */}
               {i === slide && (
                 <m.span
                   layoutId={ringId}
                   aria-hidden="true"
-                  className="absolute -inset-1 rounded-overlay ring-2 ring-ink"
+                  className="absolute -inset-1 rounded-panel ring-2 ring-ink"
                   transition={reduceMotion ? { duration: 0 } : { type: "spring", duration: 0.4, bounce: 0 }}
                 />
               )}

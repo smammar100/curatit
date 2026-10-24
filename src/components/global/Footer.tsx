@@ -90,7 +90,7 @@ export default async function Footer() {
 
   return (
     <footer className="mt-12 bg-page px-4 pb-(--footer-pb) lg:mt-16" style={safeBottom}>
-      <div data-theme="dark" className="glaze relative isolate overflow-clip rounded-shell bg-field text-text-2">
+      <div data-theme="dark" className="glaze relative isolate overflow-clip rounded-(--radius-float) bg-field text-text-2">
         <div className="grid grid-cols-2 lg:grid-cols-12">
           {/* The logo and the statement */}
           <div className={`${cell} col-span-2 border-b lg:col-span-6 lg:border-r lg:border-b-0`}>
@@ -132,7 +132,7 @@ export default async function Footer() {
               {strip.map((post, i) => (
                 <div
                   key={`${post.id}-${i}`}
-                  className="relative aspect-4/5 w-24 shrink-0 overflow-hidden rounded-tag bg-hover sm:w-28 lg:w-32"
+                  className="relative aspect-4/5 w-24 shrink-0 overflow-hidden rounded-panel bg-hover sm:w-28 lg:w-32"
                 >
                   {/* Started after the page has loaded (DeferredImages below): on a short page
                       the strip is close enough to the fold for the browser to fetch its covers

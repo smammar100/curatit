@@ -72,7 +72,7 @@ export default function PostWall({ covers }: { covers: string[] }) {
             return (
               <div
                 key={i}
-                className="relative aspect-4/5 overflow-hidden rounded-tag bg-field"
+                className="relative aspect-4/5 overflow-hidden rounded-panel bg-field"
               >
                 {eager ? (
                   // Inside a <picture>, which React leaves alone: an eager <img> anywhere else in

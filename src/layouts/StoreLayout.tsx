@@ -38,7 +38,7 @@ export default function StoreLayout({
                 <Icon icon={Checkout} />
               </Button>
             </div>
-            <div className="mt-12 rounded-shell bg-shell p-8">
+            <div className="mt-12 rounded-(--radius-float) bg-shell p-8">
               <Image
                 width={1400}
                 height={1400}
@@ -73,7 +73,7 @@ export default function StoreLayout({
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {frontmatter.gallery?.map((img) => (
-              <div key={img.url} className="mt-12 rounded-shell bg-shell p-8">
+              <div key={img.url} className="mt-12 rounded-(--radius-float) bg-shell p-8">
                 <Image
                   width={1400}
                   height={1400}

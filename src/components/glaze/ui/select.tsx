@@ -138,7 +138,7 @@ function SelectContent({className, children, side = 'bottom', sideOffset = 6, al
         {...props}
       >
         <SelectScrollUpButton/>
-        <SelectPrimitive.List className="max-h-[min(var(--popup-max),var(--available-height))] scroll-py-1 overflow-y-auto overscroll-contain p-1">{children}</SelectPrimitive.List>
+        <SelectPrimitive.List className="max-h-[min(var(--popup-max),var(--available-height))] scroll-py-3 overflow-y-auto overscroll-contain p-3">{children}</SelectPrimitive.List>
         <SelectScrollDownButton/>
       </SelectPrimitive.Popup>
     </SelectPrimitive.Positioner>
@@ -150,13 +150,13 @@ function SelectGroup(props: SelectPrimitive.Group.Props) {
 }
 
 function SelectLabel({className, ...props}: SelectPrimitive.GroupLabel.Props) {
-  return <SelectPrimitive.GroupLabel data-slot="select-label" className={mergeClass([menuLabelClass, 'ps-7'], className)} {...props}/>;
+  return <SelectPrimitive.GroupLabel data-slot="select-label" className={mergeClass([menuLabelClass, 'ps-10'], className)} {...props}/>;
 }
 
 /** One option: the label after a 28px column that holds the check once it is chosen. */
 function SelectItem({className, children, ...props}: SelectPrimitive.Item.Props) {
-  return <SelectPrimitive.Item data-slot="select-item" className={mergeClass([menuItemClass, 'ps-7'], className)} {...props}>
-    <SelectPrimitive.ItemIndicator render={<span className="pointer-events-none absolute start-2 flex size-(--icon) items-center justify-center [&_svg]:text-text-1!"/>}>
+  return <SelectPrimitive.Item data-slot="select-item" className={mergeClass([menuItemClass, 'ps-10'], className)} {...props}>
+    <SelectPrimitive.ItemIndicator render={<span className="pointer-events-none absolute start-3 flex size-(--icon) items-center justify-center [&_svg]:text-text-1!"/>}>
       <Icon icon={Check}/>
     </SelectPrimitive.ItemIndicator>
     <SelectPrimitive.ItemText className="block min-w-0 flex-1 truncate">{children}</SelectPrimitive.ItemText>

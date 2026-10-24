@@ -133,7 +133,7 @@ export default function Colour() {
               {STATUS.map((s) => (
                 <li key={s.name} className="flex flex-wrap items-center gap-3">
                   <span aria-hidden className={cn("size-10 shrink-0 rounded-tag", s.mark)} />
-                  <span className={cn("flex h-10 items-center rounded-tag px-3 type-label", s.tint, s.text)}>{s.word}</span>
+                  <span className={cn("flex h-10 items-center rounded-(--corner-xs) px-3 type-label", s.tint, s.text)}>{s.word}</span>
                   <span className="min-w-0">
                     <Mono>{`--${s.name}, --${s.name}-text, --${s.name}-tint`}</Mono>
                   </span>

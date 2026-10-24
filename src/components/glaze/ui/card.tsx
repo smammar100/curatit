@@ -57,7 +57,7 @@ function Card({className, children, ...props}: CardProps) {
 function CardHeader({className, ...props}: React.ComponentProps<'div'>) {
   return <div
     data-slot="card-header"
-    className={cn('grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-1 p-3 [&+[data-slot=card-content]:not([data-flush])]:pt-0', className)}
+    className={cn('grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-1 p-4 [&+[data-slot=card-content]:not([data-flush])]:pt-0', className)}
     {...props}
   />;
 }
@@ -91,7 +91,7 @@ function CardContent({className, flush, ...props}: CardContentProps) {
     data-flush={flush || undefined}
     className={cn(
       'flex min-w-0 flex-col gap-3 type-body-sm text-text-1',
-      flush ? 'gap-0 not-first:border-t not-first:border-line-faint' : 'p-3',
+      flush ? 'gap-0 not-first:border-t not-first:border-line-faint' : 'p-4',
       className,
     )}
     {...props}

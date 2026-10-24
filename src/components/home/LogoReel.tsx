@@ -114,7 +114,7 @@ export default function LogoReel({
         return (
           <m.div
             key={i}
-            className="absolute top-0 left-0 size-24 overflow-hidden rounded-shell ring-1 ring-line-faint"
+            className="absolute top-0 left-0 size-24 overflow-hidden rounded-panel ring-1 ring-line-faint"
             initial={false}
             animate={slotStyle(virtual, orientation, near)}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}

@@ -107,14 +107,14 @@ function PostSkeleton() {
   return (
     <div className="flex max-w-288 flex-col gap-8 lg:flex-row">
       <div className="min-w-0 lg:w-104 lg:flex-none">
-        <Skeleton className="aspect-4/5 w-full rounded-shell" />
+        <Skeleton className="aspect-4/5 w-full rounded-(--radius-float)" />
         <SkeletonText type="caption" className="mt-2 w-1/3" />
       </div>
       <div className="min-w-0 flex-1">
         <Skeleton className="h-(--control-sm) w-32 rounded-pill" />
         <SkeletonText type="heading" lines={2} className="mt-3" />
         <SkeletonText type="caption" className="mt-1 w-1/2" />
-        <Skeleton className="mt-5 h-32 w-full rounded-shell" />
+        <Skeleton className="mt-5 h-32 w-full rounded-panel" />
         <SkeletonText type="body-sm" lines={4} className="mt-6" />
       </div>
     </div>
@@ -683,7 +683,7 @@ function SlideViewer({
     <aside className="min-w-0 lg:sticky lg:top-27 lg:max-h-[calc(100dvh-3*var(--space-10))] lg:w-104 lg:flex-none lg:self-start lg:overflow-y-auto lg:overscroll-contain lg:pb-2">
       {/* The stage: the slide on the grey shell, nothing over it. The position and the arrows sit
           in a row under it, the arrows Glaze's icon Buttons, off at either end */}
-      <div className="relative aspect-4/5 overflow-hidden rounded-shell bg-shell">
+      <div className="relative aspect-4/5 overflow-hidden rounded-(--radius-float) bg-shell">
         {images[slide] && (
           <Image
             src={images[slide]}
@@ -727,7 +727,7 @@ function SlideViewer({
               pressed={i === slide}
               onPressedChange={() => onSlide(i)}
               className={cx(
-                "relative aspect-4/5 w-11 shrink-0 overflow-hidden rounded-tag border-2 transition-opacity duration-(--dur-state) ease-out",
+                "relative aspect-4/5 w-11 shrink-0 overflow-hidden rounded-(--corner-xs) border-2 transition-opacity duration-(--dur-state) ease-out",
                 i === slide ? "border-line-strong" : "border-line-faint opacity-60 hover:opacity-100 focus-visible:opacity-100",
               )}
             >

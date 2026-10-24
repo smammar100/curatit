@@ -241,7 +241,7 @@ function Tile({ board, post, note, sizes }: { board: Board; post: DashPost; note
       </Link>
       <div className="pointer-events-none absolute inset-0 flex flex-col justify-between gap-2 p-2">
         <div className={cx("flex items-start justify-between gap-2", reveal)}>
-          <span className="min-w-0 rounded-tag bg-paper px-2 py-1">
+          <span className="min-w-0 rounded-(--radius-nested) bg-paper px-2 py-1">
             <BrandName brand={post.brand} />
           </span>
           <SaveMenu post={post.shortCode} tone="overlay" className="pointer-events-auto shrink-0" />
@@ -250,7 +250,7 @@ function Tile({ board, post, note, sizes }: { board: Board; post: DashPost; note
             taller than the tile (it scrolls inside), long words broken. "Add a note" only on hover. */}
         <div
           className={cx(
-            "pointer-events-auto min-h-0 shrink overflow-y-auto rounded-tag bg-paper type-caption text-text-1 scrollbar-none",
+            "pointer-events-auto min-h-0 shrink overflow-y-auto rounded-(--radius-nested) bg-paper type-caption text-text-1 scrollbar-none",
             !note && !editing && reveal,
           )}
         >
@@ -324,7 +324,7 @@ function Editable({
     return (
       <span
         className={cx(
-          "group/editable relative flex w-full items-start gap-1 rounded-panel text-left transition-colors duration-(--dur-state) ease-out",
+          "group/editable relative flex w-full items-start gap-1 rounded-(--corner-xs) text-left transition-colors duration-(--dur-state) ease-out",
           padding,
           hoverFill && "hover:bg-hover",
           // The placeholder ("Add a note") in the placeholder's colour

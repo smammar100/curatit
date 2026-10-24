@@ -15,7 +15,7 @@ export default function AppWindow({
   className?: string;
 }) {
   return (
-    <div className={cx("@container overflow-hidden rounded-shell bg-surface-3 shadow-surface-2", className)}>
+    <div className={cx("@container overflow-hidden rounded-(--radius-nested) bg-surface-3 sm:rounded-(--radius-float) shadow-surface-2", className)}>
       <div className="flex h-9 items-center justify-center border-b border-line-faint px-4" aria-hidden="true">
         <p className="truncate type-caption text-text-2">{title}</p>
       </div>

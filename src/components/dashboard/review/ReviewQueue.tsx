@@ -389,7 +389,7 @@ function Row({ row, onChange }: { row: QueueRow; onChange: () => void }) {
     <Item>
       {/* The cover, 4:5, with the image's hairline drawn over it */}
       <ItemMedia>
-        <div className="relative aspect-4/5 w-12 overflow-hidden rounded-tag bg-field after:pointer-events-none after:absolute after:inset-0 after:rounded-tag after:border after:border-line-faint">
+        <div className="relative aspect-4/5 w-12 overflow-hidden rounded-(--corner-xs) bg-field after:pointer-events-none after:absolute after:inset-0 after:rounded-(--corner-xs) after:border after:border-line-faint">
           {post.images[0] && (
             <Image
               src={post.images[0]}

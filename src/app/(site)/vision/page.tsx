@@ -54,7 +54,7 @@ export default async function VisionPage() {
       <section className="px-4 pt-16 lg:pt-20">
         {/* .vision-night inverts the panel and the base-* colours SelectionGraph draws with; the
             words take text-inverse, which flips with the theme the same way */}
-        <div className="vision-night overflow-clip rounded-shell">
+        <div className="vision-night overflow-clip rounded-(--radius-float)">
           <Wrapper variant="standard" className="pt-12 pb-20 lg:pt-20 lg:pb-28">
             <div className="mx-auto max-w-2xl text-center">
               <Text tag="h1" variant="h1" className="text-balance text-text-inverse">

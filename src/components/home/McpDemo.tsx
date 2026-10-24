@@ -66,7 +66,7 @@ export default function McpDemo() {
       {...handlers}
       role="group"
       aria-label="Demo: an AI agent asking Curatit for references and getting three posts back"
-      className="relative overflow-hidden rounded-shell bg-shell lg:aspect-4/3"
+      className="relative overflow-hidden rounded-(--radius-float) bg-shell lg:aspect-4/3"
       data-step={step}
     >
       {/* Grows with its content on small screens; centred in a fixed 4:3 panel from lg up */}
@@ -74,7 +74,7 @@ export default function McpDemo() {
         <div className="flex justify-end">
           {/* Sent like a message: rises in from its bottom-right corner */}
           <m.p
-            className="max-w-sm origin-bottom-right rounded-shell rounded-br-tag bg-field px-4 py-3 type-body-sm text-text-1 sm:type-body"
+            className="max-w-sm origin-bottom-right rounded-(--radius-float) rounded-br-tag bg-field px-4 py-3 type-body-sm text-text-1 sm:type-body"
             initial={false}
             animate={step >= 1 ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 12, scale: 0.96 }}
             transition={step >= 1 ? { type: "spring", stiffness: 300, damping: 26 } : { duration: 0.3 }}

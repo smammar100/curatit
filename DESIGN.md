@@ -46,9 +46,12 @@ Dark mode is `data-theme="dark"` on `<html>`, set by `global/ThemeScript` and `g
    another element. Missing one? Install it (`npx shadcn@latest add https://design.how/r/glaze/<name>.json`)
    and read its page. Missing from Glaze altogether? Stop and say so.
 2. **Tokens by role, never raw values.** Glaze's colour roles (`text-text-1`, `text-text-2`, `bg-page`,
-   `bg-paper`, `bg-shell`, `bg-field`, `border-line-faint`, `bg-hover`, the status roles), its radii
-   (`rounded-pill`, `-shell`, `-panel`, `-overlay`, `-tag`), sizes (`h-(--control)`) and the 4px
-   scale. No hex, no Tailwind palette, no arbitrary px, no `dark:`, no inline styles (a value known only
+   `bg-paper`, `bg-shell`, `bg-field`, `border-line-faint`, `bg-hover`, the status roles), the corner
+   scale (a one-line control is `rounded-pill`; a box takes the step for its size: 2XS 6px `rounded-tag`,
+   XS 12px `rounded-(--corner-xs)`, S 16px `rounded-panel`, M 24px `rounded-(--radius-float)`; a box
+   inside another is the outer corner less the gap, `rounded-shell` 19 around a panel 3px in and
+   `rounded-(--radius-nested)` 8 for a label 8px inside a tile or a picture 16px inside an M box; see
+   `/system/radius`), sizes (`h-(--control)`) and the 4px scale. No hex, no Tailwind palette, no arbitrary px, no `dark:`, no inline styles (a value known only
    at runtime is a custom property read by a class: `style={{'--x': v}}` with `w-(--x)`).
 3. **No brand accent.** Emphasis is ink. Coral means failure or a destructive action, green done or
    approval, amber a warning, and each comes with a glyph and a word.

@@ -112,7 +112,7 @@ export default function ProblemSolution() {
             handle while it hangs over an edge (0 or 100) can't scroll the whole stage sideways */}
         <div
           ref={stage}
-          className="relative mt-3 aspect-4/5 touch-none overflow-clip rounded-shell bg-shell select-none sm:aspect-7/5"
+          className="relative mt-3 aspect-4/5 touch-none overflow-clip rounded-(--radius-float) bg-shell select-none sm:aspect-7/5"
           style={{ "--x": `${x}%` } as CSSProperties}
           onPointerDown={(e) => {
             dragging.current = true;

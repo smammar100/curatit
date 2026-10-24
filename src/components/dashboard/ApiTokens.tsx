@@ -206,7 +206,7 @@ export default function ApiTokens() {
               )}
             </Empty>
           ) : tokens ? (
-            <div className="mt-3 overflow-x-auto rounded-shell border border-line-faint">
+            <div className="mt-3 overflow-x-auto rounded-panel border border-line-faint">
               <table className="w-full min-w-160 border-collapse text-left">
                 <thead>
                   <tr className="type-label-sm text-text-2">

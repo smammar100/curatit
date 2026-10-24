@@ -46,9 +46,9 @@ const buttonVariants = cva(
         ],
       },
       size: {
-        sm: `${controlHeight.sm} px-2.5 type-label-sm [&_svg]:size-(--icon-sm)`,
-        default: `${controlHeight.default} px-3 type-label [&_svg]:size-(--icon)`,
-        lg: `${controlHeight.lg} px-3.5 type-label-lg [&_svg]:size-(--icon-lg)`,
+        sm: `${controlHeight.sm} px-3 type-label-sm [&_svg]:size-(--icon-sm)`,
+        default: `${controlHeight.default} px-4 type-label [&_svg]:size-(--icon)`,
+        lg: `${controlHeight.lg} px-5 type-label-lg [&_svg]:size-(--icon-lg)`,
         'icon-sm': 'size-(--control-sm) px-0 [&_svg]:size-(--icon-sm)',
         icon: 'size-(--control) px-0 [&_svg]:size-(--icon)',
         'icon-lg': 'size-(--control-lg) px-0 [&_svg]:size-(--icon-lg)',

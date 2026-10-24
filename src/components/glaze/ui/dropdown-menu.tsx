@@ -219,7 +219,7 @@ function DropdownMenuCheckboxItem({className, children, inset, ...props}: MenuPr
     className={mergeClass(menuCheckItemClass, className)}
     {...props}
   >
-    <span data-slot="dropdown-menu-checkbox-item-indicator" className="pointer-events-none absolute start-2 flex size-(--icon) items-center justify-center">
+    <span data-slot="dropdown-menu-checkbox-item-indicator" className="pointer-events-none absolute start-3 flex size-(--icon) items-center justify-center">
       <MenuPrimitive.CheckboxItemIndicator className="tick-draw flex [&_svg]:text-text-1"><Icon icon={Check}/></MenuPrimitive.CheckboxItemIndicator>
     </span>
     {children}
@@ -237,7 +237,7 @@ function DropdownMenuRadioItem({className, children, inset, ...props}: MenuPrimi
     className={mergeClass(menuCheckItemClass, className)}
     {...props}
   >
-    <span data-slot="dropdown-menu-radio-item-indicator" className="pointer-events-none absolute start-2 flex size-(--icon) items-center justify-center">
+    <span data-slot="dropdown-menu-radio-item-indicator" className="pointer-events-none absolute start-3 flex size-(--icon) items-center justify-center">
       {/* The chosen option takes the checkbox item's check: a menu marks a choice with a glyph, never a dot. */}
       <MenuPrimitive.RadioItemIndicator className="tick-draw flex [&_svg]:text-text-1"><Icon icon={Check}/></MenuPrimitive.RadioItemIndicator>
     </span>
@@ -251,7 +251,7 @@ function DropdownMenuRadioItem({className, children, inset, ...props}: MenuPrimi
 // so the change shows behind it. An icon-only segment takes a label, read aloud and shown as its title.
 function DropdownMenuSegmented({label, value, onValueChange, className, children}: {label: React.ReactNode; value: string; onValueChange: (value: string) => void; className?: string; children: React.ReactNode}) {
   const id = React.useId();
-  return <div data-slot="dropdown-menu-segmented" className={cn('flex items-center justify-between gap-3 py-1 ps-2', className)}>
+  return <div data-slot="dropdown-menu-segmented" className={cn('flex items-center justify-between gap-3 py-1 ps-3', className)}>
     <span id={id} className="type-label text-text-1">{label}</span>
     <MenuPrimitive.RadioGroup aria-labelledby={id} value={value} onValueChange={next => onValueChange(next as string)} className={segmentedVariants({size: 'default'})}>
       {children}

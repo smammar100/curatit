@@ -130,13 +130,13 @@ function Tile({ post, priority, sizes }: { post: DashPost; priority: boolean; si
       {/* Revealed on hover or keyboard focus; always there where there is no hover */}
       <div
         className={cx(
-          "pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-opacity duration-(--dur-state) ease-out",
+          "pointer-events-none absolute inset-0 flex flex-col justify-between p-2 opacity-0 transition-opacity duration-(--dur-state) ease-out",
           "group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100",
         )}
       >
         <SaveMenu post={post.shortCode} tone="overlay" className="pointer-events-auto self-end" />
         {/* A label over the cover: a tag of paper, which reads over any image */}
-        <span className="self-start rounded-tag bg-paper px-2 py-1">
+        <span className="self-start rounded-(--radius-nested) bg-paper px-2 py-1">
           <BrandName brand={post.brand} />
         </span>
       </div>

@@ -114,7 +114,7 @@ export default function SearchReel({
         {search.results.map((result, i) => (
           <li
             key={result.shortCode}
-            className="search-reel-tile group relative w-60 shrink-0 rounded-shell bg-shell p-5 [animation-delay:var(--delay)] sm:w-72 sm:p-6 lg:w-80"
+            className="search-reel-tile group relative w-60 shrink-0 rounded-(--radius-float) bg-shell p-6 [animation-delay:var(--delay)] sm:w-72 lg:w-80"
             style={{ "--delay": `${i * 70}ms` } as CSSProperties}
           >
             {/* The cover zooms in a touch under the pointer, inside its clipped frame (isolate
@@ -132,10 +132,10 @@ export default function SearchReel({
             </div>
             {/* The brand's mark on the tile's corner, like an app icon: an illustration's card,
                 lifted on the surface ladder */}
-            <div className="absolute top-3 left-3 size-12 overflow-hidden rounded-panel bg-surface-4 shadow-surface-4 sm:size-14">
+            <div className="absolute top-3 left-3 size-12 overflow-hidden rounded-(--corner-xs) bg-surface-4 shadow-surface-4 sm:size-14">
               {mounted && result.logo ? <Image src={result.logo} alt="" fill sizes="56px" className="object-cover" /> : null}
             </div>
-            <a href={result.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 rounded-shell">
+            <a href={result.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 rounded-(--radius-float)">
               <span className="sr-only">Open this {result.brand} post on Instagram (opens in a new tab)</span>
             </a>
           </li>

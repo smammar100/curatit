@@ -41,7 +41,7 @@ export default function BlogLayout({
               ))}
             </div>
           </div>
-          <div className="mt-12 rounded-shell bg-shell p-8">
+          <div className="mt-12 rounded-(--radius-float) bg-shell p-8">
             <Image
               width={1400}
               height={1400}

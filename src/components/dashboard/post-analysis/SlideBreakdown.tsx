@@ -46,7 +46,7 @@ export default function SlideBreakdown({ analysis, index, onSlide, images, video
         const role = analysis.sequence.roles[i] ?? slide?.role ?? `Slide ${i + 1}`;
         const cited = citations(analysis, i);
         return (
-          <li key={i} className={`overflow-clip rounded-panel transition-[background-color] duration-(--dur-state) ease-out ${active ? "bg-pressed" : "hover:bg-hover-row"}`}>
+          <li key={i} className={`overflow-clip rounded-(--corner-xs) transition-[background-color] duration-(--dur-state) ease-out ${active ? "bg-pressed" : "hover:bg-hover-row"}`}>
             <Item render={<ButtonPrimitive />} aria-pressed={active} aria-label={`Slide ${i + 1}: ${role}`} onClick={() => onSlide(i)} className="focus-visible:focus-ring-inset">
               <ItemMedia variant="image" className="h-10 w-8">
                 {images[i] && <Image src={images[i]} alt="" width={32} height={40} sizes="32px" />}

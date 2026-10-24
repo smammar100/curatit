@@ -54,7 +54,7 @@ export function CodeCopy() {
       <Heading title={copied ? "Code copied" : "Your verification code"}>
         Paste it in the Curatit tab that asked for it. It works for 1 hour.
       </Heading>
-      <p className="mx-auto mt-6 w-fit rounded-panel bg-field px-4 py-2.5 type-title text-text-1 tabular-nums select-all">
+      <p className="mx-auto mt-6 w-fit rounded-(--corner-xs) bg-field px-4 py-2.5 type-title text-text-1 tabular-nums select-all">
         <span className="mono">{code ?? " "}</span>
       </p>
       <Button type="button" disabled={!code} onClick={() => code && copy(code)} className="mt-6 w-full">

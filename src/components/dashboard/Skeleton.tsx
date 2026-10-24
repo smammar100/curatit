@@ -83,8 +83,8 @@ export function PostSkeleton() {
         </div>
       </div>
       <div aria-hidden="true" className="mx-auto grid max-w-384 grid-cols-1 gap-6 px-4 pt-2 sm:px-8 lg:grid-cols-(--columns) lg:gap-10 lg:pt-4" style={POST_FRAME}>
-        <div className="flex items-center justify-center rounded-shell bg-shell p-4 sm:p-8 lg:h-(--stage-h)">
-          <Block className="aspect-4/5 h-full max-h-full w-full max-w-(--cover-max) rounded-panel" />
+        <div className="flex items-center justify-center rounded-(--radius-float) bg-shell p-4 sm:p-8 lg:h-(--stage-h)">
+          <Block className="aspect-4/5 h-full max-h-full w-full max-w-(--cover-max) rounded-(--radius-nested)" />
         </div>
         <div className="divide-y divide-line-faint rounded-shell bg-surface-2 shadow-surface-2">
           <div className="space-y-2.5 p-5">

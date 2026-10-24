@@ -23,7 +23,9 @@ The live reference is `/system` (every token and component in light and dark).
 - Glaze components from `@/components/glaze/ui/*`, icons through `<Icon icon={X}/>` from
   `@/components/glaze/icon`. Never hand-roll a control or copy a component's classes.
 - Tokens by role: `text-text-1/2/3`, `bg-page/paper/shell/field`, `border-line-*`, status roles,
-  `rounded-pill/shell/panel/overlay/tag`, the 4px scale. No hex, palette, arbitrary px, `dark:` or
+  corners by size (pill for one-line controls; 2XS 6 `rounded-tag`, XS 12 `rounded-(--corner-xs)`, S 16
+  `rounded-panel`, M 24 `rounded-(--radius-float)`) and nested as outer less gap (`/system/radius`), the
+  4px scale. No hex, palette, arbitrary px, `dark:` or
   inline styles. No brand accent.
 - Type: Glaze's `type-*` roles (on FF's scale), `<Text>` on marketing pages. Motion: Glaze's motion
   tokens (FF's tiers), `spring` from `src/lib/springs.ts`. Surfaces: Glaze's recipes (on FF's ladder),

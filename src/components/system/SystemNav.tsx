@@ -55,7 +55,7 @@ export default function SystemNav({ layout }: { layout: "row" | "sidebar" }) {
           href={href(slug)}
           aria-current={current ? "page" : undefined}
           className={cn(
-            "-mx-2 flex h-(--menu-row-sm) items-center rounded-tag px-2 type-body-sm transition-colors duration-(--dur-state) ease-out",
+            "-mx-2 flex h-(--menu-row-sm) items-center rounded-(--corner-xs) px-2 type-body-sm transition-colors duration-(--dur-state) ease-out",
             current ? "bg-pressed text-text-1" : "text-text-2 hover:bg-hover hover:text-text-1",
           )}
         >

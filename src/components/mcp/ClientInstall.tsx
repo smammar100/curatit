@@ -314,7 +314,7 @@ function CardBody({ card, label, ...rest }: { card: Guide; label: string } & HTM
 // The marks' tiles are an illustration's cards, raised a step above the panel on the surface ladder
 // (its shadow carries the ring, so they show on the dark site too, as round the OAuth consent
 // screen's marks)
-const tile = "grid size-12 place-items-center rounded-panel bg-surface-4 text-text-1 shadow-surface-4";
+const tile = "grid size-12 place-items-center rounded-(--corner-xs) bg-surface-4 text-text-1 shadow-surface-4";
 // The client marks share one cell and cross-fade; after a change made from the keyboard, and
 // under reduced motion, they swap at once
 const markClass = (shown: boolean, snap: boolean) =>

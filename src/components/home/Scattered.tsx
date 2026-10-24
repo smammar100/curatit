@@ -107,7 +107,7 @@ const scraps: Scrap[] = [
         </div>
         <div className="mt-2 grid grid-cols-2 gap-1">
           {scattered.saved.map((id) => (
-            <Cover key={id} id={id} className="rounded-tag" />
+            <Cover key={id} id={id} className="rounded-(--corner-xs)" />
           ))}
         </div>
         <p className="mt-2 text-micro text-text-2">2,318 posts · no folders</p>
@@ -219,9 +219,9 @@ const scraps: Scrap[] = [
           <span className="font-medium text-text-1">moodboard-spring-v2</span> · Design file
         </p>
         <div className="relative h-48 bg-field">
-          <Cover id={scattered.canvas[0]} className="absolute top-4 left-5 w-16 -rotate-6 rounded-tag" />
-          <Cover id={scattered.canvas[1]} className="absolute top-10 left-28 w-20 rotate-3 rounded-tag" />
-          <Cover id={scattered.canvas[2]} className="absolute top-3 right-6 w-16 rotate-8 rounded-tag" />
+          <Cover id={scattered.canvas[0]} className="absolute top-4 left-5 w-16 -rotate-6 rounded-(--corner-xs)" />
+          <Cover id={scattered.canvas[1]} className="absolute top-10 left-28 w-20 rotate-3 rounded-(--corner-xs)" />
+          <Cover id={scattered.canvas[2]} className="absolute top-3 right-6 w-16 rotate-8 rounded-(--corner-xs)" />
           <span className="absolute top-28 left-44 rounded-tag bg-ink px-1.5 py-0.5 text-micro text-text-inverse">
             Sam
           </span>
@@ -297,7 +297,7 @@ const scraps: Scrap[] = [
         <p className="type-label-sm text-text-1">moodboard_v7.pdf</p>
         <div className="mt-2 grid grid-cols-3 gap-1">
           {scattered.pdf.map((id) => (
-            <Cover key={id} id={id} className="rounded-tag" />
+            <Cover key={id} id={id} className="rounded-(--corner-xs)" />
           ))}
         </div>
         <p className="mt-2 text-micro text-text-2">14 MB · page 3 of 22</p>
@@ -311,7 +311,7 @@ const scraps: Scrap[] = [
     w: 250,
     delay: 1.1,
     node: (
-      <div className="rounded-shell rounded-bl-tag bg-field px-4 py-2.5 type-body-sm text-text-1">
+      <div className="rounded-(--radius-float) rounded-bl-tag bg-field px-4 py-2.5 type-body-sm text-text-1">
         sending you a few screenshots, the green one is somewhere in there
       </div>
     ),

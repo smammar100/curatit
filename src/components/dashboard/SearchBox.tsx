@@ -226,11 +226,11 @@ export default function SearchBox({
             data-closing={panel.closing || undefined}
             className="absolute inset-x-0 top-full mt-3 origin-top transition-[opacity,translate] duration-(--dur-overlay) ease-out starting:-translate-y-1 starting:opacity-0 data-closing:-translate-y-1 data-closing:opacity-0 data-closing:duration-(--dur-state) data-closing:ease-in"
           >
-            <BorderBeam {...beam} borderRadius={28}>
+            <BorderBeam {...beam} borderRadius={24}>
               {/* A large floating panel on Fluid Functionalism's sixth surface (the beam's wrapper
                   rounds it to 28px and clips its drop, so what shows is the dark theme's inner
                   highlight) */}
-              <div className="rounded-shell bg-surface-6 p-6 shadow-surface-6">
+              <div className="rounded-(--radius-float) bg-surface-6 p-6 shadow-surface-6">
                 {!query.trim() && (
                   <Section title="Try a description">
                     <div className="flex flex-wrap gap-2">

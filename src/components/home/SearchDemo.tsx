@@ -73,7 +73,7 @@ export default function SearchDemo() {
               <PostCover
                 post={post}
                 sizes="48px"
-                className="w-12 shrink-0 rounded-tag"
+                className="w-12 shrink-0 rounded-(--corner-xs)"
               />
               <div className="min-w-0">
                 <BrandName brand={post.brand} />
