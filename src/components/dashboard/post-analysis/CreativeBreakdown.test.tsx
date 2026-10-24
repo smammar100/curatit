@@ -152,25 +152,19 @@ describe("CreativeBreakdown: Breakdown", () => {
     expect(panel().textContent).toContain("Why it might work");
   });
 
-  it("sums the data checks up in one line, and opens them with each one's kind in words", () => {
+  it("shows no data checks on the post, though the analysis has them", () => {
     const analysis = galleryAnalysis((dna) => {
       dna.integrity_notes = [
         { aspect: "Start values", status: "observed", note: "Every series starts at the same amount.", evidence: ["slide:0"] },
-        { aspect: "Figures", status: "cannot_verify", note: "The end values can't be checked from the post.", evidence: ["slide:6"] },
         { aspect: "Disclaimer", status: "potential_concern", note: "The fine print is small and low-contrast.", evidence: ["slide:6"] },
       ];
     });
+    expect(analysis.integrity).toHaveLength(2);
     render(<Harness analysis={analysis} />);
-    const summary = button(panel(), /potential concern/)!;
-    expect(summary.textContent).toContain("1 potential concern · 1 observation · 1 cannot verify");
-    expect(summary.getAttribute("aria-expanded")).toBe("false");
-    expect(panel().textContent).not.toContain("The fine print is small");
-    click(summary);
     const text = panel().textContent!;
-    expect(text.indexOf("Disclaimer")).toBeLessThan(text.indexOf("Start values"));
-    for (const label of ["Potential concern", "Cannot verify", "Observed"]) expect(text).toContain(label);
-    expect(text).toContain("No figure here was checked against its sources.");
-    expect(text).not.toMatch(/\bVerified\b|\bSound\b/);
+    expect(text).not.toContain("Data checks");
+    expect(text).not.toContain("The fine print is small");
+    expect(button(panel(), /potential concern/)).toBeFalsy();
   });
 
   it("turns tabs, not slides, with the arrow keys on the tab list", async () => {
@@ -273,7 +267,6 @@ describe("CreativeBreakdown: thin and single records", () => {
     const analysis = toPublicAnalysis({ creative_dna: dna, current_version_id: "v", image_analysis_complete: true, expected_slides: 1, processed_slides: 1 }, [{ version_id: "v", position: 0, observation: FIXTURE_PERCEPTION.slides[0] }], 1)!;
     render(<Harness analysis={analysis} />);
     click(button(panel(), /^Show the reasoning$/));
-    click(button(panel(), /cannot verify/));
     for (const name of ["Breakdown", "Visual DNA"]) {
       click(tab(name));
       expect(panel().textContent).not.toMatch(/\bSlides? \d/);
