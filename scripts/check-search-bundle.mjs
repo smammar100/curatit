@@ -5,8 +5,8 @@
 // Added on 2026-10-25, after the first deploy shipped sharp's native module without the libvips it
 // links to: the import failed and search answered keyword-only, which no other check would catch.
 //
-//   node scripts/check-search-bundle.mjs        (NEXT_DIST_DIR if the build used one)
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+//   node scripts/check-search-bundle.mjs        (reads the build in NEXT_DIST_DIR if there is one there, else .next)
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -17,7 +17,15 @@ if (process.platform !== "linux" || process.arch !== "x64") {
 }
 
 const root = process.cwd();
-const nftFile = join(root, process.env.NEXT_DIST_DIR || ".next", "server", "app", "mcp", "route.js.nft.json");
+// The build's output: NEXT_DIST_DIR when a build is there, else Next's default .next
+const nftFile = [process.env.NEXT_DIST_DIR, ".next"]
+  .filter(Boolean)
+  .map((dir) => join(root, dir, "server", "app", "mcp", "route.js.nft.json"))
+  .find((file) => existsSync(file));
+if (!nftFile) {
+  console.error("search bundle: no build found (run npm run build first)");
+  process.exit(1);
+}
 const traced = JSON.parse(readFileSync(nftFile, "utf8")).files.map((file) => resolve(dirname(nftFile), file));
 const bundle = mkdtempSync(join(tmpdir(), "curatit-search-bundle-"));
 let copied = 0;

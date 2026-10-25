@@ -36,5 +36,3 @@ jobs:
           NEXT_DIST_DIR: .next-ci
       # The search function as shipped: load both models from only the files the build traced
       - run: node scripts/check-search-bundle.mjs
-        env:
-          NEXT_DIST_DIR: .next-ci
