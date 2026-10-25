@@ -142,7 +142,10 @@ export async function updatePassword(_: AuthState, form: FormData): Promise<Auth
   redirect("/dashboard");
 }
 
+// Ends this browser's session only. Supabase's default scope is global, which also revoked the
+// sessions Claude and ChatGPT hold through Curatit MCP's OAuth: every log out, on any device,
+// left them failing to refresh (refresh_token_not_found) until the person signed in again there
 export async function signOut() {
-  await (await supabase()).auth.signOut();
+  await (await supabase()).auth.signOut({ scope: "local" });
   redirect("/signin");
 }

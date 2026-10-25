@@ -200,6 +200,12 @@ describe("search", () => {
     await expectError(searchPosts(createFixtureCatalog(), { filters: { layouts: ["halloween"] } }, ctx), "INVALID_ARGUMENT", /Unknown layout "halloween"/);
   });
 
+  it("passes on how a second creative approach was read", async () => {
+    const { data, warnings } = await searchPosts(createFixtureCatalog(), { query: "explainer product showcase posts" }, ctx);
+    expect(data.applied).toMatchObject({ query: "product showcase", filters: { creative_approaches: ["explainer"] } });
+    expect(warnings).toContain('One creative approach per search: Explainer is the filter, and "product showcase" is matched as words.');
+  });
+
   it("never relaxes a search: empty results come with suggestions", async () => {
     const { data } = await searchPosts(createFixtureCatalog(), { query: "cash launch", filters: { analysed_only: true } }, ctx);
     expect(data.posts).toEqual([]);

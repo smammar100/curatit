@@ -89,6 +89,25 @@ async function query<R extends Reply>(stage: string, request: PromiseLike<R>): P
 
 const rpc = <T>(stage: string, request: PromiseLike<Reply>) => query(stage, request) as Promise<T>;
 
+// The vocabulary (taxonomy terms, industries, brands) changes when an import or a migration lands,
+// not between searches, yet every natural-language search read all three first: four round trips
+// before the search itself. One read per server instance every few minutes; a failed read isn't
+// kept, and the posts counts in curatit_get_taxonomy may be that much behind
+export const VOCABULARY_TTL_MS = 5 * 60_000;
+function recent<T>(load: () => Promise<T>): () => Promise<T> {
+  let held: { at: number; value: Promise<T> } | null = null;
+  return () => {
+    if (!held || Date.now() - held.at > VOCABULARY_TTL_MS) {
+      const value = load();
+      held = { at: Date.now(), value };
+      value.catch(() => {
+        if (held?.value === value) held = null;
+      });
+    }
+    return held.value;
+  };
+}
+
 // `fetch` is for tests: a stand-in for the network
 export function createSupabaseCatalog(options: { url: string; publishableKey: string; secretKey: string; fetch?: typeof fetch }): CatalogRepository {
   const reader = catalogClient(options.url, options.publishableKey, READ_TIMEOUT_MS, options.fetch);
@@ -129,17 +148,17 @@ export function createSupabaseCatalog(options: { url: string; publishableKey: st
       return data ? { id: data.id, short_code: data.short_code } : null;
     },
 
-    terms: () => rpc<RawTerms>("creative_terms", reader.rpc("curatit_mcp_creative_terms", {})),
+    terms: recent(() => rpc<RawTerms>("creative_terms", reader.rpc("curatit_mcp_creative_terms", {}))),
 
-    categories: () => listTaxonomy<RawCategoryItem>("categories"),
+    categories: recent(() => listTaxonomy<RawCategoryItem>("categories")),
 
-    brands: async () => {
+    brands: recent(async () => {
       const [items, websites] = await Promise.all([
         listTaxonomy<RawBrandItem>("brands"),
         query("brand_websites", reader.from("brands").select("slug, website_url")).then((data) => new Map((data ?? []).map((row) => [row.slug, row.website_url]))),
       ]);
       return items.map((item) => ({ ...item, website: websites.get(item.slug) ?? null }));
-    },
+    }),
 
     // The function names its kinds in the plural
     resolveFilter: (kind, value) => rpc<string | null>("resolve_filter", reader.rpc("curatit_mcp_resolve_filter", { p_kind: kind === "category" ? "categories" : "brands", p_value: value })),
