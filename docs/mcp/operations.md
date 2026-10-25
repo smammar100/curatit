@@ -37,7 +37,7 @@ Database: the MCP reads through these migrations, each applied with `npx supabas
 | `20261016120300_mcp_category_resolution` | loose category and brand names, taxonomy counts | not yet |
 | `20261016120400_mcp_search_v2_reasons` | public names in match reasons, `catalog_marker` | not yet |
 | `20261025191109_search_post_text_only` | keyword search and match reasons read only what an analysis says about the post | 25 Oct 2026 |
-| `20261025194719_hybrid_search` | pgvector, `post_search_documents`, `post_search_chunks`, `curatit_search_index_source`, `curatit_mcp_search_v3` | not yet |
+| `20261025194719_hybrid_search` | pgvector, `post_search_documents`, `post_search_chunks`, `curatit_search_index_source`, `curatit_mcp_search_v3` (index built the same day: 291 posts, 1,442 chunks) | 25 Oct 2026 |
 
 The code reads the old and the new shapes, so it can be deployed before or after the last three. Rollback: the code is Vercel's "promote previous deployment"; a function change is rolled back by re-running the previous definition, which each migration's header names (the SQL in `docs/current-state.md` §8 drops only `api_tokens` and the rate-limit table, which kills every client's token: never run it to undo a function change). After applying, regenerate `src/lib/database.types.ts` with `npx supabase gen types typescript --linked > src/lib/database.types.ts` (the hand-written `api_tokens` entry matches what it generates).
 
