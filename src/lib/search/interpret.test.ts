@@ -116,6 +116,13 @@ describe("natural search", () => {
     expect(interpretSearch("giveawya", custom)).toMatchObject({ filters: { archetype: ["giveaway"] }, corrections: [{ from: "giveawya", to: "Giveaway or contest" }] });
   });
 
+  it("keeps an 'or' between words left to search, never between filter values", () => {
+    expect(parse("brand mascots or characters")).toMatchObject({ query: "mascots or characters", filters: {} });
+    expect(parse("a celebrity or famous person fronting the post").error).toBeUndefined();
+    expect(parse("fintech carousels about cash or cards")).toMatchObject({ query: "cash or cards", filters: { category: "finance", format: "carousel" } });
+    for (const query of ["Nike or Wise", "red or blue posts", "or carousels", "carousels or"]) expect(parse(query).error).toBeTruthy();
+  });
+
   it("keeps a second creative approach as words to match, and says so", () => {
     const result = parse("influencer collaboration posts");
     expect(result).toMatchObject({ filters: { archetype: ["creator-feature"] }, query: "collaboration" });

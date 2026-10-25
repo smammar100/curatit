@@ -3,6 +3,26 @@ import type { NextConfig } from "next";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 const nextConfig: NextConfig = {
+  // Hybrid search's models (2026-10-25): the two routes that search ship the int8 models fetched
+  // into ./models at build (scripts/fetch-search-models.mjs); transformers.js and onnxruntime-node
+  // are external server packages by default in Next 16. Every route leaves out what Vercel's Linux
+  // x64 never loads: the browser runtime (onnxruntime-web, 91 MB), the other platforms' binaries
+  // and the browser WebAssembly builds. onnxruntime-node loads its binary through a computed path
+  // (bin/napi-v3/<platform>/<arch>/), which the tracer can't follow, so the Linux x64 binary and its
+  // libraries are named here (43 MB)
+  outputFileTracingIncludes: {
+    "/mcp": ["./models/**/*", "./node_modules/onnxruntime-node/bin/napi-v3/linux/x64/**/*"],
+    "/api/v1/posts/search": ["./models/**/*", "./node_modules/onnxruntime-node/bin/napi-v3/linux/x64/**/*"],
+  },
+  outputFileTracingExcludes: {
+    "/**": [
+      "node_modules/onnxruntime-web/**/*",
+      "node_modules/onnxruntime-node/bin/napi-v3/darwin/**/*",
+      "node_modules/onnxruntime-node/bin/napi-v3/win32/**/*",
+      "node_modules/onnxruntime-node/bin/napi-v3/linux/arm64/**/*",
+      "node_modules/@huggingface/transformers/dist/*.wasm",
+    ],
+  },
   images: {
     // Widths the optimizer may produce. Nothing on the site renders wider than ~600px
     // (1200px at 2x), so the defaults up to 3840 only made every srcset longer.

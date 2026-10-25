@@ -3,18 +3,32 @@
 // (the database would quietly return nothing for an unknown one); `newest` only when nothing
 // ranks; and nothing is ever relaxed behind the caller's back: an empty page comes back empty
 // with suggestions. Pages are signed cursors over the function's offsets.
+//
+// Hybrid search (2026-10-25, docs/search-eval/): a natural-language search with words left after
+// interpretation also looks for posts by meaning. The request is embedded, the database fuses the
+// keyword matches with the posts closest in meaning (under the same filters), the reranker reads
+// each candidate's description, and the page keeps every keyword match plus the meaning-only
+// matches it scores RERANK_CUTOFF or more, best first. Filters are never loosened. If the models or
+// the index fail, the first page answers with keyword search alone and says so.
 
 import { FILTERS, type FilterKey, type SearchInputT, type SearchOutputT } from "../contracts";
 import { decodeCursor, encodeCursor, fingerprint } from "../cursor";
+import { markStage, remainingMs } from "../deadline";
 import { invalid, toCuratitError } from "../errors";
-import type { CatalogRepository, RawSearchRequest } from "../repo/types";
+import type { Logger } from "../log";
+import type { CatalogRepository, RawSearchHit, RawSearchRequest } from "../repo/types";
 import { brandOf, classification, excerpt, industryOf, mediaId, nameKey } from "./shared";
 import { interpretSearch } from "@/lib/search/interpret";
 import { searchRefinements } from "@/lib/search/refine";
+import { meaningReason, settle } from "@/lib/search/semantic/hybrid";
+import type { SemanticModels } from "@/lib/search/semantic/models";
 
 export const SEARCH_DEFAULT_LIMIT = 8;
+// Embedding and reranking take a second or two once the models are loaded, and loading them takes
+// a few more on a cold server; with less time than this left, the search stays keyword-only
+const HYBRID_MIN_BUDGET_MS = 8_000;
 
-export type SearchContext = { signingSecret: Uint8Array<ArrayBuffer>; principalKey: string };
+export type SearchContext = { signingSecret: Uint8Array<ArrayBuffer>; principalKey: string; semantic?: SemanticModels | null; log?: Logger };
 
 export async function searchPosts(repo: CatalogRepository, input: SearchInputT, ctx: SearchContext): Promise<{ data: SearchOutputT; warnings: string[] }> {
   const originalQuery = input.query?.trim() || null;
@@ -94,8 +108,51 @@ export async function searchPosts(repo: CatalogRepository, input: SearchInputT, 
   }
 
   if (query) request.query = queryMode === "any_word" ? anyWord(query) : query;
-  request.limit = limit;
 
+  // What every answer ends with: when nothing matched on the first page, ways to widen the search
+  // the caller can choose (never run for them)
+  const finish = (posts: SearchOutputT["posts"], nextCursor: string | null, ranking: "keyword" | "hybrid") => {
+    const suggestions = posts.length === 0 && !input.cursor ? relaxations(query, queryMode, applied) : [];
+    const suggestedQueries = posts.length === 0 && !input.cursor && queryMode === "natural" && !filters.analysed_only
+      ? searchRefinements(Object.fromEntries(Object.entries(FILTERS).flatMap(([key, { dimension }]) => applied[key] ? [[dimension, applied[key]]] : [])), query ?? "") : [];
+    return {
+      data: {
+        posts,
+        next_cursor: nextCursor,
+        applied: { query, original_query: originalQuery, query_mode: queryMode, filters: applied, sort, limit, ranking },
+        suggestions,
+        suggested_queries: suggestedQueries,
+      },
+      warnings,
+    };
+  };
+
+  // Hybrid search, for a natural-language request with words left to search. A cursor from a
+  // keyword-only page (an earlier fallback) carries on below as keyword search
+  const models = ctx.semantic;
+  if (models && repo.hybridCandidates && repo.hybridItems && queryMode === "natural" && query && originalQuery && sort === "relevance") {
+    const search = await fingerprint({ originalQuery, query, queryMode, applied: canonical(applied), sort, ranking: "hybrid" });
+    const scope = { search, principal: ctx.principalKey };
+    const page = input.cursor ? await decodeCursor(ctx.signingSecret, input.cursor, scope).catch(() => null) : null;
+    if (!input.cursor || page) {
+      try {
+        if (remainingMs() < HYBRID_MIN_BUDGET_MS) throw new Error("Not enough time left in the call to rank by meaning");
+        const { posts, next } = await hybridPage(repo, models, request, originalQuery, limit, page?.offset ?? 0, warnings, !input.cursor);
+        const marker = next.marker ?? page?.marker ?? null;
+        if (page?.marker && next.marker && page.marker !== next.marker) {
+          warnings.push("The library changed since this search's first page (posts were added or removed), so this page may repeat or skip a post. Start the search again for one consistent set.");
+        }
+        const nextCursor = next.offset !== null ? await encodeCursor(ctx.signingSecret, { offset: next.offset, marker, ...scope }) : null;
+        return finish(posts.map((p) => toHit(repo, p.hit, p.extra)), nextCursor, "hybrid");
+      } catch (error) {
+        if (page) throw invalid("Ranking by meaning isn't available right now, so this search can't continue in the same order. Start the search again.");
+        ctx.log?.warn("search_hybrid_unavailable", { reason: error instanceof Error ? error.message : String(error) });
+        warnings.push("Ranking by meaning isn't available right now, so these results come from keyword search alone.");
+      }
+    }
+  }
+
+  request.limit = limit;
   // The same search sent with its filters in another order is the same search, so the
   // fingerprint sees them sorted
   const search = await fingerprint({ originalQuery, query, queryMode, applied: canonical(applied), sort });
@@ -115,7 +172,44 @@ export async function searchPosts(repo: CatalogRepository, input: SearchInputT, 
     warnings.push("The library changed since this search's first page (posts were added or removed), so this page may repeat or skip a post. Start the search again for one consistent set.");
   }
 
-  const posts = result.posts.map((hit) => ({
+  const posts = result.posts.map((hit) => toHit(repo, hit));
+  const nextCursor = result.has_more && result.next_offset !== null ? await encodeCursor(ctx.signingSecret, { offset: result.next_offset, marker, ...cursorScope }) : null;
+  if (result.has_more && result.next_offset === null) warnings.push("The catalog's search stops at 500 results per query. Narrow the search to go further.");
+  return finish(posts, nextCursor, "keyword");
+}
+
+// One page of a hybrid search: the candidates and their reranking are worked out again for every
+// page (the models are deterministic), then the page's posts are read in order
+async function hybridPage(repo: CatalogRepository, models: SemanticModels, request: RawSearchRequest, originalQuery: string, limit: number, offset: number, warnings: string[], firstPage: boolean) {
+  markStage("embed");
+  const [embedding] = await models.embed([originalQuery]);
+  const candidates = await repo.hybridCandidates!(request, embedding);
+  markStage("rerank");
+  const described = candidates.fused.map((c, i) => ({ i, text: c.description }));
+  const scored = described.filter((d) => d.text);
+  const scores = new Array<number | null>(candidates.fused.length).fill(null);
+  (await models.rerank(originalQuery, scored.map((d) => d.text!))).forEach((score, j) => (scores[scored[j].i] = score));
+  const ranked = settle(
+    candidates.fused.map((c) => ({ id: c.id, keywordRank: c.keyword_rank, similarity: c.similarity, kind: c.kind, description: c.description })),
+    scores,
+    candidates.keyword_rest,
+  );
+  if (firstPage && candidates.keyword_total > 50) {
+    warnings.push(`${candidates.keyword_total} posts match the words; this search ranks the first 50 of them with the meaning-based matches. Narrow the search to reach the others.`);
+  }
+  const slice = ranked.slice(offset, offset + limit);
+  const items = slice.length ? await repo.hybridItems!(request, slice.map((r) => r.id)) : { posts: [], catalog_marker: candidates.catalog_marker };
+  const byId = new Map(items.posts.map((hit) => [hit.id, hit]));
+  // A post unpublished between the two reads is left out
+  const posts = slice.flatMap((r) => {
+    const hit = byId.get(r.id);
+    return hit ? [{ hit, extra: { reasons: r.meaningOnly ? [meaningReason(r.kind)] : [], score: r.rerank === null ? null : Math.round(r.rerank * 1e4) / 1e4 } }] : [];
+  });
+  return { posts, next: { offset: offset + limit < ranked.length ? offset + limit : null, marker: candidates.catalog_marker ?? items.catalog_marker ?? null } };
+}
+
+function toHit(repo: CatalogRepository, hit: RawSearchHit, extra?: { reasons: string[]; score: number | null }): SearchOutputT["posts"][number] {
+  return {
     post_id: hit.id,
     short_code: hit.short_code,
     source_url: hit.source_url,
@@ -131,26 +225,8 @@ export async function searchPosts(repo: CatalogRepository, input: SearchInputT, 
     },
     classification: classification(hit.analysis),
     analysis_available: Boolean(hit.analysis),
-    match_reasons: (hit.reasons ?? []).map(oneBasedSlides),
-    score: typeof hit.score === "number" ? hit.score : null,
-  }));
-
-  const nextCursor = result.has_more && result.next_offset !== null ? await encodeCursor(ctx.signingSecret, { offset: result.next_offset, marker, ...cursorScope }) : null;
-  if (result.has_more && result.next_offset === null) warnings.push("The catalog's search stops at 500 results per query. Narrow the search to go further.");
-
-  const suggestions = posts.length === 0 && !input.cursor ? relaxations(query, queryMode, applied) : [];
-  const suggestedQueries = posts.length === 0 && !input.cursor && queryMode === "natural" && !filters.analysed_only
-    ? searchRefinements(Object.fromEntries(Object.entries(FILTERS).flatMap(([key, { dimension }]) => applied[key] ? [[dimension, applied[key]]] : [])), query ?? "") : [];
-
-  return {
-    data: {
-      posts,
-      next_cursor: nextCursor,
-      applied: { query, original_query: originalQuery, query_mode: queryMode, filters: applied, sort, limit },
-      suggestions,
-      suggested_queries: suggestedQueries,
-    },
-    warnings,
+    match_reasons: [...(hit.reasons ?? []), ...(extra?.reasons ?? [])].map(oneBasedSlides),
+    score: extra ? extra.score : typeof hit.score === "number" ? hit.score : null,
   };
 }
 

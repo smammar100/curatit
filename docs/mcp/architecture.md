@@ -41,7 +41,7 @@ Contracts                  contracts.ts (zod, one source for MCP schemas, REST v
 
 ## Retrieval
 
-Full-text (`websearch_to_tsquery`) plus taxonomy filters, through `curatit_mcp_search_v2`, ranked by the function. `query_mode: "natural"` is the default: the shared interpreter maps supported English descriptions to catalog filters and leftover keywords. `applied` reports the original query and effective interpretation; explicit filters take precedence with a warning. `all_words` retains literal matching and `any_word` explicitly widens literal matching. Empty results have suggestions, never silent relaxation. No embeddings or model calls are used. Cursors are HMAC-signed and bound to the original query, interpreted search and account. See [natural-language search](../natural-language-search.md) for scope and tests.
+Full-text (`websearch_to_tsquery`) plus taxonomy filters, through `curatit_mcp_search_v2`, ranked by the function. `query_mode: "natural"` is the default: the shared interpreter maps supported English descriptions to catalog filters and leftover keywords. `applied` reports the original query and effective interpretation; explicit filters take precedence with a warning. `all_words` retains literal matching and `any_word` explicitly widens literal matching. Empty results have suggestions, never silent relaxation. Cursors are HMAC-signed and bound to the original query, interpreted search and account. Since 2026-10-25 a natural-language search with words left after interpretation is hybrid: `curatit_mcp_search_v3` fuses the keyword matches with the posts closest in meaning to the request's gte-small embedding (pgvector, same filters), a cross-encoder reranks them on the server, and keyword matches plus meaning-only matches scoring 0.02 or more come back (`applied.ranking: "hybrid"`); both models run in the function from files bundled at build, with no hosted model call. See [natural-language search](../natural-language-search.md) for scope and tests, and `docs/search-eval/` for the judged test it was chosen on.
 
 ## Brief generation
 
@@ -50,6 +50,6 @@ Deterministic (`services/brief.ts`): observed facts (on-slide text, labels, slid
 ## Not built (by design or blocked)
 
 - Prompts: tools carry everything. One resource exists, the `ui://curatit/search-results` MCP Apps widget for hosts that render it (ChatGPT); registering it makes the SDK advertise `resources`, and the server sets `listChanged: false` because it is stateless and never sends that notification.
-- Semantic search, boards over MCP (scopes reserved: `curatit:boards:*`).
+- Boards over MCP (scopes reserved: `curatit:boards:*`). Semantic search was on this list until 2026-10-25; it's now hybrid search (above).
 - An authorization server of our own: Supabase Auth's is the one to use once enabled; see `security.md` for the gaps that remain.
-- Server-side model calls.
+- Server-side calls to a hosted model. Hybrid search's two small models (embeddings and reranking) run inside the function.

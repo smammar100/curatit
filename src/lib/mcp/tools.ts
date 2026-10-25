@@ -13,6 +13,7 @@ import { CuratitError, toCuratitError } from "./errors";
 import type { Logger } from "./log";
 import { principalKey, requireScope, type Principal } from "./auth/principal";
 import type { CatalogRepository } from "./repo/types";
+import type { SemanticModels } from "@/lib/search/semantic/models";
 import { pseudonym } from "./log";
 import type { Throttle } from "./ratelimit";
 import { createBrief } from "./services/brief";
@@ -28,6 +29,8 @@ export type Runtime = {
   throttle: Throttle;
   log: Logger;
   media: MediaDeps;
+  // The embedding model and reranker for hybrid search; null when it's off
+  semantic?: SemanticModels | null;
 };
 
 export const TOOL_META: Record<ToolName, { title: string; description: string; readOnly: boolean; idempotent: boolean }> = {
@@ -41,7 +44,7 @@ export const TOOL_META: Record<ToolName, { title: string; description: string; r
   curatit_search_posts: {
     title: "Search Curatit posts",
     description:
-      "Find real Instagram posts using everyday descriptions such as 'fintech carousels that open with a stat', or explicit taxonomy filters. Natural mode maps supported phrases to filters and searches remaining keywords across captions, on-slide text and published analyses; applied reports the interpretation. Explicit filters win. Use all_words or any_word for literal keyword search. Returns compact matches with reasons; nothing is relaxed automatically. Empty results have suggestions. Page with next_cursor. Needs a query or a filter.",
+      "Find real Instagram posts using everyday descriptions such as 'fintech carousels that open with a stat', or explicit taxonomy filters. Natural mode maps supported phrases to filters and searches remaining keywords across captions, on-slide text and published analyses, and also finds posts close in meaning that a reranker judges relevant (applied.ranking is hybrid; their match_reasons say so); applied reports the interpretation. Explicit filters win. Use all_words or any_word for literal keyword search. Returns compact matches with reasons; nothing is relaxed automatically. Empty results have suggestions. Page with next_cursor. Needs a query or a filter.",
     readOnly: true,
     idempotent: true,
   },
@@ -132,7 +135,7 @@ async function run(rt: Runtime, name: ToolName, args: unknown, principal: Princi
       return { data: r.data, warnings: [], taxonomyVersion: r.taxonomyVersion, image: null, text: `Taxonomy ${r.taxonomyVersion ?? ""}\n${text}\nNot available: ${r.data.not_available.join(" ")}` };
     }
     case "curatit_search_posts": {
-      const r = await searchPosts(rt.repo, args as never, { signingSecret: rt.config.signingSecret, principalKey: principalKey(principal) });
+      const r = await searchPosts(rt.repo, args as never, { signingSecret: rt.config.signingSecret, principalKey: principalKey(principal), semantic: rt.semantic ?? null, log: rt.log });
       return { data: r.data, warnings: r.warnings, taxonomyVersion: null, image: null, text: withWarnings(r.warnings, searchText(r.data)) };
     }
     case "curatit_get_post": {

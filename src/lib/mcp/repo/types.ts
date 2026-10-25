@@ -144,11 +144,29 @@ export type RawTerms = { taxonomy_version: string | null; dimensions: Record<str
 export type RawCategoryItem = { name: string; slug: string; description: string | null; posts?: number | null; main_posts?: number | null; synonyms?: string[] | null };
 export type RawBrandItem = { name: string; slug: string; category: string | null; website?: string | null; posts?: number | null; categories?: RawCategory[] };
 
+// curatit_mcp_search_v3's candidates: the keyword matches' top 20 fused with the 30 posts closest
+// in meaning (within the same filters), the best 30 with their keyword rank (null when only the
+// meaning matched), similarity, closest chunk and the description the reranker reads; then the
+// other keyword matches in order, up to 50 keyword matches in all
+export type RawHybridCandidate = { id: string; keyword_rank: number | null; similarity: number | null; kind: string | null; description: string | null };
+export type RawHybridCandidates = {
+  fused: RawHybridCandidate[];
+  keyword_rest: string[];
+  keyword_total: number;
+  filters: Record<string, string[]>;
+  catalog_marker?: string | null;
+};
+
 // A post's slides from instagram_post_media, with the post's own alt and size for a single image
 export type RawSlide = { position: number; alt: string | null; was_video: boolean; width: number | null; height: number | null };
 
 export type CatalogRepository = {
   search(request: RawSearchRequest): Promise<RawSearchResult>;
+  // Hybrid search (curatit_mcp_search_v3). Optional: without them, or when they fail, search is
+  // keyword search alone
+  hybridCandidates?(request: RawSearchRequest, embedding: number[]): Promise<RawHybridCandidates>;
+  // The page's posts, in the order given, in search's item shape, with the request's reasons
+  hybridItems?(request: RawSearchRequest, ids: string[]): Promise<{ posts: RawSearchHit[]; catalog_marker?: string | null }>;
   getPost(postId: string): Promise<RawPost | null>;
   // A post's id and short code from either, published posts only
   resolvePost(idOrShortCode: string): Promise<{ id: string; short_code: string } | null>;

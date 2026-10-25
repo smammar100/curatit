@@ -1429,6 +1429,64 @@ export type Database = {
           },
         ]
       }
+      post_search_chunks: {
+        Row: {
+          embedding: string
+          kind: string
+          post_id: string
+        }
+        Insert: {
+          embedding: string
+          kind: string
+          post_id: string
+        }
+        Update: {
+          embedding?: string
+          kind?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_search_chunks_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "post_search_documents"
+            referencedColumns: ["post_id"]
+          },
+        ]
+      }
+      post_search_documents: {
+        Row: {
+          content_hash: string
+          description: string
+          indexed_at: string
+          model: string
+          post_id: string
+        }
+        Insert: {
+          content_hash: string
+          description: string
+          indexed_at?: string
+          model: string
+          post_id: string
+        }
+        Update: {
+          content_hash?: string
+          description?: string
+          indexed_at?: string
+          model?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_search_documents_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: true
+            referencedRelation: "instagram_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_slide_analyses: {
         Row: {
           body: string | null
@@ -1771,6 +1829,11 @@ export type Database = {
         Returns: Json
       }
       curatit_mcp_search_v2: { Args: { p_request?: Json }; Returns: Json }
+      curatit_mcp_search_v3: {
+        Args: { p_embedding?: string; p_ids?: string[]; p_request?: Json }
+        Returns: Json
+      }
+      curatit_search_index_source: { Args: never; Returns: Json }
       curatit_mcp_taxonomy: {
         Args: { p_after?: string; p_kind?: string; p_limit?: number }
         Returns: Json

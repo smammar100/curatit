@@ -54,9 +54,26 @@ Measured on 35 requests designers and assistants actually send, run through the 
 
 The dashboard collects pages up to the existing 500-result limit before intersecting Saved/Discover. It reports the cap instead of implying completeness. This fits the current small catalog; for a substantially larger library, move scoped filtering and lightweight ID-only pagination into a dedicated database search RPC. The current RPC returns more metadata than the dashboard needs.
 
+## Hybrid search (MCP and REST, October 25)
+
+Curatit MCP's search (and `/api/v1/posts/search`) also finds posts by meaning, chosen from a judged test (`docs/search-eval/`: 60 requests, 828 blind-judged results). Against keyword search alone it ranks about 60% better (nDCG@10 0.285 → 0.464), finds about half again as many of the relevant posts (recall 0.252 → 0.384), with the same share of relevant results (0.789 → 0.792) and nothing more for topics the library doesn't cover.
+
+How a search runs, when a natural-language request has words left after interpretation:
+
+1. The whole request is embedded with gte-small (`Supabase/gte-small`, 384 numbers).
+2. `curatit_mcp_search_v3` ranks the keyword matches exactly as `curatit_mcp_search_v2` does, under exactly its filters, takes the top 20 with the 30 posts closest in meaning (a post scores by its closest chunk: strategy and labels, caption, visuals and copy, decisions and narrative, evidence), and fuses them by reciprocal rank; the best 30 come back with each post's short description.
+3. The reranker (`Xenova/ms-marco-MiniLM-L-12-v2`, a cross-encoder) reads the request with each description and scores it 0 to 1.
+4. Every keyword match stays; a post found only by meaning stays when the reranker scores it 0.02 or more (`RERANK_CUTOFF`); they go best first, followed by the other keyword matches in keyword order (up to 50 keyword matches in all; past that a warning says so). Its `match_reasons` say it was close in meaning, and to which part of the post; `applied.ranking` is `hybrid`.
+
+Filters are never loosened, and literal modes, sorting by newest and requests that are all filters keep keyword search, unchanged. If the models or the index fail, the first page answers with keyword search alone and a warning; a later page of a hybrid search asks to start again rather than mixing two orders. `CURATIT_HYBRID_SEARCH=off` turns it off.
+
+The pieces: `src/lib/search/semantic/` (`documents.ts` builds each post's chunks and description, removing sentences the analysis pipeline writes word for word into five or more posts; `hybrid.ts` the keep rule and order; `models.ts` the two models through transformers.js), migration `20261025194719_hybrid_search` (pgvector, `post_search_documents`, `post_search_chunks`, `curatit_search_index_source`, `curatit_mcp_search_v3`, tested by `supabase/tests/hybrid_search.sql`), `npm run search:index` (embeds what changed; run after an import or after analyses are published or edited), `npm run search:models` (fetches the two int8 models, about 34 MB each, pinned and checksummed, into `./models`; also before every build, so the deployed server never downloads them). The dashboard's search is unchanged.
+
+An "or" between words left to search ("brand mascots or characters") is now the keyword search's own alternative; between filter values ("Nike or Wise") it's still refused.
+
 ## Boundaries
 
-This is deterministic language interpretation plus full-text search, not embedding-based semantic retrieval or an LLM. It understands the supported taxonomy and aliases; it does not understand every possible paraphrase, infer visual similarity or invent missing labels. There is no model charge per search, though database requests still use normal infrastructure resources.
+Interpretation is deterministic, and keyword search is full text. Hybrid search adds two small models that run on the server (an embedding model and a reranker), with no per-search charge and no call to a hosted model. It understands the supported taxonomy and aliases, and meaning beyond them only as far as gte-small and the reranker do; it does not infer visual similarity from the images or invent missing labels. Database requests still use normal infrastructure resources.
 
 Quoted phrases remain literal. Negations, alternative/multiple values within a dimension, and date ordering are rejected with guidance rather than inverted or silently broadened. Exact ambiguous brands such as On and Public work; within a sentence use `from On` or `by Public` to select them. Creative filters require published analysis; an unlabelled post will not match one merely because it looks appropriate. No filters are relaxed automatically.
 

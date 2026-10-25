@@ -13,7 +13,9 @@ import type {
   CatalogRepository,
   RawBrandItem,
   RawCategoryItem,
+  RawHybridCandidates,
   RawPost,
+  RawSearchHit,
   RawSearchRequest,
   RawSearchResult,
   RawSlide,
@@ -129,6 +131,13 @@ export function createSupabaseCatalog(options: { url: string; publishableKey: st
 
   return {
     search: (request) => rpc<RawSearchResult>("search_v2", reader.rpc("curatit_mcp_search_v2", { p_request: request as RawSearchRequest as never })),
+
+    // pgvector reads the embedding from its text form, '[0.1,0.2,…]'
+    hybridCandidates: (request, embedding) =>
+      rpc<RawHybridCandidates>("search_v3", reader.rpc("curatit_mcp_search_v3", { p_request: request as never, p_embedding: `[${embedding.join(",")}]` })),
+
+    hybridItems: (request, ids) =>
+      rpc<{ posts: RawSearchHit[]; catalog_marker?: string | null }>("search_v3_items", reader.rpc("curatit_mcp_search_v3", { p_request: request as never, p_ids: ids })),
 
     getPost: async (postId) => {
       const post = await rpc<RawPost | null>("get_post_v2", reader.rpc("curatit_mcp_get_post_v2", { p_id: postId }));

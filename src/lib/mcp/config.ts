@@ -28,6 +28,9 @@ export type McpConfig = {
   allowedOriginHostnames: string[];
   logLevel: "debug" | "info" | "warn" | "error";
   production: boolean;
+  // Hybrid search (keyword plus meaning, reranked); CURATIT_HYBRID_SEARCH=off turns it off and
+  // search is keyword search alone
+  hybridSearch: boolean;
 };
 
 export const MCP_PATH = "/mcp";
@@ -104,6 +107,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): McpConfig {
     allowedOriginHostnames,
     logLevel,
     production,
+    hybridSearch: env.CURATIT_HYBRID_SEARCH?.trim().toLowerCase() !== "off",
   };
   if (env === process.env) cached = config;
   return config;
