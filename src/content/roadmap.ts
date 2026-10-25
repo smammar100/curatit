@@ -8,44 +8,23 @@
 // scores (not what production measures), and the creative breakdown entries (published on 11 of
 // 162 posts, none yet with the 3.0 changes; they're under Now until they're out). To add a day, run
 // npm run changelog:draft for the commits since the newest entry, then write it up here. The page
-// shows the days up to EARLIER.through as one short summary and the days after it in full, so when
-// a new day is added, fold the previous one into the summary and move `through` on.
+// shows every day as its own column on the rail.
 
 export type RoadmapStage = "Now" | "Next" | "Later";
-// `celebrate` sets off the lifeline's fireworks when the item is clicked on the rail, like the
-// roadmap's own changelog entry; `brands` shows the marks of the three newest brands under it on the rail
-export type RoadmapItem = { stage: RoadmapStage; area: string; title: string; detail: string; celebrate?: boolean; brands?: boolean };
-export type ChangelogEntry = { area: string; title: string; detail: string; commits: string[] };
+export type RoadmapItem = { stage: RoadmapStage; area: string; title: string; detail: string };
+// `brands` shows, under the entry on the rail, the marks of the brands whose first posts went live
+// that day (read from the library, so they're always the real ones)
+export type ChangelogEntry = { area: string; title: string; detail: string; commits: string[]; brands?: boolean };
 export type ChangelogDay = { date: string; headline: string; entries: ChangelogEntry[] };
-export type SummaryItem = { title: string; commit: string };
 
 export const ROADMAP: RoadmapItem[] = [
   { stage: "Now", area: "AI agents", title: "Curatit MCP in beta", detail: "Claude, ChatGPT, Claude Code, Cursor and VS Code can search the library and pull a post's breakdown from inside the tool. Connect yours from the AI integration page, and tell us what breaks." },
   { stage: "Now", area: "Creative Intelligence", title: "Breakdowns for every new post", detail: "Breakdowns are drafted by AI and appear only once an editor approves them. Every post in the library has one, and new posts get theirs as they join." },
-  { stage: "Now", area: "Library", title: "More brands", detail: "New brands join a few at a time. Betterment and Airtasker are the latest, with 19 more posts from Wealthsimple, and newly added posts show near the top of your feed.", brands: true },
+  { stage: "Now", area: "Library", title: "More brands", detail: "New brands join a few at a time. Betterment and Airtasker are the latest, with 19 more posts from Wealthsimple, and newly added posts show near the top of your feed." },
   { stage: "Next", area: "AI agents", title: "Testing Curatit MCP", detail: "Trying the connection in more AI tools and with more people before it leaves beta, and fixing what breaks." },
   { stage: "Later", area: "Library", title: "More and more posts", detail: "More brands and more of their recent posts, added a few at a time." },
-  { stage: "Later", area: "Launch", title: "Launching closed beta", detail: "Opening Curatit to a first group of people to use it every day and tell us what to fix.", celebrate: true },
+  { stage: "Later", area: "Launch", title: "Launching closed beta", detail: "Opening Curatit to a first group of people to use it every day and tell us what to fix." },
 ];
-
-// Everything up to and including `through`, in a few lines (the full entries are in CHANGELOG)
-export const EARLIER: { through: string; items: SummaryItem[] } = {
-  through: "2026-10-22",
-  items: [
-    { title: "Curatit got its name and a homepage of its own", commit: "2c57f60" },
-    { title: "Real posts from thirty brands across seven categories", commit: "ea81705" },
-    { title: "A signed-in dashboard, with posts that open over the feed", commit: "155a4e7" },
-    { title: "Boards you can keep and share with a link", commit: "332ba20" },
-    { title: "Accounts, a welcome flow that tunes For you, and dark mode", commit: "e9f59a2" },
-    { title: "A Vision page, this roadmap, and brand search that forgives punctuation", commit: "0df6a74" },
-    { title: "Twenty-eight categories, and breakdowns published across the library", commit: "437b516" },
-    { title: "Curatit MCP in beta, with Claude and ChatGPT connecting by sign-in", commit: "95ea72b" },
-    { title: "Seven more brands, from Duolingo and Canva to Postmates and GoFundMe", commit: "7a89203" },
-    { title: "A clearer homepage, and Curatit's own address: www.curatit.app", commit: "6e840d7" },
-    { title: "Playbooks by type of post, and a For you that mixes brands", commit: "ecd243a" },
-    { title: "Search in plain words, and Copy brief for a new design in the same style", commit: "f83873a" },
-  ],
-};
 
 export const CHANGELOG: ChangelogDay[] = [
   {
@@ -56,7 +35,7 @@ export const CHANGELOG: ChangelogDay[] = [
       { area: "Dashboard", title: "Discover, laid out like an explore page", detail: "Discover opens on the categories, each in its own colour, then the playbooks: the kinds of post the breakdowns keep finding, as collections of covers. Opening one shows its posts under its name. The playbooks moved here from For you, which now opens straight on the posts.", commits: ["bd5a41b","b29c1b9","7fc7166"] },
       { area: "Dashboard", title: "A calmer post page", detail: "A post's page sits in the same frame as the feed, with the post filling the window and its slides as thumbnails under it. Likes and comments sit right under Save, a slide's notes read as bullets, colours show as a simple palette, and the slide-number tags are gone.", commits: ["4488342","72865a5","33125f3","bd5a41b"] },
       { area: "Dashboard", title: "A balanced header and account menu", detail: "Every control in the dashboard header is one height, with your avatar as tall as the buttons. The account menu is roomier, and theme and grid size are two small switches, so it no longer scrolls.", commits: ["ea268f1","7ea285b","258ebce"] },
-      { area: "Library", title: "Betterment and Airtasker join the library", detail: "Betterment joins Finance and Airtasker joins Lifestyle, with 19 more posts from Wealthsimple: 54 new posts in all, each with an editor-approved breakdown, taking the library to 291 posts.", commits: ["0f7f8ed","e5e3cae"] },
+      { area: "Library", title: "Betterment and Airtasker join the library", detail: "Betterment joins Finance and Airtasker joins Lifestyle, with 19 more posts from Wealthsimple: 54 new posts in all, each with an editor-approved breakdown, taking the library to 291 posts.", commits: ["0f7f8ed","e5e3cae"], brands: true },
     ],
   },
   {
@@ -111,7 +90,7 @@ export const CHANGELOG: ChangelogDay[] = [
       { area: "Accounts", title: "A welcome note from the founder", detail: "Once you confirm your address, a short welcome note from Curatit's founder arrives from hello@curatit.app.", commits: ["24d85fd","7c8b085"] },
       { area: "Homepage", title: "Every post, taken apart", detail: "A new section shows what a breakdown gives you, on Wise's eSIM cover: its hook, layout, kicker and product pinned to the slide, the strategy line above it, four colours picked off into a palette, then Copy brief. The labels, strategy and colours are the post's own published breakdown.", commits: ["488e8e1"] },
       { area: "AI agents", title: "Assistants read the full breakdown", detail: "Through Curatit MCP, assistants now get a post's full breakdown: the strategy, key creative decisions, data checks and colour roles. Everyday names work too, so ‘food and drink’, ‘crypto’ or ‘Coca Cola’ find the right category or brand, and each result says which part of its breakdown matched.", commits: ["d89154a","b1fcdb8"] },
-      { area: "Library", title: "Postmates and GoFundMe join the library", detail: "Postmates and GoFundMe join with ten posts each, taking the library to 237 posts from 39 brands.", commits: ["69af2d6"] },
+      { area: "Library", title: "Postmates and GoFundMe join the library", detail: "Postmates and GoFundMe join with ten posts each, taking the library to 237 posts from 39 brands.", commits: ["69af2d6"], brands: true },
       { area: "Site", title: "A mobile menu that unfolds like paper", detail: "On phones, the menu unfolds row by row like folded paper, with a soft rustle, and folds back up when it closes. With reduced motion it simply opens, silently.", commits: ["7f7893d"] },
     ],
   },
@@ -128,7 +107,7 @@ export const CHANGELOG: ChangelogDay[] = [
     entries: [
       { area: "AI agents", title: "Curatit MCP is in beta", detail: "The AI integration is now labelled Beta across the site. Its page shows example searches typed out over the real posts they return, found by the same search an assistant uses rather than picked by hand.", commits: ["95ea72b","72c4f0d"] },
       { area: "AI agents", title: "Search results as a gallery", detail: "In ChatGPT and other apps that can show them, a Curatit search can come back as a gallery of covers with the brand and a line of caption, each opening the post on Instagram.", commits: ["07bafbe","d0a308b"] },
-      { area: "Library", title: "Duolingo, Headspace, PUMA, On and Canva join", detail: "Five brands join with ten posts each, and Deliveroo gets five more: 55 new posts. Education, Health & Fitness and Graphics & Design now have tabs of their own on the homepage.", commits: ["7a89203"] },
+      { area: "Library", title: "Duolingo, Headspace, PUMA, On and Canva join", detail: "Five brands join with ten posts each, and Deliveroo gets five more: 55 new posts. Education, Health & Fitness and Graphics & Design now have tabs of their own on the homepage.", commits: ["7a89203"], brands: true },
       { area: "Homepage", title: "A first screen that says what Curatit is", detail: "The homepage opens on ‘Find ideas for your next social media post.’ above the corridor of covers, then two lines on what Curatit is and Create account. Every sign-up button on the site now reads Create account.", commits: ["b99b3db","0c93189"] },
       { area: "Homepage", title: "Drag to reveal the library", detail: "The scattered-saves section no longer holds the page while you scroll. Drag the divider across one grey stage, or use the arrow keys, to uncover the same brief in Curatit; the two labels above it slide it to either side.", commits: ["4ca604c","8391ade"] },
       { area: "Site", title: "A footer with a moving filmstrip", detail: "The footer is ruled into cells for the logo and links, with the five newest covers drifting past as a filmstrip. It holds still under reduced motion.", commits: ["4ca604c"] },
@@ -153,7 +132,7 @@ export const CHANGELOG: ChangelogDay[] = [
     entries: [
       { area: "Search", title: "Search finds brands however you type them", detail: "In the dashboard, punctuation, accents and spaces in brand names no longer matter, so \"hm\", \"coca cola\" and \"ubereats\" find H&M, Coca-Cola and Uber Eats. Typing a brand's exact name shows only its posts, and the search panel lists brands with their logos, narrowing as you type.", commits: ["f863fcb"] },
       { area: "Dashboard", title: "New additions lead the feed", detail: "The feed now puts the posts most recently added to the library first, with brands mixed within each day. In For you, the latest additions count as much as an industry you picked.", commits: ["f863fcb"] },
-      { area: "Library", title: "Bolt and Public join the library", detail: "Bolt joins Travel and Public joins Fintech, along with DoorDash's three newest posts: 13 new posts in all.", commits: ["0df6a74"] },
+      { area: "Library", title: "Bolt and Public join the library", detail: "Bolt joins Travel and Public joins Fintech, along with DoorDash's three newest posts: 13 new posts in all.", commits: ["0df6a74"], brands: true },
       { area: "Site", title: "A Vision page in place of About", detail: "Vision replaces About, and old About links land there. It has a note from the founder, a signature drawn stroke by stroke, a moving graph of five real posts with a Pause button, and how many posts and brands the library holds.", commits: ["0df6a74","f863fcb"] },
       { area: "Site", title: "A shorter top navigation", detail: "The top navigation is now How it works, Pricing, Vision and Roadmap. Library and Blog left the menu, but their pages are still there, and the footer links to Vision in place of About.", commits: ["0df6a74"] },
       { area: "Site", title: "A public roadmap and changelog", detail: "This page: what is being built now, what comes next and later, and what has shipped so far, each update linked to the change behind it.", commits: [] },
@@ -178,7 +157,7 @@ export const CHANGELOG: ChangelogDay[] = [
     headline: "Real brands, a dashboard, boards and accounts",
     entries: [
       { area: "Library", title: "Real brand posts replace the demo", detail: "The homepage now shows real posts from real brands, with their own images, in place of made-up examples.", commits: ["4887304"] },
-      { area: "Library", title: "Thirty brands across seven categories", detail: "Fourteen brands joined, including Shopify, Coca-Cola, McDonald's, Robinhood, Uber and Amazon, taking the library to 149 posts. E-commerce is a new category, Food delivery is now Food & drink, and brand names now show the brand's logo.", commits: ["ea81705","58f81b8"] },
+      { area: "Library", title: "Thirty brands across seven categories", detail: "Fourteen brands joined, including Shopify, Coca-Cola, McDonald's, Robinhood, Uber and Amazon, taking the library to 149 posts. E-commerce is a new category, Food delivery is now Food & drink, and brand names now show the brand's logo.", commits: ["ea81705","58f81b8"], brands: true },
       { area: "Dashboard", title: "Your signed-in dashboard", detail: "Signed-in members get a feed of the whole library in a grid that fits your screen, a search that suggests recent searches and categories, and settings for theme and tile size.", commits: ["ea81705","155a4e7","f4b9a37"] },
       { area: "Dashboard", title: "Posts open over the feed", detail: "Open a post and it appears over the feed you were browsing, with every slide, the brand, the full caption with mentions and hashtags linked, the boards it's on and Save. Placeholders show while it loads.", commits: ["155a4e7"] },
       { area: "Boards", title: "Boards you can keep and share", detail: "Save posts to named boards that stay with your account. Each board has its own page with notes on the images. Share makes a read-only link, which stops working as soon as you turn sharing off.", commits: ["332ba20","87bcb35","f4b9a37"] },
