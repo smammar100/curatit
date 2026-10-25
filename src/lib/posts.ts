@@ -101,6 +101,30 @@ export const getPublishedPosts = cache(async (): Promise<LibraryPost[]> => {
     }));
 });
 
+// Every brand in the library with when its first post went live there, by name: the Roadmap puts
+// each on its day. Published, not imported: Betterment and Airtasker were imported on 21 Oct and
+// went live on 24 Oct
+export type BrandJoined = { joinedAt: string; brand: LibraryPost["brand"] };
+export const getBrandsJoined = cache(async (): Promise<BrandJoined[]> => {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("instagram_posts")
+    .select("published_at, brands(name, slug, logo_path)")
+    .eq("is_published", true)
+    .returns<{ published_at: string; brands: { name: string; slug: string; logo_path: string | null } | null }[]>();
+  if (error) throw new Error(`Could not load the library's brands from Supabase: ${error.message}`);
+
+  const joined = new Map<string, BrandJoined>();
+  for (const { published_at, brands } of data) {
+    if (!brands) continue;
+    const seen = joined.get(brands.slug);
+    if (!seen || Date.parse(published_at) < Date.parse(seen.joinedAt)) {
+      joined.set(brands.slug, { joinedAt: published_at, brand: { name: brands.name, slug: brands.slug, logo: brands.logo_path ? `/lib/${brands.logo_path}` : null } });
+    }
+  }
+  return [...joined.values()].toSorted((a, b) => a.brand.name.localeCompare(b.brand.name));
+});
+
 // One post with everything its detail page shows: every slide (and which were videos on
 // Instagram, where the library keeps only the cover frame), the full caption, the public counts
 // as scraped (Instagram reports a hidden like count as -1, kept here as null) and the account

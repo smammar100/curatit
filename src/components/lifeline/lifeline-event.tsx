@@ -44,25 +44,25 @@ export function getLifelineEventGallery(event: LifelineEvent) {
   return undefined
 }
 
-// Curatit: a row of round images overlapping like a cluster, each ringed in the canvas colour
-// (inside .lifeline-typeset, black is the canvas on the dark theme), then "+N". One label names
-// them for screen readers; the images themselves are decorative
+// Curatit: round images that wrap onto as many lines as the column needs, each with a hairline so
+// a white mark keeps its edge (inside .lifeline-typeset, white is the light ink on the dark theme).
+// One label names them for screen readers; the images themselves are decorative
 export function LifelineEventGallery({ gallery }: { gallery: NonNullable<ReturnType<typeof getLifelineEventGallery>> }) {
   return (
-    <div role="img" aria-label={gallery.label} className="mt-3 flex items-center">
-      {gallery.images.map((image, index) => (
-        // Each mark names itself in a small tooltip on hover (the cluster's label already names them
-        // all for screen readers, so the tooltip is hidden from them)
-        <span key={image.src} className="group/mark relative -ml-2 shrink-0 first:ml-0" style={{ zIndex: gallery.images.length - index }}>
+    <div role="img" aria-label={gallery.label} className="mt-3 flex max-w-[18rem] flex-wrap gap-1">
+      {gallery.images.map((image) => (
+        // Each mark names itself in a small tooltip on hover, lifted over its neighbours (the label
+        // already names them all for screen readers, so the tooltip is hidden from them)
+        <span key={image.src} className="group/mark relative hover:z-10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={image.src}
             alt=""
-            width={32}
-            height={32}
+            width={24}
+            height={24}
             loading="lazy"
             draggable={false}
-            className="block size-8 rounded-full bg-zinc-100 object-cover ring-2 ring-white dark:bg-zinc-800 dark:ring-black"
+            className="block size-6 rounded-full bg-zinc-100 object-cover ring-1 ring-black/10 dark:bg-zinc-800 dark:ring-white/10"
           />
           <span
             aria-hidden="true"
@@ -72,7 +72,6 @@ export function LifelineEventGallery({ gallery }: { gallery: NonNullable<ReturnT
           </span>
         </span>
       ))}
-      {gallery.more ? <span className="ml-2 text-[12px] font-medium tabular-nums text-zinc-500">+{gallery.more}</span> : null}
     </div>
   )
 }
