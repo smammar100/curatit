@@ -1,5 +1,7 @@
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { CATEGORIES, categoryBySlug, inCategory, OLD_SLUGS } from "@/lib/categories";
+import { shareInFlight } from "@/lib/inFlight";
 import { createPublicClient } from "@/utils/supabase/public";
 
 // A published library post as the site shows it, read from Supabase
@@ -61,8 +63,14 @@ function hookFrom(caption: string | null) {
   return sentence.length > 90 ? `${sentence.slice(0, 88).trimEnd()}…` : sentence;
 }
 
-// Every published post that has images, newest first. Runs at build time (and on revalidation).
-export const getPublishedPosts = cache(async (): Promise<LibraryPost[]> => {
+// Every published post that has images, newest first. Read once an hour and shared by every page
+// and every build worker through Next's data cache (tag LIBRARY_TAG), not once per page: a build
+// renders some 600 pages, and the read per page was most of the project's Supabase egress until
+// 2026-10-25. cache() still dedupes the calls within one render.
+export const LIBRARY_TAG = "library";
+export const getPublishedPosts = cache(unstable_cache(shareInFlight(readPublishedPosts), ["published-posts"], { revalidate: 3600, tags: [LIBRARY_TAG] }));
+
+async function readPublishedPosts(): Promise<LibraryPost[]> {
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("instagram_posts")
@@ -99,7 +107,7 @@ export const getPublishedPosts = cache(async (): Promise<LibraryPost[]> => {
         .toSorted((a, b) => a.position - b.position)
         .map((image) => libraryUrl(image.path)),
     }));
-});
+}
 
 // Every brand in the library with when its first post went live there, by name: the Roadmap puts
 // each on its day. Published, not imported: Betterment and Airtasker were imported on 21 Oct and

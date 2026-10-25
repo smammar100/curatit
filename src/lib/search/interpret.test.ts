@@ -82,6 +82,49 @@ describe("natural search", () => {
     expect(parse("bule posts").filters).toEqual({});
   });
 
+  // 2026-10-25: requests designers and assistants actually send, which came back empty or refused
+  it.each([
+    ["memes from food brands", { category: "food-drink", archetype: ["meme"] }, ""],
+    ["educational finance content", { objective: ["education"], category: "finance" }, ""],
+    ["Halloween campaign", {}, "halloween"],
+    ["user generated content", { archetype: ["ugc-repost"] }, ""],
+    ["minimalist posts with lots of white space", { tone: ["minimal"] }, ""],
+    ["infographics with charts", { imagery: ["data-visualization"] }, ""],
+    ["funny posts", { persuasion: ["humor"] }, ""],
+    ["emotional storytelling", { persuasion: ["empathy"], narrative_pattern: ["story-arc"] }, ""],
+    ["illustrated carousels explaining a concept", { format: "carousel", imagery: ["illustration"], archetype: ["explainer"] }, ""],
+    ["AI product screenshots", { category: "ai", imagery: ["screenshot-ui"] }, "product"],
+  ])("reads around everyday words: %s", (query, filters, remaining) => {
+    const result = parse(query);
+    expect(result.error).toBeUndefined();
+    expect(result.filters).toEqual(filters);
+    expect(result.query).toBe(remaining);
+    expect(result.corrections).toEqual([]);
+  });
+
+  it("selects a generic industry or approach family only when it's the whole request", () => {
+    const withSynonyms = { ...vocabulary, categories: CATEGORIES.map((category) => (category.slug === "graphics-design" ? { ...category, synonyms: ["design"] } : category)) };
+    expect(interpretSearch("clean modern design for a banking app", withSynonyms)).toMatchObject({ filters: { tone: ["minimal"], category: "finance" }, query: "app" });
+    expect(interpretSearch("design", withSynonyms).filters).toEqual({ category: "graphics-design" });
+    expect(parse("brand").filters).toEqual({ archetype_family: ["brand"] });
+    expect(parse("how brands announce a new feature")).toMatchObject({ filters: { archetype: ["feature-launch"] }, query: "" });
+  });
+
+  it("corrects typos to names, never to a database synonym", () => {
+    const custom = { ...vocabulary, dimensions: { ...vocabulary.dimensions, archetype: [{ slug: "giveaway", label: "Giveaway or contest", synonyms: ["contest"] }] } };
+    expect(interpretSearch("context", custom)).toMatchObject({ query: "context", filters: {}, corrections: [] });
+    expect(interpretSearch("giveawya", custom)).toMatchObject({ filters: { archetype: ["giveaway"] }, corrections: [{ from: "giveawya", to: "Giveaway or contest" }] });
+  });
+
+  it("keeps a second creative approach as words to match, and says so", () => {
+    const result = parse("influencer collaboration posts");
+    expect(result).toMatchObject({ filters: { archetype: ["creator-feature"] }, query: "collaboration" });
+    expect(result.notes).toEqual(['One creative approach per search: Creator feature is the filter, and "collaboration" is matched as words.']);
+    expect(parse("product launch announcement")).toMatchObject({ filters: { archetype: ["product-launch"] }, query: "announcement" });
+    // A second value anywhere else is still an alternative, refused rather than guessed
+    expect(parse("red and blue posts").error).toBeTruthy();
+  });
+
   it("suggests removing exactly one constraint, and refinements round-trip", () => {
     const original = parse('fintech carousels that open with a stat about "Black Friday"');
     const suggestions = searchRefinements(original.filters, original.query);

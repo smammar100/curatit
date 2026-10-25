@@ -25,9 +25,9 @@ export default async function DashboardLayout({ children, modal }: { children: R
   const all = await getPublishedPosts();
   // The breakdowns' one-line strategies and labels, for the Playbooks rows. The feed still works
   // without them (the rows fall back to the caption's first line), so a failed read isn't fatal
-  const breakdowns = await getBreakdownSummaries(new Map(all.map((post) => [post.id, post.images.length]))).catch((error: unknown) => {
+  const breakdowns = await getBreakdownSummaries().catch((error: unknown): Record<string, never> => {
     console.error(error);
-    return new Map<string, never>();
+    return {};
   });
 
   // The feed's own order: what joined the library most recently first (by import day, newest day
@@ -54,7 +54,7 @@ export default async function DashboardLayout({ children, modal }: { children: R
       postedAt: post.postedAt,
       addedAt: post.addedAt,
       cover: post.images[0],
-      breakdown: breakdowns.get(post.id) ?? null,
+      breakdown: breakdowns[post.id] ?? null,
     }));
 
   return (

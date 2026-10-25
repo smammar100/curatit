@@ -28,6 +28,7 @@ export async function searchPosts(repo: CatalogRepository, input: SearchInputT, 
     const interpreted = interpretSearch(query, { dimensions: terms.dimensions, categories, brands });
     if (interpreted.error) throw invalid(interpreted.error);
     for (const correction of interpreted.corrections ?? []) warnings.push(`Read "${correction.from}" as "${correction.to}". Quote the original phrase to search it literally.`);
+    warnings.push(...(interpreted.notes ?? []));
     query = interpreted.query || null;
     for (const [key, { dimension }] of Object.entries(FILTERS)) {
       const inferred = interpreted.filters[dimension];
