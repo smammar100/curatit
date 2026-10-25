@@ -2,17 +2,28 @@ import type { NextConfig } from "next";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
+// What hybrid search needs at run time beyond what the tracer finds (see outputFileTracingIncludes)
+const SEARCH_RUNTIME = [
+  "./models/**/*",
+  "./node_modules/onnxruntime-node/bin/napi-v3/linux/x64/**/*",
+  "./node_modules/@huggingface/transformers/node_modules/@img/sharp-*/**/*",
+];
+
 const nextConfig: NextConfig = {
   // Hybrid search's models (2026-10-25): the two routes that search ship the int8 models fetched
   // into ./models at build (scripts/fetch-search-models.mjs); transformers.js and onnxruntime-node
   // are external server packages by default in Next 16. Every route leaves out what Vercel's Linux
   // x64 never loads: the browser runtime (onnxruntime-web, 91 MB), the other platforms' binaries
-  // and the browser WebAssembly builds. onnxruntime-node loads its binary through a computed path
-  // (bin/napi-v3/<platform>/<arch>/), which the tracer can't follow, so the Linux x64 binary and its
-  // libraries are named here (43 MB)
+  // and the browser WebAssembly builds. The tracer follows require calls, not native linking, so two
+  // things are named here: onnxruntime-node's Linux x64 binary and libraries (loaded through a
+  // computed path, bin/napi-v3/<platform>/<arch>/, 43 MB), and the platform packages of the sharp
+  // that transformers.js imports on start (its own copy, nested under it, whose native module links
+  // to libvips in a separate package; without it the import fails and search fell back to keyword,
+  // 2026-10-25). Only the current platform's packages are installed, so on Vercel these are Linux
+  // x64's. scripts/check-search-bundle.mjs loads the models from the traced files in CI
   outputFileTracingIncludes: {
-    "/mcp": ["./models/**/*", "./node_modules/onnxruntime-node/bin/napi-v3/linux/x64/**/*"],
-    "/api/v1/posts/search": ["./models/**/*", "./node_modules/onnxruntime-node/bin/napi-v3/linux/x64/**/*"],
+    "/mcp": SEARCH_RUNTIME,
+    "/api/v1/posts/search": SEARCH_RUNTIME,
   },
   outputFileTracingExcludes: {
     "/**": [
