@@ -18,7 +18,7 @@ Set on Vercel (Project → Settings → Environment Variables) or in `.env.local
 
 ## Deploy
 
-Vercel, from `main`, like the rest of the site. Routes under `/mcp` and `/api/v1` are dynamic (`force-dynamic`), `maxDuration` 60 s. No extra infrastructure: no Redis, no separate process. Rollback is Vercel's "promote previous deployment"; the routes are additive.
+Vercel, from `main`, like the rest of the site. Hybrid search adds three things to a deploy: `prebuild` fetches the two models into `./models` (pinned, checksummed; the build log's `search models:` line says whether they're there), `/mcp` and `/api/v1/posts/search` ship them with onnxruntime-node's Linux x64 binary (about 120 MB a function, under Vercel's 250 MB), and `.npmrc` stops onnxruntime-node's install script from downloading CUDA libraries on Linux. npm 12 will stop passing unknown `.npmrc` keys to install scripts; before then, set `ONNXRUNTIME_NODE_INSTALL_CUDA=skip` in Vercel's environment variables too (CI already sets it). Routes under `/mcp` and `/api/v1` are dynamic (`force-dynamic`), `maxDuration` 60 s. No extra infrastructure: no Redis, no separate process. Rollback is Vercel's "promote previous deployment"; the routes are additive.
 
 Database: the MCP reads through these migrations, each applied with `npx supabase db push` after a run inside `begin; … rollback;` (the matching test under `supabase/tests/` takes the migration pasted at its `-- @migration` marker):
 
@@ -36,6 +36,8 @@ Database: the MCP reads through these migrations, each applied with `npx supabas
 | `20261016120200_creative_mcp_analysis_v3` | the 3.0 analysis in the MCP's reads | not yet |
 | `20261016120300_mcp_category_resolution` | loose category and brand names, taxonomy counts | not yet |
 | `20261016120400_mcp_search_v2_reasons` | public names in match reasons, `catalog_marker` | not yet |
+| `20261025191109_search_post_text_only` | keyword search and match reasons read only what an analysis says about the post | 25 Oct 2026 |
+| `20261025194719_hybrid_search` | pgvector, `post_search_documents`, `post_search_chunks`, `curatit_search_index_source`, `curatit_mcp_search_v3` | not yet |
 
 The code reads the old and the new shapes, so it can be deployed before or after the last three. Rollback: the code is Vercel's "promote previous deployment"; a function change is rolled back by re-running the previous definition, which each migration's header names (the SQL in `docs/current-state.md` §8 drops only `api_tokens` and the rate-limit table, which kills every client's token: never run it to undo a function change). After applying, regenerate `src/lib/database.types.ts` with `npx supabase gen types typescript --linked > src/lib/database.types.ts` (the hand-written `api_tokens` entry matches what it generates).
 
@@ -72,6 +74,8 @@ These are the spec's initial targets, not measured production figures; no load t
 | `UPSTREAM_UNAVAILABLE` everywhere | Supabase status; `health/ready` | Database |
 | Briefs refused, reads fine | Rate-limit function failing (`ratelimit.store_unavailable` in logs) | Database |
 | Search finds nothing | `applied` filters in the result; taxonomy values; `query_mode` | Data |
+| "Ranking by meaning isn't available" warning | `search_hybrid_unavailable` in the logs: model files missing (the build's `search models:` line), `post_search_*` empty (run `npm run search:index`), or `curatit_mcp_search_v3` failing. Search still answers with keyword results; `CURATIT_HYBRID_SEARCH=off` stops the attempts | Hybrid search |
+| New posts never found by meaning | `npm run search:index -- --dry-run` lists posts not yet embedded | Hybrid search |
 | HTML from `/mcp` | Vercel Deployment Protection on a non-production URL | Hosting |
 | One replica differs | Shouldn't: nothing is in-process but the concurrency cap | Scaling |
 

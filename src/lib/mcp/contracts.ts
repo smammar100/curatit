@@ -282,6 +282,10 @@ export const SearchOutput = z.object({
     filters: z.record(z.string(), z.array(z.string())).describe("The filters actually applied, as resolved slugs."),
     sort: z.enum(["relevance", "newest"]),
     limit: z.number().int(),
+    ranking: z
+      .enum(["keyword", "hybrid"])
+      .optional()
+      .describe("hybrid: keyword matches plus posts close in meaning that a reranker judged relevant, best first. keyword: keyword and filter matches only."),
   }),
   suggestions: z.array(z.string()).describe("When nothing matched: ways to relax the search. Nothing is relaxed for you."),
   suggested_queries: z.array(z.object({ label: z.string(), query: z.string() })).optional().describe("Ready-to-run natural queries that remove one constraint. These are suggestions, not executed searches or promises of matches."),

@@ -157,9 +157,13 @@ export function interpretSearch(input: string, vocabulary: SearchVocabulary): In
     labels.push(`${dimensionLabels[dimension] ?? dimension.replace(/_/g, " ")}: ${label}`);
     phrase.forEach((_, j) => used.add(i + j));
   }
-  // Never turn 'without blue' into a positive blue filter or ignore requested dates/ordering.
+  // Never turn 'without blue' into a positive blue filter or ignore requested dates/ordering. An
+  // 'or' between two words left to search ('mascots or characters') is the keyword search's own
+  // alternative; between filter values ('Nike or Wise') it would need two searches, so it's refused
+  const keywordOr = (i: number) => tokens[i].value === "or" && i > 0 && i < tokens.length - 1
+    && [i - 1, i + 1].every((j) => !used.has(j) && (tokens[j].quoted || !stop.has(tokens[j].value)));
   const remaining = tokens.filter((_, i) => !used.has(i));
-  if (remaining.some((t) => !t.quoted && /^(not|no|without|excluding|except|or|latest|newest|recent|before|after)$/.test(t.value))) {
+  if (tokens.some((t, i) => !used.has(i) && !t.quoted && /^(not|no|without|excluding|except|or|latest|newest|recent|before|after)$/.test(t.value) && !keywordOr(i))) {
     return { query: "", filters, labels, error: "Use positive descriptions in one search (for example, ‘blue fintech carousels’). Exclusions, alternatives and date ordering aren't supported in natural search yet." };
   }
   const query = remaining.filter((t) => t.quoted || !stop.has(t.value)).map((t) => t.value).join(" ");

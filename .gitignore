@@ -60,3 +60,6 @@ packages/*/dist
 
 # The PostHog wizard's working files
 .posthog-wizard-cache/
+
+# Hybrid search models, fetched at build (npm run search:models)
+/models/

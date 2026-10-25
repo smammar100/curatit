@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/fetch-search-models.mjs",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
@@ -18,11 +19,15 @@
     "mcp:adapter:build": "npm run build --workspace @curatit/model-adapter",
     "test:mcp:live": "vitest run tests/mcp",
     "mcp:smoke": "tsx scripts/mcp-smoke.ts",
+    "search:models": "node scripts/fetch-search-models.mjs",
+    "search:index": "tsx scripts/search-index.ts",
+    "search:eval": "tsx scripts/search-eval.ts",
     "email:dev": "email dev --dir src/emails --port 3001",
     "email:render": "tsx scripts/render-emails.tsx"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
+    "@huggingface/transformers": "3.8.1",
     "@modelcontextprotocol/client": "2.3.1",
     "@modelcontextprotocol/server": "2.3.1",
     "@opentelemetry/api-logs": "^0.223.0",

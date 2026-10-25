@@ -15,11 +15,19 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      # onnxruntime-node would otherwise download CUDA libraries on Linux x64 (also set in .npmrc)
       - run: npm ci
+        env:
+          ONNXRUNTIME_NODE_INSTALL_CUDA: skip
       - run: npm run typecheck
       - run: npm test
       - run: npm run mcp:bridge:build
       - run: npm run mcp:adapter:build
+      # Hybrid search's models (prebuild fetches them, pinned and checksummed); cached by the pins
+      - uses: actions/cache@v4
+        with:
+          path: models
+          key: search-models-${{ hashFiles('scripts/fetch-search-models.mjs') }}
       # The site build needs the public Supabase keys to read the library at build time
       - run: npm run build
         env:

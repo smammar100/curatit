@@ -117,7 +117,7 @@ export function searchText(data: SearchOutputT): string {
   ]);
   const tail = data.suggestions.length ? [`Suggestions: ${data.suggestions.join(" ")}`] : [];
   const interpretation = data.applied.query_mode === "natural" ? [
-    `Interpreted search: ${Object.entries(data.applied.filters).map(([key, values]) => `${key}=${values.join(", ")}`).join("; ") || "no filters"}; keywords=${data.applied.query ?? "none"}.`,
+    `Interpreted search: ${Object.entries(data.applied.filters).map(([key, values]) => `${key}=${values.join(", ")}`).join("; ") || "no filters"}; keywords=${data.applied.query ?? "none"}${data.applied.ranking === "hybrid" ? "; ranked by keywords and meaning" : ""}.`,
   ] : [];
   const refinements = (data.suggested_queries ?? []).map((item) => `${item.label}: ${JSON.stringify(item.query)}`);
   return [head, ...interpretation, ...lines, ...tail, ...refinements].join("\n");
