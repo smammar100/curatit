@@ -47,13 +47,24 @@ try {
   const [vector] = (await embedder(["posts aimed at students"], { pooling: "mean", normalize: true })).tolist();
   const tokenizer = await t.AutoTokenizer.from_pretrained("Xenova/ms-marco-MiniLM-L-12-v2");
   const reranker = await t.AutoModelForSequenceClassification.from_pretrained("Xenova/ms-marco-MiniLM-L-12-v2", { dtype: "q8" });
-  const inputs = tokenizer(["funny posts about saving money"], { text_pair: ["A joke about budgeting for a holiday."], padding: true, truncation: true, max_length: 512 });
-  const [[score]] = (await reranker(inputs)).logits.sigmoid().tolist();
-  if (vector.length !== 384 || !(score > 0.5)) throw new Error(`unexpected output: ${vector.length} dimensions, rerank ${score}`);
-  console.log(`search bundle: both models load from the ${copied} traced files (384 dimensions; rerank ${score.toFixed(3)})`);
+  // A related and an unrelated description (about 0.996 and 0.000 on any platform; a very short
+  // description, like "A joke about budgeting for a holiday.", scores low even when related)
+  const query = "funny posts about saving money";
+  const pair = ["A joke about budgeting: the post laughs at how hard it is to save for a holiday.", "A product photo of running shoes on a white background."];
+  const inputs = tokenizer([query, query], { text_pair: pair, padding: true, truncation: true, max_length: 512 });
+  const [[related], [unrelated]] = (await reranker(inputs)).logits.sigmoid().tolist();
+  if (vector.length !== 384 || !(related > 0.5) || !(unrelated < 0.1)) {
+    throw new Error(`unexpected output: ${vector.length} dimensions, rerank related ${related}, unrelated ${unrelated}`);
+  }
+  console.log(`search bundle: both models load from the ${copied} traced files (384 dimensions; rerank related ${related.toFixed(3)}, unrelated ${unrelated.toFixed(3)})`);
 } catch (error) {
   console.error(`search bundle: the /mcp function can't load the search models from its traced files: ${error instanceof Error ? error.message : error}`);
   process.exitCode = 1;
 } finally {
-  rmSync(bundle, { recursive: true, force: true });
+  // Best effort: Windows won't delete a native library this process still has loaded
+  try {
+    rmSync(bundle, { recursive: true, force: true });
+  } catch {
+    // left in the temp folder
+  }
 }
