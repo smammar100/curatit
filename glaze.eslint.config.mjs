@@ -34,8 +34,9 @@ const {LINT_IGNORES} = await import(pathToFileURL(join(dirname(plugin), 'value-r
 
 export default [
   // Curatit: the emails are HTML for mail clients, styled inline as mail needs, and components/lifeline is vendored from
-  // evilrabbit/lifeline and kept close to upstream, like shadcn's components/ui
-  {ignores: [...LINT_IGNORES, '**/lib/glaze/lint/**', '**/src/emails/**', '**/components/lifeline/**']},
+  // evilrabbit/lifeline and kept close to upstream, like shadcn's components/ui; .claude holds the git worktrees, each a
+  // whole copy of the repo with its own lint
+  {ignores: [...LINT_IGNORES, '**/lib/glaze/lint/**', '**/src/emails/**', '**/components/lifeline/**', '.claude/**']},
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {parser: tsParser, parserOptions: {ecmaFeatures: {jsx: true}}},
