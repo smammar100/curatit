@@ -2,6 +2,8 @@
 
 **Search:** Dashboard and MCP share `src/lib/search/interpret.ts`. Read `docs/natural-language-search.md` before changing search. Keep exact brand/category/Playbook searches immediate, database relevance for free-text results, and expose interpreted filters. Never silently relax constraints. Since 2026-10-25 MCP and REST search are hybrid (keyword plus meaning, reranked, `src/lib/search/semantic/`); score any change to it with `npm run search:eval` against the judged set in `docs/search-eval/` before and after, and keep `npm run search:index` run after imports and analysis publishes.
 
+**Worktrees:** every git worktree lives inside this folder, at `.claude/worktrees/<name>` (gitignored, skipped by TypeScript, the tests and the lint), never beside it in `D:\Design Engineering`: `git worktree add .claude/worktrees/<name> -b <branch>`, and `git worktree move` for one that's elsewhere. On 2026-10-26 the ten sibling `Curatit-*` worktrees were moved there at the owner's request; a move breaks Windows junctions with absolute targets (npm workspaces' `node_modules/@curatit/*`, `.next`'s package links, the skill links in `.claude/skills/`), so re-point those after any move. `.claude/worktrees/_leftovers/` holds what was loose beside the repo (a `node_modules`-only `Curatit-main`, build logs, three patches).
+
 ## UI work: read this first
 
 Before you create or change any UI, read **[DESIGN.md](./DESIGN.md)** and Glaze's skill, **`.claude/skills/glaze/SKILL.md`**, then the page of every Glaze component you use (`https://design.how/systems/glaze/components/<name>.md`). The live reference is `/system`. `.cursor/skills/curatit-design/SKILL.md` points to the same files for Cursor.
