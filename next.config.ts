@@ -34,6 +34,12 @@ const nextConfig: NextConfig = {
       "node_modules/@huggingface/transformers/dist/*.wasm",
     ],
   },
+  experimental: {
+    // Pages a build worker renders at once (Next's default is 8). Post pages that render together
+    // share one Supabase read (src/lib/batch.ts), so more at once means fewer, larger reads: a cold
+    // build made 276 requests at 8 and ~1,500 before batching (2026-10-26, docs/performance/)
+    staticGenerationMaxConcurrency: 32,
+  },
   images: {
     // Widths the optimizer may produce. Nothing on the site renders wider than ~600px
     // (1200px at 2x), so the defaults up to 3840 only made every srcset longer.

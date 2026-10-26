@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { CATEGORIES, categoryBySlug, inCategory, OLD_SLUGS } from "@/lib/categories";
+import { batchLoader, chunks } from "@/lib/batch";
 import { shareInFlight } from "@/lib/inFlight";
 import { createPublicClient } from "@/utils/supabase/public";
 
@@ -70,7 +71,7 @@ function hookFrom(caption: string | null) {
 export const LIBRARY_TAG = "library";
 export const getPublishedPosts = cache(unstable_cache(shareInFlight(readPublishedPosts), ["published-posts"], { revalidate: 3600, tags: [LIBRARY_TAG] }));
 
-async function readPublishedPosts(): Promise<LibraryPost[]> {
+export async function readPublishedPosts(): Promise<LibraryPost[]> {
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("instagram_posts")
@@ -157,18 +158,36 @@ type DetailRow = Row & {
   instagram_post_media: { position: number; type: string | null }[];
 };
 
-export const getPostDetail = cache(async (shortCode: string): Promise<PostDetail | null> => {
+const DETAIL_COLUMNS =
+  "id, short_code, url, format, caption, posted_at, created_at, dimensions_width, dimensions_height, likes_count, comments_count, owner_username, owner:instagram_accounts!instagram_posts_owner_id_fkey(is_verified), brands(name, slug, logo_path, categories(name, slug)), post_images(position, path), post_categories(categories(name, slug)), instagram_post_media!instagram_post_media_post_id_fkey(position, type)";
+
+// A post page's post. Pages that render together share one read (batchLoader): a build renders
+// every post page, and one read each was ~290 requests a build (2026-10-26, docs/performance/).
+// Kept in Next's data cache like the library, so a post's page and its modal, rendered apart,
+// read it once; no longer than the page itself is kept (the dashboard revalidates hourly)
+const detailLoader = batchLoader(readPostDetails);
+export const getPostDetail = cache(unstable_cache((shortCode: string) => detailLoader(shortCode), ["post-detail"], { revalidate: 3600, tags: [LIBRARY_TAG] }));
+
+export async function readPostDetail(shortCode: string): Promise<PostDetail | null> {
+  return (await readPostDetails([shortCode])).get(shortCode) ?? null;
+}
+
+// Published posts by short code, 50 to a request
+export async function readPostDetails(shortCodes: string[]): Promise<Map<string, PostDetail>> {
   const supabase = createPublicClient();
-  const { data, error } = await supabase
-    .from("instagram_posts")
-    .select(
-      "id, short_code, url, format, caption, posted_at, created_at, dimensions_width, dimensions_height, likes_count, comments_count, owner_username, owner:instagram_accounts!instagram_posts_owner_id_fkey(is_verified), brands(name, slug, logo_path, categories(name, slug)), post_images(position, path), post_categories(categories(name, slug)), instagram_post_media!instagram_post_media_post_id_fkey(position, type)"
-    )
-    .eq("is_published", true)
-    .eq("short_code", shortCode)
-    .returns<DetailRow[]>()
-    .maybeSingle();
-  if (error) throw new Error(`Could not load post ${shortCode} from Supabase: ${error.message}`);
+  const found = new Map<string, PostDetail>();
+  for (const codes of chunks(shortCodes, 50)) {
+    const { data, error } = await supabase.from("instagram_posts").select(DETAIL_COLUMNS).eq("is_published", true).in("short_code", codes).returns<DetailRow[]>();
+    if (error) throw new Error(`Could not load posts ${codes.slice(0, 3).join(", ")}… from Supabase: ${error.message}`);
+    for (const row of data) {
+      const detail = toPostDetail(row);
+      if (detail) found.set(row.short_code, detail);
+    }
+  }
+  return found;
+}
+
+function toPostDetail(data: DetailRow): PostDetail | null {
   if (!data?.brands?.categories || !data.post_images.length) return null;
 
   const category = current(data.brands.categories);
@@ -202,7 +221,7 @@ export const getPostDetail = cache(async (shortCode: string): Promise<PostDetail
     images: images.map((image) => libraryUrl(image.path)),
     videos: images.map((image) => (data.format === "video" ? image.position === 0 : media.get(image.position) === "video")),
   };
-});
+}
 
 // A URL from Next's image optimizer, for places that need a plain <img> src
 export function optimizedImage(src: string, width = 640, quality = 75) {

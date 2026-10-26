@@ -180,3 +180,11 @@ export type CatalogRepository = {
   // The public URL of a stored image
   publicUrl(path: string): string;
 };
+
+// What a search result's analysis keeps as a card ("fields": "card", …_search_projections): the
+// labels a result shows (services/shared.ts classification) and the version, nothing else. The
+// database builds the same list (private.creative_mcp_card)
+export const CARD_ANALYSIS_KEYS = [
+  "verified_status", "analysis_version", "analysis_source", "taxonomy_version", "published_at", "image_analysis_complete", "slides_analysed", "slides_total",
+  "primary_type", "secondary_types", "objective", "visual_styles", "typography_categories", "layout_tags", "palette", "narrative_pattern", "hook_technique", "tones", "persuasion", "cta",
+] as const;

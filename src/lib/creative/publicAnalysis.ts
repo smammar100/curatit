@@ -70,6 +70,9 @@ const LINK = String.raw`(?:\s*[–—-]\s*|\s*\/\s*|\s*&\s*|\s+(?:and|or|to|thro
 const NOT_COUNTED = String.raw`(?!\s+(?!(?:as|is|was|has|its|this|plus|across|whereas)\b)[A-Za-z]+s\b)`;
 const MENTION = new RegExp(String.raw`\b(slides?|positions?)(\s+)(${NUM}(?:${LINK}${NUM}|\s*,\s*${NUM}${NOT_COUNTED})*)`, "gi");
 
+// Whether a piece of prose names a slide by number, the only text the numbering changes
+export const mentionsSlides = (prose: unknown) => typeof prose === "string" && new RegExp(MENTION.source, "i").test(prose);
+
 export function numberingOf(prose: string[], count: number): Numbering {
   const numbers = prose.flatMap((text) => [...text.matchAll(MENTION)].flatMap((match) => match[3].match(/\d+/g)!.map(Number)));
   if (numbers.includes(0)) return "zero";
