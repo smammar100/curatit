@@ -20,10 +20,26 @@ describe("dashboard catalog search", () => {
     searchReplies.push(Promise.resolve(page(["a", "b"], 50)), Promise.resolve(page(["b", "c"])));
     const result = await loadLibrarySearch("fintech carousels", posts, new AbortController().signal);
     expect(result.codes).toEqual(["a", "b", "c"]);
+    // Short codes only, 100 to a page
     expect(rpc.mock.calls.filter(([name]) => name === "curatit_mcp_search_v2").map(([, args]) => args.p_request)).toEqual([
-      { category: "finance", format: "carousel", limit: 50, offset: 0 },
-      { category: "finance", format: "carousel", limit: 50, offset: 50 },
+      { category: "finance", format: "carousel", fields: "ids", limit: 100, offset: 0 },
+      { category: "finance", format: "carousel", fields: "ids", limit: 100, offset: 50 },
     ]);
+  });
+
+  it("keeps a search to the view's category or saved posts, in the database", async () => {
+    setup();
+    searchReplies.push(Promise.resolve(page(["a"])), Promise.resolve(page(["b"])));
+    await loadLibrarySearch("cash", posts, new AbortController().signal, { category: "finance" });
+    await loadLibrarySearch("cash", posts, new AbortController().signal, { postIds: ["p1", "p2"] });
+    const requests = rpc.mock.calls.filter(([name]) => name === "curatit_mcp_search_v2").map(([, args]) => args.p_request);
+    expect(requests).toEqual([
+      { query: "cash", category: "finance", fields: "ids", limit: 100, offset: 0 },
+      { query: "cash", post_ids: ["p1", "p2"], fields: "ids", limit: 100, offset: 0 },
+    ]);
+    // Nothing saved: nothing to ask
+    expect((await loadLibrarySearch("cash", posts, new AbortController().signal, { postIds: [] })).codes).toEqual([]);
+    expect(rpc.mock.calls.filter(([name]) => name === "curatit_mcp_search_v2")).toHaveLength(2);
   });
 
   it("reports the catalog cap and propagates failures instead of showing no matches", async () => {
@@ -73,5 +89,23 @@ describe("dashboard catalog search", () => {
       await act(async () => { root.render(<Harness query="" />); });
       expect(host.textContent).toBe("idle");
     } finally { await act(async () => root.unmount()); }
+  });
+
+  it("asks the old way when the database doesn't know the compact search yet", async () => {
+    vi.resetModules();
+    const fresh = await import("./useLibrarySearch");
+    setup();
+    searchReplies.push(
+      Promise.resolve({ data: null, error: { code: "22023", message: 'Unknown search field "fields"' } }),
+      Promise.resolve(page(["a"])),
+      Promise.resolve(page(["b"])),
+    );
+    expect((await fresh.loadLibrarySearch("cash", posts, new AbortController().signal, { postIds: ["p1"] })).codes).toEqual(["a"]);
+    expect((await fresh.loadLibrarySearch("cards", posts, new AbortController().signal)).codes).toEqual(["b"]);
+    expect(rpc.mock.calls.filter(([name]) => name === "curatit_mcp_search_v2").map(([, args]) => args.p_request)).toEqual([
+      { query: "cash", post_ids: ["p1"], fields: "ids", limit: 100, offset: 0 },
+      { query: "cash", limit: 50, offset: 0 },
+      { query: "cards", limit: 50, offset: 0 },
+    ]);
   });
 });

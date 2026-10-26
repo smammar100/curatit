@@ -47,7 +47,17 @@ export default function Feed() {
   const [view, setView] = useState<View>("For you");
   // Discover's category (a slug), or null for All
   const [category, setCategory] = useState<string | null>(null);
-  const search = useLibrarySearch(query, list);
+  // Everything on any board, most recently saved first
+  const saved = useMemo(
+    () =>
+      [...new Set(boards.flatMap((board) => board.items).toSorted((a, b) => b.addedAt.localeCompare(a.addedAt)).map((item) => item.post))].flatMap(
+        (code) => byCode.get(code) ?? [],
+      ),
+    [boards, byCode],
+  );
+  // A search keeps to what the view shows: the saved posts, or Discover's category
+  const scope = useMemo(() => (view === "Saved" ? { postIds: saved.map((post) => post.id) } : view === "Discover" && category ? { category } : {}), [view, category, saved]);
+  const search = useLibrarySearch(query, list, scope);
 
   // Open on the view, category and search in the address: on arrival, and whenever a link brings
   // the address back to the feed itself (a post's category or search lands here with the feed
@@ -82,14 +92,6 @@ export default function Feed() {
     history.replaceState(null, "", href);
   }, [view, query, category]);
 
-  // Everything on any board, most recently saved first
-  const saved = useMemo(
-    () =>
-      [...new Set(boards.flatMap((board) => board.items).toSorted((a, b) => b.addedAt.localeCompare(a.addedAt)).map((item) => item.post))].flatMap(
-        (code) => byCode.get(code) ?? [],
-      ),
-    [boards, byCode],
-  );
   const shown = useMemo(() => {
     const source = view === "Saved" ? saved : view === "Discover" && category ? list.filter((post) => inCategory(post, category)) : list;
     const brand = brandNamed(list, query);

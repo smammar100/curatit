@@ -27,7 +27,10 @@ export async function runExampleSearches(posts: LibraryPost[]): Promise<ExampleS
   const byShortCode = new Map(posts.map((post) => [post.shortCode, post]));
   const searches = await Promise.all(
     SEARCHES.map(async ({ query, request }) => {
-      const { data, error } = await client.rpc("curatit_mcp_search_v2", { p_request: { ...request, limit: PER_SEARCH } });
+      // Short codes only, all the row needs (the cards come from the library); a database without
+      // the search projections (…_search_projections) refuses "fields", and gets the old request
+      let { data, error } = await client.rpc("curatit_mcp_search_v2", { p_request: { ...request, limit: PER_SEARCH, fields: "ids" } });
+      if (error?.code === "22023") ({ data, error } = await client.rpc("curatit_mcp_search_v2", { p_request: { ...request, limit: PER_SEARCH } }));
       if (error || !data) return null;
       const results = ((data as { posts?: { short_code: string }[] }).posts ?? []).flatMap(({ short_code }) => {
         const post = byShortCode.get(short_code);

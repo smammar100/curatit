@@ -20,7 +20,7 @@ import type { CatalogRepository, RawSearchHit, RawSearchRequest } from "../repo/
 import { brandOf, classification, excerpt, industryOf, mediaId, nameKey } from "./shared";
 import { interpretSearch } from "@/lib/search/interpret";
 import { searchRefinements } from "@/lib/search/refine";
-import { meaningReason, rerankQuery, settle } from "@/lib/search/semantic/hybrid";
+import { meaningReason, RERANK_CUTOFF, rerankQuery, settle } from "@/lib/search/semantic/hybrid";
 import type { SemanticModels } from "@/lib/search/semantic/models";
 
 export const SEARCH_DEFAULT_LIMIT = 8;
@@ -137,7 +137,7 @@ export async function searchPosts(repo: CatalogRepository, input: SearchInputT, 
     if (!input.cursor || page) {
       try {
         if (remainingMs() < HYBRID_MIN_BUDGET_MS) throw new Error("Not enough time left in the call to rank by meaning");
-        const { posts, next } = await hybridPage(repo, models, request, originalQuery, limit, page?.offset ?? 0, warnings, !input.cursor);
+        const { posts, next } = await hybridPage(repo, models, request, originalQuery, search, limit, page?.offset ?? 0, warnings, !input.cursor);
         const marker = next.marker ?? page?.marker ?? null;
         if (page?.marker && next.marker && page.marker !== next.marker) {
           warnings.push("The library changed since this search's first page (posts were added or removed), so this page may repeat or skip a post. Start the search again for one consistent set.");
@@ -178,9 +178,33 @@ export async function searchPosts(repo: CatalogRepository, input: SearchInputT, 
   return finish(posts, nextCursor, "keyword");
 }
 
-// One page of a hybrid search: the candidates and their reranking are worked out again for every
-// page (the models are deterministic), then the page's posts are read in order
-async function hybridPage(repo: CatalogRepository, models: SemanticModels, request: RawSearchRequest, originalQuery: string, limit: number, offset: number, warnings: string[], firstPage: boolean) {
+// A hybrid search's order, kept a few minutes per process (2026-10-26, docs/performance/): an
+// assistant paging through results, or asking the same thing again, had it embedded, ranked and
+// reranked from scratch every time (a database call and about a second of reranking a page). Only
+// the order is kept; every page reads its posts fresh, so one unpublished since is left out, and a
+// post published since joins once the order expires. Bounded, keyed by everything the order
+// depends on, and searches asked at the same time share one ranking
+type Ranking = { ranked: ReturnType<typeof settle>; keywordTotal: number; marker: string | null };
+const RANKING_TTL_MS = 5 * 60_000;
+const RANKINGS_KEPT = 200;
+const RANKING_VERSION = `${RERANK_CUTOFF}`;
+const rankings = new Map<string, { at: number; value: Promise<Ranking> }>();
+
+function rankingOnce(key: string, compute: () => Promise<Ranking>) {
+  const held = rankings.get(key);
+  if (held && Date.now() - held.at < RANKING_TTL_MS) return held.value;
+  const value = compute();
+  rankings.delete(key);
+  rankings.set(key, { at: Date.now(), value });
+  while (rankings.size > RANKINGS_KEPT) rankings.delete(rankings.keys().next().value!);
+  // A failed ranking isn't kept
+  value.catch(() => {
+    if (rankings.get(key)?.value === value) rankings.delete(key);
+  });
+  return value;
+}
+
+async function rankHybrid(repo: CatalogRepository, models: SemanticModels, request: RawSearchRequest, originalQuery: string): Promise<Ranking> {
   markStage("embed");
   const [embedding] = await models.embed([originalQuery]);
   const candidates = await repo.hybridCandidates!(request, embedding);
@@ -194,18 +218,29 @@ async function hybridPage(repo: CatalogRepository, models: SemanticModels, reque
     scores,
     candidates.keyword_rest,
   );
-  if (firstPage && candidates.keyword_total > 50) {
-    warnings.push(`${candidates.keyword_total} posts match the words; this search ranks the first 50 of them with the meaning-based matches. Narrow the search to reach the others.`);
+  return { ranked, keywordTotal: candidates.keyword_total, marker: candidates.catalog_marker ?? null };
+}
+
+// One page of a hybrid search: the order (above), then the page's posts read in order
+async function hybridPage(repo: CatalogRepository, models: SemanticModels, request: RawSearchRequest, originalQuery: string, search: string, limit: number, offset: number, warnings: string[], firstPage: boolean) {
+  const { ranked, keywordTotal, marker } = await rankingOnce(`${RANKING_VERSION}|${search}`, () => rankHybrid(repo, models, request, originalQuery));
+  if (firstPage && keywordTotal > 50) {
+    warnings.push(`${keywordTotal} posts match the words; this search ranks the first 50 of them with the meaning-based matches. Narrow the search to reach the others.`);
   }
   const slice = ranked.slice(offset, offset + limit);
-  const items = slice.length ? await repo.hybridItems!(request, slice.map((r) => r.id)) : { posts: [], catalog_marker: candidates.catalog_marker };
+  const items = slice.length ? await repo.hybridItems!(request, slice.map((r) => r.id)) : { posts: [], catalog_marker: marker };
   const byId = new Map(items.posts.map((hit) => [hit.id, hit]));
   // A post unpublished between the two reads is left out
   const posts = slice.flatMap((r) => {
     const hit = byId.get(r.id);
     return hit ? [{ hit, extra: { reasons: r.meaningOnly ? [meaningReason(r.kind)] : [], score: r.rerank === null ? null : Math.round(r.rerank * 1e4) / 1e4 } }] : [];
   });
-  return { posts, next: { offset: offset + limit < ranked.length ? offset + limit : null, marker: candidates.catalog_marker ?? items.catalog_marker ?? null } };
+  return { posts, next: { offset: offset + limit < ranked.length ? offset + limit : null, marker: marker ?? items.catalog_marker ?? null } };
+}
+
+// Forget every kept order (tests)
+export function clearRankings() {
+  rankings.clear();
 }
 
 function toHit(repo: CatalogRepository, hit: RawSearchHit, extra?: { reasons: string[]; score: number | null }): SearchOutputT["posts"][number] {
