@@ -95,7 +95,7 @@ const line = (label: string, s: ReturnType<typeof summary>) =>
 
 const rankings = [...new Set(runs.map((r) => r.ranking))].map((r) => `${r} ${runs.filter((x) => x.ranking === r).length}`).join(", ");
 console.log(`${keywordOnly ? "Keyword search alone" : "Search as deployed"} (rankings: ${rankings}; median ${[...runs.map((r) => r.ms)].sort((a, b) => a - b)[Math.floor(runs.length / 2)]} ms a search)`);
-console.log(line("All 60 requests", summary(scored)));
+console.log(line(`All ${queries.length} requests`, summary(scored)));
 console.log(line("Held-out half", summary(scored.filter((x) => heldOut.has(x.run.query.id)))));
 for (const group of ["taxonomy", "concept", "brand"] as const) console.log(`  ${group.padEnd(9)} nDCG@10 ${mean(scored.filter((x) => x.run.query.group === group).map((x) => x.m.ndcg)).toFixed(3)}`);
 for (const r of runs.filter((r) => r.error)) console.log(`refused: ${r.query.id} "${r.query.q}": ${r.error}`);

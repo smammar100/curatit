@@ -26,6 +26,16 @@ const stop = new Set(("show find me please can could would you i am want need lo
 // Ordinary words that are also a whole industry or approach family narrow a sentence to almost
 // nothing ('memes from food brands' became the Brand family); alone they still select it
 const generic = new Set(["category:graphics-design", "archetype_family:brand", "archetype_family:product"]);
+// Everyday words that are also a label's or an industry's name stay words, never filters
+// (2026-10-26, from 30 designer requests run against the library): 'summer' and 'back to school'
+// became the one Seasonal label and brought back autumn posts, 'funny' and 'motivational' a humour
+// or tone label the right posts don't carry, 'money' the Finance industry ('save money on food
+// delivery' was refused as two industries, and 'save' the Save call to action), 'customer reviews'
+// a second approach that emptied the search. As words they're matched in the text and, in MCP
+// search, ranked by meaning
+const everyday = ["funny", "hilarious", "motivational", "motivation", "inspiring", "inspiration", "summer", "holiday", "black friday", "back to school", "money", "save money", "review", "customer review"].map(words);
+// A post has one brand, one main industry and one format; creative labels can take several values
+const oneValue = new Set(["brand", "category", "format"]);
 const dimensions = ["archetype", "archetype_family", "objective", "hook_technique", "narrative_pattern", "typography", "layout", "imagery", "palette", "visual_device", "tone", "persuasion", "cta"];
 const dimensionLabels: Record<string, string> = { category: "Industry", brand: "Brand", format: "Format", archetype: "Creative approach", archetype_family: "Approach family", objective: "Goal", hook_technique: "Opening hook", narrative_pattern: "Sequence", palette: "Colour", cta: "Call to action" };
 // These words are ordinary language as well as brand names. Only an exact name or explicit
@@ -38,7 +48,7 @@ const aliases: Record<string, Record<string, string[]>> = {
     "feature-launch": ["launch a feature", "launching a feature", "feature announcement", "announce a new feature", "announcing a new feature", "introducing a new feature"],
     "product-launch": ["launch a product", "launching a product", "announce a new product", "announcing a new product", "introducing a new product"],
     "product-showcase": ["showcase a product", "showcasing a product", "product shots", "hero product shots"],
-    testimonial: ["customer reviews", "customer testimonials", "customer quotes"],
+    testimonial: ["customer testimonials", "customer quotes"],
     collaboration: ["brand collaboration", "co branded campaign", "two brands working together"],
     tutorial: ["teaches step by step", "teach step by step"],
     "ugc-repost": ["user generated content", "ugc"],
@@ -49,10 +59,10 @@ const aliases: Record<string, Record<string, string[]>> = {
   objective: { education: ["educational"] },
   imagery: { illustration: ["illustrated", "illustrations"], "3d-render": ["3d", "3d renders", "three dimensional"], "screenshot-ui": ["app screenshots", "ui screenshots", "app screens", "screenshots of an app", "screenshot", "ui"], "data-visualization": ["data visualization", "data visualizations", "graphs", "charts and graphs", "chart", "infographic"] },
   layout: { "text-only": ["only text", "just text"], "text-over-image": ["text over a photo", "text over photos"], "before-after": ["before vs after"], centered: ["centered composition", "centred composition"] },
-  tone: { witty: ["witty copy"], playful: ["playful copy"], luxurious: ["luxury tone"], minimal: ["minimalist", "minimalism", "white space", "whitespace", "clean"], inspirational: ["motivational", "motivation", "inspiring"] },
+  tone: { witty: ["witty copy"], playful: ["playful copy"], luxurious: ["luxury tone"], minimal: ["minimalist", "minimalism", "white space", "whitespace", "clean"] },
   typography: { "sans-serif": ["sans serif fonts", "sans serif type"] },
   narrative_pattern: { "story-arc": ["storytelling", "narrative"] },
-  persuasion: { empathy: ["emotional", "emotion", "emotive", "heartfelt"], humor: ["funny", "humorous", "hilarious", "joke"] },
+  persuasion: { empathy: ["emotional", "emotion", "emotive", "heartfelt"], humor: ["humorous", "joke"] },
   palette: { black: ["dark background", "dark mode"] },
 };
 
@@ -112,13 +122,26 @@ export function interpretSearch(input: string, vocabulary: SearchVocabulary): In
   candidates.sort((a, b) => b.phrase.length - a.phrase.length || a.priority - b.priority || a.slug.localeCompare(b.slug));
   const knownWords = new Set(candidates.filter((candidate) => candidate.phrase.length === 1).map((candidate) => candidate.phrase[0]));
   const used = new Set<number>();
-  // Words kept as keywords on purpose (a second creative approach), never matched again
+  // Words kept as keywords on purpose (an everyday phrase, a second creative approach), never matched again
   const kept = new Set<number>();
-  const filters: Interpretation["filters"] = {};
-  const labels: string[] = [];
-  const chosen: Record<string, string> = {};
-  const corrections: NonNullable<Interpretation["corrections"]> = [];
-  const notes: string[] = [];
+  // Each phrase read as a filter, in sentence order; the filters, labels and corrections come from these
+  type Span = { start: number; end: number; dimension: string; slug: string; label: string; correction?: { from: string; to: string } };
+  const spans: Span[] = [];
+  const notes: { text: string; filter: Span }[] = [];
+  // An everyday phrase is words through and through: 'Black Friday' mustn't become the colour black
+  tokens.forEach((_, i) => {
+    for (const phrase of everyday) {
+      if (phrase.every((word, j) => tokens[i + j] && !tokens[i + j].quoted && tokens[i + j].key === word)) phrase.forEach((_, j) => kept.add(i + j));
+    }
+  });
+  const collect = () => {
+    const filters: Interpretation["filters"] = {};
+    for (const { dimension, slug } of spans) {
+      filters[dimension] = oneValue.has(dimension) ? slug : [...new Set([...(filters[dimension] as string[] ?? []), slug])];
+    }
+    const labels = [...new Set(spans.map((s) => `${dimensionLabels[s.dimension] ?? s.dimension.replace(/_/g, " ")}: ${s.label}`))];
+    return { filters, labels };
+  };
   for (let i = 0; i < tokens.length; i++) {
     if (used.has(i) || kept.has(i) || tokens[i].quoted) continue;
     const eligible = (c: Candidate) => c.phrase.every((_, j) => tokens[i + j] && !used.has(i + j) && !kept.has(i + j) && !tokens[i + j].quoted)
@@ -137,29 +160,46 @@ export function interpretSearch(input: string, vocabulary: SearchVocabulary): In
     const candidate = unambiguous ?? exact;
     if (!candidate) continue;
     const { dimension, slug, label, phrase } = candidate;
-    const single = ["brand", "category", "format"].includes(dimension);
-    const existing = filters[dimension];
-    if (existing && !(Array.isArray(existing) ? existing.includes(slug) : existing === slug)) {
+    const existing = spans.filter((s) => s.dimension === dimension);
+    // 'X or Y' between two values of one creative label ('witty or playful', 'memes or user
+    // generated content') is that label's own alternative: the database matches any of its values
+    const orJoined = tokens[i - 1]?.value === "or" && existing.some((s) => s.end === i - 2);
+    if (existing.length && !existing.some((s) => s.slug === slug) && !(orJoined && !oneValue.has(dimension))) {
       if (dimension !== "archetype") {
-        return { query: "", filters, labels, error: `Search one ${dimension === "category" ? "industry" : dimension.replace(/_/g, " ")} at a time. Use separate searches for alternatives.` };
+        return { query: "", ...collect(), error: `Search one ${dimension === "category" ? "industry" : dimension.replace(/_/g, " ")} at a time. Use separate searches for alternatives.` };
       }
       // Two creative approaches in one sentence ('influencer collaboration', 'product launch
       // announcement') describe one post, not alternatives: the first stays the filter and the
       // second stays words the post must match, which narrows rather than widens
       const text = tokens.slice(i, i + phrase.length).map((t) => t.value).join(" ");
-      notes.push(`One creative approach per search: ${chosen[dimension]} is the filter, and "${text}" is matched as words.`);
+      notes.push({ text: `One creative approach per search: ${existing[0].label} is the filter, and "${text}" is matched as words.`, filter: existing[0] });
       phrase.forEach((_, j) => kept.add(i + j));
       continue;
     }
-    if (unambiguous) corrections.push({ from: tokens.slice(i, i + phrase.length).map((t) => t.value).join(" "), to: label });
-    filters[dimension] = single ? slug : [...new Set([...(filters[dimension] as string[] ?? []), slug])];
-    chosen[dimension] ??= label;
-    labels.push(`${dimensionLabels[dimension] ?? dimension.replace(/_/g, " ")}: ${label}`);
+    const from = tokens.slice(i, i + phrase.length).map((t) => t.value).join(" ");
+    spans.push({ start: i, end: i + phrase.length - 1, dimension, slug, label, ...(unambiguous ? { correction: { from, to: label } } : {}) });
+    if (orJoined) used.add(i - 1);
     phrase.forEach((_, j) => used.add(i + j));
   }
+  // An 'or' with a creative label on one side only ('charts or data'), or labels of two kinds
+  // ('illustrations or photos of people'), can't be one label's alternative: both sides are
+  // searched as words instead. Beside a brand, industry or format it's still refused below
+  tokens.forEach((t, k) => {
+    if (t.value !== "or" || t.quoted || used.has(k)) return;
+    const sides = [k - 1, k + 1].flatMap((side) => spans.filter((s) => s.start <= side && side <= s.end));
+    if (sides.some((span) => oneValue.has(span.dimension))) return;
+    for (const span of sides) {
+      spans.splice(spans.indexOf(span), 1);
+      for (let j = span.start; j <= span.end; j++) used.delete(j);
+    }
+  });
+  const { filters, labels } = collect();
+  const corrections = spans.flatMap((s) => (s.correction ? [s.correction] : []));
+  const keptNotes = notes.filter((note) => spans.includes(note.filter)).map((note) => note.text);
   // Never turn 'without blue' into a positive blue filter or ignore requested dates/ordering. An
   // 'or' between two words left to search ('mascots or characters') is the keyword search's own
-  // alternative; between filter values ('Nike or Wise') it would need two searches, so it's refused
+  // alternative; between values of a brand, industry or format ('Nike or Wise') it would need two
+  // searches, so it's refused above
   const keywordOr = (i: number) => tokens[i].value === "or" && i > 0 && i < tokens.length - 1
     && [i - 1, i + 1].every((j) => !used.has(j) && (tokens[j].quoted || !stop.has(tokens[j].value)));
   const remaining = tokens.filter((_, i) => !used.has(i));
@@ -168,7 +208,7 @@ export function interpretSearch(input: string, vocabulary: SearchVocabulary): In
   }
   const query = remaining.filter((t) => t.quoted || !stop.has(t.value)).map((t) => t.value).join(" ");
   if (!query && !Object.keys(filters).length) return { query, filters, labels, error: "Add a brand, industry, format or creative idea to search for." };
-  return { query, filters, labels: [...new Set(labels)], corrections, ...(notes.length ? { notes } : {}) };
+  return { query, filters, labels, corrections, ...(keptNotes.length ? { notes: keptNotes } : {}) };
 }
 
 function oneEdit(a: string, b: string): boolean {

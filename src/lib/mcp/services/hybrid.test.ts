@@ -5,6 +5,7 @@ import { CuratitError } from "../errors";
 import { createFixtureCatalog, FIXTURE_IDS, FIXTURE_TAGGED } from "../repo/fixture";
 import type { RawHybridCandidate, RawSearchHit } from "../repo/types";
 import { searchPosts } from "./search";
+import { rerankQuery } from "@/lib/search/semantic/hybrid";
 import type { SemanticModels } from "@/lib/search/semantic/models";
 
 const secret = new Uint8Array(32).fill(5);
@@ -54,9 +55,10 @@ describe("hybrid search", () => {
     expect(data.posts[0].score).toBe(0.9);
     expect(data.posts[0].match_reasons.at(-1)).toMatch(/^Close in meaning to the request \(its strategy\)/);
     expect(data.posts[1].match_reasons.join(" ")).not.toMatch(/Close in meaning/);
-    // The whole sentence is embedded and reranked, not just the words left after interpretation
+    // The whole sentence is embedded and reranked, not just the words left after interpretation,
+    // though the reranker reads it without the words that only frame it
     expect(repo.seen[0].embeddingLength).toBe(384);
-    expect(m.reranked).toEqual(["cash posts"]);
+    expect(m.reranked).toEqual(["cash"]);
     expect(warnings).toEqual([]);
   });
 
@@ -96,6 +98,13 @@ describe("hybrid search", () => {
       expect(data.applied.ranking).toBe("keyword");
       expect(repo.seen).toHaveLength(0);
     }
+  });
+
+  it("reranks the request without the words that frame it, and keeps a request that's only framing", () => {
+    expect(rerankQuery("posts that make saving money feel fun")).toBe("make saving money feel fun");
+    expect(rerankQuery("Show me some examples of carousels with charts or data")).toBe("some of carousels with charts or data");
+    expect(rerankQuery('posts about "Black Friday"')).toBe('about "Black Friday"');
+    expect(rerankQuery("inspiration posts")).toBe("inspiration posts");
   });
 
   it("says when more posts match the words than it ranks", async () => {

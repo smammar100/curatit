@@ -20,7 +20,7 @@ import type { CatalogRepository, RawSearchHit, RawSearchRequest } from "../repo/
 import { brandOf, classification, excerpt, industryOf, mediaId, nameKey } from "./shared";
 import { interpretSearch } from "@/lib/search/interpret";
 import { searchRefinements } from "@/lib/search/refine";
-import { meaningReason, settle } from "@/lib/search/semantic/hybrid";
+import { meaningReason, rerankQuery, settle } from "@/lib/search/semantic/hybrid";
 import type { SemanticModels } from "@/lib/search/semantic/models";
 
 export const SEARCH_DEFAULT_LIMIT = 8;
@@ -188,7 +188,7 @@ async function hybridPage(repo: CatalogRepository, models: SemanticModels, reque
   const described = candidates.fused.map((c, i) => ({ i, text: c.description }));
   const scored = described.filter((d) => d.text);
   const scores = new Array<number | null>(candidates.fused.length).fill(null);
-  (await models.rerank(originalQuery, scored.map((d) => d.text!))).forEach((score, j) => (scores[scored[j].i] = score));
+  (await models.rerank(rerankQuery(originalQuery), scored.map((d) => d.text!))).forEach((score, j) => (scores[scored[j].i] = score));
   const ranked = settle(
     candidates.fused.map((c) => ({ id: c.id, keywordRank: c.keyword_rank, similarity: c.similarity, kind: c.kind, description: c.description })),
     scores,

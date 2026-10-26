@@ -49,7 +49,7 @@ describe("natural search", () => {
   it.each([
     ["I am looking for fintech ads announcing a new feature", { category: "finance", archetype: ["feature-launch"] }],
     ["Fintech feature launches", { category: "finance", archetype: ["feature-launch"] }],
-    ["posts with customer reviews", { archetype: ["testimonial"] }],
+    ["posts with customer testimonials", { archetype: ["testimonial"] }],
     ["food ads showcasing a product", { category: "food-drink", archetype: ["product-showcase"] }],
     ["carousels with app screens", { format: "carousel", imagery: ["screenshot-ui"] }],
     ["ads with charts and graphs", { imagery: ["data-visualization"] }],
@@ -90,7 +90,7 @@ describe("natural search", () => {
     ["user generated content", { archetype: ["ugc-repost"] }, ""],
     ["minimalist posts with lots of white space", { tone: ["minimal"] }, ""],
     ["infographics with charts", { imagery: ["data-visualization"] }, ""],
-    ["funny posts", { persuasion: ["humor"] }, ""],
+    ["humorous posts", { persuasion: ["humor"] }, ""],
     ["emotional storytelling", { persuasion: ["empathy"], narrative_pattern: ["story-arc"] }, ""],
     ["illustrated carousels explaining a concept", { format: "carousel", imagery: ["illustration"], archetype: ["explainer"] }, ""],
     ["AI product screenshots", { category: "ai", imagery: ["screenshot-ui"] }, "product"],
@@ -116,11 +116,57 @@ describe("natural search", () => {
     expect(interpretSearch("giveawya", custom)).toMatchObject({ filters: { archetype: ["giveaway"] }, corrections: [{ from: "giveawya", to: "Giveaway or contest" }] });
   });
 
-  it("keeps an 'or' between words left to search, never between filter values", () => {
+  it("keeps an 'or' between words left to search, never between brands, industries or formats", () => {
     expect(parse("brand mascots or characters")).toMatchObject({ query: "mascots or characters", filters: {} });
     expect(parse("a celebrity or famous person fronting the post").error).toBeUndefined();
     expect(parse("fintech carousels about cash or cards")).toMatchObject({ query: "cash or cards", filters: { category: "finance", format: "carousel" } });
-    for (const query of ["Nike or Wise", "red or blue posts", "or carousels", "carousels or"]) expect(parse(query).error).toBeTruthy();
+    for (const query of ["Nike or Wise", "Nike or Coca-Cola", "fintech or food posts", "carousels or videos", "or carousels", "carousels or"]) expect(parse(query).error).toBeTruthy();
+  });
+
+  // 2026-10-26: 'posts with charts or data' was refused as two searches
+  it("reads an 'or' between two values of one creative label as either, and beside one label as words", () => {
+    for (const [query, filters, words] of [
+      ["red or blue posts", { palette: ["red", "blue"] }, ""],
+      ["witty or playful fintech posts", { tone: ["witty", "playful"], category: "finance" }, ""],
+      ["memes or user generated content", { archetype: ["meme", "ugc-repost"] }, ""],
+      ["charts or graphs", { imagery: ["data-visualization"] }, ""],
+      ["posts with charts or data", {}, "charts or data"],
+      ["food carousels with illustrations or photos of people", { category: "food-drink", format: "carousel" }, "illustrations or photos people"],
+    ] as const) {
+      const result = parse(query);
+      expect(result.error, query).toBeUndefined();
+      expect(result.filters, query).toEqual(filters);
+      expect(result.query, query).toBe(words);
+    }
+    expect(parse("posts with charts or data").labels).toEqual([]);
+    // 'and' still asks for both, which one label can't promise
+    expect(parse("red and blue posts").error).toBeTruthy();
+  });
+
+  // 2026-10-26: as filters these emptied ordinary requests or brought back the wrong posts
+  it("keeps everyday words that are also a label's or an industry's name as words", () => {
+    const live = { ...vocabulary, categories: CATEGORIES.map((category) => (category.slug === "finance" ? { ...category, synonyms: ["banking", "investing", "money", "payments"] } : category)) };
+    const read = (query: string) => interpretSearch(query, live);
+    for (const [query, filters, words] of [
+      ["summer campaign ideas", {}, "summer"],
+      ["back to school posts", {}, "back school"],
+      ["Black Friday deals", {}, "black friday deals"],
+      ["funny posts from fintech brands", { category: "finance" }, "funny"],
+      ["Nike motivational posts", { brand: "nike" }, "motivational"],
+      ["travel inspiration carousels", { category: "travel-transportation", format: "carousel" }, ""],
+      ["social proof with customer reviews", { persuasion: ["social-proof"] }, "customer reviews"],
+      ["save money on food delivery", { category: "food-drink" }, "save money"],
+      ["money-saving deals", {}, "money saving deals"],
+      // A label's or an industry's own name still selects it
+      ["seasonal posts", { archetype: ["seasonal"] }, ""],
+      ["inspirational tone", { tone: ["inspirational"] }, ""],
+      ["finance carousels", { category: "finance", format: "carousel" }, ""],
+    ] as const) {
+      const result = read(query);
+      expect(result.error, query).toBeUndefined();
+      expect(result.filters, query).toEqual(filters);
+      expect(result.query, query).toBe(words);
+    }
   });
 
   it("keeps a second creative approach as words to match, and says so", () => {
