@@ -5,7 +5,6 @@ import { CuratitError } from "../errors";
 import { createFixtureCatalog, FIXTURE_IDS, FIXTURE_TAGGED } from "../repo/fixture";
 import type { RawHybridCandidate, RawSearchHit } from "../repo/types";
 import { clearRankings, searchPosts } from "./search";
-import { rerankQuery } from "@/lib/search/semantic/hybrid";
 import type { SemanticModels } from "@/lib/search/semantic/models";
 
 const secret = new Uint8Array(32).fill(5);
@@ -29,7 +28,8 @@ function hybridRepo(fused: RawHybridCandidate[], options: { keywordRest?: string
   });
 }
 const candidate = (id: string, keywordRank: number | null, description: string): RawHybridCandidate => ({ id, keyword_rank: keywordRank, similarity: keywordRank === null ? 0.9 : null, kind: "strategy", description });
-function models(scores: Record<string, number>, options: { fail?: boolean } = {}): SemanticModels & { reranked: string[] } {
+// Scores per description, the same for every reading of the request, or per reading
+function models(scores: Record<string, number> | ((reading: string) => Record<string, number>), options: { fail?: boolean } = {}): SemanticModels & { reranked: string[] } {
   const reranked: string[] = [];
   return {
     reranked,
@@ -39,7 +39,8 @@ function models(scores: Record<string, number>, options: { fail?: boolean } = {}
     },
     async rerank(query, documents) {
       reranked.push(query);
-      return documents.map((d) => scores[d] ?? 0);
+      const forReading = typeof scores === "function" ? scores(query) : scores;
+      return documents.map((d) => forReading[d] ?? 0);
     },
   };
 }
@@ -58,10 +59,10 @@ describe("hybrid search", () => {
     expect(data.posts[0].score).toBe(0.9);
     expect(data.posts[0].match_reasons.at(-1)).toMatch(/^Close in meaning to the request \(its strategy\)/);
     expect(data.posts[1].match_reasons.join(" ")).not.toMatch(/Close in meaning/);
-    // The whole sentence is embedded and reranked, not just the words left after interpretation,
-    // though the reranker reads it without the words that only frame it
+    // The whole sentence is embedded; the reranker reads it as written and as the words left
+    // after interpretation
     expect(repo.seen[0].embeddingLength).toBe(384);
-    expect(m.reranked).toEqual(["cash"]);
+    expect(m.reranked).toEqual(["cash posts", "cash"]);
     expect(warnings).toEqual([]);
   });
 
@@ -105,11 +106,20 @@ describe("hybrid search", () => {
     }
   });
 
-  it("reranks the request without the words that frame it, and keeps a request that's only framing", () => {
-    expect(rerankQuery("posts that make saving money feel fun")).toBe("make saving money feel fun");
-    expect(rerankQuery("Show me some examples of carousels with charts or data")).toBe("some of carousels with charts or data");
-    expect(rerankQuery('posts about "Black Friday"')).toBe('about "Black Friday"');
-    expect(rerankQuery("inspiration posts")).toBe("inspiration posts");
+  // 2026-10-26: 'funny posts from fintech brands' scored the crypto memes about 0.0001 as written
+  // (their descriptions say "Crypto & Web3, Finance"), 0.02 to 0.54 as the word left, "funny"
+  it("reads the request as written and as the words the filters left, and keeps each post's better score", async () => {
+    const repo = hybridRepo([candidate(carousel, null, "C"), candidate(tagged, null, "T"), candidate(single, null, "S")]);
+    const m = models((reading) => (reading === "cash" ? { C: 0.3, T: 0.001, S: 0.01 } : { C: 0.001, T: 0.5, S: 0.01 }));
+    const { data } = await searchPosts(repo, { query: "carousels about cash" }, ctxWith(m));
+    expect(m.reranked).toEqual(["carousels about cash", "cash"]);
+    expect(data.posts.map((p) => [p.post_id, p.score])).toEqual([[tagged, 0.5], [carousel, 0.3]]);
+  });
+
+  it("reads a request once when nothing was left out of it", async () => {
+    const m = models({ C: 0.5 });
+    await searchPosts(hybridRepo([candidate(carousel, null, "C")]), { query: "cash" }, ctxWith(m));
+    expect(m.reranked).toEqual(["cash"]);
   });
 
   it("keeps a search's order for its next page and for the same search again, reading every page's posts fresh", async () => {

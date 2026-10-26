@@ -57,4 +57,4 @@ All 95 ordered result lists and ranking modes are identical (compared request by
 
 - **Synthetic 10,000-post benchmark: blocked.** No non-production database: there's no Docker here, and a Supabase branch would change billing.
 - **Latency samples are small:** 3 per workflow and 95 per configuration, not 100 per condition under load.
-- **Reranker readings (PR 46):** the separate change that reads requests several ways changes `hybridPage` too; whichever merges second resolves a small conflict there.
+- **Reranker readings (PR 46):** the reranker now reads each request as written and as the words the filters left, keeping each post's better score (`rankHybrid` in `services/search.ts`). The kept order is whatever that produces, so the cache needed no change.

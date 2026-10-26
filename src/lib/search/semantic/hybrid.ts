@@ -20,19 +20,6 @@ export function settle(candidates: Candidate[], scores: (number | null)[], keywo
   return [...kept, ...keywordRest.filter((id) => !seen.has(id)).map((id) => ({ id, rerank: null, meaningOnly: false, kind: null }))];
 }
 
-// Words that frame a request rather than describe a post ('posts that …', 'show me …'). The
-// reranker reads the request beside each post's description, and the framing pulled good matches
-// under the cutoff: for 'posts that make saving money feel fun' it scored Betterment's funny
-// savings goals 0.013, for 'make saving money feel fun' 0.044 (2026-10-26)
-const FRAMING = new Set("show find me please can could would you i want need looking search post posts ad ads example examples inspiration inspo reference references instagram idea ideas that which".split(" "));
-
-// The request as the reranker reads it: the framing words left out, the rest in order. A request
-// that's all framing is read as it is
-export function rerankQuery(request: string) {
-  const words = request.split(/\s+/).filter((word) => word && !FRAMING.has(word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "")));
-  return words.length ? words.join(" ") : request.trim();
-}
-
 // Why a post found only by meaning matched, in the words of the chunk it was closest to
 const CHUNK_NAMES: Record<string, string> = { strategy: "strategy", caption: "caption", visual: "visuals and copy", decisions: "creative decisions", evidence: "slides" };
 export function meaningReason(kind: string | null) {

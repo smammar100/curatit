@@ -20,7 +20,7 @@ import type { CatalogRepository, RawSearchHit, RawSearchRequest } from "../repo/
 import { brandOf, classification, excerpt, industryOf, mediaId, nameKey } from "./shared";
 import { interpretSearch } from "@/lib/search/interpret";
 import { searchRefinements } from "@/lib/search/refine";
-import { meaningReason, RERANK_CUTOFF, rerankQuery, settle } from "@/lib/search/semantic/hybrid";
+import { meaningReason, RERANK_CUTOFF, settle } from "@/lib/search/semantic/hybrid";
 import type { SemanticModels } from "@/lib/search/semantic/models";
 
 export const SEARCH_DEFAULT_LIMIT = 8;
@@ -212,7 +212,14 @@ async function rankHybrid(repo: CatalogRepository, models: SemanticModels, reque
   const described = candidates.fused.map((c, i) => ({ i, text: c.description }));
   const scored = described.filter((d) => d.text);
   const scores = new Array<number | null>(candidates.fused.length).fill(null);
-  (await models.rerank(rerankQuery(originalQuery), scored.map((d) => d.text!))).forEach((score, j) => (scores[scored[j].i] = score));
+  // The reranker reads the request twice, as written and as the words the interpreter left (no
+  // framing, no filter words: every candidate already meets the filters, and a description says
+  // "Crypto & Web3, Finance" where the request said "fintech brands"), and each post keeps its
+  // better score. Either reading alone loses posts the other finds (docs/search-eval/, 26 October)
+  const readings = [...new Set([originalQuery.trim(), request.query].filter((r): r is string => Boolean(r)))];
+  for (const reading of readings) {
+    (await models.rerank(reading, scored.map((d) => d.text!))).forEach((score, j) => (scores[scored[j].i] = Math.max(scores[scored[j].i] ?? 0, score)));
+  }
   const ranked = settle(
     candidates.fused.map((c) => ({ id: c.id, keywordRank: c.keyword_rank, similarity: c.similarity, kind: c.kind, description: c.description })),
     scores,
