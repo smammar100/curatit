@@ -1,10 +1,10 @@
 // Hybrid search in the search service, over the fixture catalog with stand-ins for
 // curatit_mcp_search_v3 and for the two models (scores set per description)
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { CuratitError } from "../errors";
 import { createFixtureCatalog, FIXTURE_IDS, FIXTURE_TAGGED } from "../repo/fixture";
 import type { RawHybridCandidate, RawSearchHit } from "../repo/types";
-import { searchPosts } from "./search";
+import { clearRankings, searchPosts } from "./search";
 import type { SemanticModels } from "@/lib/search/semantic/models";
 
 const secret = new Uint8Array(32).fill(5);
@@ -47,6 +47,9 @@ function models(scores: Record<string, number> | ((reading: string) => Record<st
 const ctxWith = (semantic: SemanticModels) => ({ signingSecret: secret, principalKey: "personal_access_token:user-a", semantic });
 
 describe("hybrid search", () => {
+  // Each test is a fresh process: no order kept from another
+  beforeEach(() => clearRankings());
+
   it("keeps every keyword match and the meaning-only matches scored 0.02 or more, best first", async () => {
     const repo = hybridRepo([candidate(single, 1, "S"), candidate(carousel, null, "C"), candidate(tagged, null, "T")]);
     const m = models({ S: 0.001, C: 0.9, T: 0.01 });
@@ -79,6 +82,8 @@ describe("hybrid search", () => {
     const second = await searchPosts(hybridRepo(fused), { query: "cash", limit: 2, cursor: first.data.next_cursor! }, ctxWith(m));
     expect(second.data.posts.map((p) => p.post_id)).toEqual([tagged]);
     expect(second.data.next_cursor).toBeNull();
+    // On an instance that no longer holds the order, a failing model can't carry the search on
+    clearRankings();
     const broken = searchPosts(hybridRepo(fused), { query: "cash", limit: 2, cursor: first.data.next_cursor! }, ctxWith(models({}, { fail: true })));
     await expect(broken).rejects.toBeInstanceOf(CuratitError);
     await expect(broken).rejects.toMatchObject({ code: "INVALID_ARGUMENT", message: expect.stringMatching(/Start the search again/) });
@@ -115,6 +120,31 @@ describe("hybrid search", () => {
     const m = models({ C: 0.5 });
     await searchPosts(hybridRepo([candidate(carousel, null, "C")]), { query: "cash" }, ctxWith(m));
     expect(m.reranked).toEqual(["cash"]);
+  });
+
+  it("keeps a search's order for its next page and for the same search again, reading every page's posts fresh", async () => {
+    const repo = hybridRepo([candidate(single, 1, "S"), candidate(carousel, 2, "C"), candidate(tagged, 3, "T")]);
+    let items = 0;
+    const hydrate = repo.hybridItems.bind(repo);
+    repo.hybridItems = (request, ids) => (items++, hydrate(request, ids));
+    const m = models({ S: 0.3, C: 0.2, T: 0.1 });
+    const first = await searchPosts(repo, { query: "cash", limit: 2 }, ctxWith(m));
+    await searchPosts(repo, { query: "cash", limit: 2, cursor: first.data.next_cursor! }, ctxWith(m));
+    await searchPosts(repo, { query: "cash", limit: 2 }, ctxWith(m));
+    expect(repo.seen).toHaveLength(1);
+    expect(m.reranked).toHaveLength(1);
+    expect(items).toBe(3);
+    // Another search is ranked on its own
+    await searchPosts(repo, { query: "cards", limit: 2 }, ctxWith(m));
+    expect(repo.seen).toHaveLength(2);
+  });
+
+  it("doesn't keep a failed ranking", async () => {
+    const repo = hybridRepo([candidate(carousel, null, "C")]);
+    const failed = await searchPosts(repo, { query: "cash" }, ctxWith(models({}, { fail: true })));
+    expect(failed.data.applied.ranking).toBe("keyword");
+    const next = await searchPosts(repo, { query: "cash" }, ctxWith(models({ C: 0.5 })));
+    expect(next.data.applied.ranking).toBe("hybrid");
   });
 
   it("says when more posts match the words than it ranks", async () => {

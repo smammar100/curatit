@@ -66,3 +66,4 @@ packages/*/dist
 
 # Git worktrees live inside the repo here (AGENTS.md), never beside it
 /.claude/worktrees/
+.supabase-usage/

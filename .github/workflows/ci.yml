@@ -28,11 +28,15 @@ jobs:
         with:
           path: models
           key: search-models-${{ hashFiles('scripts/fetch-search-models.mjs') }}
-      # The site build needs the public Supabase keys to read the library at build time
+      # The site build needs the public Supabase keys to read the library at build time. It counts
+      # what it asks of Supabase (src/utils/supabase/meter.ts), and the next step holds it to a budget
       - run: npm run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
           NEXT_DIST_DIR: .next-ci
+          CURATIT_SUPABASE_USAGE: .supabase-usage
+      # About 90 requests a cold build since 2026-10-26 (about 1,500 before, a read per post page)
+      - run: node scripts/perf/supabase-budget.mjs .supabase-usage --max-requests 400 --max-gzip-mib 8
       # The search function as shipped: load both models from only the files the build traced
       - run: node scripts/check-search-bundle.mjs

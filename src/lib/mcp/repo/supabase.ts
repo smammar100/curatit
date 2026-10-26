@@ -7,6 +7,7 @@
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
+import { meteredFetch } from "@/utils/supabase/meter";
 import { currentSignal, markStage, remainingMs, withDeadline } from "../deadline";
 import { toCuratitError, upstreamFailure } from "../errors";
 import type {
@@ -68,7 +69,7 @@ export function catalogClient(url: string, key: string, timeoutMs = READ_TIMEOUT
   return createClient<Database>(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
     db: { retry: false },
-    global: { fetch: fetchWithTimeout(timeoutMs, fetchImpl) },
+    global: { fetch: fetchWithTimeout(timeoutMs, meteredFetch(fetchImpl)) },
   });
 }
 
@@ -90,6 +91,28 @@ async function query<R extends Reply>(stage: string, request: PromiseLike<R>): P
 }
 
 const rpc = <T>(stage: string, request: PromiseLike<Reply>) => query(stage, request) as Promise<T>;
+
+// Search results as cards: each post's analysis as its labels only, all a search result shows of
+// it (supabase/migrations/20261026070552_search_projections.sql; about two thirds fewer bytes, the
+// same posts in the same order). A database without that migration refuses the field; then this
+// process asks for the full results, as before, from then on
+let cardsServed = true;
+const refusedCards = (error: unknown) => (error as { code?: string } | null)?.code === "22023" && /Unknown search field "fields"/.test(String((error as { message?: unknown }).message));
+async function cardRpc<T>(stage: string, request: (cards: boolean) => PromiseLike<Reply>): Promise<T> {
+  if (cardsServed) {
+    markStage(stage);
+    let result: Reply;
+    try {
+      result = await request(true);
+    } catch (error) {
+      throw toCuratitError(upstreamFailure(stage, error, 0));
+    }
+    if (!result.error) return result.data as T;
+    if (!refusedCards(result.error)) throw toCuratitError(upstreamFailure(stage, result.error, result.status));
+    cardsServed = false;
+  }
+  return rpc<T>(stage, request(false));
+}
 
 // The vocabulary (taxonomy terms, industries, brands) changes when an import or a migration lands,
 // not between searches, yet every natural-language search read all three first: four round trips
@@ -130,14 +153,17 @@ export function createSupabaseCatalog(options: { url: string; publishableKey: st
   }
 
   return {
-    search: (request) => rpc<RawSearchResult>("search_v2", reader.rpc("curatit_mcp_search_v2", { p_request: request as RawSearchRequest as never })),
+    search: (request) =>
+      cardRpc<RawSearchResult>("search_v2", (cards) => reader.rpc("curatit_mcp_search_v2", { p_request: (cards ? { ...request, fields: "card" } : request) as RawSearchRequest as never })),
 
     // pgvector reads the embedding from its text form, '[0.1,0.2,…]'
     hybridCandidates: (request, embedding) =>
       rpc<RawHybridCandidates>("search_v3", reader.rpc("curatit_mcp_search_v3", { p_request: request as never, p_embedding: `[${embedding.join(",")}]` })),
 
     hybridItems: (request, ids) =>
-      rpc<{ posts: RawSearchHit[]; catalog_marker?: string | null }>("search_v3_items", reader.rpc("curatit_mcp_search_v3", { p_request: request as never, p_ids: ids })),
+      cardRpc<{ posts: RawSearchHit[]; catalog_marker?: string | null }>("search_v3_items", (cards) =>
+        reader.rpc("curatit_mcp_search_v3", { p_request: (cards ? { ...request, fields: "card" } : request) as never, p_ids: ids }),
+      ),
 
     getPost: async (postId) => {
       const post = await rpc<RawPost | null>("get_post_v2", reader.rpc("curatit_mcp_get_post_v2", { p_id: postId }));
