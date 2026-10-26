@@ -18,7 +18,7 @@ The MCP/REST service uses the same interpreter. `query_mode` now defaults to `na
 | Food posts about Halloween | Food & Drink + keyword `halloween` |
 | Fintech posts about "Black Friday" | Finance + literal phrase `Black Friday` |
 | I am looking for fintech ads announcing a new feature | Finance + feature launch |
-| Posts with customer reviews | Testimonial |
+| Posts with customer testimonials | Testimonial |
 | Carousels with app screens | Carousel + screenshot/UI imagery |
 | Food carosuel posts | Food & Drink + carousel, with a visible correction |
 | Product photgraphy | Product photography, with a visible correction |
@@ -71,11 +71,20 @@ The pieces: `src/lib/search/semantic/` (`documents.ts` builds each post's chunks
 
 An "or" between words left to search ("brand mascots or characters") is now the keyword search's own alternative; between filter values ("Nike or Wise") it's still refused.
 
+## October 26 improvements
+
+Thirty requests a designer would type, run against the live search, found everyday words read as filters and the meaning matches dropped by the request's framing. The judged set grew to 95 requests (`docs/search-eval/`, round 5) and every change was scored on it: nDCG@10 0.459 → 0.542, recall 0.424 → 0.504, precision 0.812 → 0.814, the same junk (19%) and the same answers for topics the library doesn't cover; requests that came back empty though relevant posts exist, 27 → 20.
+
+- Everyday words that are also a label's or an industry's name stay words: funny, hilarious, motivational, motivation, inspiring, inspiration, summer, holiday, Black Friday, back to school, money, save money, review, customer review (`everyday` in `interpret.ts`; the whole phrase, so "Black Friday" doesn't become the colour black). "Summer campaign ideas" had become the one Seasonal label and brought back autumn posts; "save money on food delivery" was refused as two industries; "travel inspiration carousels" and "Nike motivational posts" required labels no post carried. Funny, motivational and customer reviews were added as aliases on October 25 and are taken out again. A label's own name still selects it ("seasonal posts", "inspirational tone", "humorous posts").
+- "X or Y" between two values of one creative label is either value, which the database already matches ("witty or playful", "red or blue", "memes or user generated content"). With a label on one side only ("charts or data"), or labels of two kinds, both sides are searched as words, the keyword search's alternative. Between brands, industries or formats it's still refused; "and" between two values of one label still is too ("red and blue").
+- MCP search's reranker reads the request without the words that only frame it ("posts that", "show me", "examples"; `rerankQuery` in `src/lib/search/semantic/hybrid.ts`); the embedding still reads it whole. Close to neutral over the set (+0.015 nDCG@10 on the calibration half, −0.008 on the held-out half); it brings back "posts for language learners" and the saving-money requests and loses "posts aimed at students".
+- Worse after: "funny posts from fintech brands" (the humour label found three crypto memes; the word finds one post). The dashboard has no meaning search, so there an everyday word is matched in the text only.
+
 ## Boundaries
 
 Interpretation is deterministic, and keyword search is full text. Hybrid search adds two small models that run on the server (an embedding model and a reranker), with no per-search charge and no call to a hosted model. It understands the supported taxonomy and aliases, and meaning beyond them only as far as gte-small and the reranker do; it does not infer visual similarity from the images or invent missing labels. Database requests still use normal infrastructure resources.
 
-Quoted phrases remain literal. Negations, alternative/multiple values within a dimension, and date ordering are rejected with guidance rather than inverted or silently broadened. Exact ambiguous brands such as On and Public work; within a sentence use `from On` or `by Public` to select them. Creative filters require published analysis; an unlabelled post will not match one merely because it looks appropriate. No filters are relaxed automatically.
+Quoted phrases remain literal. Negations, alternatives between brands, industries or formats, two values of one label joined by "and", and date ordering are rejected with guidance rather than inverted or silently broadened. Exact ambiguous brands such as On and Public work; within a sentence use `from On` or `by Public` to select them. Creative filters require published analysis; an unlabelled post will not match one merely because it looks appropriate. No filters are relaxed automatically.
 
 ## Verification
 
