@@ -39,11 +39,15 @@ import {
 } from "@/components/glaze/ui/dropdown-menu";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/glaze/ui/empty-state";
 import { Input } from "@/components/glaze/ui/input";
+import { Kbd } from "@/components/glaze/ui/kbd";
 import { Skeleton } from "@/components/glaze/ui/skeleton";
 import { Textarea } from "@/components/glaze/ui/textarea";
 import { Edit, Icon, More } from "@/components/glaze/icon";
 import BrandName from "@/components/home/BrandName";
+import { track } from "@/lib/analytics";
 import { cx } from "@/lib/cx";
+import { coarsePointer } from "@/lib/glaze/portal";
+import { boardCsv, boardFileName, boardMarkdown } from "./boardExport";
 import { NAME_MAX, SaveMenu, useBoards } from "./boards";
 import { feedHref } from "./Feed";
 import { postHref, ratio, rememberOpener } from "./Grid";
@@ -452,23 +456,73 @@ function SharePanel({ board }: { board: Board }) {
   );
 }
 
-// More: Glaze's DropdownMenu (Rename, Add/Edit description, Delete board…). Delete asks first, in
-// an alertdialog with focus on Cancel, so Enter can't delete by accident. The question opens once
-// the menu has finished closing (onOpenChangeComplete): by then focus is back on More, so the
-// dialog returns focus there on Cancel or Escape.
+// More: Glaze's DropdownMenu (Rename, Add/Edit description, Copy as Markdown, Download spreadsheet,
+// Delete board…). Delete asks first, in an alertdialog with focus on Cancel, so Enter can't delete
+// by accident. A dialog from here opens once the menu has finished closing (whenShut): by then
+// focus is back on More, so the dialog returns focus there on Cancel or Escape.
+//
+// The export pair takes the board out of Curatit (boardExport.ts, 2026-10-28): Copy as Markdown
+// for pasting into a brief, a deck or an AI tool (agencies), the spreadsheet for keeping (students).
+// Placed in More beside Share, as Pinterest's board page has it, and grouped between separators
+// with Delete last, as Perplexity's thread menu groups its exports; the spreadsheet named by its use
+// with the format after, as Miro's "Export to spreadsheet (CSV)" (Mobbin). Where the browser refuses
+// the clipboard, the Markdown opens in a dialog, selected, to copy by hand, as Copy brief does on a
+// post, with the one way to copy that fits: ⌘ C or Ctrl C, or touch and hold on a phone.
 function MoreMenu({ board, onRename, onDescribe }: { board: Board; onRename: () => void; onDescribe: () => void }) {
   const router = useRouter();
-  const { deleteBoard } = useBoards();
+  const { deleteBoard, posts, notify } = useBoards();
   const [asking, setAsking] = useState(false);
-  const pendingDelete = useRef(false);
+  const [manual, setManual] = useState({ open: false, text: "", touch: false });
+  const manualField = useRef<HTMLTextAreaElement>(null);
+  const menuOpen = useRef(false);
+  const afterClose = useRef<(() => void) | null>(null);
+  // Runs now while the menu is shut, else once it has finished closing
+  const whenShut = (run: () => void) => {
+    if (menuOpen.current) afterClose.current = run;
+    else run();
+  };
+  // Counts only: never the board's name, its notes or its posts
+  const exported = (format: "markdown" | "csv", properties: { clipboard?: boolean } = {}) =>
+    track("board_exported", { format, ...properties, board_post_count: board.items.length, note_count: board.items.filter((item) => item.note).length });
+
+  const copyMarkdown = () => {
+    const text = boardMarkdown(board, posts);
+    // Started inside the click, which is the gesture the clipboard asks for
+    const write = navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject(new Error("No clipboard here"));
+    write.then(
+      () => {
+        notify("Board copied as Markdown");
+        exported("markdown", { clipboard: true });
+      },
+      () => {
+        whenShut(() => setManual({ open: true, text, touch: coarsePointer() }));
+        exported("markdown", { clipboard: false });
+      },
+    );
+  };
+
+  const downloadCsv = () => {
+    const url = URL.createObjectURL(new Blob([boardCsv(board, posts)], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = boardFileName(board.name);
+    link.click();
+    // Safari reads the file after the click returns, so the URL stays alive a little longer
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    exported("csv");
+  };
 
   return (
     <>
       <DropdownMenu
+        onOpenChange={(open) => {
+          if (open) menuOpen.current = true;
+        }}
         onOpenChangeComplete={(open) => {
-          if (open || !pendingDelete.current) return;
-          pendingDelete.current = false;
-          setAsking(true);
+          if (open) return;
+          menuOpen.current = false;
+          afterClose.current?.();
+          afterClose.current = null;
         }}
       >
         <DropdownMenuTrigger render={<Button variant="secondary" size="icon" aria-label="More" />}>
@@ -478,16 +532,44 @@ function MoreMenu({ board, onRename, onDescribe }: { board: Board; onRename: () 
           <DropdownMenuItem onClick={onRename}>Rename</DropdownMenuItem>
           <DropdownMenuItem onClick={onDescribe}>{board.description ? "Edit description" : "Add a description"}</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => {
-              pendingDelete.current = true;
-            }}
-          >
+          <DropdownMenuItem onClick={copyMarkdown}>Copy as Markdown</DropdownMenuItem>
+          <DropdownMenuItem onClick={downloadCsv}>Download spreadsheet (CSV)</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem variant="destructive" onClick={() => whenShut(() => setAsking(true))}>
             Delete board…
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <Dialog open={manual.open} onOpenChange={(open) => setManual((state) => ({ ...state, open }))}>
+        <DialogContent size="sm" initialFocus={manualField}>
+          <DialogHeader>
+            <DialogTitle>Copy the board yourself</DialogTitle>
+            <DialogDescription>
+              {manual.touch ? (
+                "This browser didn’t let Curatit copy the board. Touch and hold the text below, then choose Select all and Copy."
+              ) : (
+                <>
+                  This browser didn’t let Curatit copy the board, so it’s selected below. Press <Kbd keys="mod+c" /> to copy it.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogBody>
+            <Textarea
+              ref={manualField}
+              readOnly
+              rows={10}
+              value={manual.text}
+              aria-label="The board as Markdown"
+              spellCheck={false}
+              onFocus={(event) => event.currentTarget.select()}
+            />
+          </DialogBody>
+          <DialogFooter>
+            <DialogClose>Done</DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={asking} onOpenChange={setAsking} role="alertdialog">
         <DialogContent size="sm">
           <DialogHeader>
