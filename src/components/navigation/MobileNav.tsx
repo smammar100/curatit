@@ -178,11 +178,25 @@ export default function MobileNav() {
     if (open) firstLinkRef.current?.focus({ preventScroll: true });
   }, [open]);
 
-  // Escape, or a tap anywhere outside the nav, closes it
+  // Escape, or a tap anywhere outside the nav, closes it. Tab stays inside the nav while it's open,
+  // wrapping at either end: the page behind is dimmed and can't scroll (2026-10-28, from a QA run:
+  // focus walked off the menu into the page and scrolled it)
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeMenu();
+      if (event.key === "Escape") return closeMenu();
+      if (event.key !== "Tab" || !navRef.current) return;
+      const stops = [...navRef.current.querySelectorAll<HTMLElement>("a[href], button:not([disabled])")].filter(
+        (el) => el.getClientRects().length > 0,
+      );
+      const first = stops[0];
+      const last = stops.at(-1);
+      if (!first || !last) return;
+      const active = document.activeElement;
+      if (event.shiftKey ? active === first : active === last || !navRef.current.contains(active)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus({ preventScroll: true });
+      }
     };
     const onClick = (event: MouseEvent) => {
       if (!navRef.current?.contains(event.target as Node)) closeMenu();

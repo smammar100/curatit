@@ -27,6 +27,10 @@ import {cn, controlHeight} from '@/lib/glaze/utils';
 // value it has shown, or countMax, so a live count that goes from 99 to 100 never moves the segments.
 //
 // A label too long for its segment ends in an ellipsis and gets its full text as a title.
+//
+// Curatit (2026-10-28, at the owner's request): the thumb and a chosen segment are the primary button's ink glass,
+// like the selected tab, so every tab row and switch matches Create account. The sliding thumb carries the glass on a
+// span inside it, because the recipe sets its own position and transition, which would stop the thumb sliding.
 
 const segmentedVariants = cva('inline-flex w-fit max-w-full items-stretch gap-0.5 rounded-pill border border-line-faint bg-paper p-0.5 forced-colors:border-[CanvasText]', {
   variants: {
@@ -131,11 +135,13 @@ function SegmentedControl(props: SegmentedControlProps) {
       aria-hidden
       data-slot="segmented-control-thumb"
       className={cn(
-        'glaze-sm pointer-events-none absolute inset-y-0.5 left-0 w-(--seg-w) translate-x-(--seg-x) rounded-pill',
+        'pointer-events-none absolute inset-y-0.5 left-0 w-(--seg-w) translate-x-(--seg-x) rounded-pill',
         'transition-[translate,width] duration-(--dur-slide) ease-out motion-reduce:transition-none',
         !ready && 'invisible',
       )}
-    />
+    >
+      <span className="glass glass-ink block size-full rounded-pill"/>
+    </span>
     <ModeContext.Provider value={ctx}>{children}</ModeContext.Provider>
   </RadioGroupPrimitive>;
 }
@@ -165,9 +171,9 @@ const itemSize: Record<Size, string> = {
   default: 'px-3 type-label [&_svg]:size-(--icon)',
   lg: 'px-3.5 type-label-lg [&_svg]:size-(--icon-lg)',
 };
-// The chosen segment: on its own small glaze (multiple, or before the sliding thumb has measured), or over the thumb.
-const on = 'glaze-sm forced-colors:[forced-color-adjust:none] forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]';
-const onThumb = 'text-(--glaze-sm-text) data-disabled:text-text-disabled forced-colors:[forced-color-adjust:none] forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]';
+// The chosen segment: on its own glass (multiple, or before the sliding thumb has measured), or over the thumb.
+const on = 'glass glass-ink forced-colors:[forced-color-adjust:none] forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]';
+const onThumb = 'text-(--glass-ink-text) data-disabled:text-text-disabled forced-colors:[forced-color-adjust:none] forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]';
 const off = 'text-text-2 hover:not-data-disabled:text-text-1 active:not-data-disabled:bg-hover data-disabled:text-text-disabled forced-colors:data-disabled:text-[GrayText]';
 
 function SegmentedControlItem({className, children, count, countMax: itemMax, ...props}: SegmentedControlItemProps) {

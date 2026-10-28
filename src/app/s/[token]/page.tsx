@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-// Assets
-import Lockup from "@/components/assets/Lockup";
 // Fundations
 import Text from "@/components/fundations/elements/Text";
-// Glaze
-import { Button } from "@/components/glaze/ui/button";
 import BaseLayout from "@/layouts/BaseLayout";
 import { getSharedBoard } from "@/lib/boards";
+import ShareHeader from "./share-header";
 
 // A board's read-only link, the one the homepage's board demo shows: anyone with it sees the
 // board's posts and notes, signed in or not. Read on every request, so a link that's been
@@ -22,9 +18,15 @@ export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ token: string }> };
 
+// A public page shows members' own words: direction overrides (U+202A–202E, U+2066–2069) are taken
+// out, so no one can make a name or note read backwards, and one long word wraps rather than
+// widening the page (2026-10-28, from a QA run)
+const plain = (text: string) => text.replace(/[‪-‮⁦-⁩]/g, "");
+const wrap = "[overflow-wrap:anywhere]";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const board = await getSharedBoard((await params).token);
-  return { title: board ? `${board.name} | Curatit` : "Curatit", robots: { index: false, follow: false } };
+  return { title: board ? plain(board.name) : { absolute: "Curatit" }, robots: { index: false, follow: false } };
 }
 
 export default async function SharedBoardPage({ params }: Props) {
@@ -35,25 +37,14 @@ export default async function SharedBoardPage({ params }: Props) {
   return (
     <BaseLayout hideNavigation hideFooter>
       <div className="min-h-dvh bg-page">
-        <header className="flex h-20 items-center justify-between gap-4 px-4 sm:px-6">
-          <Link
-            href="/"
-            aria-label="Curatit home"
-            className="rounded-tag text-text-1"
-          >
-            <Lockup />
-          </Link>
-          <Button size="sm" render={<Link href="/signup" />} nativeButton={false}>
-            Make your own board
-          </Button>
-        </header>
+        <ShareHeader />
         <main className="px-4 pb-24 sm:px-6">
           <div className="mx-auto max-w-3xl pt-6 pb-12 text-center">
-            <Text tag="h1" variant="h1" className="text-balance text-text-1">
-              {board.name}
+            <Text tag="h1" variant="h1" className={`text-balance text-text-1 ${wrap}`}>
+              {plain(board.name)}
             </Text>
             {board.description && (
-              <Text className="mx-auto mt-4 max-w-xl text-pretty whitespace-pre-line text-text-2">{board.description}</Text>
+              <Text className={`mx-auto mt-4 max-w-xl text-pretty whitespace-pre-line text-text-2 ${wrap}`}>{plain(board.description)}</Text>
             )}
             <Text variant="bodySM" className="mt-3 text-text-2 tabular-nums">
               Shared board · Read-only · {count} {count === 1 ? "reference" : "references"}
@@ -70,6 +61,8 @@ export default async function SharedBoardPage({ params }: Props) {
                       href={post.url}
                       target="_blank"
                       rel="noopener noreferrer"
+                      // Named here too: a post with no cover had a link with no name
+                      aria-label={`${name} on Instagram`}
                       className="block rounded-panel"
                     >
                       {post.cover ? (
@@ -92,8 +85,8 @@ export default async function SharedBoardPage({ params }: Props) {
                       <span className="truncate">{name}</span>
                     </p>
                     {post.note && (
-                      <Text variant="bodySM" className="mt-1 text-pretty whitespace-pre-line text-text-2">
-                        {post.note}
+                      <Text variant="bodySM" className={`mt-1 text-pretty whitespace-pre-line text-text-2 ${wrap}`}>
+                        {plain(post.note)}
                       </Text>
                     )}
                   </li>

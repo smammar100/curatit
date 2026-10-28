@@ -74,7 +74,7 @@ export default function Header({
 
       {/* After Mobbin's header (2026-10-24, at the owner's request): every control one height, the
           icon a plain ghost button, one outlined pill, then the avatar as tall as the rest; the header's
-          controls take the large step (44px, 20px icons) beside the 52px search */}
+          controls take the large step (44px, 20px icons), and since 2026-10-28 the search pill does too */}
       <div className="flex items-center justify-end gap-1 sm:gap-2 lg:gap-3">
         {/* Saved: a ghost bookmark, the ink glass while you're on it or on one of your boards. The
             bookmark alone, as on Mobbin (its count badge was taken out at the owner's request); the

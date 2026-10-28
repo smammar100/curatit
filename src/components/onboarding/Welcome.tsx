@@ -9,7 +9,7 @@
 // that you've been here, so it doesn't ask again. The feed ranks on them from then on. Open
 // again from the account menu to change them.
 //
-// Since 2026-10-24 on Glaze: Back, Skip, Cancel and "No one in particular" are ghost Buttons,
+// Since 2026-10-24 on Glaze: Back, Skip, Cancel and "Build my feed without brands" are ghost Buttons,
 // the step's one action the primary (with its arc while the answers save), a profile that can't
 // load or answers that can't save are fail Alerts, the wall's ground is the grey shell, and the
 // pickers are in parts.tsx and Folders.tsx.
@@ -108,7 +108,7 @@ export default function Welcome() {
     track("onboarding_step_completed", { step: STEP_NAMES[step], step_number: step + 1, selection_count: selections, redo: start.redo });
   const selections = () => [draft.name.trim() ? 1 : 0, draft.industries.length, draft.brands.length][step] ?? 0;
 
-  // `last` is a change made on the way out (No one in particular clears the brands), which the
+  // `last` is a change made on the way out (Build my feed without brands clears them), which the
   // draft in this render doesn't have yet
   const finish = async (last: Partial<Draft> = {}) => {
     const answers = { ...draft, ...last };
@@ -210,7 +210,8 @@ export default function Welcome() {
                   <AlertDescription>We couldn’t save that. Check your connection and try again.</AlertDescription>
                 </Alert>
               )}
-              <div className="mt-8 flex items-center gap-4">
+              {/* Wraps: the second button's words are long, and Glaze's buttons don't shrink */}
+              <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2">
                 <Button
                   type="submit"
                   size="lg"
@@ -221,9 +222,11 @@ export default function Welcome() {
                 >
                   {step === STEPS.length - 1 ? "Build my feed" : "Next"}
                 </Button>
+                {/* It saves and ends the flow with no brands, and says so, picks and all (2026-10-28,
+                    from a QA run: "No one in particular" read as a choice to tick, not a finish) */}
                 {step === 2 && (
                   <Button variant="ghost" size="sm" onClick={() => finish({ brands: [] })} disabled={saving !== null}>
-                    No one in particular
+                    {draft.brands.length ? "Clear my brands and build my feed" : "Build my feed without brands"}
                   </Button>
                 )}
               </div>

@@ -35,8 +35,8 @@ export default function EmptyStateSheet() {
               <Specimen label={<Mono>empty, with its own glyph</Mono>} stretch>
                 <Empty>
                   <EmptyHeader>
-                    <EmptyTitle icon={Bookmark}>Your swipe file is empty</EmptyTitle>
-                    <EmptyDescription>Save a post and it waits here for your next brief.</EmptyDescription>
+                    <EmptyTitle icon={Bookmark}>You haven&apos;t saved anything yet</EmptyTitle>
+                    <EmptyDescription>Save a post and it will wait here for your next project.</EmptyDescription>
                   </EmptyHeader>
                   <EmptyContent>
                     <Button size="sm" variant="secondary">

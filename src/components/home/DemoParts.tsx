@@ -184,7 +184,7 @@ export function BriefTabs({
 }) {
   return (
     <SegmentedControl
-      aria-label="Try a brief"
+      aria-label="Try an example search"
       size="sm"
       fill
       value={String(active)}
@@ -215,7 +215,7 @@ export function QueryField({
   return (
     <div className={cx("field [--field-h:var(--control-sm)]", className)}>
       <Icon icon={Search} size={12} className="text-text-3" />
-      <span className="sr-only">Brief:</span>
+      <span className="sr-only">Search:</span>
       <span className="truncate">{query}</span>
       {typing && <span aria-hidden="true" className="-ml-1.5 h-3.5 w-px shrink-0 bg-ink" />}
     </div>

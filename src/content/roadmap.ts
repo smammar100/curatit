@@ -18,10 +18,10 @@ export type ChangelogEntry = { area: string; title: string; detail: string; comm
 export type ChangelogDay = { date: string; headline: string; entries: ChangelogEntry[] };
 
 export const ROADMAP: RoadmapItem[] = [
-  { stage: "Now", area: "AI agents", title: "Curatit MCP in beta", detail: "Claude, ChatGPT, Claude Code, Cursor and VS Code can search the library and pull a post's breakdown from inside the tool. Connect yours from the AI integration page, and tell us what breaks." },
+  { stage: "Now", area: "AI agents", title: "AI integration in beta", detail: "Claude, ChatGPT, Claude Code, Cursor and VS Code can search the library and pull a post's breakdown from inside the tool. Connect yours from the AI integration page, and tell us what breaks." },
   { stage: "Now", area: "Creative Intelligence", title: "Breakdowns for every new post", detail: "Breakdowns are drafted by AI and appear only once an editor approves them. Every post in the library has one, and new posts get theirs as they join." },
   { stage: "Now", area: "Library", title: "More brands", detail: "New brands join a few at a time. Betterment and Airtasker are the latest, with 19 more posts from Wealthsimple, and newly added posts show near the top of your feed." },
-  { stage: "Next", area: "AI agents", title: "Testing Curatit MCP", detail: "Trying the connection in more AI tools and with more people before it leaves beta, and fixing what breaks." },
+  { stage: "Next", area: "AI agents", title: "Testing the AI integration", detail: "Trying the connection in more AI tools and with more people before it leaves beta, and fixing what breaks." },
   { stage: "Later", area: "Library", title: "More and more posts", detail: "More brands and more of their recent posts, added a few at a time." },
   { stage: "Later", area: "Launch", title: "Launching closed beta", detail: "Opening Curatit to a first group of people to use it every day and tell us what to fix." },
 ];
@@ -59,7 +59,7 @@ export const CHANGELOG: ChangelogDay[] = [
     headline: "Search in your own words",
     entries: [
       { area: "Search", title: "Describe the posts you want", detail: "The dashboard's search now understands plain descriptions such as ‘fintech carousels that launch a feature’ or ‘food posts with product photography’, and looks through captions, on-slide text and breakdowns, not just titles. Above the results it shows the filters it took from your words, and the search panel suggests a few descriptions to try. Brand and category names still filter at once.", commits: ["f83873a","43b38a7","55f9297","d77b31e"] },
-      { area: "Search", title: "Typos and dead ends, handled in the open", detail: "A small typo like ‘carosuel’ is corrected and the search says so; put a phrase in quotes to search its exact wording. When nothing matches, buttons offer the same search with one detail taken out, or Search full library from Saved or a category. Nothing is loosened without asking.", commits: ["f83873a","8c879e5","55f9297"] },
+      { area: "Search", title: "Typos and empty searches, explained", detail: "A small typo like ‘carosuel’ is corrected and the search says so; put a phrase in quotes to search its exact wording. When nothing matches, buttons offer the same search with one detail taken out, or Search full library from Saved or a category. Nothing is loosened without asking.", commits: ["f83873a","8c879e5","55f9297"] },
       { area: "AI agents", title: "Assistants search the same way", detail: "Assistants connected through Curatit MCP read plain descriptions the same way, and are told which filters, corrections and keywords their search came down to.", commits: ["c82b247","442b6b7"] },
     ],
   },
@@ -103,9 +103,9 @@ export const CHANGELOG: ChangelogDay[] = [
   },
   {
     date: "2026-10-15",
-    headline: "Curatit MCP in beta, five new brands and a clearer homepage",
+    headline: "AI integration in beta, five new brands and a clearer homepage",
     entries: [
-      { area: "AI agents", title: "Curatit MCP is in beta", detail: "The AI integration is now labelled Beta across the site. Its page shows example searches typed out over the real posts they return, found by the same search an assistant uses rather than picked by hand.", commits: ["95ea72b","72c4f0d"] },
+      { area: "AI agents", title: "AI integration is in beta", detail: "The AI integration is now labelled Beta across the site. Its page shows example searches typed out over the real posts they return, found by the same search an assistant uses rather than picked by hand.", commits: ["95ea72b","72c4f0d"] },
       { area: "AI agents", title: "Search results as a gallery", detail: "In ChatGPT and other apps that can show them, a Curatit search can come back as a gallery of covers with the brand and a line of caption, each opening the post on Instagram.", commits: ["07bafbe","d0a308b"] },
       { area: "Library", title: "Duolingo, Headspace, PUMA, On and Canva join", detail: "Five brands join with ten posts each, and Deliveroo gets five more: 55 new posts. Education, Health & Fitness and Graphics & Design now have tabs of their own on the homepage.", commits: ["7a89203"], brands: true },
       { area: "Homepage", title: "A first screen that says what Curatit is", detail: "The homepage opens on ‘Find ideas for your next social media post.’ above the corridor of covers, then two lines on what Curatit is and Create account. Every sign-up button on the site now reads Create account.", commits: ["b99b3db","0c93189"] },

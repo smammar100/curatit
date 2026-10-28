@@ -3,9 +3,10 @@ import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-static";
 
-const title = "Lexington Themes";
-const description =
-  "Free and premium multipage themes and UI Kits For freelancers, developers, businesses, and personal use.Beautifully crafted with Next.js, and Tailwind CSS — Simple & easy to customise.";
+// Curatit's own name (2026-10-28, from a QA run: the feed still said "Lexington Themes", the
+// template's publisher)
+const title = "Curatit";
+const description = "Find ideas for your next social media post: a library of real brand posts, each with a breakdown of how it's made.";
 
 function escapeXml(value: string) {
   return value

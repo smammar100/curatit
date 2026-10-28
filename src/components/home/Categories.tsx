@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import Link from "next/link";
 import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 // Fundation
 import Text from "@/components/fundations/elements/Text";
@@ -28,7 +29,7 @@ const tabInk = (hue: number) => `light-dark(oklch(0.42 0.1 ${hue}), oklch(0.82 0
 // on the server, see page.tsx); a tab's gallery takes its extra tags too. The ten slots stay put;
 // each one cross-fades to its new post, slot by slot, so the grid never reflows.
 //
-// Since 2026-10-24 the row is Glaze's Tabs: its paper pill slides to the selected tab, the arrow
+// Since 2026-10-24 the row is Glaze's Tabs: its glass pill slides to the selected tab, the arrow
 // keys move between tabs, and the selected one scrolls itself into view. Each tab keeps its
 // category's hue on its icon (the --tab-ink property), a recorded exception to Glaze's black and
 // white, since the pill itself is Glaze's and takes no colour.
@@ -65,7 +66,7 @@ export default function Categories({
       observer.disconnect();
     };
   }, [categories]);
-  // An edge with more beyond it is fully clear under its caret (which ends 2.25rem in from the
+  // An edge with more beyond it is fully clear under its caret (which ends 2.5rem in from the
   // list's edge), then fades in, so no tab text shows through the caret. A mask paints nothing
   const edge = (side: "left" | "right") =>
     side === "left"
@@ -81,7 +82,10 @@ export default function Categories({
       left: dir * row.current.clientWidth * 0.6,
       behavior: reduceMotion ? "auto" : "smooth",
     });
-  // A caret is the secondary icon Button; this places it over the row's edge
+  // A caret is the secondary icon Button at the tab row's height (2026-10-28, at the owner's
+  // request: the large one stood taller than the tabs), with a hit area 2px wider all round so a
+  // thumb still gets 44px; this places it over the row's edge
+  const reach = "after:absolute after:-inset-0.5";
   const caret = "absolute top-1/2 z-(--z-raised) flex -translate-y-1/2";
 
   return (
@@ -101,14 +105,14 @@ export default function Categories({
           <div className="relative -mx-4 flex justify-center px-4 sm:-mx-8 sm:px-8">
             {more.left && (
               <span className={cx(caret, "left-4 sm:left-8")}>
-                <Button variant="secondary" size="icon-lg" aria-label="Scroll categories left" onClick={() => nudge(-1)}>
+                <Button variant="secondary" size="icon" aria-label="Scroll categories left" onClick={() => nudge(-1)} className={reach}>
                   <Icon icon={ChevronLeft} />
                 </Button>
               </span>
             )}
             {more.right && (
               <span className={cx(caret, "right-4 sm:right-8")}>
-                <Button variant="secondary" size="icon-lg" aria-label="Scroll categories right" onClick={() => nudge(1)}>
+                <Button variant="secondary" size="icon" aria-label="Scroll categories right" onClick={() => nudge(1)} className={reach}>
                   <Icon icon={ChevronRight} />
                 </Button>
               </span>
@@ -155,6 +159,13 @@ export default function Categories({
                 </li>
               ))}
             </ul>
+            {/* A way on from the ten (2026-10-28, from a QA run: the gallery ended with nowhere
+                to go): the category on Discover, through sign-in for a visitor */}
+            <div className="mt-10 flex justify-center">
+              <Button variant="secondary" render={<Link href={`/dashboard?view=discover&category=${active}`} />} nativeButton={false}>
+                See every {categories.find((category) => category.slug === active)?.name} post
+              </Button>
+            </div>
           </TabsContent>
         </Tabs>
       </Wrapper>

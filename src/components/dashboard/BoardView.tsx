@@ -84,6 +84,11 @@ function ago(iso: string) {
   return "just now";
 }
 
+// Boards deleted from their own page in this visit: the board leaves the list at once while the
+// way back to Saved is still loading, so the page waits on its skeleton rather than saying the board
+// "may belong to someone else" (2026-10-28, from a QA run)
+const deleting = new Set<string>();
+
 export default function BoardView({ id }: { id: string }) {
   const router = useRouter();
   const { boards, status, posts, updateBoard } = useBoards();
@@ -92,9 +97,19 @@ export default function BoardView({ id }: { id: string }) {
   const board = boards.find((b) => b.id === id);
   const items = board ? board.items.flatMap((item) => (posts.get(item.post) ? [{ note: item.note ?? "", post: posts.get(item.post)! }] : [])) : [];
 
+  // The board's name in the tab, kept there: Next writes the dashboard's own title again after a
+  // client navigation or a refresh, which wiped it (2026-10-28, from a QA run)
   const name = board?.name;
   useEffect(() => {
-    if (name) document.title = `${name} | Curatit`;
+    if (!name) return;
+    const want = `${name} | Curatit`;
+    const apply = () => {
+      if (document.title !== want) document.title = want;
+    };
+    apply();
+    const watch = new MutationObserver(apply);
+    watch.observe(document.head, { subtree: true, childList: true, characterData: true });
+    return () => watch.disconnect();
   }, [name]);
 
   return (
@@ -108,7 +123,7 @@ export default function BoardView({ id }: { id: string }) {
         onSearch={(text) => router.push(feedHref("For you", text))}
       />
       <main className="px-4 pb-24 sm:px-6">
-        {status === "loading" ? (
+        {status === "loading" || (!board && deleting.has(id)) ? (
           <BoardSkeleton />
         ) : !board ? (
           <Empty reason="no-access" variant="plain" className="py-24">
@@ -132,7 +147,8 @@ export default function BoardView({ id }: { id: string }) {
               {/* The name and the actions share a row; the rest of the header hangs under the name */}
               <div className="mt-1 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
                 <div className="min-w-0 flex-1">
-                  <h1 className="-mx-2 type-title text-balance text-text-1">
+                  {/* One long word wraps instead of widening the page (2026-10-28, from a QA run) */}
+                  <h1 className="-mx-2 type-title text-balance text-text-1 [overflow-wrap:anywhere]">
                     <Editable
                       value={board.name}
                       editing={editing === "name"}
@@ -145,7 +161,7 @@ export default function BoardView({ id }: { id: string }) {
                   </h1>
                   {/* Only when there is one; More has "Add a description" */}
                   {(board.description || editing === "description") && (
-                    <div className="-mx-2 mt-1.5 max-w-2xl type-body text-pretty text-text-2">
+                    <div className="-mx-2 mt-1.5 max-w-2xl type-body text-pretty text-text-2 [overflow-wrap:anywhere]">
                       <Editable
                         value={board.description ?? ""}
                         editing={editing === "description"}
@@ -341,7 +357,10 @@ function Editable({
           onClick={() => onEdit(true)}
           aria-label={value || placeholder || label}
           title={`Edit ${label.toLowerCase()}`}
-          className="static -my-1 after:absolute after:inset-0"
+          // No press scale: any scale (1 included) makes the button its ::after's containing
+          // block, so the hit area shrank to the 32px button mid-tap and the click landed outside
+          // it (2026-10-28, from a QA run: tapping a note or the board's name did nothing)
+          className="static -my-1 after:absolute after:inset-0 active:not-data-disabled:scale-none"
         >
           <Icon icon={Edit} className="opacity-0 group-hover/editable:opacity-100 group-has-focus-visible/editable:opacity-100" />
         </Button>
@@ -358,6 +377,8 @@ function Editable({
     value: draft,
     maxLength,
     "aria-label": label,
+    // How to save, inside the empty field (2026-10-28, from a QA run: an empty box gave no clue)
+    placeholder: multiline ? "Type, then press Enter to save" : "Press Enter to save",
     onBlur: finish,
     onKeyDown: (event: React.KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -471,13 +492,14 @@ function MoreMenu({ board, onRename, onDescribe }: { board: Board; onRename: () 
         <DialogContent size="sm">
           <DialogHeader>
             <DialogTitle>{`Delete “${board.name}”?`}</DialogTitle>
-            <DialogDescription>The board and its notes go for good. The posts stay in the library.</DialogDescription>
+            <DialogDescription>The board and its notes will be deleted forever. The posts stay in the library.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <DialogClose>Cancel</DialogClose>
             <DialogAction
               variant="destructive"
               onAction={() => {
+                deleting.add(board.id);
                 router.push(feedHref("Saved"));
                 deleteBoard(board.id);
               }}

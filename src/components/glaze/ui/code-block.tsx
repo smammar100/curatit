@@ -1,7 +1,7 @@
 'use client';
 
 import {useEffect, useRef, useState, type CSSProperties, type ReactNode} from 'react';
-import {Icon, Check, Copy, Hide, Show, Wrap} from '@/components/glaze/icon';
+import {Icon, Check, Copy, Failed, Hide, Show, Wrap} from '@/components/glaze/icon';
 import {Button} from '@/components/glaze/ui/button';
 import {cn} from '@/lib/glaze/utils';
 
@@ -167,29 +167,36 @@ type CopyCodeButtonProps = {
 
 /**
  * A ghost icon button that copies, then shows a check for 1.6s and says "Copied" once in a status region. If the
- * clipboard refuses, it says "Copy failed" and keeps the copy glyph.
+ * clipboard refuses, it says "Copy failed", shows the failure glyph and selects the code (see the Curatit note below).
  */
+// Curatit (2026-10-28, from a QA run): a refused copy changed nothing on screen. Now the block's code is selected, so a
+// long press or Ctrl+C copies it by hand, and the button shows the failure glyph for a little longer.
 function CopyCodeButton({text, label = 'Copy code', onCopy, className}: CopyCodeButtonProps) {
   const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle');
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const button = useRef<HTMLButtonElement>(null);
   useEffect(() => () => clearTimeout(timer.current), []);
   const copy = async () => {
     const value = typeof text === 'function' ? text() : text;
     clearTimeout(timer.current);
+    let failed = false;
     try {
       await navigator.clipboard.writeText(value);
       setState('copied');
       onCopy?.(value);
     } catch {
+      failed = true;
       setState('failed');
+      const code = button.current?.closest('[data-slot=code-block]')?.querySelector('pre');
+      if (code) getSelection()?.selectAllChildren(code);
     }
-    timer.current = setTimeout(() => setState('idle'), 1600);
+    timer.current = setTimeout(() => setState('idle'), failed ? 3200 : 1600);
   };
   return <>
-    <Button data-slot="code-copy" variant="ghost" size="icon-sm" aria-label={label} onClick={copy} className={className}>
-      <Icon icon={state === 'copied' ? Check : Copy} size={12}/>
+    <Button ref={button} data-slot="code-copy" variant="ghost" size="icon-sm" aria-label={label} onClick={copy} className={className}>
+      <Icon icon={state === 'copied' ? Check : state === 'failed' ? Failed : Copy} size={12}/>
     </Button>
-    <span role="status" className="sr-only">{state === 'copied' ? 'Copied' : state === 'failed' ? 'Copy failed' : ''}</span>
+    <span role="status" className="sr-only">{state === 'copied' ? 'Copied' : state === 'failed' ? 'Copy failed. The code is selected, so copy it by hand.' : ''}</span>
   </>;
 }
 

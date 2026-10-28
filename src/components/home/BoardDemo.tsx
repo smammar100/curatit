@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { m } from "framer-motion";
 // Fundations
 import Text from "@/components/fundations/elements/Text";
@@ -21,8 +21,11 @@ import { cx } from "@/lib/cx";
 // Fills its box (HowItWorks gives every illustration the same one).
 // Since 2026-10-24 on Glaze: the link field is its Input (read-only, selects on focus) beside the
 // group's one primary Button, which carries the Copied state; the covers take the panel corner.
+const EXAMPLE_LINK = "www.curatit.app/s/k7Qm2xVbR4";
+
 export default function BoardDemo() {
   const [copied, setCopied] = useState(false);
+  const field = useRef<HTMLInputElement>(null);
   const { ref, playing, stop } = useLoop<HTMLDivElement>(5000, () => setCopied(true));
   const posts = usePosts(board.references.map((reference) => reference.post));
   const intro = useIntro();
@@ -37,16 +40,23 @@ export default function BoardDemo() {
     <m.div ref={ref} {...intro} className="flex h-full flex-col pb-10">
       <m.div variants={introItem} className="flex items-center gap-2">
         <Input
+          ref={field}
           readOnly
-          value="curatit.com/s/k7Qm2xVbR4"
+          value={EXAMPLE_LINK}
           aria-label="Example share link"
           onFocus={(event) => event.currentTarget.select()}
           className="min-w-0 flex-1"
         />
+        {/* A click really copies the example (it said Copied and copied nothing until a QA run on
+            2026-10-28); where the clipboard is refused, the link is selected to copy by hand */}
         <Button
           onClick={() => {
             stop();
-            setCopied(true);
+            // Inside a promise, so a browser with no clipboard API falls back too instead of throwing
+            Promise.resolve()
+              .then(() => navigator.clipboard.writeText(`https://${EXAMPLE_LINK}`))
+              .then(() => setCopied(true))
+              .catch(() => field.current?.select());
           }}
           className="shrink-0"
         >

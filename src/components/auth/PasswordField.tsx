@@ -86,7 +86,6 @@ export default function PasswordField({
         id={id}
         label={label}
         type="password"
-        placeholder="••••••••"
         autoComplete="new-password"
         required
         aria-describedby={`${id}-rules`}

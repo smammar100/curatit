@@ -98,7 +98,7 @@ export default function NewBoardDialog({ open, onClose, firstPost }: { open: boo
               <Checkbox checked={shared} onCheckedChange={setShared} className="mt-0.5" />
               <span className="min-w-0">
                 <span className="block type-label text-text-1">Share with a link</span>
-                <span className="block type-body-sm text-text-2">Anyone with the link can view it, read-only</span>
+                <span className="block type-body-sm text-text-2">Anyone with the link can view it and your notes, read-only</span>
               </span>
             </label>
           </form>

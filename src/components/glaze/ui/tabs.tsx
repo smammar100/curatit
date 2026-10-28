@@ -23,6 +23,10 @@ import {cn, controlHeight, mergeClass, mergeRefs} from '@/lib/glaze/utils';
 // For you / Discover switch and every tab row read as one control. The list is the segmented track (the paper pill
 // with the panel's hairline and 2px of room inside) and the indicator its small glaze thumb, the label on it in the
 // glaze's glyph colour. Tabs keep their own semantics: they still swap whole panels, with the arrow keys selecting.
+//
+// Curatit (2026-10-28, at the owner's request): the thumb is the primary button's ink glass, so the selected tab
+// matches Create account. The glass is a span inside the indicator, because the recipe sets its own position and
+// transition, which would stop the indicator sliding.
 
 type Size = 'sm' | 'default';
 const ListContext = createContext<{size: Size}>({size: 'default'});
@@ -76,17 +80,19 @@ function TabsList({className, size = 'default', children, ref, activateOnFocus =
       activateOnFocus={activateOnFocus}
       {...props}
     >
-      {/* The glaze thumb under the selected label. First, so the labels paint over it. */}
+      {/* The glass thumb under the selected label. First, so the labels paint over it. */}
       <TabsPrimitive.Indicator
         data-slot="tabs-indicator"
         renderBeforeHydration
         className={cn(
           'pointer-events-none absolute top-(--active-tab-top) left-0 h-(--active-tab-height) w-(--active-tab-width) translate-x-(--active-tab-left)',
-          'glaze-sm rounded-pill',
+          'rounded-pill',
           'transition-[translate,width] duration-(--dur-slide) ease-out motion-reduce:transition-none',
           'forced-colors:border-[Highlight] forced-colors:bg-[Highlight]',
         )}
-      />
+      >
+        <span className="glass glass-ink block size-full rounded-pill"/>
+      </TabsPrimitive.Indicator>
       {children}
     </TabsPrimitive.List>
   </ListContext.Provider>;
@@ -104,12 +110,12 @@ const triggerSize: Record<Size, string> = {
   default: 'px-3 type-label [&_svg]:size-(--icon)',
 };
 
-// Selected: the glaze's glyph colour over the sliding thumb. While the thumb is still hidden (no layout yet, or no
-// script) the selected tab draws the glaze itself, so the choice shows from the first paint. The rest turn text-1
+// Selected: the glass's label colour over the sliding thumb. While the thumb is still hidden (no layout yet, or no
+// script) the selected tab draws the glass itself, so the choice shows from the first paint. The rest turn text-1
 // under the pointer, and a press takes the hover wash, as the segmented control's segments do.
 const on = cn(
-  'text-(--glaze-sm-text) forced-colors:[forced-color-adjust:none] forced-colors:text-[HighlightText]',
-  'in-[[data-slot=tabs-list]:has(>[data-slot=tabs-indicator][hidden])]:glaze-sm',
+  'text-(--glass-ink-text) forced-colors:[forced-color-adjust:none] forced-colors:text-[HighlightText]',
+  'in-[[data-slot=tabs-list]:has(>[data-slot=tabs-indicator][hidden])]:glass in-[[data-slot=tabs-list]:has(>[data-slot=tabs-indicator][hidden])]:glass-ink',
 );
 const off = 'hover:not-data-disabled:text-text-1 active:not-data-disabled:bg-hover';
 

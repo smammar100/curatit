@@ -157,6 +157,7 @@ describe("natural search", () => {
       ["social proof with customer reviews", { persuasion: ["social-proof"] }, "customer reviews"],
       ["save money on food delivery", { category: "food-drink" }, "save money"],
       ["money-saving deals", {}, "money saving deals"],
+      ["script for a reel", { format: "video" }, "script"],
       // A label's or an industry's own name still selects it
       ["seasonal posts", { archetype: ["seasonal"] }, ""],
       ["inspirational tone", { tone: ["inspirational"] }, ""],

@@ -1009,6 +1009,17 @@
   }
 }
 
+/* The dashboard search panel on phones (dashboard/SearchBox), fixed under the 92px header 12px
+   down: it stops 16px above the screen's foot and scrolls inside, so a short phone or an open
+   keyboard can't hide its lower part (2026-10-28, from a UI review) */
+@media (width < 40rem) {
+  .search-panel {
+    max-height: calc(100dvh - 7.5rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
 /* The empty Saved view's illustration (dashboard/SavedArt, the "Pocket"): the posts drop into
    the bookmark one after another, settling with a slight give, then the count pops onto its
    corner. Once, on mount */

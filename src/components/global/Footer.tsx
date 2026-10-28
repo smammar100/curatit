@@ -10,6 +10,7 @@ import {
   optimizedImage,
   type LibraryPost,
 } from "@/lib/posts";
+import { SUPPORT_MAILTO } from "@/lib/site";
 import FooterNewsletter from "./FooterNewsletter";
 
 // The site footer, "Ruled" (chosen from two prototype rounds on 2026-10-15, replacing "Night"'s
@@ -30,14 +31,19 @@ import FooterNewsletter from "./FooterNewsletter";
 // the hover wash with tag corners. The --f-* palette in global.css is no longer read here.
 
 // One column of links since 2026-10-23, at the owner's request: Pricing, Submit a brand, Blog,
-// Advertise and Contact came out, with the Company heading; the pages themselves stay
+// Advertise and Contact came out, with the Company heading; the pages themselves stay. Pricing and
+// Contact came back on 2026-10-28, at the owner's request after a QA run: visitors looked for both
+// and found Pricing only at the foot of the homepage, and no way to reach anyone
 const LINKS = [
   {
     title: "Product",
     links: [
-      { label: "MCP (beta)", href: "/agents" },
+      // The navigation's name for it, so one page doesn't have two (2026-10-28, from a QA run)
+      { label: "AI integration (beta)", href: "/agents" },
+      { label: "Pricing", href: "/pricing" },
       { label: "Vision", href: "/vision" },
       { label: "Roadmap", href: "/roadmap" },
+      { label: "Contact", href: SUPPORT_MAILTO },
     ],
   },
 ];

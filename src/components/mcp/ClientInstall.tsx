@@ -109,8 +109,8 @@ const CLIENTS: Client[] = [
         title: "Sign in",
         body: (
           <>
-            Click <span className={ui}>Connect</span>, sign in to Curatit and choose <span className={ui}>Allow</span>. If Claude asks which OAuth client to
-            use, pick <span className={ui}>Register automatically</span>.
+            Click <span className={ui}>Connect</span>, sign in to Curatit and choose <span className={ui}>Allow</span>. If Claude asks how to register
+            Curatit, pick <span className={ui}>Register automatically</span>.
           </>
         ),
       },

@@ -1,77 +1,83 @@
 ---
-page: Terms
-pubDate: 2023-12-22
+page: Terms of use
+pubDate: 2026-10-28
 ---
-This privacy policy sets out how Unwrapped AB collects, processes and uses your Personal Information through your use of our Services.
+<!-- Draft written from Curatit's code and docs on 2026-10-28. The owner needs to review it (and a lawyer, if he wants one) before launch. -->
 
-### Definitions
+These terms cover your use of Curatit: the site at www.curatit.app, the dashboard, and the API and MCP server. By creating an account, you agree to them.
 
-### DPO
+## Who runs Curatit
 
-DPO means Data Protection Officer, and is the person specifically appointed by us to deal with your enquiries with respect to this privacy policy and your Personal Information.
+Curatit is run by its founder, Syed Mohammad Ammar. In these terms, “we” means Curatit. Questions go to [syed.m.ammar@hotmail.com](mailto:syed.m.ammar@hotmail.com).
 
-Personal Information means any identifying information about you. This includes, but is not limited to, the following: cookies and usage data.
+## What Curatit is
 
-Services means all services provided by Michael Alexander Web Agency to you, including (but not limited to) this Website.
+- **A library** of real posts that brands published on their public Instagram accounts, searchable by brand, category or idea.
+- **Breakdowns** of those posts: notes on the copy, structure and design. AI drafts them, and a Curatit editor approves each one before it's published.
+- **Boards**, where you save posts and add notes. A board is private until you share it with a link.
+- **An API and MCP server**, in beta, that lets AI assistants and your own tools search the library. Claude and ChatGPT connect by signing in to Curatit; other tools use a personal access token you create in the dashboard.
 
-Website means this website and all websites, applications and communications that post a link to this Privacy Policy.
+## Price
 
-### Personal Information Collection
+Curatit is free while it's in beta, and everything it does today is in the free plan. The free plan stays. Paid team plans may come later; we'll say what's in them and what they cost before anything changes for existing accounts.
 
-We only collect and use Personal Information to the extent necessary to provide you with the Services. We collect Personal Information for the Website to provide you with a better online experience.
+## Curatit is in beta
 
-### Personal Information Retention
+Features will change, some may be taken away, and things will sometimes break. We can't promise Curatit will always be available or that nothing will be lost, so keep your own copy of any notes you can't do without.
 
-We keep Personal Information for the shortest time necessary to provide you with Services and to meet all our legal and compliance obligations. To determine this retention period, we take into account (i) the nature of the Personal Information gathered; and (ii) the nature of our legal and compliance obligations. All Personal Information no longer required by us is destroyed and/or erased.
+## Your account
 
-### Personal Data from Third Parties
+- Sign up with your own email address and keep your password to yourself. You're responsible for what's done with your account.
+- Addresses at throwaway email services can't be used to sign up.
 
-We may, from time to time, obtain Personal Information from third parties to enable us to better tailor our Services to you (Third Party Personal Information). When we obtain Third Party Personal Information, we will notify you within one month. If we use or share Third Party Personal Information, we will notify you immediately.
+## The posts in the library
 
-### Your Rights
+The posts belong to the brands that published them and to the people who made them. Curatit shows them for reference and study, so you can see how good social content is made. Using Curatit gives you no rights to a post, its images, or a brand's name or logo.
 
-With respect to Personal Information we hold, you have the following rights:
+- Learn from the posts and make your own work.
+- Don't publish a brand's post, or a close copy of it, as your own, and don't use a brand's name, logo or products unless you have the right to.
+- A brief you copy from a post is for studying it. It isn't permission to reproduce it.
 
-*   Access: You may request from us access to your data that we hold on you.
+If you own a post in the library and want it taken down, write to us and we'll remove it.
 
-    li
-*   Rectification: If the data we hold on you is inaccurate, you may request that we correct it. If the data we hold is incomplete, you may request that we complete it.
-*   Erasure: Subject to certain conditions, you may request that we erase all of the data we hold on you. li Restrictions: Subject to certain conditions, you may request that we restrict the processing of data we hold on you.
-*   Portability: Subject to certain conditions, you may request that we transfer all the data we hold on you to a third party (including yourself).
-*   Objections: Subject to certain conditions, you may object to us processing the data we hold on you.
+## The breakdowns
 
-### Social Media
+Breakdowns can be incomplete or wrong, even after an editor approves them. They describe what a post does and why it might work, not how it performed. Figures that appear in a post aren't checked against their sources. Like and comment counts are what Instagram showed when the post was collected, so they may be out of date. Use your own judgement before acting on any of it.
 
-You may choose to engage with our Services through a variety of social media sites and platforms, for example Facebook, Instagram and Twitter. When you interact with our Services through these social media platforms, you may allow us to receive Personal Information on how you are interacting with our Services. This will depend on your privacy settings on each social media site and platform. The data we are provided by you through your interaction with our Services on social media sites and platforms will be used by us subject to the terms of this privacy policy. Depending on your social media site’s privacy settings, your Personal Information may become public to a community of users if you choose to engage with our Services through these platforms. For further information on how you can customize your privacy settings on social media sites and how those sites handle your privacy, please refer to the privacy policy of each particular social media site.
+## Boards and notes
 
-### Minors
+What you write on Curatit (board names, descriptions and notes) is yours. We store it to show it back to you and to anyone you share a board with. A shared board's link works for anyone who has it, with no account needed, and it shows your notes. Turn sharing off and the link stops working.
 
-We do not knowingly collect information on children under the age of 16 (“Child”). If you become aware that a Child has provided us with Personal Information, please contact us. If we become aware that we have collected Personal Information from a Child without their parent's verifiable authorization to access our Services, we will take steps to remove that information from our servers.
+## The API and MCP server
 
-### Third Party Links
+- Treat a personal access token like a password: don't share it or put it in public code. If one leaks, revoke it in API tokens, in the account menu.
+- A token lasts 30 to 365 days, as you choose, and you can revoke it at any time.
+- Tokens and connected assistants can read the library. They can't see your boards.
+- Requests are rate limited. Don't try to get around the limits.
+- Use the API for your own research and work, not to copy the library in bulk.
 
-Our website contains links to other third-party websites not owned or managed by Unwrapped. This privacy policy applies to this website only. If you click a link to a third-party website, the privacy policy of that website will apply. We highly recommend that you read the privacy policies of other websites as they may be different from ours.
+## What you can't do
 
-### Payment Vendors
+- Scrape, crawl or download the library in bulk, through the site or the API.
+- Try to get into accounts, boards or data that aren't yours, or test Curatit's security without asking us first.
+- Overload Curatit, get around its limits, or interfere with how it runs.
+- Create accounts in bulk or with a script.
+- Use a shared board or its notes to spam, harass or mislead anyone.
 
-You can make payments via our website. Our vendors are listed below:
+## Closing your account
 
-*   Paypal
+You can stop using Curatit at any time. There's no button to delete an account yet: write to [syed.m.ammar@hotmail.com](mailto:syed.m.ammar@hotmail.com) from the address you signed up with, and we'll delete it. That deletes your profile, boards, notes and tokens.
 
-Their privacy policy can be viewed [here](https://www.paypal.com/webapps/mpp/ua/privacy-full)
+We may suspend or close an account that breaks these terms. Where we can, we'll tell you why first.
 
-### Merger, acquisition or asset sale
+## No guarantees
 
-If we or our subsidiaries are involved in a merger, acquisition, or asset sale, your Personal Information may be transferred.
+Curatit is free, in beta, and provided as it is. As far as the law allows, we aren't responsible for losses that come from using it or from relying on a breakdown.
 
-### Updates
+## Changes to these terms
 
-We are constantly reviewing our privacy policy and procedures to ensure that they meet best practices. This policy was last updated on August 21, 2021.
+We'll update these terms as Curatit changes, and the date on this page says when they last changed. If a change affects what you can do or what you pay, we'll email you before it applies.
 
-### Contact us
+## Contact
 
-If you have any questions or suggestions about our privacy policy or want to know more information about Personal Information we hold, please contact us at support@unwrapped.design or write to us at Mariehamn, Åland Islands..
-
-### Complaints
-
-If you believe that we have breached our obligations to you under this privacy policy or relevant privacy laws, please contact us at email@example If you are not satisfied with our response, you have the right to lodge a complaint at any time to your relevant authority.
+Write to [syed.m.ammar@hotmail.com](mailto:syed.m.ammar@hotmail.com).

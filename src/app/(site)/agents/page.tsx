@@ -17,9 +17,9 @@ import { getPublishedPosts } from "@/lib/posts";
 import { SUPPORT_MAILTO } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Curatit MCP (beta)",
+  title: "AI integration (beta)",
   description:
-    "Use Curatit's library of real brand posts from Claude, Cursor, VS Code and ChatGPT: search it, read a post slide by slide and draft a brief, with every answer linked to its source.",
+    "Use Curatit's library of real brand posts from Claude, ChatGPT, Cursor and VS Code: search it, read a post slide by slide and draft a brief, with every answer linked to its source.",
 };
 
 export const revalidate = 3600;
@@ -31,7 +31,9 @@ export const revalidate = 3600;
 // searches typed out over rows of their real results (SearchReel, after Mobbin's "one search"
 // section), the six tools as a quiet grid under a left label, what a token can and can't do, the
 // Beta note and a closing call. Earlier Mobbin references (Higgsfield, Neon, Midday, Bloom) shaped
-// the tabs and the before/after. Since 2026-10-24 the page is on Glaze: "Curatit MCP" and its Beta
+// the tabs and the before/after. Since 2026-10-28 (a QA run: the feature had five names and "MCP"
+// was never explained) it is "AI integration" wherever a visitor reads it, and the intro says once
+// what MCP is. Since 2026-10-24 the page is on Glaze: "Curatit MCP" (now "AI integration") and its Beta
 // badge moved from above the title to under it (Glaze puts no label above a title), the benefit
 // icons stand bare (no tinted plates), the "can and can't" lists and the Beta note are grouped by
 // space and a hairline rather than cards (nobody acts on them), the tool ids are mono at 0.8 of
@@ -59,7 +61,7 @@ export default async function AgentsPage() {
     {
       icon: Plugs,
       title: "In the tool you already use",
-      body: "Ask in Claude, Cursor or VS Code, mid-task, and turn what comes back into a brief without switching tabs.",
+      body: "Ask in Claude, ChatGPT, Cursor or VS Code, mid-task, and turn what comes back into a brief without switching tabs.",
     },
   ];
 
@@ -74,13 +76,13 @@ export default async function AgentsPage() {
                 Bring Curatit to your AI assistant
               </Text>
               <p className="mt-4 flex items-center gap-2 type-body-sm text-text-2">
-                Curatit MCP
+                AI integration
                 <Badge>Beta</Badge>
               </p>
             </div>
             <Text className="text-pretty text-text-2 lg:col-span-5 lg:pb-1">
-              Search real brand posts, read their editor-approved breakdowns and build briefs from inside Claude, Cursor, VS Code or ChatGPT. Every answer comes
-              with its source.
+              Search real brand posts, read their editor-approved breakdowns and build briefs from inside Claude, ChatGPT, Cursor or VS Code. Every answer comes
+              with its source. It connects through MCP, the standard way AI apps link to other services.
             </Text>
           </div>
           <div id="install" className="mt-10 scroll-mt-24 lg:mt-12">
@@ -155,7 +157,7 @@ export default async function AgentsPage() {
                 {[
                   `Read what you can read: the library's ${count}published posts and their editor-approved analyses.`,
                   "Answer with real Instagram links, so every reference can be opened.",
-                  "Draft an original brief grounded in the posts you choose (with the Briefs scope), keeping what was observed apart from what's recommended.",
+                  "Draft an original brief from the posts you choose (if you allowed briefs when you connected it), keeping what was seen apart from what's suggested.",
                 ].map((line) => (
                   <li key={line} className="flex gap-3">
                     <Icon icon={Check} size={16} className="mt-0.5 shrink-0 text-text-1" />
@@ -198,8 +200,8 @@ export default async function AgentsPage() {
         <Wrapper variant="standard" className="section-y">
           <div className="mx-auto max-w-2xl text-center text-balance">
             <Text tag="h2" id="start" variant="h2">
-              <span className="block text-text-2">Your next brief starts in a chat.</span>
-              <span className="block text-text-1">Bring the library with you.</span>
+              <span className="block text-text-2">Ask your AI assistant for references.</span>
+              <span className="block text-text-1">Get real posts back.</span>
             </Text>
             <div className="mt-8 flex flex-wrap justify-center gap-2">
               <Button size="lg" render={<a href="#install" />} nativeButton={false}>

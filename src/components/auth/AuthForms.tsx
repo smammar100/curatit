@@ -35,6 +35,7 @@ import { identify } from "@/lib/analytics";
 import {
   authMessage,
   emailProblem,
+  linkMessage,
   passwordProblem,
   SIGNUP_EMAIL_KEY,
 } from "@/lib/auth";
@@ -54,6 +55,12 @@ function useParam(name: string) {
 function Next() {
   const next = useParam("next");
   return next ? <input type="hidden" name="next" value={next} /> : null;
+}
+
+// A link to the other form that keeps ?next=, so switching between sign-in and sign-up still
+// lands where the visitor was going
+function withNext(path: string, next: string | null) {
+  return next ? `${path}?next=${encodeURIComponent(next)}` : path;
 }
 
 export function Heading({ title, children }: { title: string; children: ReactNode }) {
@@ -179,6 +186,8 @@ export function Submit({
 export function SignInForm() {
   const [state, action, pending] = useActionState(signIn, {});
   const linkError = useParam("error");
+  // Sent here from a page that needs an account (a token link, a post): the visitor may be new
+  const next = useParam("next");
   const check = useValidation(
     { email: emailProblem, password: enterPassword },
     ["email"],
@@ -186,11 +195,13 @@ export function SignInForm() {
   );
   const error = check.any
     ? null
-    : (state.error ?? (linkError ? authMessage(linkError) : null));
+    : (state.error ?? (linkError ? linkMessage(linkError) : null));
   return (
     <>
-      <Heading title="Welcome back">
-        Sign in to pick up your boards where you left them.
+      <Heading title={next ? "Sign in to continue" : "Welcome back"}>
+        {next
+          ? "Sign in, or create a free account, to carry on."
+          : "Sign in to pick up your boards where you left them."}
       </Heading>
       <form action={action} {...check.form} className="mt-6 space-y-4">
         <Next />
@@ -210,7 +221,6 @@ export function SignInForm() {
           error={check.errors.password}
           label="Password"
           type="password"
-          placeholder="••••••••"
           autoComplete="current-password"
           required
           aside={
@@ -224,7 +234,7 @@ export function SignInForm() {
         <Submit pending={pending} idle="Sign in" busy="Signing in…" />
       </form>
       <Footer>
-        Don&apos;t have an account? <TextLink href="/signup">Sign up</TextLink>
+        Don&apos;t have an account? <TextLink href={withNext("/signup", next)}>Sign up</TextLink>
       </Footer>
     </>
   );
@@ -232,6 +242,7 @@ export function SignInForm() {
 
 export function SignUpForm() {
   const [state, action, pending] = useActionState(signUp, {});
+  const next = useParam("next");
   const check = useValidation(
     { email: emailProblem, password: passwordProblem },
     ["email"],
@@ -289,9 +300,14 @@ export function SignUpForm() {
           idle="Create account"
           busy="Creating account…"
         />
+        <Text tag="p" variant="captionLG" className="text-center text-text-2">
+          By creating an account you agree to the{" "}
+          <TextLink href="/legal/terms">Terms of use</TextLink> and{" "}
+          <TextLink href="/legal/privacy">Privacy policy</TextLink>.
+        </Text>
       </form>
       <Footer>
-        Already have an account? <TextLink href="/signin">Sign in</TextLink>
+        Already have an account? <TextLink href={withNext("/signin", next)}>Sign in</TextLink>
       </Footer>
     </>
   );

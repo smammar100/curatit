@@ -8,7 +8,7 @@ import { CHANGELOG, ROADMAP, type ChangelogEntry, type RoadmapStage } from "@/co
 import { getBrandsJoined, getPublishedPosts } from "@/lib/posts";
 
 export const metadata: Metadata = {
-  title: "Roadmap | Curatit",
+  title: "Roadmap",
   description: "What Curatit has shipped, what's being built now and what's next, with a changelog of every update.",
 };
 
@@ -96,11 +96,10 @@ export default async function RoadmapPage() {
               Roadmap
             </Text>
             <Text className="mt-6 text-pretty text-text-2">
-              What&apos;s been built, day by day on one line, and what&apos;s coming after it. Curatit is built in the open: every update links to
-              the change that made it.
+              What&apos;s been built, day by day on one line, and what&apos;s coming after it. Every update links to the change that made it.
             </Text>
             <Text variant="bodySM" className="mt-4 text-text-2">
-              {updates} updates across {days.length} days of building. Scroll over the line to travel along it.
+              {updates} updates across {days.length} days of building. Scroll the timeline to see more days.
             </Text>
           </div>
         </Wrapper>

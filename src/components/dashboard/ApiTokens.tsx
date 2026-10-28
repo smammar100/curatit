@@ -161,7 +161,7 @@ export default function ApiTokens() {
           <div>
             <h1 className="type-title text-text-1">API tokens</h1>
             <p className="mt-1 max-w-measure type-body text-pretty text-text-2">
-              A token lets an MCP client or the Curatit bridge use the library as you. It&apos;s shown once; anything with it can read what you can.
+              A token lets your AI app (an MCP client or the Curatit bridge) search and read the library as you. It can&apos;t see or change your boards. It&apos;s shown once, so keep it private.
             </p>
           </div>
           {!open && !fresh && <Button onClick={() => setOpen(true)}>New token</Button>}

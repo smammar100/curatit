@@ -14,7 +14,7 @@ import CopyBlock from "@/components/mcp/CopyBlock";
 import { MCP_URL, TOOLS } from "@/components/mcp/tools";
 
 export const metadata: Metadata = {
-  title: "Connect your AI tools | Curatit",
+  title: "Connect your AI tools",
   description: "Use Curatit's library from Claude, Cursor, VS Code or any MCP client: six research tools, a personal access token, and a brief built from real posts.",
 };
 

@@ -53,14 +53,16 @@ export default function HomeHero({ posts }: { posts: LibraryPost[] }) {
       <Wrapper variant="standard" className="relative z-(--z-raised) pb-20 text-center">
         <div className="mx-auto max-w-xl text-balance">
           <Text tag="p" variant="body" className="text-text-2">
-            A searchable library of real brand posts, reviewed by editors. See
+            A searchable library of real brand posts, reviewed by an editor. See
             how each one is built, then save and share the best.
           </Text>
           <div className="mt-8 flex flex-wrap justify-center gap-2">
             <Button size="lg" render={<Link href="/signup" />} nativeButton={false}>
               Create account
             </Button>
-            <Button size="lg" variant="secondary" render={<Link href="#how-it-works" />} nativeButton={false}>
+            {/* A plain anchor: the jump is on this page, and Next's Link made it wait for a round
+                trip to the server before scrolling (2026-10-28, from a QA run) */}
+            <Button size="lg" variant="secondary" render={<a href="#how-it-works" />} nativeButton={false}>
               See how it works
             </Button>
           </div>

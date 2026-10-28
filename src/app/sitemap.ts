@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 import { getCollection } from "@/lib/content";
 import { SITE_URL } from "@/lib/site";
-import { TOPICS } from "@/components/system/topics";
 
+// The styleguide (/system) is a working reference, not a page for search engines, so it's left out
+// (2026-10-28, from a QA run)
 const staticRoutes = [
   "/",
   "/library",
@@ -19,7 +20,6 @@ const staticRoutes = [
   "/blog/tags",
   "/store",
   "/sites/tags",
-  "/system",
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -33,7 +33,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...sites.map((site) => `/sites/site/${site.id}`),
     ...[...new Set(sites.flatMap((site) => site.data.tags ?? []))].map((tag) => `/sites/tags/${tag}`),
     ...getCollection("legal").map((page) => `/legal/${page.id}`),
-    ...TOPICS.map((topic) => `/system/${topic.slug}`),
   ];
   return routes.map((route) => ({ url: new URL(route, SITE_URL).toString() }));
 }

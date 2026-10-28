@@ -6,10 +6,11 @@ import { Icon, LinkedinLogo } from "@/components/glaze/icon";
 import { Button } from "@/components/glaze/ui/button";
 import SelectionGraph from "@/components/vision/SelectionGraph";
 import Signature from "@/components/vision/Signature";
+import { CATEGORIES } from "@/lib/categories";
 import { getPublishedPosts, type LibraryPost } from "@/lib/posts";
 
 export const metadata: Metadata = {
-  title: "Vision | Curatit",
+  title: "Vision",
   description: "Taste you can learn from: why Curatit keeps real brand posts and names the decisions behind them.",
 };
 
@@ -21,12 +22,16 @@ const FOUNDER = {
   linkedin: "https://www.linkedin.com/in/syedmammar/",
 };
 
-// Five posts for the graph: the newest from each category, so the frames don't repeat a look
+// Five posts for the graph: the newest from each category, so the frames don't repeat a look. Only
+// the site's own categories (a brand filed in the database under one the site doesn't list, such as
+// "Others", labelled a frame with it, 2026-10-28)
+const KNOWN = new Set(CATEGORIES.map((category) => category.slug));
+
 function byCategory(posts: LibraryPost[], count: number) {
   const seen = new Set<string>();
   const picked: LibraryPost[] = [];
   for (const post of posts) {
-    if (seen.has(post.category.slug)) continue;
+    if (seen.has(post.category.slug) || !KNOWN.has(post.category.slug)) continue;
     seen.add(post.category.slug);
     picked.push(post);
     if (picked.length === count) break;
@@ -63,15 +68,15 @@ export default async function VisionPage() {
               {/* A note from the founder, in his own voice, signed below */}
               <div className="mt-10 space-y-5">
                 <Text className="text-pretty text-text-inverse/70">
-                  I learn design the way most of us do: by studying work that&apos;s better than mine. A crop that holds a face. A headline that gives the verdict before the
+                  I learn design the way most of us do: by studying work that&apos;s better than mine. A crop that holds a face. A headline that gives the answer before the
                   chart. A colour saved for the last slide.
                 </Text>
                 <Text className="text-pretty text-text-inverse/70">
                   Mine lived in screenshots and saved posts I could never find again, with no note on why they worked. So I built Curatit: real posts from real brands, kept
-                  in one place, with the decisions behind them named, so you can find the move you need and see why it lands.
+                  in one place, with the decisions behind them named, so you can find the idea you need and see why it works.
                 </Text>
                 <Text className="text-pretty text-text-inverse/70">
-                  Next, I want the same library open to the AI tools you brief, so they can search by technique, point at the slide and follow the principle, without
+                  Next, I want the same library open to the AI tools you work with, so they can search by technique, point at the slide and follow the principle, without
                   copying the post.
                 </Text>
                 <Text className="text-pretty text-text-inverse">Good taste is learnable. I&apos;m building the place to learn it.</Text>
@@ -118,7 +123,7 @@ export default async function VisionPage() {
             )}
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Button size="lg" render={<Link href="/signup" />} nativeButton={false}>
-                Start your swipe file
+                Create account
               </Button>
               <Button size="lg" variant="secondary" render={<Link href="/#how-it-works" />} nativeButton={false}>
                 See how it works

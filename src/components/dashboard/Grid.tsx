@@ -4,7 +4,7 @@
 // tile size fits, each tile opening the post, with Save on hover. Since 2026-10-24 on Glaze: the
 // cover in the panel corner over Glaze's Skeleton until its image arrives, the brand label a tag
 // of paper, and Glaze's focus ring on the tile.
-import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import BrandName from "@/components/home/BrandName";
@@ -26,9 +26,12 @@ export const postHref = (shortCode: string) => `/dashboard/p/${shortCode}`;
 
 // A tile clicked in the feed or on a board opens its post over that page (an intercepted
 // route), so closing the post can step back to the page as it was, scroll and all, instead of
-// loading the feed again
+// loading the feed again. The second and third clicks of a double or triple click open nothing:
+// they landed on whatever tile sat under a dialog that the first click had just closed
+// (2026-10-28, from a QA run: a triple-clicked Create board opened a stranger's post)
 let openedOverPage = false;
-export function rememberOpener() {
+export function rememberOpener(event: MouseEvent) {
+  if (event.detail > 1) return event.preventDefault();
   openedOverPage = !location.pathname.startsWith("/dashboard/p/");
 }
 export function backToPage() {

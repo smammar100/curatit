@@ -278,14 +278,14 @@ describe("CreativeBreakdown: thin and single records", () => {
     expect(traits(analysis).map((t) => t.label)).not.toContain("Format");
   });
 
-  it("shows only what a thin record has, and says it may be incomplete", () => {
+  it("shows only what a thin record has, and says parts may be missing", () => {
     const { dna } = galleryFixture();
     const bare = toPublicAnalysis({ creative_dna: { concept: dna.concept }, current_version_id: null, image_analysis_complete: false, expected_slides: 7, processed_slides: 0 }, [], 7)!;
     render(<Harness analysis={bare} />);
     expect(tabNames()).toEqual(["Breakdown", "Visual DNA"]);
     expect(panel().querySelectorAll("dt").length).toBe(0);
     expect(panel().textContent).toContain(dna.concept);
-    expect(within("breakdown").textContent).toContain("may be incomplete");
+    expect(within("breakdown").textContent).toContain("parts may be missing");
   });
 
   it("leaves the slide alone when the panel scrolls, and never prints a zero-based number", () => {

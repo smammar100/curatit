@@ -21,7 +21,7 @@ const steps: {
     demo: <SearchDemo />,
   },
   {
-    title: "Understand the copy and design.",
+    title: "Understand the words and design.",
     muted: "See the message, structure and visual choices behind each post.",
     demoLabel: "Interactive example: a carousel's slides, each labelled with its role",
     demo: <DetailDemo />,

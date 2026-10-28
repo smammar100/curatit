@@ -100,7 +100,7 @@ export default function DnaDemo() {
       ref={ref}
       {...handlers}
       role="img"
-      aria-label={`Demo: ${post.brand.name}'s carousel cover taken apart by Curatit: its hook, layout, kicker and product pinned, its strategy, four colours picked off the slide, then copied as a brief for an AI tool`}
+      aria-label={`Demo: ${post.brand.name}'s carousel cover with its parts labelled by Curatit: its hook, layout, kicker and product pinned, its strategy, four colours picked off the slide, then copied as instructions for an AI tool`}
       // At least 4:3 from lg like the MCP demo beside it (a zero-width spacer 75% of the width
       // tall), taller only if the column is too narrow; an aspect ratio would clip it instead
       className="relative flex items-center overflow-hidden rounded-(--radius-float) bg-shell lg:before:block lg:before:w-0 lg:before:shrink-0 lg:before:pt-[75%] lg:before:content-['']"

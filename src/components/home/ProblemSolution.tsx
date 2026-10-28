@@ -77,7 +77,7 @@ export default function ProblemSolution() {
         <div className="text-balance max-w-3xl mx-auto text-center">
           <Text tag="h2" variant="h1" className="text-text-1">
             <span className="block text-text-2">
-              Stop hunting for examples.
+              Stop searching for examples.
             </span>
             <span className="block">Start with Curatit&apos;s collection.</span>
           </Text>
@@ -86,7 +86,7 @@ export default function ProblemSolution() {
             variant="body"
             className="mx-auto mt-4 max-w-xl text-text-2"
           >
-            No more digging through saved posts and screenshots. Search for the
+            No more looking through saved posts and screenshots. Search for the
             post you need and save what's useful.
           </Text>
         </div>
@@ -96,29 +96,33 @@ export default function ProblemSolution() {
             variant="secondary"
             size="sm"
             onClick={() => glideTo(100)}
-            aria-label="Show the mess only"
+            aria-label="Saved posts and screenshots: show this side only"
           >
             Saved posts and screenshots
           </Button>
           <Button
             size="sm"
             onClick={() => glideTo(0)}
-            aria-label="Show Curatit only"
+            aria-label="Curatit: show this side only"
           >
             Curatit
           </Button>
         </div>
         {/* overflow-clip, not hidden: a clipped box isn't a scroll container, so focusing the
-            handle while it hangs over an edge (0 or 100) can't scroll the whole stage sideways */}
+            handle while it hangs over an edge (0 or 100) can't scroll the whole stage sideways.
+            On touch (2026-10-28, from a QA run: the stage took over half a phone's screen and
+            swallowed every swipe) vertical swipes stay the page's (touch-pan-y; the browser
+            cancels the pointer when it scrolls), and a touch moves the divider only once it moves
+            sideways, so resting a thumb on the scene doesn't jump it */}
         <div
           ref={stage}
-          className="relative mt-3 aspect-4/5 touch-none overflow-clip rounded-(--radius-float) bg-shell select-none sm:aspect-7/5"
+          className="relative mt-3 aspect-4/5 touch-pan-y overflow-clip rounded-(--radius-float) bg-shell select-none sm:aspect-7/5"
           style={{ "--x": `${x}%` } as CSSProperties}
           onPointerDown={(e) => {
             dragging.current = true;
             stopGlide();
             e.currentTarget.setPointerCapture(e.pointerId);
-            place(e);
+            if (e.pointerType !== "touch") place(e);
           }}
           onPointerMove={(e) => dragging.current && place(e)}
           onPointerUp={() => {
@@ -153,7 +157,7 @@ export default function ProblemSolution() {
             <div className="absolute inset-y-0 left-0 w-px bg-ink" aria-hidden="true" />
             {/* The divider's handle: a slider for the keyboard, a grip for the pointer. Placed by
                 a wrapper, so the Button keeps its own classes */}
-            <span className="pointer-events-auto absolute top-1/2 left-0 flex -translate-x-1/2 -translate-y-1/2">
+            <span className="pointer-events-auto absolute top-1/2 left-0 flex -translate-x-1/2 -translate-y-1/2 touch-none">
               <Button
                 size="icon-lg"
                 role="slider"

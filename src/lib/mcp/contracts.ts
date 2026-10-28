@@ -410,7 +410,7 @@ export const AnalysisFullSchema = AnalysisSummarySchema.extend({
     .string()
     .nullable()
     .optional()
-    .describe("The post page's copy brief: a Markdown prompt for any LLM to make an original post on this principle, with [brackets] for the reader's brand."),
+    .describe("The post page's Copy brief: a Markdown prompt for an AI image tool to make a new post in this post's visual style, with new words, a placeholder logo and other photos."),
   copy_strategy: z.unknown().optional(),
   attention_mechanisms: z.array(z.unknown()).optional(),
   adaptation_ideas: z.array(z.unknown()).optional(),

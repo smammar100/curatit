@@ -1,90 +1,105 @@
 ---
-page: Privacy
-pubDate: 2023-12-22
+page: Privacy policy
+pubDate: 2026-10-28
 ---
-If you are a California resident, the California Consumer Privacy Act, as amended by the California Privacy Rights Act of 2020 (“**CCPA**”), requires us to provide some additional information to California residents. This Section only applies to you if you are a California resident, although please note that this information and the rights afforded herein are the same as offered to our other users in our main Privacy Policy. This Section does not apply to personal information we collect from our employees and job applicants in their capacity as employees and job applicants, as such information practices are described in separate policies.
+<!-- Draft written from Curatit's code and docs on 2026-10-28. The owner needs to review it (and a lawyer, if he wants one) before launch. -->
 
-The following chart details these activities:
+This policy explains what Curatit collects about you, why, who else handles it, and what you can ask us to do with it.
 
-**Category of personal information**
+## Who we are
 
-**Purposes of use**
+Curatit is run by its founder, Syed Mohammad Ammar. Write to [syed.m.ammar@hotmail.com](mailto:syed.m.ammar@hotmail.com) with any question or request about your data.
 
-**Categories of Third Parties Information**
+## What we collect, and why
 
-**Categories of Third Parties**
+| What | Why |
+| --- | --- |
+| Your email address | To sign you in, confirm your address and send you account emails |
+| Your password | To sign you in. Supabase Auth stores only a hash of it; Curatit's own tables never hold it |
+| Your name, what you do, and the industries, brands and posts you picked when you set up your feed | To greet you, and to put the posts most relevant to you first in For you |
+| Your boards: their names and descriptions, the posts you save and your notes | To keep them for you, and to show a board to anyone you share it with |
+| Your personal access tokens: name, scopes, expiry and when each was last used | To let your tools use the API. We keep a hash of each token, never the token itself |
+| Your sign-in sessions, with the browser and IP address each came from | To keep you signed in. Supabase Auth keeps these |
+| Your IP address, for a short time, when you sign in, sign up or reset a password | To limit repeated attempts from one address |
+| How you use the site | To see what works and fix what breaks (see Analytics) |
 
-Contact information (such as your full name, phone number, email address)
+We don't sell your data, and we don't use it for advertising.
 
-Provide the Services; Communicate with you; Analyze use of and improve the services; With your consent; Comply with law or defend our legal rights; Security/fraud prevention
+## Analytics
 
-Affiliated entities; Service providers; Entities for legal purposes
+Curatit uses PostHog to understand how the site is used. On the public site it starts once a page has loaded, at your first tap, key press or scroll, or after about eight seconds, whichever comes first. In the dashboard it starts as soon as you're signed in. It records:
 
-We do not share/sell
+- the address of each page you visit (in the dashboard, that includes the words you searched for), what you click, your browser, your device and the page you came from;
+- errors that happen in your browser or on our servers;
+- steps such as signing up, confirming your email, setting up your feed, saving a post, creating, sharing or deleting a board, and creating or revoking a token. These never include a board's name, a note, or anything you typed.
 
-Customer service interaction information (including optional surveys and when you ask for help)
+When you're signed in, these are linked to your account, and PostHog holds your name and email address with them.
 
-Provide the Services; Communicate with you; Analyze use of and improve the services; With your consent; Comply with law or defend our legal rights; Security/fraud prevention
+PostHog may also record sessions: a replay of the pages you see and where you click and scroll. What you type into fields is masked in these recordings.
 
-Affiliated entities; Service providers; Entities for legal purposes
+Like any service your browser contacts, PostHog receives your IP address. It stores Curatit's analytics in the United States. If you block PostHog, Curatit works just the same.
 
-We do not share/sell
+## Cookies and browser storage
 
-Product interaction information
+- Supabase sets cookies that keep you signed in.
+- PostHog sets a cookie and uses your browser's local storage to recognise visits from the same browser.
+- Curatit keeps your theme, your grid size and your recent searches in your browser's local storage. They stay on your device.
 
-Provide the Services; Communicate with you; Analyze use of and improve the services; With your consent; Comply with law or defend our legal rights; Security/fraud prevention
+There are no advertising cookies.
 
-Affiliated entities; Service providers; Entities for legal purposes
+## Email
 
-We do not share/sell
+Our emails are delivered by Resend. We send:
 
-Internet network and device information (such as mobile device information, IP address, and information about your interaction with the services)
+- account emails: confirming your address, resetting your password, changing your email, verification codes, and notices when something on your account changes;
+- one welcome email, when you confirm your account.
 
-Provide the Services; Analyze use of and improve the services; With your consent; Comply with law or defend our legal rights; Security/fraud prevention
+These have no unsubscribe link, because they're part of having an account. We don't send any other email today. If we start (product news, for example), every one will carry an unsubscribe link that works in one click, and we won't send them to anyone who has unsubscribed. If you unsubscribe, we keep your address and any reason you give, so we know not to write to it.
 
-Affiliated entities; Service providers; Entities for legal purposes;
+## Shared boards
 
-We do not share/sell
+Your boards are private. When you share one, anyone with its link can see the board's name, description, posts and notes, without an account. The page doesn't show your name or email, and it asks search engines not to list it. Turn sharing off and the link stops working; turn it on again and the board gets a new link.
 
-Login information (such as your username and password)
+## AI and the breakdowns
 
-Provide the Services; Comply with law or defend our legal rights; Security/fraud prevention; Comply with law or defend our legal rights
+The breakdowns are drafted by AI models from each post's public content: its images, caption, brand and category. None of your data goes into them: not your account, boards, notes or searches.
 
-Affiliated entities; Service providers; Entities for legal purposes
+Searches run on Curatit's own servers and database, with search models that run there too. We don't send your search words to an AI company.
 
-We do not share/sell
+When you connect an AI assistant to Curatit, it can read the library but not your boards. What you ask the assistant, and what it does with Curatit's results, is covered by its maker's privacy policy. Our server logs each call without its contents: which tool ran, whether it worked, how long it took, and a code that stands in for your account.
 
-Professional or employment information (such as the name and address of the company you work for and your title)
+## People in library posts
 
-Provide the Services; Communicate with you; Analyze use of and improve the services; With your consent; Comply with law or defend our legal rights; Security/fraud prevention
+The library is made of posts that brands published on public Instagram accounts. With each post we keep the details Instagram shows publicly alongside it, which can include the usernames of accounts tagged or credited in it and some of its comments with their authors' usernames. Curatit shows a post's images, its caption, the account that posted it and its like and comment counts. It doesn't show comments or tagged accounts.
 
-Affiliated entities; Service providers; Entities for legal purposes;
+If you appear in a post in the library and want it removed, write to us.
 
-We do not share/sell
+## Who else handles your data
 
-Other information (any other information you choose to provide directly to us, including optional profile photos)
+| Service | What it does for Curatit |
+| --- | --- |
+| Supabase | Database, sign-in and file storage: your account, profile, boards, notes and tokens |
+| Vercel | Hosts the site and runs its server code |
+| PostHog | Analytics, error reports and session recordings |
+| Resend | Delivers Curatit's emails |
 
-Provide the Services; Communicate with you; Analyze use of and improve the services; With your consent; Comply with law or defend our legal rights; Security/fraud prevention
+When you open a post on Instagram from Curatit, Instagram's own privacy policy applies there.
 
-Affiliated entities; Service providers; Entities for legal purposes;
+## Changing, deleting or getting a copy of your data
 
-We do not sell/share
+Your account, profile, boards and notes stay until you delete them or ask us to. You can change or remove most of it yourself:
 
-For more information about each category of personal information, purpose of use, and third parties to which we disclose personal information, please see the "What we collect and why," and "When we access or disclose you information" sections of our Privacy Policy.
+- your name and feed answers, in Personalise your feed in the account menu;
+- your boards, notes and saved posts, on each board;
+- a board's link, by turning sharing off;
+- your tokens, in API tokens in the account menu.
 
-**Your Choices Regarding “Sharing” and “Selling”**: You have the right to opt out of our sale/sharing of your personal information for purposes of online analytics and advertising. Currently, we do not sell or share your data as defined by the CCPA and we have not done so over the past 12 months from the effective date of this Privacy Policy.
+There's no button to delete your account yet. Write to [syed.m.ammar@hotmail.com](mailto:syed.m.ammar@hotmail.com) from your account's address and we'll delete it. Deleting an account deletes its profile, boards, saved posts, notes and tokens, and we'll also delete the analytics PostHog holds for it. To get a copy of your data, write to the same address and we'll send it to you.
 
-**Other CCPA Rights.** If we ever offer any financial incentives in exchange for your personal information, we will provide you with appropriate information about such incentives.
+## Changes to this policy
 
-The CCPA also allows you to limit the use or disclosure of your “sensitive personal information” (as defined in the CCPA) if your sensitive personal information is used for certain purposes. Please note that we do not use or disclose sensitive personal information other than for business purposes for which you cannot opt out under the CCPA.
+We'll update this policy when what Curatit collects, or who handles it, changes. The date on this page says when it last changed. If a change affects how your data is used, we'll email you before it applies.
 
-Please see the “Your rights with respect to your information” section of our Policy above for information about the additional rights you have with respect to your personal information under California law and how to exercise them.
+## Contact
 
-Retention of Your Personal Information. Please see the “Retention Of Your Information” section belowof our Privacy Policy for more information.
-
-Shine the Light Disclosure
---------------------------
-
-The California "Shine the Light" law gives residents of California the right under certain circumstances to request information from us regarding the manner in which we disclose certain categories of personal information (as defined in the Shine the Light law) with third parties for their direct marketing purposes. We currently do not disclose your personal information to third parties for their own direct marketing purposes.
-
-
+Questions, requests or complaints: [syed.m.ammar@hotmail.com](mailto:syed.m.ammar@hotmail.com).

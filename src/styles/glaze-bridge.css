@@ -154,7 +154,11 @@
   --paper: var(--field-fill-hover);
 }
 
-/* The secondary button keeps Glaze's hairline, drawn as FF's one stroke. */
-:where(.glaze, [data-system="glaze"]) .flat {
-  --flat-ring: var(--border);
+/* Code inside a code block keeps the block's size: base.css scales every <code> to --mono-scale of the text around it
+   for running text, which shrank a 12px block's copyable link to 9.6px (2026-10-28, from a QA run on /agents). */
+.glaze :where(pre code) {
+  font-size: inherit;
 }
+
+/* The secondary button keeps Glaze's own ring, the panel's faint hairline (--line-faint), the same stroke as the tab
+   and segmented tracks it sits beside (2026-10-28, at the owner's request: it was FF's 12% stroke, which read heavier). */

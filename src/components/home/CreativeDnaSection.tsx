@@ -17,7 +17,7 @@ const features = [
   },
   {
     title: "Copy brief",
-    text: "One tap copies a Markdown prompt to rebuild the post, every slide linked.",
+    text: "One tap copies instructions for an AI image tool to make a new post in the same style, with new words, a placeholder logo and other photos.",
   },
 ];
 
@@ -28,11 +28,11 @@ export default function CreativeDnaSection() {
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="text-balance lg:col-span-5">
             <Text tag="h2" variant="h1" className="text-text-1">
-              Every post, taken apart.
+              See how every post is made.
             </Text>
             <Text tag="p" variant="body" className="mt-4 text-text-2">
-              See the hook, layout and colours of a post, then hand them to your
-              AI as a brief.
+              See the hook, layout and colours of each post, then give them to
+              your AI tool as instructions.
             </Text>
             <dl className="mt-8 divide-y divide-line-faint border-y border-line-faint">
               {features.map((feature) => (

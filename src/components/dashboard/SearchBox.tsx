@@ -10,8 +10,11 @@
 // and the dim fade out a little faster than they came in.
 //
 // Since 2026-10-24 on Glaze's tokens and controls, the pill's look kept at the owner's request
-// (52px, Fluid Functionalism's raised surface, the BorderBeam): the text is Glaze's bare text
-// control (InputControl), the pill's line darkens to Glaze's focus line while it has the cursor,
+// (Fluid Functionalism's raised surface, the BorderBeam): the text is Glaze's bare text control
+// (InputControl). Since 2026-10-28, at the owner's request, it's the header's 44px (the large
+// control, like the For you / Discover switch and Create beside it, where it was 52px) and has the
+// switch's faint hairline at rest (without one it disappeared into the page); the line darkens to
+// Glaze's focus line while it has the cursor,
 // Clear is a ghost icon Button, the / hint a Kbd, and the panel's picks are secondary Buttons. The
 // beam is the deliberate exception to Glaze's no-glow rule, as it was to the palette before.
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
@@ -175,8 +178,8 @@ export default function SearchBox({
               text has the cursor (not the Clear button, which draws its own ring).
               The beam's wrapper clips everything outside the pill (overflow: hidden), so only the
               shadow's inner part shows, and the line is drawn inside */}
-          <BorderBeam {...beam} active={beam.active && !open} borderRadius={26}>
-            <label className="relative flex h-13 items-center rounded-pill border border-transparent bg-surface-2 shadow-surface-2 transition-[border-color] duration-(--dur-state) ease-out has-[[data-control]:focus]:border-line-focus">
+          <BorderBeam {...beam} active={beam.active && !open} borderRadius={22}>
+            <label className="relative flex h-(--control-lg) items-center rounded-pill border border-line-faint bg-surface-2 shadow-surface-2 transition-[border-color] duration-(--dur-state) ease-out has-[[data-control]:focus]:border-line-focus">
               <Icon icon={Search} size={16} className="pointer-events-none absolute left-5 text-text-3" />
               <span className="sr-only">Search the library</span>
               <InputControl
@@ -220,17 +223,22 @@ export default function SearchBox({
 
         {panel.mounted && (
           // The beam's wrapper sets position: relative, so the panel is placed by a plain div
-          // outside it. While it leaves it can't be clicked or tabbed into
+          // outside it. While it leaves it can't be clicked or tabbed into. On phones it spans the
+          // screen under the header, 16px in, since the pill there is a third of the width
+          // (2026-10-28, from a QA run: the panel was 147px wide at 375)
           <div
             inert={panel.closing || undefined}
             data-closing={panel.closing || undefined}
-            className="absolute inset-x-0 top-full mt-3 origin-top transition-[opacity,translate] duration-(--dur-overlay) ease-out starting:-translate-y-1 starting:opacity-0 data-closing:-translate-y-1 data-closing:opacity-0 data-closing:duration-(--dur-state) data-closing:ease-in"
+            className="absolute inset-x-0 top-full mt-3 max-sm:fixed max-sm:inset-x-4 max-sm:top-23 origin-top transition-[opacity,translate] duration-(--dur-overlay) ease-out starting:-translate-y-1 starting:opacity-0 data-closing:-translate-y-1 data-closing:opacity-0 data-closing:duration-(--dur-state) data-closing:ease-in"
           >
             <BorderBeam {...beam} borderRadius={24}>
               {/* A large floating panel on Fluid Functionalism's sixth surface (the beam's wrapper
                   rounds it to 28px and clips its drop, so what shows is the dark theme's inner
                   highlight) */}
-              <div className="rounded-(--radius-float) bg-surface-6 p-6 shadow-surface-6">
+              {/* On phones the panel is fixed under the header, so it stops at the screen's foot
+                  and scrolls inside (.search-panel in global.css; a short phone, or the keyboard,
+                  hid its lower part) */}
+              <div className="search-panel rounded-(--radius-float) bg-surface-6 p-6 shadow-surface-6">
                 {!query.trim() && (
                   <Section title="Try a description">
                     <div className="flex flex-wrap gap-2">

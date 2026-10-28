@@ -14,6 +14,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/glaze/ui/alert";
 import { Button } from "@/components/glaze/ui/button";
 import { Empty as EmptyRegion, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/glaze/ui/empty-state";
+import { SegmentedControl, SegmentedControlItem } from "@/components/glaze/ui/segmented-control";
 import BoardList from "./BoardList";
 import { useBoards } from "./boards";
 import CategoryBar from "./CategoryBar";
@@ -130,8 +131,33 @@ export default function Feed() {
       <Suspense fallback={null}>
         <AddressSync onAddress={fromAddress} />
       </Suspense>
-      <Header view={view} onView={setView} query={query} onQuery={setQuery} />
+      {/* Going to Saved from another view opens on your boards, not on the last search, which
+          hid them (2026-10-28, from a QA run); a search typed on Saved still narrows it */}
+      <Header
+        view={view}
+        onView={(next) => {
+          if (next === "Saved" && view !== "Saved") setQuery("");
+          setView(next);
+        }}
+        query={query}
+        onQuery={setQuery}
+      />
       <main className="px-4 pt-2 pb-24 sm:px-6">
+        {/* Phones: the header has no room for the views (the switch shows from lg, its menu from sm),
+            so they head the feed, full width (2026-10-28, from a QA run: Discover couldn't be
+            reached below 640px) */}
+        <SegmentedControl
+          aria-label="Feed"
+          fill
+          // The header's 44px, a thumb's reach
+          size="lg"
+          value={view === "Saved" ? "" : view}
+          onValueChange={(next) => setView(next as View)}
+          className="mb-4 sm:hidden"
+        >
+          <SegmentedControlItem value="For you">For you</SegmentedControlItem>
+          <SegmentedControlItem value="Discover">Discover</SegmentedControlItem>
+        </SegmentedControl>
         {/* Discover, after Cosmos's Explore: the categories under the header, then (with nothing typed
             and every category showing) the playbooks, moved here from For you on 2026-10-24 at the
             owner's request, then the wall */}
@@ -205,12 +231,13 @@ function Empty({ view, query, onClear, onBrowse, refinements, onRefine, scoped, 
       <EmptyRegion variant="plain" className="py-16">
         <SavedArt />
         <EmptyHeader>
-          <EmptyTitle icon={false}>Your swipe file is empty</EmptyTitle>
-          <EmptyDescription>See a carousel that stops your thumb, or a launch you wish you’d made? Hit Save. It waits here for your next brief.</EmptyDescription>
+          {/* Plain words since 2026-10-28 (a QA run: "swipe file" and "stops your thumb" lost readers) */}
+          <EmptyTitle icon={false}>You haven’t saved anything yet</EmptyTitle>
+          <EmptyDescription>When you see a post you like, press Save. It will wait here for your next project.</EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
           <Button size="sm" onClick={onBrowse}>
-            Start your swipe file
+            Find posts to save
           </Button>
         </EmptyContent>
       </EmptyRegion>

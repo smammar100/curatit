@@ -17,7 +17,7 @@ import { categoryPosts, getPublishedPosts, toPostCard, type LibraryPost, type Po
 export const metadata: Metadata = {
   title: { absolute: "Curatit: find ideas for your next social media post" },
   description:
-    "Real organic brand posts, reviewed by editors. Search by brief, save the best references to private boards, and share them with your client.",
+    "Real brand posts, each with a breakdown approved by an editor. Describe the post you need, save the best references to private boards, and share them with your client.",
 };
 
 // Posts come from Supabase at build time; pick up newly published ones hourly

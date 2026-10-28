@@ -20,21 +20,21 @@ import Faq from "@/components/global/Faq";
 export const metadata: Metadata = {
   title: { absolute: "Curatit pricing | Plans for social media inspiration" },
   description:
-    "Curatit is free while it's in beta: the whole library of real brand posts, breakdowns, boards and sharing. Paid team plans come later.",
+    "Curatit is free while it's in beta, and a free plan stays after it: the whole library of real brand posts, breakdowns, boards and sharing. Paid team plans come later.",
 };
 
 const included = [
   { label: "Library", value: "Every published brand post, searchable" },
   {
     label: "Breakdowns",
-    value: "Copy, structure and design notes on analysed posts",
+    value: "Notes on the words, structure and design of each post",
   },
   { label: "Boards", value: "Unlimited private boards and saves" },
   {
     label: "Sharing",
     value: "View-only links, no account needed to open them",
   },
-  { label: "AI integration", value: "The MCP server, in beta" },
+  { label: "AI integration", value: "Use Curatit from Claude, ChatGPT, Cursor and VS Code, in beta" },
 ];
 
 const faqs = [
@@ -46,7 +46,7 @@ const faqs = [
   {
     question: "Will Curatit stay free?",
     answer:
-      "The free plan stays. Paid team plans are planned for later, for things like shared workspaces; we'll announce what's in them and what they cost before anything changes for existing accounts.",
+      "The free plan stays. Paid team plans are planned for later, for things like shared workspaces. Before anything changes for existing accounts, we'll email you what's in them and what they cost.",
   },
   {
     question: "How many posts can I save?",
@@ -58,7 +58,7 @@ const faqs = [
       "Only you, until you share a board with a link. A shared board is view-only, opens without an account, and shows your notes. Turn sharing off and the link stops working.",
   },
   {
-    question: "Do I need a card to sign up?",
+    question: "Do I need a credit card to sign up?",
     answer:
       "No. There's nothing to pay and nothing to cancel: it's an email address and a password.",
   },
@@ -75,7 +75,7 @@ export default function PricingPage() {
               Free while we&apos;re in beta.
             </Text>
             <Text tag="p" variant="body" className="mx-auto mt-4 max-w-xl text-text-2">
-              The whole library, breakdowns, boards and sharing. Team plans come later.
+              The whole library, breakdowns, boards and sharing. A free plan stays after the beta; team plans come later.
             </Text>
           </div>
           <div className="mx-auto mt-12 max-w-xl">

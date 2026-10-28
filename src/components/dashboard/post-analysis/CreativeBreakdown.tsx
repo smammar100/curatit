@@ -17,7 +17,9 @@
 //   a bar. Since 2026-10-24, at the owner's request, no slide tags: where a statement rests is in
 //   plain words where it matters, and a section's header is its title alone.
 // Beside the tabs, Copy brief puts the reference-led visual adaptation prompt on the clipboard
-// (2026-10-14; the Download .md button beside it was taken out on 2026-10-15). The tabs are
+// (2026-10-14; the Download .md button beside it was taken out on 2026-10-15). Since 2026-10-28, at
+// the owner's request, it's the card's one primary Button at full size beside small tabs, so the
+// action outweighs the switch between views. The tabs are
 // Glaze's Tabs (Base UI), whose ← / → / Home / End are marked handled so PostView's slide arrows
 // leave them be. The bar stays in view while the page scrolls, and switching tabs brings the new
 // tab's start into view only when the page had scrolled past it. One slide index in PostView
@@ -35,7 +37,9 @@ import { Button } from "@/components/glaze/ui/button";
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { Collapsible, CollapsibleContent, CollapsibleGroup, CollapsibleTrigger } from "@/components/glaze/ui/collapsible";
 import { DataList, DataListItem, DataListLabel, DataListValue } from "@/components/glaze/ui/data-list";
+import { Dialog, DialogBody, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/glaze/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/glaze/ui/tabs";
+import { Textarea } from "@/components/glaze/ui/textarea";
 import {
   briefMarkdown,
   evidenceGroups,
@@ -120,9 +124,12 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
       <div ref={top} aria-hidden="true" />
       <Tabs value={view} onValueChange={(next) => choose(next as View)}>
         {/* Sticky over the card's own padding (px-4 in PostView), so content slides under it, just
-            below the post page's 92px bar (h-23), which sticks too */}
-        <div ref={bar} className="sticky top-23 z-(--z-sticky) -mx-4 flex flex-wrap items-center justify-between gap-2 bg-paper px-4 py-2">
-          <TabsList aria-label="Creative breakdown" activateOnFocus>
+            below the post page's 92px bar (h-23), which sticks too. From sm only: on a phone Copy
+            brief wraps under the tabs, and the two pinned bars took 188px of an 812px screen
+            (2026-10-28, from a QA run). Both positions are breakpoint classes: Glaze's scoped
+            copy of a bare `relative` sits outside the utilities layer and beat `sm:sticky` */}
+        <div ref={bar} className="z-(--z-sticky) -mx-4 flex flex-wrap items-center justify-between gap-2 bg-paper px-4 py-2 max-sm:relative sm:sticky sm:top-23">
+          <TabsList size="sm" aria-label="Creative breakdown" activateOnFocus>
             {views.map((v) => (
               <TabsTrigger key={v.id} value={v.id}>
                 {v.label}
@@ -131,6 +138,11 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
           </TabsList>
           <CopyBrief analysis={analysis} source={source} />
         </div>
+        {/* What Copy brief makes, in words: until 2026-10-28 it was only the button's title, which a
+            touch screen never shows (two launch simulations doubted what it was for) */}
+        <p className="type-caption text-pretty text-text-2">
+          Copy brief copies instructions for an AI image tool: a new post in this style, with new words, a placeholder logo and other photos.
+        </p>
 
         {/* Each view renders only while it's shown, so a switch starts it afresh, as before */}
         <TabsContent value="breakdown">{view === "breakdown" && <Breakdown analysis={analysis} stage={stage} />}</TabsContent>
@@ -138,7 +150,7 @@ export default function CreativeBreakdown({ analysis, index, onSlide, videos, so
       </Tabs>
 
       <p className="mt-5 type-caption text-pretty text-text-2">
-        AI-written from every slide, checked by Curatit&apos;s editors.{!analysis.complete && " Some slides have no record, so this may be incomplete."}
+        An AI wrote this after looking at the whole post. A Curatit editor then checked it.{!analysis.complete && " Some slides weren't looked at, so parts may be missing."}
       </p>
     </div>
   );
@@ -514,14 +526,21 @@ function mostCommon(roles: (string | null)[]) {
 
 // Resolve /lib links at the time of the click, so the copied brief has absolute image references
 // without reading window during server rendering.
+// Where the browser refuses the clipboard (an in-app browser, a background tab), the brief opens in
+// a dialog, selected, to copy by hand (2026-10-28, from a QA run where it was a dead end). Still one
+// export: no download, as decided on 2026-10-15.
 function CopyBrief({ analysis, source }: { analysis: PublicAnalysis; source: BriefSource }) {
   const [state, setState] = useState<"copied" | "failed" | null>(null);
+  const [manual, setManual] = useState<string | null>(null);
+  const manualField = useRef<HTMLTextAreaElement>(null);
   const copy = async () => {
+    const brief = briefMarkdown(analysis, source, window.location.origin);
     try {
-      await navigator.clipboard.writeText(briefMarkdown(analysis, source, window.location.origin));
+      await navigator.clipboard.writeText(brief);
       setState("copied");
     } catch {
       setState("failed");
+      setManual(brief);
     }
   };
   useEffect(() => {
@@ -531,13 +550,36 @@ function CopyBrief({ analysis, source }: { analysis: PublicAnalysis; source: Bri
   }, [state]);
   return (
     <>
-      <Button variant="secondary" size="sm" onClick={copy} title="Copy a design brief matching this post’s visual treatment with replacement text, logos and imagery">
+      <Button variant="primary" onClick={copy} title="Copy a design brief matching this post’s visual treatment with replacement text, logos and imagery">
         <span>{state === "copied" ? "Copied" : state === "failed" ? "Couldn't copy" : "Copy brief"}</span>
         <Icon icon={state === "copied" ? Check : Copy} />
       </Button>
       <span role="status" className="sr-only">
         {state === "copied" ? "Design brief copied. Paste it into your AI tool." : state === "failed" ? "Couldn't copy the brief here." : ""}
       </span>
+      <Dialog open={manual !== null} onOpenChange={(open) => !open && setManual(null)}>
+        <DialogContent size="sm" initialFocus={manualField}>
+          <DialogHeader>
+            <DialogTitle>Copy the brief yourself</DialogTitle>
+            <DialogDescription>
+              This browser didn&apos;t let Curatit copy the brief. It&apos;s selected below: press Ctrl+C (⌘C on a Mac), or touch and hold to copy it.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogBody>
+            <Textarea
+              ref={manualField}
+              readOnly
+              rows={10}
+              value={manual ?? ""}
+              aria-label="Design brief"
+              onFocus={(event) => event.currentTarget.select()}
+            />
+          </DialogBody>
+          <DialogFooter>
+            <DialogClose>Done</DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

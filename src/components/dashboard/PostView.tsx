@@ -450,7 +450,22 @@ function SaveForm({ post }: { post: PostDetail }) {
   const { boards, status, save, createBoard } = useBoards();
   const [choice, setChoice] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const nameField = useRef<HTMLInputElement>(null);
   const board = choice ?? boards[0]?.id ?? NEW;
+  // Choosing "New board…" puts the cursor in the name field, a frame after the Select has handed
+  // focus back to its trigger, which the field replaces (autoFocus lost that race and focus fell to
+  // Copy brief; 2026-10-28, from a QA run)
+  useEffect(() => {
+    if (choice !== NEW) return;
+    let inner = 0;
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => nameField.current?.focus());
+    });
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+    };
+  }, [choice]);
   const naming = status !== "loading" && board === NEW;
   const inChosen = boards.some((b) => b.id === board && b.items.some((item) => item.post === post.shortCode));
 
@@ -470,8 +485,8 @@ function SaveForm({ post }: { post: PostDetail }) {
     >
       {naming ? (
         <Input
+          ref={nameField}
           aria-label="New board name"
-          autoFocus={choice === NEW}
           value={name}
           onValueChange={setName}
           maxLength={NAME_MAX}

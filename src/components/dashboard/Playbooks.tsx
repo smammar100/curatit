@@ -43,9 +43,11 @@ export default function Playbooks({ posts, onPick }: { posts: DashPost[]; onPick
 
   return (
     <section aria-labelledby="playbooks-types" className="mb-12 lg:mb-14">
-      <h2 id="playbooks-types" className="mb-4 type-heading text-text-1">
+      <h2 id="playbooks-types" className="type-heading text-text-1">
         Playbooks
       </h2>
+      {/* What the name means, for anyone new to it (2026-10-28, from a QA run) */}
+      <p className="mt-1 mb-4 type-body-sm text-text-2">Posts grouped by the kind of post they are. Pick one to see them all.</p>
       <Scroller label="playbooks">
         {types.map((group, i) => (
           <li key={group.name} className={cx(CARD, "shrink-0 snap-start")}>

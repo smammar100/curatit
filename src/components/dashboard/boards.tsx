@@ -12,6 +12,7 @@
 // written: writes to a board wait for its creation.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/glaze/ui/button";
 import {
   DropdownMenu,
@@ -90,6 +91,11 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
     if (tone === "error") toast.fail(text);
     else toast(text);
   }, []);
+  // "Saved to …" carries View board (2026-10-28, from a QA run: nothing else on a post leads to
+  // the board it was just saved to)
+  const router = useRouter();
+  const savedTo = (name: string, id: string) =>
+    toast(`Saved to ${name}`, { action: { label: "View board", onClick: () => router.push(`/dashboard/b/${id}`) } });
   const change = (id: string, edit: (board: Board) => Board) => setBoards((list) => list.map((b) => (b.id === id ? edit(b) : b)));
 
   useEffect(() => {
@@ -148,7 +154,7 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
     if (board.items.some((item) => item.post === code)) return notify(`Already in ${board.name}`);
     const now = new Date().toISOString();
     change(boardId, (b) => ({ ...b, updatedAt: now, items: [{ post: code, addedAt: now }, ...b.items] }));
-    notify(`Saved to ${board.name}`);
+    savedTo(board.name, boardId);
     void write(
       boardId,
       () => supabase.from("board_posts").insert({ board_id: boardId, post_id: post.id }),
@@ -187,7 +193,8 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
     const shareToken = shared ? crypto.randomUUID() : null;
     const about = description?.trim() || undefined;
     setBoards((list) => [{ id, name, description: about, shareToken, updatedAt: now, items: post ? [{ post: post.shortCode, addedAt: now }] : [] }, ...list]);
-    notify(post ? `Saved to ${name}` : `Created ${name}`);
+    if (post) savedTo(name, id);
+    else notify(`Created ${name}`);
 
     const created = Promise.resolve(supabase.from("boards").insert({ id, name, description: about ?? null, share_token: shareToken })).then(({ error }) => !error);
     creating.current.set(id, created);
@@ -257,6 +264,7 @@ export function BoardsProvider({ posts, children }: { posts: DashPost[]; childre
     if (!post || !item || text === (item.note ?? "")) return;
     const withNote = (value?: string) => (b: Board) => ({ ...b, items: b.items.map((i) => (i.post === code ? { ...i, note: value } : i)) });
     change(boardId, withNote(text || undefined));
+    notify(text ? "Note saved" : "Note removed");
     write(
       boardId,
       () => supabase.from("board_posts").update({ note: text || null }).eq("board_id", boardId).eq("post_id", post.id),
@@ -352,7 +360,9 @@ function NewBoardItem({ label, onCreate }: { label: string; onCreate: (name: str
 }
 
 // "Save" with a menu of boards (Glaze's DropdownMenu): a board with the post on it shows a check,
-// and choosing it takes the post off again. Choosing a board (or making one) from the keyboard puts
+// and choosing it takes the post off again. The check sits at the row's end (2026-10-28, at the
+// owner's request: Glaze keeps its column at the start, which left an empty gap before every board
+// the post isn't on), so the boards' covers line up with the heading and New board. Choosing a board (or making one) from the keyboard puts
 // focus back on Save; a pointer's choice doesn't move focus there, because the tiles reveal Save on
 // focus-within and it would stay on screen after the pointer left. The boards scroll under the
 // "Save to board" heading; New board stays at the foot. On a cover and on a page Save is the same
@@ -388,6 +398,8 @@ export function SaveMenu({ post, className }: { post: string; tone?: "plain" | "
             <DropdownMenuCheckboxItem
               key={board.id}
               closeOnClick
+              // Room for the check only on a board that has the post, so names keep their width
+              className="ps-3 pe-3 data-checked:pe-10 *:data-[slot=dropdown-menu-checkbox-item-indicator]:start-auto *:data-[slot=dropdown-menu-checkbox-item-indicator]:end-3"
               checked={board.items.some((item) => item.post === post)}
               onCheckedChange={(on) => (on ? save(post, board.id) : remove(post, board.id))}
             >

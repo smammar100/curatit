@@ -10,7 +10,7 @@ import type { DashPost } from "@/components/dashboard/types";
 import { getBreakdownSummaries } from "@/lib/creative/display";
 import { getPublishedPosts } from "@/lib/posts";
 
-export const metadata: Metadata = { title: "Curatit", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: { absolute: "Curatit" }, robots: { index: false, follow: false } };
 
 // Posts come from Supabase at build time; pick up newly published ones hourly
 export const revalidate = 3600;
