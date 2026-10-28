@@ -5,6 +5,10 @@
 //   npm run search:eval                   hybrid search, as deployed
 //   npm run search:eval -- --keyword      keyword search alone, for comparison
 //   npm run search:eval -- --out <file>   also write every query's results as JSON
+//   npm run search:eval -- --dashboard    the dashboard's search instead (useLibrarySearch: its own
+//                                         interpretation, the exact brand and category shortcut,
+//                                         keyword pages, and the order /api/search adds); with
+//                                         --keyword, the dashboard's keyword search alone
 //
 // A result nobody has judged counts as not relevant and is listed at the end: judge those (the
 // method is in docs/search-eval/README.md) and add them to judgments.json before trusting a change
@@ -13,7 +17,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { TOOLS } from "@/lib/mcp/contracts";
 import { createSupabaseCatalog } from "@/lib/mcp/repo/supabase";
-import { searchPosts } from "@/lib/mcp/services/search";
+import { hybridOrder, searchPosts } from "@/lib/mcp/services/search";
 import { createLocalModels } from "@/lib/search/semantic/models";
 
 try {
@@ -23,6 +27,7 @@ try {
 }
 const args = process.argv.slice(2);
 const keywordOnly = args.includes("--keyword");
+const dashboard = args.includes("--dashboard");
 const out = args.includes("--out") ? args[args.indexOf("--out") + 1] : null;
 const env = process.env;
 if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || !env.SUPABASE_SECRET_KEY) {
@@ -40,12 +45,40 @@ const repo = createSupabaseCatalog({ url: env.NEXT_PUBLIC_SUPABASE_URL, publisha
 const semantic = keywordOnly ? null : createLocalModels({ modelDir: join(process.cwd(), "models"), download: false });
 const ctx = { signingSecret: new Uint8Array(32).fill(7), principalKey: "search-eval", semantic };
 
+// The dashboard's search, as the browser runs it, with the server's ranking called in place of
+// /api/search (the same hybridOrder the route runs)
+const dashboardSearch = dashboard ? await (async () => {
+  const { readPublishedPosts } = await import("@/lib/posts");
+  const { createPublicClient } = await import("@/utils/supabase/public");
+  const { loadLibrarySearch } = await import("@/components/dashboard/useLibrarySearch");
+  const { brandNamed, categoryNamed } = await import("@/components/dashboard/search");
+  const { inCategory } = await import("@/lib/categories");
+  const posts = await readPublishedPosts();
+  const list = posts.map((post) => ({ ...post, cover: post.images[0], breakdown: null }));
+  const idOf = new Map(posts.map((post) => [post.shortCode, post.id]));
+  const rank = semantic ? (body: { query: string; request: Record<string, unknown>; post_ids?: string[] }) => hybridOrder(repo, semantic, { ...body.request, ...(body.post_ids ? { post_ids: body.post_ids } : {}) }, body.query).then((r) => r.ids) : null;
+  return async (q: string) => {
+    // Exact brand and category names are filtered in the browser, as the feed does
+    const brand = brandNamed(list, q);
+    const named = brand ? null : categoryNamed(q);
+    if (brand || named) return { ids: list.filter((p) => (brand ? p.brand.slug === brand.slug : inCategory(p, named!.slug))).map((p) => p.id), ranking: "exact" };
+    const result = await loadLibrarySearch(q, list, new AbortController().signal, {}, createPublicClient() as never, rank);
+    if (result.error) throw new Error(result.error);
+    return { ids: result.codes.map((code) => idOf.get(code)!).filter(Boolean), ranking: result.notice ? "fallback" : (result.ranking ?? "keyword") };
+  };
+})() : null;
+
 const runs: { query: Query; ids: string[]; ranking: string; error: string | null; ms: number }[] = [];
 for (const query of queries) {
   const started = Date.now();
   try {
-    const { data } = await searchPosts(repo, TOOLS.curatit_search_posts.input.parse({ query: query.q, limit: 10 }) as never, ctx);
-    runs.push({ query, ids: data.posts.map((p) => p.post_id), ranking: data.applied.ranking ?? "keyword", error: null, ms: Date.now() - started });
+    if (dashboardSearch) {
+      const { ids, ranking } = await dashboardSearch(query.q);
+      runs.push({ query, ids: ids.slice(0, 10), ranking, error: null, ms: Date.now() - started });
+    } else {
+      const { data } = await searchPosts(repo, TOOLS.curatit_search_posts.input.parse({ query: query.q, limit: 10 }) as never, ctx);
+      runs.push({ query, ids: data.posts.map((p) => p.post_id), ranking: data.applied.ranking ?? "keyword", error: null, ms: Date.now() - started });
+    }
   } catch (error) {
     runs.push({ query, ids: [], ranking: "refused", error: (error as Error).message, ms: Date.now() - started });
   }
@@ -94,7 +127,7 @@ const line = (label: string, s: ReturnType<typeof summary>) =>
   `${label.padEnd(22)} nDCG@10 ${s.ndcg.toFixed(3)}  recall ${s.recall.toFixed(3)}  precision ${s.precision.toFixed(3)}  junk ${(s.junk * 100).toFixed(0)}%  empty-but-relevant ${s.emptyButRelevant}  absent topics: ${s.absentJunk} junk, ${s.absentEmpty} of ${s.absentTotal} empty`;
 
 const rankings = [...new Set(runs.map((r) => r.ranking))].map((r) => `${r} ${runs.filter((x) => x.ranking === r).length}`).join(", ");
-console.log(`${keywordOnly ? "Keyword search alone" : "Search as deployed"} (rankings: ${rankings}; median ${[...runs.map((r) => r.ms)].sort((a, b) => a - b)[Math.floor(runs.length / 2)]} ms a search)`);
+console.log(`${dashboard ? "Dashboard search" : "MCP search"}, ${keywordOnly ? "keyword alone" : "as deployed"} (rankings: ${rankings}; median ${[...runs.map((r) => r.ms)].sort((a, b) => a - b)[Math.floor(runs.length / 2)]} ms a search)`);
 console.log(line(`All ${queries.length} requests`, summary(scored)));
 console.log(line("Held-out half", summary(scored.filter((x) => heldOut.has(x.run.query.id)))));
 for (const group of ["taxonomy", "concept", "brand"] as const) console.log(`  ${group.padEnd(9)} nDCG@10 ${mean(scored.filter((x) => x.run.query.group === group).map((x) => x.m.ndcg)).toFixed(3)}`);

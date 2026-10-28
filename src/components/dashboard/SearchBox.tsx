@@ -31,6 +31,7 @@ import { usePresence, useReducedMotion } from "@/lib/motion";
 import { useBoards } from "./boards";
 import { CATEGORY_ICONS } from "./categoryIcons";
 import { compact } from "./search";
+import { warmSearch } from "./useLibrarySearch";
 
 const RECENT_KEY = "curatit-recent-searches";
 const RECENT_MAX = 8;
@@ -76,6 +77,11 @@ export default function SearchBox({
   const beam = { size: "md", colorVariant: "colorful", strength: 0.7, theme: dark ? "dark" : "light", active: !reducedMotion && !scrolling } as const;
 
   useEffect(() => setRecent(readRecent()), []);
+  // Opening the box starts the server's search-by-meaning models loading, so they're ready by the
+  // time something's typed (a cold server takes several seconds; useLibrarySearch)
+  useEffect(() => {
+    if (open) warmSearch();
+  }, [open]);
 
   const remember = (text: string) => {
     const trimmed = text.trim();

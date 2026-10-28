@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { CuratitError } from "../errors";
 import { createFixtureCatalog, FIXTURE_IDS, FIXTURE_TAGGED } from "../repo/fixture";
 import type { RawHybridCandidate, RawSearchHit } from "../repo/types";
-import { clearRankings, searchPosts } from "./search";
+import { clearRankings, hybridOrder, searchPosts } from "./search";
 import type { SemanticModels } from "@/lib/search/semantic/models";
 
 const secret = new Uint8Array(32).fill(5);
@@ -151,5 +151,34 @@ describe("hybrid search", () => {
     const repo = hybridRepo([candidate(single, 1, "S")], { keywordTotal: 64 });
     const { warnings } = await searchPosts(repo, { query: "cash" }, ctxWith(models({ S: 0.5 })));
     expect(warnings[0]).toMatch(/^64 posts match the words; this search ranks the first 50/);
+  });
+
+  // The dashboard (/api/search, 2026-10-28) asks for the order alone, for a request it interpreted
+  describe("for the dashboard", () => {
+    it("answers every id in order: the kept matches by score, then the other keyword matches", async () => {
+      const repo = hybridRepo([candidate(single, 1, "S"), candidate(carousel, null, "C"), candidate(tagged, null, "T")], { keywordRest: ["kw-21"] });
+      const m = models({ S: 0.1, C: 0.6, T: 0.001 });
+      const { ids } = await hybridOrder(repo, m, { query: "cash", category: "finance", post_ids: ["a", "b"] }, "finance posts about cash");
+      expect(ids).toEqual([carousel, single, "kw-21"]);
+      // The request goes to the database as given, scope included; the reranker reads both readings
+      expect(repo.seen[0].request).toEqual({ query: "cash", category: "finance", post_ids: ["a", "b"] });
+      expect(m.reranked).toEqual(["finance posts about cash", "cash"]);
+    });
+
+    it("keeps the order for the same request in any key or id order, and ranks another request anew", async () => {
+      const repo = hybridRepo([candidate(single, 1, "S")]);
+      const m = models({ S: 0.5 });
+      await hybridOrder(repo, m, { query: "cash", tone: ["witty", "playful"], post_ids: ["a", "b"] }, "witty cash");
+      await hybridOrder(repo, m, { post_ids: ["b", "a"], tone: ["playful", "witty"], query: "cash" }, "witty cash");
+      expect(repo.seen).toHaveLength(1);
+      await hybridOrder(repo, m, { query: "cash", post_ids: ["a"] }, "witty cash");
+      expect(repo.seen).toHaveLength(2);
+    });
+
+    it("fails when the models do, and doesn't keep the failure", async () => {
+      const repo = hybridRepo([candidate(single, 1, "S")]);
+      await expect(hybridOrder(repo, models({}, { fail: true }), { query: "cash" }, "cash")).rejects.toThrow("no model files");
+      expect((await hybridOrder(repo, models({ S: 0.5 }), { query: "cash" }, "cash")).ids).toEqual([single]);
+    });
   });
 });

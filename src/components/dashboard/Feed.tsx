@@ -181,9 +181,16 @@ export default function Feed() {
         )}
         {/* The Saved view opens on the boards, then every saved post */}
         {view === "Saved" && !query.trim() && status !== "loading" && <BoardList />}
-        {search.result && !search.result.error && <p role="status" className="mb-5 type-body-sm text-text-2">
-          {shown.length} {shown.length === 1 ? "post" : "posts"}{search.result.labels.length ? ` · ${search.result.labels.join(" · ")}` : ""}
-          {search.result.capped ? " · First 500 matches. Narrow your search to see more." : ""}
+        {/* One line says what the search found and how: "Searching…" while it runs, in the place the
+            count takes, so nothing moves when the results land (search by meaning takes a second or
+            two: 2026-10-28, after Copilot's "Searching the web" and Perplexity's "Image results
+            for", on Mobbin). Nothing on the tiles: the grid stays pictures */}
+        {(search.loading || (search.result && !search.result.error)) && <p role="status" className="mb-5 type-body-sm text-text-2 tabular-nums">
+          {search.loading || !search.result ? "Searching…" : <>
+            {shown.length} {shown.length === 1 ? "post" : "posts"}{search.result.labels.length ? ` · ${search.result.labels.join(" · ")}` : ""}
+            {search.result.ranking === "meaning" && shown.length > 1 ? " · Closest in meaning first" : ""}
+            {search.result.capped ? " · First 500 matches. Narrow your search to see more." : ""}
+          </>}
         </p>}
         {search.result?.corrections?.length ? (
           <Alert className="mb-5">
@@ -192,8 +199,18 @@ export default function Feed() {
             </AlertDescription>
           </Alert>
         ) : null}
+        {/* Search by meaning failed or was too slow: these are the keyword results, and it says so */}
+        {search.result?.notice ? (
+          <Alert className="mb-5">
+            <AlertDescription>{search.result.notice}</AlertDescription>
+            <AlertAction>
+              <Button size="sm" variant="secondary" onClick={search.retry}>Try again</Button>
+            </AlertAction>
+          </Alert>
+        ) : null}
         {waiting || search.loading ? (
-          <GridSkeleton label={search.loading ? "Searching the library" : view === "Saved" ? "Loading your saved posts" : "Loading your feed"} />
+          // While a search runs, the line above is its status, so the skeleton is only a picture
+          <GridSkeleton label={search.loading ? null : view === "Saved" ? "Loading your saved posts" : "Loading your feed"} />
         ) : search.result?.error ? (
           <Alert status={search.result.invalid ? "neutral" : "fail"}>
             <AlertTitle>{search.result.invalid ? "Adjust your search" : "Search couldn't finish"}</AlertTitle>

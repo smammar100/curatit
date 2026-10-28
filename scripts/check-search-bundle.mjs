@@ -1,6 +1,7 @@
 // Checks that the deployed search function can load hybrid search's models: copies exactly the
 // files the build traced for /mcp (what Vercel ships) into an empty folder, then loads both models
-// from there and runs one embedding and one rerank. Run after `npm run build`, on Linux x64 like
+// from there and runs one embedding and one rerank; the REST search and the dashboard's /api/search
+// must trace the same model and native files. Run after `npm run build`, on Linux x64 like
 // Vercel (CI does); elsewhere it says so and stops, since the function carries Linux binaries only.
 // Added on 2026-10-25, after the first deploy shipped sharp's native module without the libvips it
 // links to: the import failed and search answered keyword-only, which no other check would catch.
@@ -27,6 +28,18 @@ if (!nftFile) {
   process.exit(1);
 }
 const traced = JSON.parse(readFileSync(nftFile, "utf8")).files.map((file) => resolve(dirname(nftFile), file));
+// The other routes that search ship the same runtime files as /mcp (next.config.ts), so the models
+// are loaded once, from /mcp's, and the others are checked to carry every one of those files
+const runtimeFile = (file) => /^(models|node_modules[\\/](onnxruntime-node[\\/]bin|@huggingface[\\/]transformers[\\/]node_modules[\\/]@img))[\\/]/.test(relative(root, file));
+for (const route of [["api", "v1", "posts", "search"], ["api", "search"]]) {
+  const file = join(dirname(nftFile), "..", ...route, "route.js.nft.json");
+  const files = existsSync(file) ? new Set(JSON.parse(readFileSync(file, "utf8")).files.map((f) => resolve(dirname(file), f))) : new Set();
+  const missing = traced.filter(runtimeFile).filter((f) => !files.has(f));
+  if (missing.length) {
+    console.error(`search bundle: /${route.join("/")} is missing ${missing.length} of the search runtime's files, e.g. ${relative(root, missing[0])}`);
+    process.exit(1);
+  }
+}
 const bundle = mkdtempSync(join(tmpdir(), "curatit-search-bundle-"));
 let copied = 0;
 for (const file of traced) {

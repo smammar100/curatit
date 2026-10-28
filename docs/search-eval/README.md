@@ -70,10 +70,22 @@ Better: "funny posts from fintech brands" (0.28 → 0.71, 1 → 4 relevant), "po
 
 The cost is a second reranker pass. One pass over 30 descriptions took a median 1.35 s on a laptop that was busy with another session's work, so a hybrid search takes about one pass longer than before. That's well inside the 25 s a tool call has; hybrid search only starts with 8 s left.
 
+## 28 October: the dashboard
+
+The dashboard's search now ranks by meaning through `/api/search` (`docs/natural-language-search.md`). `npm run search:eval -- --dashboard` runs it as the browser does, with the server's ranking called directly; `--keyword` with it is the dashboard as it was. Same catalog, same day:
+
+| All 95 requests | Ranking (nDCG@10) | Recall | Precision | Junk | Empty, though relevant posts exist | Topics not covered: junk, empty |
+|---|---|---|---|---|---|---|
+| Dashboard before (keyword, its own interpretation) | 0.362 | 0.346 | 0.824 | 18% | 39 | 2, 12 of 14 |
+| **Dashboard with meaning (shipped)** | **0.561** | **0.519** | **0.804** | **20%** | **19** | **2, 12 of 14** |
+| MCP search, before and after this change | 0.561 | 0.519 | 0.804 | 20% | 19 | 2, 12 of 14 |
+
+Held-out half: 0.412 / 0.389 / 0.823 before, 0.629 / 0.576 / 0.799 after. By kind (nDCG@10): taxonomy 0.671 → 0.794, concepts 0.156 → 0.339, a brand with an idea 0.284 → 0.767. The dashboard with meaning returns the same top 10 as MCP search on every request. The keyword run brought up 8 results nobody has judged (three requests, counted as not relevant), so its figures may be a little low. Median time a search on a laptop running a dev server alongside: 297 ms keyword, 2,242 ms with meaning.
+
 ## Re-scoring
 
 ```bash
 npm run search:eval
 ```
 
-runs every request through the search service the server runs (the live catalog, read-only, and the models in `./models`) and prints the table's columns for all requests, for the held-out half and by kind. `-- --keyword` scores keyword search alone; `-- --out <file>` writes every result. A result nobody has judged counts as not relevant and is listed: before trusting a change that brings up many, grade them the same way (blind, strict, from the description) and add them to `judgments.json` with the next `round` number.
+runs every request through the search service the server runs (the live catalog, read-only, and the models in `./models`) and prints the table's columns for all requests, for the held-out half and by kind. `-- --keyword` scores keyword search alone; `-- --dashboard` scores the dashboard's search instead (its own interpretation, the exact brand and category shortcut, its keyword pages and the order `/api/search` adds; with `--keyword`, the dashboard as it was before October 28); `-- --out <file>` writes every result. A result nobody has judged counts as not relevant and is listed: before trusting a change that brings up many, grade them the same way (blind, strict, from the description) and add them to `judgments.json` with the next `round` number.

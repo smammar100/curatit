@@ -245,6 +245,16 @@ async function hybridPage(repo: CatalogRepository, models: SemanticModels, reque
   return { posts, next: { offset: offset + limit < ranked.length ? offset + limit : null, marker: marker ?? items.catalog_marker ?? null } };
 }
 
+// The dashboard's search by meaning (/api/search, 2026-10-28): the same order for a request the
+// browser has already interpreted, kept the same way. Every post id in order: the matches the
+// reranker keeps, best first, then the rest of the first 50 keyword matches; the browser appends
+// the keyword matches past those from its own keyword search
+export async function hybridOrder(repo: CatalogRepository, models: SemanticModels, request: RawSearchRequest, originalQuery: string) {
+  const search = await fingerprint({ originalQuery, request: canonical(request as Record<string, unknown>), ranking: "dashboard" });
+  const { ranked } = await rankingOnce(`${RANKING_VERSION}|${search}`, () => rankHybrid(repo, models, request, originalQuery));
+  return { ids: ranked.map((r) => r.id) };
+}
+
 // Forget every kept order (tests)
 export function clearRankings() {
   rankings.clear();
@@ -272,12 +282,15 @@ function toHit(repo: CatalogRepository, hit: RawSearchHit, extra?: { reasons: st
   };
 }
 
-// The applied filters with keys and values in one order, for the cursor's fingerprint
-function canonical(applied: Record<string, string[]>) {
+// The applied filters (or a request) with keys and list values in one order, for a fingerprint
+function canonical(applied: Record<string, unknown>) {
   return Object.fromEntries(
     Object.keys(applied)
       .sort()
-      .map((k) => [k, [...applied[k]].sort()]),
+      .map((k) => {
+        const value = applied[k];
+        return [k, Array.isArray(value) ? [...value].sort() : value];
+      }),
   );
 }
 
