@@ -158,6 +158,7 @@ describe("natural search", () => {
       ["save money on food delivery", { category: "food-drink" }, "save money"],
       ["money-saving deals", {}, "money saving deals"],
       ["script for a reel", { format: "video" }, "script"],
+      ["posts from other brands", {}, "other"],
       // A label's or an industry's own name still selects it
       ["seasonal posts", { archetype: ["seasonal"] }, ""],
       ["inspirational tone", { tone: ["inspirational"] }, ""],

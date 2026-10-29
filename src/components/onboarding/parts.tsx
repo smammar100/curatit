@@ -48,7 +48,7 @@ export function brandsOf(posts: DashPost[]): Brand[] {
 // its brand's main category and in its extra tags
 export type Category = { slug: string; name: string; hue: number; posts: DashPost[] };
 export function categoriesOf(posts: DashPost[]): Category[] {
-  return categoriesWithPosts(posts).map((c) => ({ ...c, posts: posts.filter((p) => inCategory(p, c.slug)) }));
+  return categoriesWithPosts(posts, { catchAll: false }).map((c) => ({ ...c, posts: posts.filter((p) => inCategory(p, c.slug)) }));
 }
 
 // The step's question. It takes focus when the step changes (tabIndex -1: a target, not a stop),

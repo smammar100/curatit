@@ -298,8 +298,10 @@ export const sources = [
   },
   {
     file: "data/instagram/gofundme.json",
+    // Its files stay in finance/ (where they were uploaded); its category is Others since 2026-10-21
+    // in the database, and here since 2026-10-29, at the owner's request: it isn't a fintech brand
     folder: "finance",
-    categories: ["finance"],
+    categories: ["others"],
     brand: { name: "GoFundMe", slug: "gofundme", websiteUrl: "https://www.gofundme.com" },
     // GoFundMe Pro (its nonprofit platform) and @gofundmenl are GoFundMe's own and co-post with it;
     // fundraisers like @hawaiimutualaid post with @gofundme as co-author but aren't filed here

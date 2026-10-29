@@ -38,7 +38,7 @@ export default async function HomePage() {
   // The tabs: the brands' main categories that can fill the ten-slot gallery, each with its ten
   // posts. One card per post, so a post in two tabs is written into the page's data once (React
   // refers back to an object it has already sent)
-  const tabs = categoriesWithPosts(posts, { main: true, min: 10 });
+  const tabs = categoriesWithPosts(posts, { main: true, min: 10, catchAll: false });
   const cards = new Map<string, PostCard>();
   const card = (post: LibraryPost) => {
     if (!cards.has(post.id)) cards.set(post.id, toPostCard(post));

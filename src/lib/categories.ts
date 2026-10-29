@@ -1,10 +1,14 @@
 // The library's categories, after Mobbin's app categories (2026-10-13): the same 28 as the
-// `categories` table, in its `position` order. Each has a hue for its swatch, tab and folder
+// `categories` table, in its `position` order, then Others (position 30), a catch-all for brands
+// none of them fits (GoFundMe, filed there in the database on 2026-10-21, listed here on 2026-10-29
+// at the owner's request so Discover has a tab for it). Each has a hue for its swatch, tab and folder
 // (OKLCH; lightness and chroma are shared by whoever draws it). A brand has one main category
 // and may carry extra ones as post tags, so a post can be in several: `post.categories`, main
 // first. The site lists only the categories that have posts. Imported by client code: no Node.
 
-export type CategoryDef = { slug: string; name: string; hue: number };
+// `catchAll`: Others. Discover, the search chips and a post's chips list it; the homepage's tabs,
+// the welcome flow's industries and the Vision graph leave it out, where it reads as no answer
+export type CategoryDef = { slug: string; name: string; hue: number; catchAll?: true };
 
 export const CATEGORIES: CategoryDef[] = [
   { slug: "ai", name: "AI", hue: 300 },
@@ -35,6 +39,7 @@ export const CATEGORIES: CategoryDef[] = [
   { slug: "sports", name: "Sports", hue: 135 },
   { slug: "travel-transportation", name: "Travel & Transportation", hue: 240 },
   { slug: "utilities", name: "Utilities", hue: 90 },
+  { slug: "others", name: "Others", hue: 110, catchAll: true },
 ];
 
 const BY_SLUG = new Map(CATEGORIES.map((category) => [category.slug, category]));
@@ -76,8 +81,8 @@ export const inCategory = (post: Pick<Tagged, "categories">, slug: string) => po
 // The categories with at least `min` posts, in CATEGORIES order. A post counts in each of its
 // categories, or with `main` in its brand's main category alone (the homepage's tabs, where a
 // tag-only category would repeat another tab's posts)
-export function categoriesWithPosts(posts: Tagged[], { min = 1, main = false }: { min?: number; main?: boolean } = {}): CategoryDef[] {
+export function categoriesWithPosts(posts: Tagged[], { min = 1, main = false, catchAll = true }: { min?: number; main?: boolean; catchAll?: boolean } = {}): CategoryDef[] {
   const counts = new Map<string, number>();
   for (const post of posts) for (const { slug } of main ? [post.category] : post.categories) counts.set(slug, (counts.get(slug) ?? 0) + 1);
-  return CATEGORIES.filter((category) => (counts.get(category.slug) ?? 0) >= min);
+  return CATEGORIES.filter((category) => (catchAll || !category.catchAll) && (counts.get(category.slug) ?? 0) >= min);
 }

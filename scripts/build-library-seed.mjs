@@ -15,7 +15,8 @@ import { postImages, sources } from "./library-sources.mjs";
 const CATEGORY_SLUGS = new Set(
   [...fs.readFileSync(path.join("src", "lib", "categories.ts"), "utf8").matchAll(/\{ slug: "([a-z0-9-]+)", name: /g)].map((m) => m[1])
 );
-if (CATEGORY_SLUGS.size !== 28) throw new Error(`Expected 28 categories in src/lib/categories.ts, found ${CATEGORY_SLUGS.size}`);
+// The 28 and Others (2026-10-29)
+if (CATEGORY_SLUGS.size !== 29) throw new Error(`Expected 29 categories in src/lib/categories.ts, found ${CATEGORY_SLUGS.size}`);
 
 // Dollar-quoted literal with a tag that can't appear in the data
 const literal = (value) => {

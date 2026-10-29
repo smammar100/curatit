@@ -33,8 +33,10 @@ const generic = new Set(["category:graphics-design", "archetype_family:brand", "
 // delivery' was refused as two industries, and 'save' the Save call to action), 'customer reviews'
 // a second approach that emptied the search. As words they're matched in the text and, in MCP
 // search, ranked by meaning. 'script' joined on 2026-10-28 (a QA run): to a marketer it's a video or
-// caption script, and as the Script typeface 'script for a reel' came back empty
-const everyday = ["funny", "hilarious", "motivational", "motivation", "inspiring", "inspiration", "summer", "holiday", "black friday", "back to school", "money", "save money", "review", "customer review", "script"].map(words);
+// caption script, and as the Script typeface 'script for a reel' came back empty. 'other'
+// joined on 2026-10-29, when Others became a listed category: 'posts from other brands' would
+// have become an Others filter
+const everyday = ["funny", "hilarious", "motivational", "motivation", "inspiring", "inspiration", "summer", "holiday", "black friday", "back to school", "money", "save money", "review", "customer review", "script", "other"].map(words);
 // A post has one brand, one main industry and one format; creative labels can take several values
 const oneValue = new Set(["brand", "category", "format"]);
 const dimensions = ["archetype", "archetype_family", "objective", "hook_technique", "narrative_pattern", "typography", "layout", "imagery", "palette", "visual_device", "tone", "persuasion", "cta"];
