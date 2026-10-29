@@ -196,7 +196,7 @@ begin
 end;
 $function$;
 
-CREATE OR REPLACE FUNCTION public.curatit_mcp_search_v3(p_request jsonb DEFAULT '{}'::jsonb, p_embedding vector DEFAULT NULL::vector, p_ids text[] DEFAULT NULL::text[])
+CREATE OR REPLACE FUNCTION public.curatit_mcp_search_v3(p_request jsonb DEFAULT '{}'::jsonb, p_embedding extensions.vector DEFAULT NULL::extensions.vector, p_ids text[] DEFAULT NULL::text[])
  RETURNS jsonb
  LANGUAGE plpgsql
  STABLE
