@@ -23,9 +23,9 @@ const FOUNDER = {
 };
 
 // Five posts for the graph: the newest from each category, so the frames don't repeat a look. Only
-// the site's own categories (a brand filed in the database under one the site doesn't list, such as
-// "Others", labelled a frame with it, 2026-10-28)
-const KNOWN = new Set(CATEGORIES.map((category) => category.slug));
+// the site's own categories, and not the catch-all Others (a frame labelled "Others" said nothing,
+// 2026-10-28)
+const KNOWN = new Set(CATEGORIES.filter((category) => !category.catchAll).map((category) => category.slug));
 
 function byCategory(posts: LibraryPost[], count: number) {
   const seen = new Set<string>();

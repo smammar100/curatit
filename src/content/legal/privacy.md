@@ -1,6 +1,6 @@
 ---
 page: Privacy policy
-pubDate: 2026-10-28
+pubDate: 2026-10-29
 ---
 <!-- Draft written from Curatit's code and docs on 2026-10-28. The owner needs to review it (and a lawyer, if he wants one) before launch. -->
 
@@ -38,6 +38,8 @@ When you're signed in, these are linked to your account, and PostHog holds your 
 PostHog may also record sessions: a replay of the pages you see and where you click and scroll. What you type into fields is masked in these recordings.
 
 Like any service your browser contacts, PostHog receives your IP address. It stores Curatit's analytics in the United States. If you block PostHog, Curatit works just the same.
+
+Vercel, which hosts the site, also counts page views with Vercel Web Analytics. It sets no cookie and doesn't tie a view to you: it tells visits apart by a code made from each request, which it throws away after a day. With each view it keeps the page's address, the page you came from, your country and region, and your browser, operating system and type of device. Before an address is sent we take out anything private in it: a shared board's link, the one-time code in a sign-in link, the email address in an unsubscribe link, and the words you searched for.
 
 ## Cookies and browser storage
 
@@ -79,7 +81,7 @@ If you appear in a post in the library and want it removed, write to us.
 | Service | What it does for Curatit |
 | --- | --- |
 | Supabase | Database, sign-in and file storage: your account, profile, boards, notes and tokens |
-| Vercel | Hosts the site and runs its server code |
+| Vercel | Hosts the site, runs its server code and counts page views |
 | PostHog | Analytics, error reports and session recordings |
 | Resend | Delivers Curatit's emails |
 

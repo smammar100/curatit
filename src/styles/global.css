@@ -755,41 +755,40 @@
 
 /* The empty board's illustration (BoardView): its two saved cards and the dashed one fan out
    once, when the empty state appears */
-.board-art-card {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-  animation: board-art-fan 560ms cubic-bezier(0.23, 1, 0.32, 1) both;
+/* Where each tile of the feed's grid sits (dashboard/Grid). Registered so they don't inherit: a new
+   order moves every tile, and an inherited value would restyle everything inside each one too
+   (2026-10-29) */
+@property --tile-x {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --tile-y {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
 }
 
-/* A soft lift under the two saved cards (it fades out against the dark theme, which is fine) */
-.board-art-card[data-side="left"],
-.board-art-card[data-side="right"] {
-  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.07));
+/* The empty board's ghost wall (BoardView's EmptyBoard, 2026-10-29): the wall fades out downward and
+   its slots rise in once, column by column, each at its own --delay. Still under reduced motion */
+.board-ghost {
+  mask-image: linear-gradient(to bottom, black 35%, transparent 100%);
 }
 
-.board-art-card[data-side="left"] {
-  --from: translate(18px, 6px) rotate(9deg);
-  animation-delay: 60ms;
+.board-ghost-slot {
+  animation: board-ghost-rise 420ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation-delay: var(--delay, 0ms);
 }
 
-.board-art-card[data-side="right"] {
-  --from: translate(-18px, 6px) rotate(-9deg);
-  animation-delay: 110ms;
-}
-
-.board-art-card[data-side="front"] {
-  --from: translateY(8px) scale(0.94);
-}
-
-@keyframes board-art-fan {
+@keyframes board-ghost-rise {
   from {
     opacity: 0;
-    transform: var(--from);
+    transform: translateY(8px);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .board-art-card {
+  .board-ghost-slot {
     animation: none;
   }
 }
@@ -1048,6 +1047,55 @@
 @media (prefers-reduced-motion: reduce) {
   .saved-art-card,
   .saved-art-badge {
+    animation: none;
+  }
+}
+
+/* The empty search's illustration (dashboard/SearchEmptyArt, the "Flip", 2026-10-29): the hand of
+   posts fans open from a stack, outer cards last, then the middle card lifts and turns over to its
+   blank back. Once, on mount; each element's resting style is its last frame */
+.search-art-card {
+  transform: rotate(var(--angle));
+  transform-origin: 50% 190%;
+  animation: search-art-fan 520ms cubic-bezier(0.23, 1, 0.32, 1) var(--delay) both;
+}
+
+.search-art-flip {
+  transform-style: preserve-3d;
+  transform: translateY(-10px) perspective(700px) rotateY(180deg);
+  animation: search-art-flip 1000ms cubic-bezier(0.65, 0, 0.35, 1) 560ms both;
+}
+
+.search-art-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.search-art-back {
+  transform: rotateY(180deg);
+}
+
+@keyframes search-art-fan {
+  from {
+    transform: none;
+  }
+}
+
+@keyframes search-art-flip {
+  0% {
+    transform: translateY(0) perspective(700px) rotateY(0deg);
+  }
+  28% {
+    transform: translateY(-14px) perspective(700px) rotateY(0deg);
+  }
+  100% {
+    transform: translateY(-10px) perspective(700px) rotateY(180deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-art-card,
+  .search-art-flip {
     animation: none;
   }
 }

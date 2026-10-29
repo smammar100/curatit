@@ -23,6 +23,7 @@ import {
   Light,
   ListChecks,
   MapTrifold,
+  More,
   MusicNotes,
   Newspaper,
   PaintBrush,
@@ -64,4 +65,5 @@ export const CATEGORY_ICONS: Record<string, GlazeIcon> = {
   sports: Basketball,
   "travel-transportation": AirplaneTilt,
   utilities: Tool,
+  others: More,
 };

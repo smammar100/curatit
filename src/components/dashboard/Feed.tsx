@@ -21,6 +21,7 @@ import CategoryBar from "./CategoryBar";
 import { rank, spread } from "./forYou";
 import { useProfile } from "./profile";
 import SavedArt from "./SavedArt";
+import SearchEmptyArt from "./SearchEmptyArt";
 import Grid from "./Grid";
 import Playbooks from "./Playbooks";
 import Header, { VIEWS, type View } from "./Header";
@@ -48,6 +49,24 @@ export default function Feed() {
   const [view, setView] = useState<View>("For you");
   // Discover's category (a slug), or null for All
   const [category, setCategory] = useState<string | null>(null);
+  // The switch and the category bar show a pick at once; the feed under them follows once that has
+  // been painted. Restyling and laying out the grid's 291 tiles for a new view takes the browser a
+  // few hundred milliseconds on a laptop, and done in the same frame it held the switch still until
+  // the feed was ready (2026-10-29). A deferred value wasn't enough: React starts it before the
+  // browser has painted anything
+  const [settled, setSettled] = useState({ view, category });
+  useEffect(() => {
+    let timer = 0;
+    const frame = requestAnimationFrame(() => {
+      timer = window.setTimeout(() => setSettled((was) => (was.view === view && was.category === category ? was : { view, category })));
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
+  }, [view, category]);
+  const shownView = settled.view;
+  const shownCategory = settled.category;
   // Everything on any board, most recently saved first
   const saved = useMemo(
     () =>
@@ -57,7 +76,10 @@ export default function Feed() {
     [boards, byCode],
   );
   // A search keeps to what the view shows: the saved posts, or Discover's category
-  const scope = useMemo(() => (view === "Saved" ? { postIds: saved.map((post) => post.id) } : view === "Discover" && category ? { category } : {}), [view, category, saved]);
+  const scope = useMemo(
+    () => (shownView === "Saved" ? { postIds: saved.map((post) => post.id) } : shownView === "Discover" && shownCategory ? { category: shownCategory } : {}),
+    [shownView, shownCategory, saved],
+  );
   const search = useLibrarySearch(query, list, scope);
 
   // Open on the view, category and search in the address: on arrival, and whenever a link brings
@@ -94,7 +116,7 @@ export default function Feed() {
   }, [view, query, category]);
 
   const shown = useMemo(() => {
-    const source = view === "Saved" ? saved : view === "Discover" && category ? list.filter((post) => inCategory(post, category)) : list;
+    const source = shownView === "Saved" ? saved : shownView === "Discover" && shownCategory ? list.filter((post) => inCategory(post, shownCategory)) : list;
     const brand = brandNamed(list, query);
     const named = brand ? null : categoryNamed(query);
     // A type of post or a hook, as the Playbooks cards and chips send them
@@ -112,8 +134,8 @@ export default function Feed() {
               ? source.filter((post) => post.breakdown?.hook === hook)
               : source.filter((post) => search.order.has(post.shortCode)).toSorted((a, b) => search.order.get(a.shortCode)! - search.order.get(b.shortCode)!);
     // For you never lets one brand's run (a new import, or a brand the answers favour) fill the top
-    return view === "For you" && !query.trim() ? spread(rank(filtered, profile, list, { fresh: true }), 6) : filtered;
-  }, [list, saved, query, view, category, profile, search.order]);
+    return shownView === "For you" && !query.trim() ? spread(rank(filtered, profile, list, { fresh: true }), 6) : filtered;
+  }, [list, saved, query, shownView, shownCategory, profile, search.order]);
   // A playbook opened from its card (or typed in full): the search names a type of post exactly. It
   // gets a headline over its posts, set like a board's title, with how many posts from how many brands
   const playbook = useMemo(
@@ -123,7 +145,7 @@ export default function Feed() {
   const playbookBrands = useMemo(() => new Set(shown.map((post) => post.brand.slug)).size, [shown]);
   // For you waits for the answers it ranks on, so it never shows one order and then another, and
   // keeps waiting while a first visit is on its way to the welcome flow
-  const waiting = (view === "Saved" && status === "loading") || (view === "For you" && (profileStatus === "loading" || (onFeed && unset)));
+  const waiting = (shownView === "Saved" && status === "loading") || (shownView === "For you" && (profileStatus === "loading" || (onFeed && unset)));
 
   return (
     <div className="min-h-dvh bg-page">
@@ -161,8 +183,8 @@ export default function Feed() {
         {/* Discover, after Cosmos's Explore: the categories under the header, then (with nothing typed
             and every category showing) the playbooks, moved here from For you on 2026-10-24 at the
             owner's request, then the wall */}
-        {view === "Discover" && <CategoryBar posts={list} value={category} onChange={setCategory} />}
-        {view === "Discover" && !query.trim() && !category && (
+        {shownView === "Discover" && <CategoryBar posts={list} value={category} onChange={setCategory} />}
+        {shownView === "Discover" && !query.trim() && !shownCategory && (
           <Playbooks
             posts={list}
             onPick={(next) => {
@@ -180,12 +202,13 @@ export default function Feed() {
           </div>
         )}
         {/* The Saved view opens on the boards, then every saved post */}
-        {view === "Saved" && !query.trim() && status !== "loading" && <BoardList />}
+        {shownView === "Saved" && !query.trim() && status !== "loading" && <BoardList />}
         {/* One line says what the search found and how: "Searching…" while it runs, in the place the
             count takes, so nothing moves when the results land (search by meaning takes a second or
             two: 2026-10-28, after Copilot's "Searching the web" and Perplexity's "Image results
             for", on Mobbin). Nothing on the tiles: the grid stays pictures */}
-        {(search.loading || (search.result && !search.result.error)) && <p role="status" className="mb-5 type-body-sm text-text-2 tabular-nums">
+        {/* An empty result has no count line: the empty state below says it (2026-10-29) */}
+        {(search.loading || (search.result && !search.result.error && shown.length > 0)) && <p role="status" className="mb-5 type-body-sm text-text-2 tabular-nums">
           {search.loading || !search.result ? "Searching…" : <>
             {shown.length} {shown.length === 1 ? "post" : "posts"}{search.result.labels.length ? ` · ${search.result.labels.join(" · ")}` : ""}
             {search.result.ranking === "meaning" && shown.length > 1 ? " · Closest in meaning first" : ""}
@@ -210,7 +233,7 @@ export default function Feed() {
         ) : null}
         {waiting || search.loading ? (
           // While a search runs, the line above is its status, so the skeleton is only a picture
-          <GridSkeleton label={search.loading ? null : view === "Saved" ? "Loading your saved posts" : "Loading your feed"} />
+          <GridSkeleton label={search.loading ? null : shownView === "Saved" ? "Loading your saved posts" : "Loading your feed"} />
         ) : search.result?.error ? (
           <Alert status={search.result.invalid ? "neutral" : "fail"}>
             <AlertTitle>{search.result.invalid ? "Adjust your search" : "Search couldn't finish"}</AlertTitle>
@@ -223,13 +246,13 @@ export default function Feed() {
           </Alert>
         ) : shown.length ? (
           <>
-            {view === "Saved" && !query.trim() && boards.length > 0 && <h2 className="mb-5 type-heading text-text-1">All saved posts</h2>}
+            {shownView === "Saved" && !query.trim() && boards.length > 0 && <h2 className="mb-5 type-heading text-text-1">All saved posts</h2>}
             <Grid posts={shown} />
           </>
         ) : (
-          <Empty view={view} query={query} onClear={() => setQuery("")} onBrowse={() => setView("For you")}
+          <Empty view={shownView} query={query} onClear={() => setQuery("")} onBrowse={() => setView("For you")}
             refinements={search.result?.refinements ?? []} onRefine={setQuery}
-            scoped={view === "Saved" || (view === "Discover" && Boolean(category))}
+            scoped={shownView === "Saved" || (shownView === "Discover" && Boolean(shownCategory))}
             onSearchAll={() => { setView("Discover"); setCategory(null); }} />
         )}
       </main>
@@ -260,25 +283,22 @@ function Empty({ view, query, onClear, onBrowse, refinements, onRefine, scoped, 
       </EmptyRegion>
     );
   }
-  // A search that found nothing: the lead way out, then the other refinements and Clear search as
-  // ghost buttons
+  // A search that found nothing (simplified at the owner's request, 2026-10-29): the Flip
+  // illustration, a short title (the request is already in the search box), one line of help and
+  // one way out: the full library from a scoped view, else the first refinement, else Clear search.
+  // The search box's own × clears it too
   return (
     <EmptyRegion reason="no-results" variant="plain" className="py-16">
+      <SearchEmptyArt />
       <EmptyHeader>
-        <EmptyTitle>Nothing matches ‘{query}’</EmptyTitle>
-        <EmptyDescription>{scoped ? "This search is limited to your current view. Try the full library." : "Try removing one detail, or describe the posts another way."}</EmptyDescription>
+        <EmptyTitle icon={false}>No posts match your search</EmptyTitle>
+        <EmptyDescription>{scoped ? "This search only looks in your current view." : "Try fewer details, or describe it another way."}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button size="sm" onClick={scoped ? onSearchAll : refinements[0] ? () => onRefine(refinements[0].query) : onClear}>
+        <Button size="sm" variant="secondary" onClick={scoped ? onSearchAll : refinements[0] ? () => onRefine(refinements[0].query) : onClear}>
           {scoped ? "Search full library" : refinements[0]?.label ?? "Clear search"}
         </Button>
       </EmptyContent>
-      {(scoped || refinements.length > 0) && (
-        <EmptyContent>
-          {!scoped && refinements.slice(1).map((item) => <Button key={item.query} size="sm" variant="ghost" onClick={() => onRefine(item.query)}>{item.label}</Button>)}
-          <Button size="sm" variant="ghost" onClick={onClear}>Clear search</Button>
-        </EmptyContent>
-      )}
     </EmptyRegion>
   );
 }

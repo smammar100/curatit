@@ -12,8 +12,9 @@
 // link and Stop sharing, or Create link), More is a DropdownMenu, and Delete asks in an
 // alertdialog with focus on Cancel, opened once More's menu has finished closing so focus comes
 // back to More after. The wall's tiles sit on the panel corner, the brand label and the note on
-// tags of paper, the empty board and the missing board are Glaze's Empty, and the loading shape is
-// Glaze's Skeleton. The name, description and notes still edit in place (Editable): at rest the
+// tags of paper, the missing board is Glaze's Empty, and the loading shape is Glaze's Skeleton.
+// Since 2026-10-29 the header is the "Banner" and an empty board shows the "Ghost wall" (both at
+// the owner's request, from six-way prototypes; see EmptyBoard and AGENTS.md). The name, description and notes still edit in place (Editable): at rest the
 // text, with a ghost Button whose hit area covers it, and while editing Glaze's Input or Textarea.
 import {
   useEffect,
@@ -41,7 +42,7 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "
 import { Input } from "@/components/glaze/ui/input";
 import { Skeleton } from "@/components/glaze/ui/skeleton";
 import { Textarea } from "@/components/glaze/ui/textarea";
-import { Edit, Icon, More } from "@/components/glaze/icon";
+import { ArrowLeft, Edit, Globe, Icon, More } from "@/components/glaze/icon";
 import BrandName from "@/components/home/BrandName";
 import { cx } from "@/lib/cx";
 import { NAME_MAX, SaveMenu, useBoards } from "./boards";
@@ -63,6 +64,8 @@ export function useOrigin() {
 }
 
 const NOTE_MAX = 280;
+// A fact about the board in the banner's foot: a chip of paper on the shell's grey
+const FACT = "rounded-pill bg-paper px-2.5 py-1 type-caption text-text-2 tabular-nums";
 // Tiles aim for this width; the column count is however many fit (two at least). The gap is
 // gap-2's 8px
 const TARGET = 210;
@@ -139,50 +142,61 @@ export default function BoardView({ id }: { id: string }) {
           </Empty>
         ) : (
           <>
-            <header className="pt-2 pb-6">
-              {/* An invisible 44px tap area round the short word */}
-              <TextLink variant="quiet" href={feedHref("Saved")} className="after:absolute after:-inset-x-2 after:-inset-y-3">
-                Saved
-              </TextLink>
-              {/* The name and the actions share a row; the rest of the header hangs under the name */}
-              <div className="mt-1 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
-                <div className="min-w-0 flex-1">
-                  {/* One long word wraps instead of widening the page (2026-10-28, from a QA run) */}
-                  <h1 className="-mx-2 type-title text-balance text-text-1 [overflow-wrap:anywhere]">
-                    <Editable
-                      value={board.name}
-                      editing={editing === "name"}
-                      onEdit={(on) => setEditing(on ? "name" : null)}
-                      onSave={(text) => text && updateBoard(board.id, { name: text })}
-                      maxLength={NAME_MAX}
-                      label="Board name"
-                      size="lg"
-                    />
-                  </h1>
-                  {/* Only when there is one; More has "Add a description" */}
-                  {(board.description || editing === "description") && (
-                    <div className="-mx-2 mt-1.5 max-w-2xl type-body text-pretty text-text-2 [overflow-wrap:anywhere]">
-                      <Editable
-                        value={board.description ?? ""}
-                        editing={editing === "description"}
-                        onEdit={(on) => setEditing(on ? "description" : null)}
-                        onSave={(text) => updateBoard(board.id, { description: text || null })}
-                        maxLength={DESCRIPTION_MAX}
-                        label="Description"
-                      />
-                    </div>
-                  )}
-                  <p className="mt-2 type-body-sm text-text-2 tabular-nums">
-                    {items.length} {items.length === 1 ? "post" : "posts"} · Updated {ago(board.updatedAt)}
-                    {board.shareToken && " · Shared"}
-                  </p>
-                </div>
+            {/* The "Banner" (2026-10-29, chosen from a six-way prototype at the owner's request): the
+                board's name and what it's for on a panel of the shell's grey, like a cover sheet over
+                its posts; the way back, Share and More along its top, the facts as chips at its foot */}
+            <header className="mt-2 mb-6 rounded-shell bg-shell px-5 py-6 sm:px-8 sm:py-8">
+              <div className="flex items-center justify-between gap-4">
+                {/* -ms-3 takes back the ghost Button's 12px padding, so its arrow lines up with the name */}
+                <Button variant="ghost" size="sm" render={<Link href={feedHref("Saved")} />} nativeButton={false} className="-ms-3">
+                  <Icon icon={ArrowLeft} />
+                  Saved
+                </Button>
                 {/* Share and More: secondary Buttons, like the header's Create */}
                 <div className="flex shrink-0 items-center gap-2">
                   <SharePanel board={board} />
                   <MoreMenu board={board} onRename={() => setEditing("name")} onDescribe={() => setEditing("description")} />
                 </div>
               </div>
+              {/* One long word wraps instead of widening the page (2026-10-28, from a QA run). At rest
+                  the name hugs its words, so the hover wash and the pencil sit with it rather than
+                  running the width of the banner; while editing, the field takes the full width */}
+              <h1 className={cx("-mx-2 mt-5 max-w-3xl type-title text-balance text-text-1 [overflow-wrap:anywhere]", editing !== "name" && "w-fit")}>
+                <Editable
+                  value={board.name}
+                  editing={editing === "name"}
+                  onEdit={(on) => setEditing(on ? "name" : null)}
+                  onSave={(text) => text && updateBoard(board.id, { name: text })}
+                  maxLength={NAME_MAX}
+                  label="Board name"
+                  size="lg"
+                />
+              </h1>
+              {/* Only when there is one; More has "Add a description" */}
+              {(board.description || editing === "description") && (
+                <div className={cx("-mx-2 mt-2 max-w-2xl type-body text-pretty text-text-2 [overflow-wrap:anywhere]", editing !== "description" && "w-fit")}>
+                  <Editable
+                    value={board.description ?? ""}
+                    editing={editing === "description"}
+                    onEdit={(on) => setEditing(on ? "description" : null)}
+                    onSave={(text) => updateBoard(board.id, { description: text || null })}
+                    maxLength={DESCRIPTION_MAX}
+                    label="Description"
+                  />
+                </div>
+              )}
+              <ul aria-label="About this board" className="mt-5 flex flex-wrap items-center gap-2">
+                <li className={FACT}>
+                  {items.length} {items.length === 1 ? "post" : "posts"}
+                </li>
+                <li className={FACT}>Updated {ago(board.updatedAt)}</li>
+                {board.shareToken && (
+                  <li className={cx(FACT, "inline-flex items-center gap-1.5")}>
+                    <Icon icon={Globe} size={14} />
+                    Shared with a link
+                  </li>
+                )}
+              </ul>
             </header>
 
             {items.length ? <Masonry board={board} items={items} /> : <EmptyBoard />}
@@ -513,71 +527,78 @@ function MoreMenu({ board, onRename, onDescribe }: { board: Board; onRename: () 
   );
 }
 
-// The board's empty state: the illustration, what belongs here, and the way to fill it
+// The empty board, the "Ghost wall" (2026-10-29, chosen from a six-way prototype at the owner's
+// request): the wall it will become, drawn as empty slots in its own columns (TARGET, GAP) and
+// fading out downward, with what goes here and the way to fill it on a card over it. The slots rise
+// in once (.board-ghost-slot in global.css), still under reduced motion; decorative, so hidden from
+// screen readers, since the card says the same
+const SHAPES = [1.25, 0.9, 1.4, 1, 1.2, 0.8, 1.3, 1.1];
+
 function EmptyBoard() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const measure = () => setWidth(element.clientWidth);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  const count = width ? Math.max(2, Math.floor((width + GAP) / (TARGET + GAP))) : 2;
+
   return (
-    <Empty variant="plain" className="py-12">
-      <EmptyBoardArt className="w-64" />
-      <EmptyHeader>
-        <EmptyTitle icon={false}>Nothing on this board yet</EmptyTitle>
-        <EmptyDescription>Save posts to it from the feed: Save is on every post, and this board is in its list.</EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent>
-        <Button size="sm" render={<Link href="/dashboard" />} nativeButton={false}>
-          Browse the feed
-        </Button>
-      </EmptyContent>
-    </Empty>
+    <div className="relative">
+      <div
+        ref={ref}
+        aria-hidden="true"
+        className="board-ghost grid grid-cols-(--columns) gap-2"
+        style={{ "--columns": `repeat(${count}, minmax(0, 1fr))` } as CSSProperties}
+      >
+        {Array.from({ length: count }, (_, column) => (
+          <div key={column} className="flex flex-col gap-2">
+            {[0, 1, 2].map((row) => (
+              <span
+                key={row}
+                className="board-ghost-slot block aspect-(--shape) rounded-panel border border-dashed border-line-strong"
+                style={{ "--shape": `1 / ${SHAPES[(column * 3 + row) % SHAPES.length]}`, "--delay": `${column * 45 + row * 110}ms` } as CSSProperties}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className="absolute inset-x-0 top-12 flex justify-center px-2">
+        <div className="flex max-w-sm flex-col items-center rounded-shell bg-paper px-6 py-6 text-center shadow-surface-6">
+          <h2 className="type-heading text-balance text-text-1">Nothing on this board yet</h2>
+          <p className="mt-1.5 type-body text-pretty text-text-2">Posts you save to it fill this wall, newest first.</p>
+          <Button size="sm" variant="secondary" render={<Link href="/dashboard" />} nativeButton={false} className="mt-5">
+            Browse the feed
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
-// Two saved posts fanned behind a dashed card waiting for the next one: what a board is, and
-// what's missing. Drawn in Glaze's tokens (paper, its line, the grey field for the picture and
-// lines, so it follows dark mode), decorative because the words beside it say the same. The cards
-// fan out once (.board-art-card in global.css); static under reduced motion.
-function EmptyBoardArt({ className }: { className?: string }) {
-  const card = (side: "left" | "right", x: number, angle: number) => (
-    <g transform={`translate(${x} 46) rotate(${angle} 44 112)`}>
-      <g className="board-art-card" data-side={side}>
-        <rect x="0.75" y="0.75" width="86.5" height="110.5" rx="10" fill="var(--paper)" stroke="var(--line)" strokeWidth="1.5" />
-        <rect x="9" y="9" width="70" height="64" rx="5" fill="var(--field)" />
-        <rect x="9" y="83" width="46" height="5" rx="2.5" fill="var(--field)" />
-        <rect x="9" y="94" width="30" height="5" rx="2.5" fill="var(--field)" />
-      </g>
-    </g>
-  );
-  return (
-    <svg viewBox="0 0 280 176" aria-hidden="true" className={cx("pointer-events-none select-none", className)}>
-      <ellipse cx="140" cy="166" rx="92" ry="5" fill="var(--hover)" />
-      {card("left", 46, -10)}
-      {card("right", 146, 10)}
-      <g transform="translate(96 30)">
-        <g className="board-art-card" data-side="front">
-          <rect x="0.75" y="0.75" width="86.5" height="126.5" rx="10" fill="var(--paper)" stroke="var(--line)" strokeWidth="1.5" strokeDasharray="5 5" />
-          <path d="M44 38v26M31 51h26" stroke="var(--text-3)" strokeWidth="2.5" strokeLinecap="round" />
-          <rect x="9" y="92" width="46" height="5" rx="2.5" fill="var(--field)" />
-          <rect x="9" y="103" width="30" height="5" rx="2.5" fill="var(--field)" />
-        </g>
-      </g>
-    </svg>
-  );
-}
-
-// The board's shape while it loads: the header (the Saved link, the name, the line, the count,
-// Share and More at Glaze's 32px), then the wall
+// The board's shape while it loads: the banner (the way back, Share and More, the name, the line,
+// the facts), then the wall
 function BoardSkeleton() {
   return (
     <div role="status" aria-label="Loading board">
-      <div className="flex flex-col gap-4 pt-2 pb-6 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex-1">
-          <Skeleton className="h-3.5 w-12 rounded-pill" />
-          <Skeleton className="mt-3 h-7 w-64 max-w-full rounded-pill" />
-          <Skeleton className="mt-3 h-4 w-96 max-w-full rounded-pill" />
-          <Skeleton className="mt-3 h-3.5 w-40 rounded-pill" />
+      <div className="mt-2 mb-6 rounded-shell bg-shell px-5 py-6 sm:px-8 sm:py-8">
+        <div className="flex items-center justify-between gap-4">
+          <Skeleton className="h-8 w-20 rounded-pill" />
+          <div className="flex gap-2">
+            <Skeleton className="h-(--control) w-16 rounded-pill" />
+            <Skeleton className="size-(--control) rounded-pill" />
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Skeleton className="h-(--control) w-16 rounded-pill" />
-          <Skeleton className="size-(--control) rounded-pill" />
+        <Skeleton className="mt-5 h-8 w-80 max-w-full rounded-pill" />
+        <Skeleton className="mt-3 h-4 w-96 max-w-full rounded-pill" />
+        <div className="mt-5 flex gap-2">
+          <Skeleton className="h-6 w-16 rounded-pill" />
+          <Skeleton className="h-6 w-32 rounded-pill" />
         </div>
       </div>
       <GridSkeleton label="Loading the board’s posts" />

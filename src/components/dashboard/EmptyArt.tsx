@@ -1,5 +1,5 @@
 // Empty-state illustrations for the API tokens page and the analysis review queue (2026-10-18,
-// at the owner's request), drawn like the empty board's (BoardView's EmptyBoardArt): flat cards in
+// at the owner's request), drawn like the empty board's was until 2026-10-29 (now the ghost wall): flat cards in
 // Glaze's tokens (paper, its lines, ink at alphas, ok's green for the last tick; since 2026-10-24),
 // so they follow dark mode. Each plays a short intro once, when the empty
 // state appears (.empty-art-* in global.css; transform, opacity and stroke offsets only), and
