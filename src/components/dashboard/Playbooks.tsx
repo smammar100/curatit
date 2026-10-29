@@ -97,7 +97,13 @@ function Scroller({ label, children }: { label: string; children: ReactNode }) {
   useEffect(() => {
     const row = ref.current;
     if (!row) return;
-    const measure = () => setMore({ left: row.scrollLeft > 1, right: row.scrollLeft + row.clientWidth < row.scrollWidth - 1 });
+    // Only a change at an edge updates the row: a new object on every scroll event re-rendered it about
+    // sixty times a second while it moved (2026-10-29)
+    const measure = () => {
+      const left = row.scrollLeft > 1;
+      const right = row.scrollLeft + row.clientWidth < row.scrollWidth - 1;
+      setMore((prev) => (prev.left === left && prev.right === right ? prev : { left, right }));
+    };
     measure();
     row.addEventListener("scroll", measure, { passive: true });
     const observer = new ResizeObserver(measure);

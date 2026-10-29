@@ -28,6 +28,23 @@
       }
     },
     {
+      "name": "curatit-prod-qa",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "start",
+        "--",
+        "-p",
+        "3100"
+      ],
+      "port": 3100,
+      "env": {
+        "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN": "",
+        "NEXT_PUBLIC_POSTHOG_HOST": "",
+        "RESEND_API_KEY": ""
+      }
+    },
+    {
       "name": "curatit-email",
       "runtimeExecutable": "npm",
       "runtimeArgs": [

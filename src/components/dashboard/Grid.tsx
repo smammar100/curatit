@@ -4,7 +4,7 @@
 // tile size fits, each tile opening the post, with Save on hover. Since 2026-10-24 on Glaze: the
 // cover in the panel corner over Glaze's Skeleton until its image arrives, the brand label a tag
 // of paper, and Glaze's focus ring on the tile.
-import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
+import { memo, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import BrandName from "@/components/home/BrandName";
@@ -42,19 +42,28 @@ export function backToPage() {
 
 // Deals the posts across the columns, each to the one that is currently shortest, so the
 // order reads across the top row first and the columns end close together. Plain CSS
-// columns would fill top to bottom and put the first posts all on the left.
-function intoColumns(posts: DashPost[], count: number) {
-  const columns: DashPost[][] = Array.from({ length: count }, () => []);
+// columns would fill top to bottom and put the first posts all on the left. The tiles sit in one
+// list, each placed where its column has got to, so a new order of the same posts (For you and
+// Discover show the same library) moves the tiles React already has. Dealt into a list per column,
+// as until 2026-10-29, most tiles changed list on a switch and React built each one again, Save
+// menu, images and all: about half a second a switch, with the switch itself stuck until it ended
+function layout(posts: DashPost[], count: number, width: number, gap: number) {
+  const column = (width - gap * (count - 1)) / count;
   const heights = Array<number>(count).fill(0);
-  for (const post of posts) {
+  const tiles = posts.map((post) => {
     const shortest = heights.indexOf(Math.min(...heights));
-    columns[shortest].push(post);
-    heights[shortest] += 1 / ratio(post);
-  }
-  return columns;
+    const tile = { post, x: shortest * (column + gap), y: heights[shortest] };
+    heights[shortest] += column / ratio(post) + gap;
+    return tile;
+  });
+  return { column, tiles, height: Math.max(0, Math.max(...heights) - gap) };
 }
 
-export default function Grid({ posts, priority = true }: { posts: DashPost[]; priority?: boolean }) {
+// Memoised: a press on the feed's switch re-renders the feed at once, before its posts change, and
+// the grid sits that render out (2026-10-29)
+export default memo(Grid);
+
+function Grid({ posts, priority = true }: { posts: DashPost[]; priority?: boolean }) {
   const { size } = useGridSize();
   const [width, setWidth] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
@@ -73,36 +82,40 @@ export default function Grid({ posts, priority = true }: { posts: DashPost[]; pr
 
   const gap = gapFor(width);
   const count = width ? Math.max(1, Math.floor((width + gap) / (TARGET[size] + gap))) : 0;
-  const columns = useMemo(() => (count ? intoColumns(posts, count) : []), [posts, count]);
+  const placed = useMemo(() => (count ? layout(posts, count, width, gap) : null), [posts, count, width, gap]);
 
   return (
     <div ref={ref}>
       {/* Until the width is known (in the server's HTML, before the page's code has loaded)
           the grid's shape stands in, so the feed never opens on a blank page */}
-      {count === 0 && <GridSkeleton />}
-      {count > 0 && (
-        <div
-          className="grid grid-cols-(--columns) items-start gap-x-(--gap)"
-          style={{ "--columns": `repeat(${count}, minmax(0, 1fr))`, "--gap": `${gap}px` } as CSSProperties}
+      {!placed && <GridSkeleton />}
+      {placed && (
+        <ul
+          className="relative h-(--height)"
+          style={{ "--height": `${placed.height}px`, "--column": `${placed.column}px` } as CSSProperties}
         >
-          {columns.map((column, c) => (
-            <ul key={c} className="flex flex-col gap-y-(--gap)">
-              {column.map((post, i) => (
-                <Tile key={post.shortCode} post={post} priority={priority && i === 0} sizes={`${Math.ceil(100 / count)}vw`} />
-              ))}
-            </ul>
+          {placed.tiles.map(({ post, x, y }) => (
+            <li
+              key={post.shortCode}
+              className="group absolute top-0 left-0 w-(--column) translate-x-(--tile-x) translate-y-(--tile-y)"
+              style={{ "--tile-x": `${x}px`, "--tile-y": `${y}px` } as CSSProperties}
+            >
+              {/* The top row's covers load first */}
+              <Tile post={post} priority={priority && y === 0} sizes={`${Math.ceil(100 / count)}vw`} />
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );
 }
 
-function Tile({ post, priority, sizes }: { post: DashPost; priority: boolean; sizes: string }) {
+// A tile's content, memoised apart from its place, so moving a tile renders nothing inside it
+const Tile = memo(function Tile({ post, priority, sizes }: { post: DashPost; priority: boolean; sizes: string }) {
   // The tile shows the Skeleton until its image has arrived
   const [loaded, setLoaded] = useState(false);
   return (
-    <li className="group relative">
+    <>
       <Link
         href={postHref(post.shortCode)}
         scroll={false}
@@ -143,6 +156,6 @@ function Tile({ post, priority, sizes }: { post: DashPost; priority: boolean; si
           <BrandName brand={post.brand} />
         </span>
       </div>
-    </li>
+    </>
   );
-}
+});

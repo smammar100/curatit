@@ -755,6 +755,20 @@
 
 /* The empty board's illustration (BoardView): its two saved cards and the dashed one fan out
    once, when the empty state appears */
+/* Where each tile of the feed's grid sits (dashboard/Grid). Registered so they don't inherit: a new
+   order moves every tile, and an inherited value would restyle everything inside each one too
+   (2026-10-29) */
+@property --tile-x {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --tile-y {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
 .board-art-card {
   transform-box: fill-box;
   transform-origin: 50% 100%;
