@@ -34,10 +34,12 @@ const PAGE_CAP = 500;
 // best first, then the first 50 keyword matches) and the keyword matches past those follow, so no
 // keyword match is lost. The results wait for both, so tiles never reorder after they show. If it
 // fails or hasn't answered in MEANING_WAIT_MS (a cold server still loading its models), the
-// keyword results show with a notice, and aren't kept, so the next search tries again
+// keyword results show with a notice, and aren't kept, so the next search tries again. 12 s since
+// 2026-10-29: on Vercel a fresh ranking takes about 5 s end to end (laptop: about 2), so the first
+// 6 s fell back on half the searches; the owner chose the wait over the word matches
 export type MeaningRequest = { query: string; request: Record<string, unknown>; post_ids?: string[] };
 export type Ranker = (body: MeaningRequest, signal: AbortSignal) => Promise<string[]>;
-const MEANING_WAIT_MS = 6_000;
+const MEANING_WAIT_MS = 12_000;
 export const MEANING_NOTICE = "Searching by meaning isn’t working right now, so these results only match your words.";
 // CURATIT_HYBRID_SEARCH=off: keyword search, as before, without a notice, for the rest of the visit
 class MeaningOff extends Error {}
