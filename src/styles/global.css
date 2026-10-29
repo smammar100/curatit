@@ -769,41 +769,26 @@
   initial-value: 0px;
 }
 
-.board-art-card {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-  animation: board-art-fan 560ms cubic-bezier(0.23, 1, 0.32, 1) both;
+/* The empty board's ghost wall (BoardView's EmptyBoard, 2026-10-29): the wall fades out downward and
+   its slots rise in once, column by column, each at its own --delay. Still under reduced motion */
+.board-ghost {
+  mask-image: linear-gradient(to bottom, black 35%, transparent 100%);
 }
 
-/* A soft lift under the two saved cards (it fades out against the dark theme, which is fine) */
-.board-art-card[data-side="left"],
-.board-art-card[data-side="right"] {
-  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.07));
+.board-ghost-slot {
+  animation: board-ghost-rise 420ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation-delay: var(--delay, 0ms);
 }
 
-.board-art-card[data-side="left"] {
-  --from: translate(18px, 6px) rotate(9deg);
-  animation-delay: 60ms;
-}
-
-.board-art-card[data-side="right"] {
-  --from: translate(-18px, 6px) rotate(-9deg);
-  animation-delay: 110ms;
-}
-
-.board-art-card[data-side="front"] {
-  --from: translateY(8px) scale(0.94);
-}
-
-@keyframes board-art-fan {
+@keyframes board-ghost-rise {
   from {
     opacity: 0;
-    transform: var(--from);
+    transform: translateY(8px);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .board-art-card {
+  .board-ghost-slot {
     animation: none;
   }
 }
