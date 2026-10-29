@@ -10,7 +10,7 @@ const SEARCH_RUNTIME = [
 ];
 
 const nextConfig: NextConfig = {
-  // Hybrid search's models (2026-10-25): the two routes that search ship the int8 models fetched
+  // Hybrid search's models (2026-10-25): the routes that search ship the int8 models fetched
   // into ./models at build (scripts/fetch-search-models.mjs); transformers.js and onnxruntime-node
   // are external server packages by default in Next 16. Every route leaves out what Vercel's Linux
   // x64 never loads: the browser runtime (onnxruntime-web, 91 MB), the other platforms' binaries
@@ -24,6 +24,8 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/mcp": SEARCH_RUNTIME,
     "/api/v1/posts/search": SEARCH_RUNTIME,
+    // The dashboard's search by meaning (2026-10-28)
+    "/api/search": SEARCH_RUNTIME,
   },
   outputFileTracingExcludes: {
     "/**": [

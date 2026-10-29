@@ -9,7 +9,9 @@ import type { RawSearchResult, RawTerms } from "@/lib/mcp/repo/types";
 import { brandNamed, categoryNamed, typeNamed, hookNamed } from "./search";
 import type { DashPost } from "./types";
 
-export type LibrarySearch = { key: string; codes: string[]; labels: string[]; corrections?: { from: string; to: string }[]; refinements?: SearchRefinement[]; error?: string; invalid?: boolean; capped?: boolean };
+// `ranking`: "meaning" when the server's search by meaning ordered the results; `notice` when it
+// was tried and failed, so they come from keyword search alone (never said silently)
+export type LibrarySearch = { key: string; codes: string[]; labels: string[]; corrections?: { from: string; to: string }[]; refinements?: SearchRefinement[]; error?: string; invalid?: boolean; capped?: boolean; ranking?: "meaning" | "keyword"; notice?: string };
 // What a search is limited to: Discover's category, or the saved posts. Sent with the search, so the
 // database applies it before the pages are cut and a match ranked past the library's first 500 still
 // counts; the feed still intersects with what it shows (2026-10-26, docs/performance/)
@@ -26,10 +28,43 @@ const cachedResults = new WeakMap<DashPost[], Map<string, { data: LibrarySearch;
 let compact = true;
 const PAGE_CAP = 500;
 
+// Search by meaning (2026-10-28, docs/natural-language-search.md): when words are left after
+// interpretation, the server ranks the same request by meaning (/api/search, the MCP's hybrid
+// ranking) while the keyword pages load here. Its order goes first (the matches the reranker keeps,
+// best first, then the first 50 keyword matches) and the keyword matches past those follow, so no
+// keyword match is lost. The results wait for both, so tiles never reorder after they show. If it
+// fails or hasn't answered in MEANING_WAIT_MS (a cold server still loading its models), the
+// keyword results show with a notice, and aren't kept, so the next search tries again
+export type MeaningRequest = { query: string; request: Record<string, unknown>; post_ids?: string[] };
+export type Ranker = (body: MeaningRequest, signal: AbortSignal) => Promise<string[]>;
+const MEANING_WAIT_MS = 6_000;
+export const MEANING_NOTICE = "Searching by meaning isn’t working right now, so these results only match your words.";
+// CURATIT_HYBRID_SEARCH=off: keyword search, as before, without a notice, for the rest of the visit
+class MeaningOff extends Error {}
+let meaningOff = false;
+
+export const rankByMeaning: Ranker = async (body, signal) => {
+  const response = await fetch("/api/search", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal });
+  const reply = (await response.json().catch(() => null)) as { ids?: string[]; error?: string } | null;
+  if (reply?.error === "off") throw new MeaningOff();
+  if (!response.ok || !Array.isArray(reply?.ids)) throw new Error(`Search by meaning answered ${response.status}`);
+  return reply.ids;
+};
+
+// Loads the models on the server while someone is still typing (the search box asks when it opens),
+// at most every five minutes
+let warmedAt = 0;
+export function warmSearch() {
+  if (meaningOff || Date.now() - warmedAt < 5 * 60_000) return;
+  warmedAt = Date.now();
+  fetch("/api/search", { method: "GET" }).catch(() => {});
+}
+
 // The existing public RPC enforces published-only reads. Never import the server catalog
 // repository here: it has a privileged client for unrelated metric-provenance lookups.
-// `client`: scripts/perf passes its own, metered one
-export async function loadLibrarySearch(query: string, posts: DashPost[], signal: AbortSignal, scope: SearchScope = {}, client: ReturnType<typeof createClient> = createClient()): Promise<LibrarySearch> {
+// `client`: scripts/perf passes its own, metered one; `rank`: the search eval passes the server's
+// ranking itself, null leaves search by meaning out
+export async function loadLibrarySearch(query: string, posts: DashPost[], signal: AbortSignal, scope: SearchScope = {}, client: ReturnType<typeof createClient> = createClient(), rank: Ranker | null = rankByMeaning): Promise<LibrarySearch> {
   signal.throwIfAborted();
   const cache = cachedResults.get(posts) ?? new Map();
   cachedResults.set(posts, cache);
@@ -53,16 +88,46 @@ export async function loadLibrarySearch(query: string, posts: DashPost[], signal
   // An industry named in the search wins over Discover's; the feed still keeps to Discover's
   const scoped = { ...plan.filters, ...(plan.query ? { query: plan.query } : {}), ...(scope.category && !plan.filters.category ? { category: scope.category } : {}) };
 
+  // Kept a minute unless capped or answered without the meaning it asked for
   const remember = (data: LibrarySearch) => {
+    if (data.capped || data.notice) return data;
     cache.delete(cacheKey);
     cache.set(cacheKey, { data, until: Date.now() + 60_000 });
     if (cache.size > 16) cache.delete(cache.keys().next().value!);
     return data;
   };
+  // Started first, so it runs while the keyword pages load. With no words left (a search that's all
+  // filters) there's nothing to rank by meaning, as in MCP search
+  const stop = new AbortController();
+  const meaning = rank && plan.query && !meaningOff
+    ? rank({ query, request: scoped, ...(scope.postIds ? { post_ids: scope.postIds } : {}) }, AbortSignal.any([signal, stop.signal, AbortSignal.timeout(MEANING_WAIT_MS)])).then(
+        (ids) => ({ ids }),
+        (error: unknown) => ({ error }),
+      )
+    : null;
+  try {
+    const keyword = await keywordCodes(client, scoped, scope, signal);
+    if (!meaning) return remember({ ...base, ...keyword });
+    const ranked = await meaning;
+    signal.throwIfAborted();
+    if ("error" in ranked) {
+      if (!(ranked.error instanceof MeaningOff)) return { ...base, ...keyword, ranking: "keyword", notice: MEANING_NOTICE };
+      meaningOff = true;
+      return remember({ ...base, ...keyword });
+    }
+    const codeOf = new Map(posts.map((post) => [post.id, post.shortCode]));
+    const head = ranked.ids.flatMap((id) => codeOf.get(id) ?? []);
+    return remember({ ...base, ...keyword, codes: [...new Set([...head, ...keyword.codes])], ranking: "meaning" });
+  } finally {
+    stop.abort();
+  }
+}
+
+// Every keyword page up to the cap, so Saved and Discover see the whole ranked set; past the cap the
+// feed says it shows the first 500
+async function keywordCodes(client: ReturnType<typeof createClient>, scoped: Record<string, unknown>, scope: SearchScope, signal: AbortSignal): Promise<{ codes: string[]; capped?: boolean }> {
   const codes: string[] = [];
   let offset = 0;
-  // Every page up to the cap, so Saved and Discover see the whole ranked set; past the cap the feed
-  // says it shows the first 500
   while (offset < PAGE_CAP) {
     signal.throwIfAborted();
     const request = compact ? { ...scoped, ...(scope.postIds ? { post_ids: scope.postIds } : {}), fields: "ids", limit: 100, offset } : { ...scoped, limit: 50, offset };
@@ -76,12 +141,12 @@ export async function loadLibrarySearch(query: string, posts: DashPost[], signal
     codes.push(...result.posts.map((post) => post.short_code));
     if (!result.has_more) {
       signal.throwIfAborted();
-      return remember({ ...base, codes: [...new Set(codes)] });
+      return { codes: [...new Set(codes)] };
     }
-    if (result.next_offset === null || result.next_offset <= offset || result.next_offset >= PAGE_CAP) return { ...base, codes: [...new Set(codes)], capped: true };
+    if (result.next_offset === null || result.next_offset <= offset || result.next_offset >= PAGE_CAP) return { codes: [...new Set(codes)], capped: true };
     offset = result.next_offset;
   }
-  return { ...base, codes: [...new Set(codes)], capped: true };
+  return { codes: [...new Set(codes)], capped: true };
 }
 
 export function useLibrarySearch(query: string, posts: DashPost[], scope: SearchScope = {}) {

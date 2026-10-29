@@ -3,16 +3,19 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { DashPost } from "./types";
-import { loadLibrarySearch, useLibrarySearch } from "./useLibrarySearch";
+import { loadLibrarySearch, MEANING_NOTICE, useLibrarySearch, type Ranker } from "./useLibrarySearch";
 
 const { rpc, searchReplies } = vi.hoisted(() => ({ rpc: vi.fn(), searchReplies: [] as Promise<unknown>[] }));
 vi.mock("@/utils/supabase/client", () => ({ createClient: () => ({ rpc }) }));
 const posts: DashPost[] = [];
 const page = (codes: string[], next: number | null = null, more = next !== null) => ({ data: { posts: codes.map((short_code) => ({ short_code })), has_more: more, next_offset: next }, error: null });
+// /api/search, the server's search by meaning: by default it ranks nothing, so the keyword order shows
+const meaningReply = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 function setup() {
+  vi.stubGlobal("fetch", vi.fn(async () => meaningReply({ ids: [] })));
   rpc.mockImplementation((name: string) => ({ abortSignal: () => name === "curatit_mcp_creative_terms" ? Promise.resolve({ data: { dimensions: {} }, error: null }) : searchReplies.shift() }));
 }
-afterEach(() => { searchReplies.length = 0; vi.clearAllMocks(); vi.useRealTimers(); });
+afterEach(() => { searchReplies.length = 0; vi.clearAllMocks(); vi.unstubAllGlobals(); vi.useRealTimers(); });
 
 describe("dashboard catalog search", () => {
   it("collects ranked pages without duplicates for Saved/Discover intersection", async () => {
@@ -107,5 +110,100 @@ describe("dashboard catalog search", () => {
       { query: "cash", limit: 50, offset: 0 },
       { query: "cards", limit: 50, offset: 0 },
     ]);
+  });
+});
+
+// Search by meaning (2026-10-28): the server ranks the interpreted request while the keyword pages
+// load; its order goes first, the other keyword matches follow
+describe("dashboard search by meaning", () => {
+  const dash = (id: string, shortCode: string) => ({ id, shortCode, brand: { slug: "brand", name: "Brand" } }) as unknown as DashPost;
+  const library = [dash("p1", "a"), dash("p2", "b"), dash("p3", "c")];
+  const signal = () => new AbortController().signal;
+
+  it("puts the server's order first and the keyword matches it left out after it", async () => {
+    setup();
+    searchReplies.push(Promise.resolve(page(["a", "b"])));
+    // A post the feed doesn't have (published since it loaded) is left out
+    const rank = vi.fn<Ranker>(async () => ["p3", "p1", "not-in-the-feed"]);
+    const result = await loadLibrarySearch("cash", library, signal(), {}, undefined, rank);
+    expect(result).toMatchObject({ codes: ["c", "a", "b"], ranking: "meaning" });
+    expect(result.notice).toBeUndefined();
+    expect(rank).toHaveBeenCalledWith({ query: "cash", request: { query: "cash" } }, expect.any(AbortSignal));
+  });
+
+  it("sends the view's scope with the interpreted request", async () => {
+    setup();
+    searchReplies.push(Promise.resolve(page(["a"])), Promise.resolve(page(["a"])));
+    const rank = vi.fn<Ranker>(async () => ["p1"]);
+    await loadLibrarySearch("cards", library, signal(), { category: "finance" }, undefined, rank);
+    await loadLibrarySearch("cards", library, signal(), { postIds: ["p1", "p2"] }, undefined, rank);
+    expect(rank.mock.calls.map(([body]) => body)).toEqual([
+      { query: "cards", request: { query: "cards", category: "finance" } },
+      { query: "cards", request: { query: "cards" }, post_ids: ["p1", "p2"] },
+    ]);
+  });
+
+  it("leaves a search that's all filters to keyword search, as MCP does", async () => {
+    setup();
+    searchReplies.push(Promise.resolve(page(["a"])));
+    const rank = vi.fn<Ranker>(async () => ["p3"]);
+    const result = await loadLibrarySearch("fintech carousels", library, signal(), {}, undefined, rank);
+    expect(rank).not.toHaveBeenCalled();
+    expect(result.codes).toEqual(["a"]);
+    expect(result.ranking).toBeUndefined();
+  });
+
+  it("shows the keyword results with a notice when it fails or is too slow, and tries again next time", async () => {
+    setup();
+    searchReplies.push(Promise.resolve(page(["a", "b"])), Promise.resolve(page(["a", "b"])));
+    const rank = vi.fn<Ranker>().mockRejectedValueOnce(new DOMException("timed out", "TimeoutError")).mockResolvedValueOnce(["p2"]);
+    const failed = await loadLibrarySearch("savings", library, signal(), {}, undefined, rank);
+    expect(failed).toMatchObject({ codes: ["a", "b"], ranking: "keyword", notice: MEANING_NOTICE });
+    // Not kept: the same search asks again
+    const again = await loadLibrarySearch("savings", library, signal(), {}, undefined, rank);
+    expect(again).toMatchObject({ codes: ["b", "a"], ranking: "meaning" });
+    expect(rank).toHaveBeenCalledTimes(2);
+  });
+
+  it("asks /api/search, and an error answer counts as a failure", async () => {
+    setup();
+    const fetch = vi.fn(async () => meaningReply({ error: "unavailable" }, 503));
+    vi.stubGlobal("fetch", fetch);
+    searchReplies.push(Promise.resolve(page(["a"])));
+    const result = await loadLibrarySearch("budget", library, signal());
+    expect(result.notice).toBe(MEANING_NOTICE);
+    expect(fetch).toHaveBeenCalledWith("/api/search", expect.objectContaining({ method: "POST", body: JSON.stringify({ query: "budget", request: { query: "budget" } }) }));
+  });
+
+  it("goes quietly back to keyword search for the visit when it's switched off", async () => {
+    vi.resetModules();
+    const fresh = await import("./useLibrarySearch");
+    setup();
+    const fetch = vi.fn(async () => meaningReply({ error: "off" }, 503));
+    vi.stubGlobal("fetch", fetch);
+    searchReplies.push(Promise.resolve(page(["a"])), Promise.resolve(page(["b"])));
+    const first = await fresh.loadLibrarySearch("wallet", library, signal());
+    expect(first.notice).toBeUndefined();
+    expect(first.codes).toEqual(["a"]);
+    await fresh.loadLibrarySearch("purse", library, signal());
+    expect(fetch).toHaveBeenCalledTimes(1);
+    // Nor warms the models
+    fresh.warmSearch();
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("warms the models when the box opens, at most every five minutes", async () => {
+    vi.resetModules();
+    const fresh = await import("./useLibrarySearch");
+    vi.useFakeTimers();
+    const fetch = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetch);
+    fresh.warmSearch();
+    fresh.warmSearch();
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledWith("/api/search", { method: "GET" });
+    vi.setSystemTime(Date.now() + 5 * 60_000 + 1);
+    fresh.warmSearch();
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 });

@@ -23,11 +23,11 @@ const PER_COLUMN = 5;
 
 // The masonry's shape before its width is known. Column counts approximate what the medium
 // tile size gives at each width (1 on a phone, up to 4 on a wide screen: from xl, Glaze's widest
-// breakpoint).
-export function GridSkeleton({ label = "Loading posts" }: { label?: string }) {
+// breakpoint). A null label leaves it a picture, for a page that says what's loading in words
+export function GridSkeleton({ label = "Loading posts" }: { label?: string | null }) {
   const columns = ["flex", "hidden sm:flex", "hidden lg:flex", "hidden xl:flex"];
   return (
-    <div role="status" aria-label={label} className="grid grid-cols-1 items-start gap-x-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8 xl:grid-cols-4 xl:gap-x-10">
+    <div role={label ? "status" : undefined} aria-label={label ?? undefined} aria-hidden={label ? undefined : true} className="grid grid-cols-1 items-start gap-x-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8 xl:grid-cols-4 xl:gap-x-10">
       {columns.map((visibility, c) => (
         <div key={c} className={`flex-col gap-6 lg:gap-8 xl:gap-10 ${visibility}`}>
           {Array.from({ length: PER_COLUMN }, (_, i) => (
