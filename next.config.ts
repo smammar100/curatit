@@ -43,6 +43,12 @@ const nextConfig: NextConfig = {
     staticGenerationMaxConcurrency: 32,
   },
   images: {
+    // Off since 2026-10-29: the Vercel project's image optimization allowance ran out, and every
+    // size Vercel hadn't cached answered 402 (OPTIMIZED_IMAGE_REQUEST_PAYMENT_REQUIRED), so images
+    // broke across the site. The stored files are already WebP, at most 1080px wide, so they're
+    // served as they are. Turn it back on (delete this line, and IMAGE_OPTIMIZER in src/lib/posts.ts)
+    // once the plan allows it again: tiles then come back about half the bytes
+    unoptimized: true,
     // Widths the optimizer may produce. Nothing on the site renders wider than ~600px
     // (1200px at 2x), so the defaults up to 3840 only made every srcset longer.
     deviceSizes: [640, 828, 1080, 1200],

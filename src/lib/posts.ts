@@ -223,8 +223,14 @@ function toPostDetail(data: DetailRow): PostDetail | null {
   };
 }
 
-// A URL from Next's image optimizer, for places that need a plain <img> src
+// Whether Next's image optimizer is on: off since 2026-10-29 with `images.unoptimized` in
+// next.config.ts (Vercel's allowance ran out and it answered 402); change the two together
+const IMAGE_OPTIMIZER = false;
+
+// A URL from Next's image optimizer, for places that need a plain <img> src; the stored file itself
+// while the optimizer is off
 export function optimizedImage(src: string, width = 640, quality = 75) {
+  if (!IMAGE_OPTIMIZER) return src;
   return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=${quality}`;
 }
 
