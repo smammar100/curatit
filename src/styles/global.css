@@ -1052,6 +1052,55 @@
   }
 }
 
+/* The empty search's illustration (dashboard/SearchEmptyArt, the "Flip", 2026-10-29): the hand of
+   posts fans open from a stack, outer cards last, then the middle card lifts and turns over to its
+   blank back. Once, on mount; each element's resting style is its last frame */
+.search-art-card {
+  transform: rotate(var(--angle));
+  transform-origin: 50% 190%;
+  animation: search-art-fan 520ms cubic-bezier(0.23, 1, 0.32, 1) var(--delay) both;
+}
+
+.search-art-flip {
+  transform-style: preserve-3d;
+  transform: translateY(-10px) perspective(700px) rotateY(180deg);
+  animation: search-art-flip 1000ms cubic-bezier(0.65, 0, 0.35, 1) 560ms both;
+}
+
+.search-art-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.search-art-back {
+  transform: rotateY(180deg);
+}
+
+@keyframes search-art-fan {
+  from {
+    transform: none;
+  }
+}
+
+@keyframes search-art-flip {
+  0% {
+    transform: translateY(0) perspective(700px) rotateY(0deg);
+  }
+  28% {
+    transform: translateY(-14px) perspective(700px) rotateY(0deg);
+  }
+  100% {
+    transform: translateY(-10px) perspective(700px) rotateY(180deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-art-card,
+  .search-art-flip {
+    animation: none;
+  }
+}
+
 /* The 404 page's collage (global/NotFoundCollage): covers fly in from different depths into the
    digits. Near the cursor each lifts toward you by its --lift (0 to 1, set from the pointer's
    distance): it straightens, grows and casts a shadow, and rises above its neighbours (z-index,

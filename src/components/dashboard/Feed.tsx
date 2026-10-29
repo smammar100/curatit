@@ -21,6 +21,7 @@ import CategoryBar from "./CategoryBar";
 import { rank, spread } from "./forYou";
 import { useProfile } from "./profile";
 import SavedArt from "./SavedArt";
+import SearchEmptyArt from "./SearchEmptyArt";
 import Grid from "./Grid";
 import Playbooks from "./Playbooks";
 import Header, { VIEWS, type View } from "./Header";
@@ -185,7 +186,8 @@ export default function Feed() {
             count takes, so nothing moves when the results land (search by meaning takes a second or
             two: 2026-10-28, after Copilot's "Searching the web" and Perplexity's "Image results
             for", on Mobbin). Nothing on the tiles: the grid stays pictures */}
-        {(search.loading || (search.result && !search.result.error)) && <p role="status" className="mb-5 type-body-sm text-text-2 tabular-nums">
+        {/* An empty result has no count line: the empty state below says it (2026-10-29) */}
+        {(search.loading || (search.result && !search.result.error && shown.length > 0)) && <p role="status" className="mb-5 type-body-sm text-text-2 tabular-nums">
           {search.loading || !search.result ? "Searching…" : <>
             {shown.length} {shown.length === 1 ? "post" : "posts"}{search.result.labels.length ? ` · ${search.result.labels.join(" · ")}` : ""}
             {search.result.ranking === "meaning" && shown.length > 1 ? " · Closest in meaning first" : ""}
@@ -260,25 +262,22 @@ function Empty({ view, query, onClear, onBrowse, refinements, onRefine, scoped, 
       </EmptyRegion>
     );
   }
-  // A search that found nothing: the lead way out, then the other refinements and Clear search as
-  // ghost buttons
+  // A search that found nothing (simplified at the owner's request, 2026-10-29): the Flip
+  // illustration, a short title (the request is already in the search box), one line of help and
+  // one way out: the full library from a scoped view, else the first refinement, else Clear search.
+  // The search box's own × clears it too
   return (
     <EmptyRegion reason="no-results" variant="plain" className="py-16">
+      <SearchEmptyArt />
       <EmptyHeader>
-        <EmptyTitle>Nothing matches ‘{query}’</EmptyTitle>
-        <EmptyDescription>{scoped ? "This search is limited to your current view. Try the full library." : "Try removing one detail, or describe the posts another way."}</EmptyDescription>
+        <EmptyTitle icon={false}>No posts match your search</EmptyTitle>
+        <EmptyDescription>{scoped ? "This search only looks in your current view." : "Try fewer details, or describe it another way."}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button size="sm" onClick={scoped ? onSearchAll : refinements[0] ? () => onRefine(refinements[0].query) : onClear}>
+        <Button size="sm" variant="secondary" onClick={scoped ? onSearchAll : refinements[0] ? () => onRefine(refinements[0].query) : onClear}>
           {scoped ? "Search full library" : refinements[0]?.label ?? "Clear search"}
         </Button>
       </EmptyContent>
-      {(scoped || refinements.length > 0) && (
-        <EmptyContent>
-          {!scoped && refinements.slice(1).map((item) => <Button key={item.query} size="sm" variant="ghost" onClick={() => onRefine(item.query)}>{item.label}</Button>)}
-          <Button size="sm" variant="ghost" onClick={onClear}>Clear search</Button>
-        </EmptyContent>
-      )}
     </EmptyRegion>
   );
 }
