@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Hedvig_Letters_Serif, Inter } from "next/font/google";
 import ThemeScript from "@/components/global/ThemeScript";
+import VercelAnalytics from "@/components/global/VercelAnalytics";
 import type { ReactNode } from "react";
 import { GlazePortalProvider } from "@/lib/glaze/portal";
 // Import global styles, then Glaze (scoped to .glaze, as its own stylesheet) and the bridge that gives Glaze
@@ -73,6 +74,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <GlazePortalProvider>
           {children}
         </GlazePortalProvider>
+        <VercelAnalytics />
       </body>
     </html>
   );
