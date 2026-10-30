@@ -25,8 +25,8 @@ const collageWidth = { "--collage-max": "min(48rem, calc((100dvh - 22rem) * 2.08
 // (NotFoundCollage), and the way out, together in one screen. If the library can't be reached
 // the digits still stand, in plain tiles. The root not-found puts it inside the site's navigation
 // and footer; the (site) group's not-found renders it bare, inside the group's own. On Glaze since
-// 2026-10-24: the title in text-1, the line in text-2, Go home the primary Button and Browse the
-// library the secondary, both rendered as links.
+// 2026-10-24: the title in text-1, the line in text-2, Go home the primary Button rendered as a
+// link (Browse the library beside it was taken out on 2026-10-30, at the owner's request).
 export default async function NotFoundContent() {
   const covers = await getCovers();
 
@@ -47,9 +47,6 @@ export default async function NotFoundContent() {
         <div className="mt-8 flex flex-wrap justify-center gap-2 sm:mt-10">
           <Button variant="primary" render={<Link href="/" />} nativeButton={false}>
             Go home
-          </Button>
-          <Button variant="secondary" render={<Link href="/library" />} nativeButton={false}>
-            Browse the library
           </Button>
         </div>
       </Wrapper>

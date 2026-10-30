@@ -8,6 +8,9 @@
 // client (ThemeToggle loads this file on intent), so the saved choice can be read when it mounts.
 // Split from ThemeToggle so the menu's code (Base UI's menu) stays out of every page's first
 // load: the navigation is in the homepage hero's path.
+// The check sits at the row's end, as in the Save menu (2026-10-30, at the owner's request: Glaze keeps
+// its column at the start, a gap before every icon the choice isn't on), and the menu is as wide as its
+// rows rather than Glaze's menu minimum.
 import { useEffect, useRef, useState, type ReactElement } from "react";
 import {
   DropdownMenu,
@@ -18,6 +21,9 @@ import {
 } from "@/components/glaze/ui/dropdown-menu";
 import { CircleHalf, Dark, Icon, Light } from "@/components/glaze/icon";
 import { getThemeMode, setThemeMode, type ThemeMode } from "./theme";
+
+const row =
+  "ps-3 pe-10 *:data-[slot=dropdown-menu-radio-item-indicator]:start-auto *:data-[slot=dropdown-menu-radio-item-indicator]:end-3";
 
 export default function ThemeMenu({
   trigger,
@@ -41,7 +47,7 @@ export default function ThemeMenu({
   return (
     <DropdownMenu defaultOpen={defaultOpen}>
       <DropdownMenuTrigger render={trigger} />
-      <DropdownMenuContent align="end" size="sm" aria-label="Theme">
+      <DropdownMenuContent align="end" size="sm" aria-label="Theme" className="min-w-0">
         <DropdownMenuRadioGroup
           value={mode}
           onValueChange={(next) => {
@@ -49,15 +55,15 @@ export default function ThemeMenu({
             setMode(next as ThemeMode);
           }}
         >
-          <DropdownMenuRadioItem value="light">
+          <DropdownMenuRadioItem value="light" className={row}>
             <Icon icon={Light} />
             Light
           </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="dark">
+          <DropdownMenuRadioItem value="dark" className={row}>
             <Icon icon={Dark} />
             Dark
           </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="system">
+          <DropdownMenuRadioItem value="system" className={row}>
             <Icon icon={CircleHalf} />
             System
           </DropdownMenuRadioItem>
